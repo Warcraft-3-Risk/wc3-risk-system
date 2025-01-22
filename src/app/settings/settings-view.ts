@@ -196,15 +196,21 @@ export class SettingsView {
 				this.colorizeFogText(BlzFrameGetValue(fogFrame));
 				this.colorizeDiplomacyText(BlzFrameGetValue(diploFrame));
 				this.colorizeOvertimeText(BlzFrameGetValue(overtimeFrame));
-				BlzFrameSetText(BlzGetFrameByName('PromodeOption', 0), `${PromodeOptionsColorFormatted[SettingsContext.getInstance().getSettings().Promode]}`);
+				BlzFrameSetText(
+					BlzGetFrameByName('PromodeOption', 0),
+					`${PromodeOptionsColorFormatted[SettingsContext.getInstance().getSettings().Promode]}`
+				);
 			})
 		);
 
-		BlzFrameSetText(BlzGetFrameByName('PromodeOption', 0), `${PromodeOptionsColorFormatted[SettingsContext.getInstance().getSettings().Promode]}`);
+		BlzFrameSetText(
+			BlzGetFrameByName('PromodeOption', 0),
+			`${PromodeOptionsColorFormatted[SettingsContext.getInstance().getSettings().Promode]}`
+		);
 	}
 
 	private hostSetup() {
-		BlzFrameSetEnable(BlzGetFrameByName('GameTypePopup', 0), false);
+		BlzFrameSetEnable(BlzGetFrameByName('GameTypePopup', 0), true);
 
 		if (GetLocalPlayer() == Player(0)) {
 			BlzFrameSetVisible(BlzGetFrameByName('PopupMenuOptions', 0), false);

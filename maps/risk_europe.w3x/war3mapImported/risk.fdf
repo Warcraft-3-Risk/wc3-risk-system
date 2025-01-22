@@ -196,7 +196,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		PopupMenuFrame "GameTypePopupMenu",
 			Frame "MENU" "GameTypePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
 				MenuItem "Standard",     -2,
-				//MenuItem "Capitals",     -2,
+				MenuItem "Capitals",     -2,
 			}
 		}
 
