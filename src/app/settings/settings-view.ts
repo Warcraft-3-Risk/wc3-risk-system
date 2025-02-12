@@ -36,6 +36,11 @@ export class SettingsView {
 		BlzFrameSetVisible(this.backdrop, false);
 	}
 
+	public show() {
+		BlzFrameSetEnable(this.backdrop, true);
+		BlzFrameSetVisible(this.backdrop, true);
+	}
+
 	public isVisible(): boolean {
 		return BlzFrameIsVisible(this.backdrop);
 	}
@@ -174,37 +179,45 @@ export class SettingsView {
 					SettingsContext.getInstance().getSettings().Promode = 1;
 					SettingsContext.getInstance().getSettings().Fog = 1;
 					SettingsContext.getInstance().getSettings().Diplomacy.option = 1;
-					SettingsContext.getInstance().getSettings().Overtime.option = 0;
+					SettingsContext.getInstance().getSettings().Overtime.option = 3;
 
 					BlzFrameSetValue(fogFrame, 1);
 					BlzFrameSetEnable(fogFrame, false);
 					BlzFrameSetValue(diploFrame, 1);
 					BlzFrameSetEnable(diploFrame, false);
-					BlzFrameSetValue(overtimeFrame, 0);
+					BlzFrameSetValue(overtimeFrame, 3);
 					BlzFrameSetEnable(overtimeFrame, false);
 				} else {
 					SettingsContext.getInstance().getSettings().Promode = 0;
 					SettingsContext.getInstance().getSettings().Fog = 0;
 					SettingsContext.getInstance().getSettings().Diplomacy.option = 0;
+					SettingsContext.getInstance().getSettings().Overtime.option = 0;
 					BlzFrameSetValue(fogFrame, 0);
 					BlzFrameSetEnable(fogFrame, true);
 					BlzFrameSetValue(diploFrame, 0);
 					BlzFrameSetEnable(diploFrame, true);
+					BlzFrameSetValue(overtimeFrame, 0);
 					BlzFrameSetEnable(overtimeFrame, true);
 				}
 
 				this.colorizeFogText(BlzFrameGetValue(fogFrame));
 				this.colorizeDiplomacyText(BlzFrameGetValue(diploFrame));
 				this.colorizeOvertimeText(BlzFrameGetValue(overtimeFrame));
-				BlzFrameSetText(BlzGetFrameByName('PromodeOption', 0), `${PromodeOptionsColorFormatted[SettingsContext.getInstance().getSettings().Promode]}`);
+				BlzFrameSetText(
+					BlzGetFrameByName('PromodeOption', 0),
+					`${PromodeOptionsColorFormatted[SettingsContext.getInstance().getSettings().Promode]}`
+				);
 			})
 		);
 
-		BlzFrameSetText(BlzGetFrameByName('PromodeOption', 0), `${PromodeOptionsColorFormatted[SettingsContext.getInstance().getSettings().Promode]}`);
+		BlzFrameSetText(
+			BlzGetFrameByName('PromodeOption', 0),
+			`${PromodeOptionsColorFormatted[SettingsContext.getInstance().getSettings().Promode]}`
+		);
 	}
 
 	private hostSetup() {
-		BlzFrameSetEnable(BlzGetFrameByName('GameTypePopup', 0), false);
+		BlzFrameSetEnable(BlzGetFrameByName('GameTypePopup', 0), true);
 
 		if (GetLocalPlayer() == Player(0)) {
 			BlzFrameSetVisible(BlzGetFrameByName('PopupMenuOptions', 0), false);

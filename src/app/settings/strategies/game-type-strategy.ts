@@ -1,7 +1,13 @@
 import { HexColors } from 'src/app/utils/hex-colors';
 import { SettingsStrategy } from './settings-strategy';
+import { EventEmitter } from 'src/app/utils/events/event-emitter';
+import { EVENT_SET_GAME_MODE } from 'src/app/utils/events/event-constants';
+import { StandardGameMode } from 'src/app/game/game-mode/modes/standard-game-mode';
+import { CapitalsGameMode } from 'src/app/game/game-mode/modes/capitals-game-mode';
 
-export const GameTypeOptions: Record<number, string> = {
+export type GameType = 'Standard' | 'Capitals';
+
+export const GameTypeOptions: Record<number, GameType> = {
 	0: `Standard`,
 	1: `Capitals`,
 };
@@ -30,10 +36,10 @@ export class GameTypeStrategy implements SettingsStrategy {
 	}
 
 	private handleConquest(): void {
-		//TODO
+		EventEmitter.getInstance().emit(EVENT_SET_GAME_MODE, 'Standard');
 	}
 
 	private handleCapitals(): void {
-		//TODO
+		EventEmitter.getInstance().emit(EVENT_SET_GAME_MODE, 'Capitals');
 	}
 }

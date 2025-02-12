@@ -4,6 +4,8 @@ export const UNIT_ID = {
 	PORT: FourCC('h001'),
 	CONTROL_POINT: FourCC('h002'),
 	SPAWNER: FourCC('h004'),
+	CAPITAL: FourCC('h005'),
+	CONQUERED_CAPITAL: FourCC('h006'),
 	//City Units
 	RIFLEMEN: FourCC('u000'),
 	MEDIC: FourCC('u001'),

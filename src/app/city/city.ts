@@ -34,6 +34,7 @@ export abstract class City implements Resetable, Ownable {
 	public abstract onUnitTrain(unit: unit): void;
 	public abstract onCast(): void;
 	public abstract isPort(): boolean;
+	public abstract isCapital(): boolean;
 
 	/** Resets the city, returning it to its default state */
 	public reset(): void {

@@ -1423,3 +1423,15 @@ STRING 7523
 Removes all buffs from units in a target area.
 }
 
+STRING 7524
+// Units: h006 (|cffff8000Conquered Capital|r), Name (Name)
+{
+|cffff8000Conquered Capital|r
+}
+
+STRING 7525
+// Units: h006 (|cffff8000Conquered Capital|r), Ubertip (Tooltip - Extended)
+{
+Produces units for your armies.
+}
+

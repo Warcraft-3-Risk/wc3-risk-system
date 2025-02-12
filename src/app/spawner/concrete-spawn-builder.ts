@@ -11,6 +11,7 @@ export class ConcreteSpawnerBuilder implements SpawnerBuilder {
 	private spawnsPerStep: number;
 	private maxSpawnsPerPlayer: number;
 	private spawnTypeID: number;
+	private spawnMultiplier: number = 1;
 
 	/**
 	 * Sets the unit or coordinates for the Spawner.
@@ -88,7 +89,14 @@ export class ConcreteSpawnerBuilder implements SpawnerBuilder {
 			print('Spawner builder is missing required components.');
 		}
 
-		const spawner = new Spawner(this.unit, this.country, this.spawnsPerStep, this.maxSpawnsPerPlayer, this.spawnTypeID);
+		const spawner = new Spawner(
+			this.unit,
+			this.country,
+			this.spawnsPerStep,
+			this.maxSpawnsPerPlayer,
+			this.spawnTypeID,
+			this.spawnMultiplier
+		);
 
 		this.reset();
 
@@ -103,5 +111,6 @@ export class ConcreteSpawnerBuilder implements SpawnerBuilder {
 		this.country = null;
 		this.spawnsPerStep = null;
 		this.maxSpawnsPerPlayer = null;
+		this.spawnMultiplier = 1;
 	}
 }

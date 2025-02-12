@@ -9,7 +9,6 @@ import { NameManager } from './app/managers/names/name-manager';
 import { ChatManager } from './app/managers/chat-manager';
 import { TransportManager } from './app/managers/transport-manager';
 import { SetConsoleUI } from './app/ui/console';
-import { GameManager } from './app/game/game-manager';
 import { OwnershipChangeEvent } from './app/triggers/ownership-change-event';
 import { EnterRegionEvent } from './app/triggers/enter-region-event';
 import { LeaveRegionEvent } from './app/triggers/leave-region-event';
@@ -24,6 +23,15 @@ import { TimedEventManager } from './app/libs/timer/timed-event-manager';
 import { AntiSpam } from './app/triggers/anti-spam';
 import { SetCommands } from './app/commands/commands';
 import { ExportShuffledPlayerList } from './app/utils/export-statistics/export-shuffled-player-list';
+import { ModeSelection } from './app/game/state/mode-selection';
+import { PlayerSetupService } from './app/game/services/player-setup-service';
+import { Wait } from './app/utils/wait';
+import { GameLoop } from './app/game/game-loop';
+import { EventEmitter } from './app/utils/events/event-emitter';
+import { EVENT_MODE_SELECTION } from './app/utils/events/event-constants';
+import { CitySelectedEvent } from './app/triggers/city-selected-event';
+import { CityDeselectedEvent } from './app/triggers/city-deselected-event';
+import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
 import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST } from './configs/game-settings';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
@@ -86,12 +94,14 @@ function tsMain() {
 		LeaveRegionEvent();
 		UnitDeathEvent();
 		UnitTrainedEvent();
-		//UnitUpgradeEvent();
+		UnitUpgradeEvent();
 		OwnershipChangeEvent();
 		PlayerLeaveEvent();
 		SpellEffectEvent();
 		AntiSpam();
 		KeyEvents();
+		CitySelectedEvent();
+		CityDeselectedEvent();
 
 		//Create Quests
 		Quests.Create();
@@ -104,7 +114,7 @@ function tsMain() {
 		//Set up actions on game load
 		const onLoadTimer: timer = CreateTimer();
 
-		TimerStart(onLoadTimer, 0.0, false, () => {
+		TimerStart(onLoadTimer, 0.0, false, async () => {
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
 			FogEnable(false);
@@ -114,7 +124,20 @@ function tsMain() {
 			ChatManager.getInstance();
 			TransportManager.getInstance();
 			TimedEventManager.getInstance();
-			SetCommands(GameManager.getInstance());
+			SetCommands();
+
+			new PlayerSetupService().run();
+
+			EnableSelect(false, false);
+			EnableDragSelect(false, false);
+			FogEnable(true);
+			EventEmitter.getInstance();
+			GameLoop.getInstance();
+			ModeSelection.getInstance();
+
+			await Wait.forSeconds(2);
+
+			EventEmitter.getInstance().emit(EVENT_MODE_SELECTION);
 		});
 	} catch (e) {
 		print(e);

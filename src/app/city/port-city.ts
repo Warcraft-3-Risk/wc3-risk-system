@@ -74,4 +74,11 @@ export class PortCity extends City {
 	public isPort(): boolean {
 		return true;
 	}
+
+	/**
+	 * Checks if this city type is a capital
+	 */
+	public isCapital(): boolean {
+		return false;
+	}
 }

@@ -70,9 +70,10 @@ Ensure that the .env file is not committed to the repository.
 ```
 GAME_EXECUTABLE=C:\\Program Files (x86)\\Warcraft III\\_retail_\\x86_64\\Warcraft III.exe
 OUTPUT_FOLDER=C:\\Users\\{USERNAME}\\Documents\\Warcraft III\\Maps\\Download\\(0) testing
+TAG_NAME=2.7.4-preview
 ```
 
-Running the build command will automatically generate the path and required directories.
+Running the build command will automatically generate the path and required directories. This includes injecting the map version number. The above settings would generate a file in the output folder named `Risk Europe 2.7.4-preview.w3x`.
 
 Check out the base [wc3-ts-template](https://cipherxof.github.io/w3ts/docs/getting-started) for more detials on installation and usage
 
