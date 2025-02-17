@@ -1,16 +1,16 @@
 export class ChatManager {
-	private static _instance: ChatManager;
-	private _chatActions: Map<string, Function> = new Map<string, Function>();
+	private static instance: ChatManager;
+	private chatActions: Map<string, Function> = new Map<string, Function>();
 
 	/**
 	 * Gets the singleton instance of the ChatManager.
 	 * @returns The singleton instance.
 	 */
 	public static getInstance() {
-		if (this._instance == null) {
-			this._instance = new ChatManager();
+		if (this.instance == null) {
+			this.instance = new ChatManager();
 		}
-		return this._instance;
+		return this.instance;
 	}
 
 	/**
@@ -28,7 +28,7 @@ export class ChatManager {
 			Condition(() => {
 				const cmd: string = GetEventPlayerChatString().split(' ')[0].toLowerCase().trim();
 
-				this._chatActions.get(cmd)();
+				this.chatActions.get(cmd)();
 
 				return true;
 			})
@@ -42,8 +42,8 @@ export class ChatManager {
 	 */
 	public addCmd(cmds: string[], action: Function) {
 		cmds.forEach((cmd) => {
-			if (!this._chatActions.has(cmd)) {
-				this._chatActions.set(cmd.toLowerCase(), action);
+			if (!this.chatActions.has(cmd)) {
+				this.chatActions.set(cmd.toLowerCase(), action);
 			}
 		});
 	}
@@ -54,7 +54,7 @@ export class ChatManager {
 	 */
 	public removeCmd(cmds: string[]) {
 		cmds.forEach((cmd) => {
-			this._chatActions.delete(cmd.toLowerCase());
+			this.chatActions.delete(cmd.toLowerCase());
 		});
 	}
 }

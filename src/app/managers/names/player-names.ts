@@ -1,7 +1,7 @@
 export class PlayerNames {
-	private readonly _btag: string;
-	private readonly _acct: string;
-	private _color: string;
+	private readonly btag: string;
+	private readonly acct: string;
+	private color: string;
 
 	/**
 	 * Initializes the BattleTag and account name based on the provided name.
@@ -13,40 +13,40 @@ export class PlayerNames {
 		if (splitName === 'Computer' || splitName === 'Local') {
 			const uniqueId = '#' + Math.floor(Math.random() * 10000);
 
-			this._btag = `${splitName}${uniqueId}`;
+			this.btag = `${splitName}${uniqueId}`;
 		} else {
-			this._btag = splitName;
+			this.btag = splitName;
 		}
 
-		this._acct = this._btag.split('#')[0];
+		this.acct = this.btag.split('#')[0];
 	}
 
 	/**
 	 * @returns The BattleTag of the player.
 	 */
-	public get btag() {
-		return this._btag;
+	public getBtag() {
+		return this.btag;
 	}
 
 	/**
 	 * @returns The account name of the player.
 	 */
-	public get acct() {
-		return this._acct;
+	public getAcct() {
+		return this.acct;
 	}
 
 	/**
 	 * Sets the color name for the player.
 	 * @param color - The new color name.
 	 */
-	public set color(color: string) {
-		this._color = color;
+	public setColor(color: string) {
+		this.color = color;
 	}
 
 	/**
 	 * @returns The color name of the player.
 	 */
-	public get color() {
-		return this._color;
+	public getColor() {
+		return this.color;
 	}
 }

@@ -88,15 +88,15 @@ export class NameManager {
 	public setName(p: player, name: Names) {
 		switch (name) {
 			case 'btag':
-				SetPlayerName(p, this.names.get(p).btag);
+				SetPlayerName(p, this.names.get(p).getBtag());
 				break;
 
 			case 'acct':
-				SetPlayerName(p, this.names.get(p).acct);
+				SetPlayerName(p, this.names.get(p).getAcct());
 				break;
 
 			case 'color':
-				SetPlayerName(p, this.names.get(p).color);
+				SetPlayerName(p, this.names.get(p).getColor());
 				break;
 
 			default:
@@ -117,7 +117,7 @@ export class NameManager {
 	 * @returns The BattleTag of the player.
 	 */
 	public getBtag(p: player) {
-		return this.names.get(p).btag;
+		return this.names.get(p).getBtag();
 	}
 
 	/**
@@ -125,7 +125,7 @@ export class NameManager {
 	 * @returns The account name of the player.
 	 */
 	public getAcct(p: player) {
-		return this.names.get(p).acct;
+		return this.names.get(p).getAcct();
 	}
 
 	/**
@@ -133,7 +133,7 @@ export class NameManager {
 	 * @returns The color name of the player.
 	 */
 	public getColor(p: player) {
-		return this.names.get(p).color;
+		return this.names.get(p).getColor();
 	}
 
 	/**
@@ -146,6 +146,6 @@ export class NameManager {
 
 		SetPlayerColor(p, color);
 
-		this.names.get(p).color = colorName;
+		this.names.get(p).setColor(colorName);
 	}
 }
