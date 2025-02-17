@@ -137,9 +137,9 @@ export class ObserverBoard extends Scoreboard {
 		this.setItemValue(`${textColor}${data.getKillsDeaths().get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
 
 		if (player.getStatus().isNomad() || player.getStatus().isSTFU()) {
-			this.setItemValue(`${player.getStatus().status} ${player.getStatus().statusDuration}`, row, this.STATUS_COL);
+			this.setItemValue(`${player.getStatus()} ${player.getStatus()}`, row, this.STATUS_COL);
 		} else {
-			this.setItemValue(`${player.getStatus().status}`, row, this.STATUS_COL);
+			this.setItemValue(`${player.getStatus()}`, row, this.STATUS_COL);
 		}
 	}
 

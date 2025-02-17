@@ -5,6 +5,7 @@ import * as path from 'path';
 import { createLogger, format, transports } from 'winston';
 const { combine, timestamp, printf } = format;
 const luamin = require('luamin');
+import 'dotenv/config';
 
 export interface IProjectConfig {
 	mapFolder: string;
@@ -24,7 +25,9 @@ export interface IProjectConfig {
  */
 export function loadJsonFile(fname: string) {
 	try {
-		return JSON.parse(fs.readFileSync(fname).toString());
+		const rawConfig = fs.readFileSync(fname).toString();
+		const substitutedConfig = rawConfig.replace(/\$\{(\w+)\}/g, (_, envVar) => process.env[envVar] || '');
+		return JSON.parse(substitutedConfig);
 	} catch (e: any) {
 		logger.error(e.toString());
 		return {};
@@ -81,9 +84,9 @@ function updateTSConfig(mapFolder: string) {
 	const tsconfig = loadJsonFile('tsconfig.json');
 	const plugin = tsconfig.compilerOptions.plugins[0];
 
-	plugin.mapDir = path.resolve('maps', mapFolder).replace(/\\/g, '/');
-	plugin.entryFile = path.resolve(tsconfig.tstl.luaBundleEntry).replace(/\\/g, '/');
-	plugin.outputDir = path.resolve('dist', mapFolder).replace(/\\/g, '/');
+	plugin.mapDir = path.relative('maps', mapFolder).replace(/\\/g, '/');
+	plugin.entryFile = tsconfig.tstl.luaBundleEntry.replace(/\\/g, '/');
+	plugin.outputDir = path.relative('dist', mapFolder).replace(/\\/g, '/');
 
 	writeFileSync('tsconfig.json', JSON.stringify(tsconfig, undefined, 2));
 }

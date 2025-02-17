@@ -1,9 +1,9 @@
 {
 	"mapFolder": "risk_europe.w3x",
 	"mapName": "Risk Europe",
-	"mapVersion": "2.10",
+	"mapVersion": "${TAG_NAME}",
 	"minifyScript": false,
-	"gameExecutable": "D:\\Warcraft III\\_retail_\\x86_64\\Warcraft III.exe",
-	"outputFolder": "C:\\Users\\Daniel\\Documents\\Warcraft III\\Maps\\Download\\(0) testing",
+	"gameExecutable": "${GAME_EXECUTABLE}",
+	"outputFolder": "${OUTPUT_FOLDER}",
 	"launchArgs": ["-launch", "-windowmode", "windowed"]
 }

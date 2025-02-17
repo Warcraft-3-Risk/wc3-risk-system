@@ -25,48 +25,36 @@ function tsMain() {
 			print('Failed to load TOC file!');
 			return;
 		}
-
 		if (!BlzChangeMinimapTerrainTex('minimap.blp')) {
 			print('Failed to load minimap file!');
 			return;
 		}
-
 		SetGameSpeed(MAP_SPEED_FASTEST);
 		SetMapFlag(MAP_LOCK_SPEED, true);
 		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, false);
 		SetTimeOfDay(12.0);
 		SetTimeOfDayScale(0.0);
 		SetAllyColorFilterState(0);
-
 		//Handle names to prevent namebug
 		NameManager.getInstance();
-
 		//Set up countries
 		CityBehaviorRegistry.registerBehavior(CityType.Land, new LandCityBehavior());
 		CityBehaviorRegistry.registerBehavior(CityType.Port, new PortCityBehavior());
-
 		const countryData: ICountryData[] = [];
-
 		SetCountries(countryData);
-
 		const contryBuilder = new CountryBuilder();
 		const cityBuilder = new CityBuilder();
 		const spawnBuilder = new SpawnerBuilder();
-
 		for (const country of countryData) {
 			contryBuilder.setData(country, cityBuilder, spawnBuilder);
 			contryBuilder.build();
 			contryBuilder.reset();
 		}
-
 		//Set up triggers
-
 		//Create Quests
 		Quests.Create();
-
 		//Set up actions on game load
 		const onLoadTimer: timer = CreateTimer();
-
 		TimerStart(onLoadTimer, 0.0, false, () => {
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);

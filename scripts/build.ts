@@ -30,7 +30,7 @@ function main() {
 
 	const distDir = `./dist/${config.mapFolder}`;
 	const ddsDir = path.join(__dirname, '..', distDir, 'war3mapPreview.dds');
-	const mapName = `${config.mapName} ${config.mapVersion} --unreleased.w3x`;
+	const mapName = `${config.mapName} ${config.mapVersion}.w3x`;
 
 	if (fs.existsSync(ddsDir)) {
 		const copyDest = path.join(__dirname, '..', distDir, 'war3mapMap.dds');

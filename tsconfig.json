@@ -19,9 +19,9 @@
     "plugins": [
       {
         "transform": "war3-transformer",
-        "mapDir": "D:/Projects/risk/maps/risk_europe.w3x",
-        "entryFile": "D:/Projects/risk/src/main.ts",
-        "outputDir": "D:/Projects/risk/dist/risk_europe.w3x"
+        "mapDir": "../risk_europe.w3x",
+        "entryFile": "./src/main.ts",
+        "outputDir": "../risk_europe.w3x"
       }
     ],
     "types": [
