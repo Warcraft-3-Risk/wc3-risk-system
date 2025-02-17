@@ -13,8 +13,7 @@
 	},
 	"dependencies": {
 		"dotenv": "^16.4.7",
-		"w3ts": "^3.0.2",
-		"wc3-ts-template": "file:"
+		"w3ts": "^3.0.2"
 	},
 	"devDependencies": {
 		"@types/fs-extra": "8.1.1",
