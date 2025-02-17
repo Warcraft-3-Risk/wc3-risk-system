@@ -382,7 +382,6 @@ export function SetCountries(countryData: ICountryData[]) {
 			{ x: -3584.0, y: -5568.0 },
 			{ x: -3520.0, y: -3776.0 },
 			{ x: -4800.0, y: -3136.0 },
-			{ x: -6336.0, y: -3456.0 },
 			{ x: -6944.0, y: -4704.0, cityType: CityType.Port },
 			{ x: -4384.0, y: -7008.0, cityType: CityType.Port },
 		],
@@ -424,8 +423,8 @@ export function SetCountries(countryData: ICountryData[]) {
 	countryData.push({
 		name: 'Belgium',
 		spawnerSettings: {
-			x: -3648.0,
-			y: -1856.0,
+			x: -3777.0,
+			y: -1982.0,
 		},
 		cities: [
 			{ x: -3072.0, y: -2368.0 },
@@ -887,7 +886,7 @@ export function SetCountries(countryData: ICountryData[]) {
 		],
 	});
 	countryData.push({
-		name: 'Corse',
+		name: 'Corsica',
 		spawnerSettings: {
 			x: -1857.0,
 			y: -8135.0,
@@ -928,6 +927,25 @@ export function SetCountries(countryData: ICountryData[]) {
 		cities: [
 			{ x: 13408.0, y: -10272.0, cityType: CityType.Port },
 			{ x: 12576.0, y: -11808.0, cityType: CityType.Port },
+		],
+	});
+	countryData.push({
+		name: 'Isle of Man',
+		spawnerSettings: {
+			x: -9282.0,
+			y: 2752.0,
+		},
+		cities: [{ x: -9000.0, y: 3265.0 }],
+	});
+	countryData.push({
+		name: 'Normandy',
+		spawnerSettings: {
+			x: -5312.0,
+			y: -2490.0,
+		},
+		cities: [
+			{ x: -6050.0, y: -2800.0 },
+			{ x: -5440.0, y: -1730.0, cityType: CityType.Port },
 		],
 	});
 }
