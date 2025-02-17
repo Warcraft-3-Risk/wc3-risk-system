@@ -1,0 +1,60 @@
+{
+  "compilerOptions": {
+    "strict": true,
+    "strictNullChecks": false,
+    "allowJs": false,
+    "outDir": ".",
+    "baseUrl": "./",
+    "forceConsistentCasingInFileNames": true,
+    "target": "ESNext",
+    "lib": [
+      "ESNext"
+    ],
+    "moduleResolution": "node",
+    "paths": {
+      "@objectdata/*": [
+        "./node_modules/war3-objectdata-th/dist/cjs/generated/constants/*"
+      ]
+    },
+    "plugins": [
+      {
+        "transform": "war3-transformer",
+        "mapDir": "D:/Projects/risk/maps/risk_europe.w3x",
+        "entryFile": "D:/Projects/risk/src/main.ts",
+        "outputDir": "D:/Projects/risk/dist/risk_europe.w3x"
+      }
+    ],
+    "types": [
+      "@typescript-to-lua/language-extensions",
+      "lua-types/core/coroutine",
+      "lua-types/core/global",
+      "lua-types/core/math",
+      "lua-types/core/metatable",
+      "lua-types/core/modules",
+      "lua-types/core/string",
+      "lua-types/core/table",
+      "lua-types/core/os",
+      "lua-types/special/5.3",
+      "war3-types-strict/1.33.0",
+      "war3-transformer/types",
+      "war3-objectdata-th/dist/cjs/objectdata"
+    ]
+  },
+  "include": [
+    "src"
+  ],
+  "exclude": [],
+  "tstl": {
+    "luaTarget": "5.3",
+    "noHeader": true,
+    "luaLibImport": "require",
+    "noImplicitSelf": true,
+    "luaBundle": "dist/tstl_output.lua",
+    "luaBundleEntry": "./src/main.ts",
+    "sourceMapTraceback": false,
+    "noResolvePaths": [
+      "typescript",
+      "typescript-to-lua"
+    ]
+  }
+}

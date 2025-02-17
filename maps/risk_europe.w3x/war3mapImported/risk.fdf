@@ -1,0 +1,399 @@
+IncludeFile "UI\FrameDef\UI\EscMenuTemplates.fdf",
+IncludeFile "UI\FrameDef\UI\UpperButtonBar.fdf",
+IncludeFile "UI\FrameDef\UI\ScriptDialog.fdf",
+IncludeFile "UI\FrameDef\UI\QuestDialog.fdf",
+
+//UI Message Frames
+Frame "TEXT" "ErrorMessageFrame" INHERITS "EscMenuButtonTextTemplate" {
+	Text "",
+    SetPoint CENTER, "ConsoleUI", CENTER, -0.2, -0.11,
+	LayerStyle "IGNORETRACKEVENTS",
+}
+
+Frame "TEXT" "GlobalMessageFrame" INHERITS "EscMenuButtonTextTemplate" {
+	Text "",
+    SetPoint CENTER, "ConsoleUI", CENTER, 0, .15,
+	LayerStyle "IGNORETRACKEVENTS",
+}
+
+Frame "TEXT" "LocalMessageFrame" INHERITS "EscMenuButtonTextTemplate" {
+	Text "",
+    SetPoint CENTER, "ConsoleUI", CENTER, 0, .17,
+	LayerStyle "IGNORETRACKEVENTS",
+}
+
+Frame "TEXT" "CountdownFrame" INHERITS "EscMenuButtonTextTemplate" {
+	Text "",
+    SetPoint CENTER, "ConsoleUI", CENTER, 0, .07,
+	LayerStyle "IGNORETRACKEVENTS",
+	FrameFont "MasterFont", 0.025, "",
+	FontColor 1.0 1.0 1.0 1.0,
+	FontShadowColor 0.0 0.4 0.7 0.5,
+	FontShadowOffset 0.001 -0.001,
+}
+
+//Fight Bonus Bar Frames
+String "MyBarTextTemplate" { 
+	//FontColor 0.99 0.427 0.0705 1.0, //Red Green Blue Alpha 0.0 to 1.0
+	FontColor 1.0 1.0 1.0 1.0,
+	FontShadowColor 0.0 0.0 0.0 0.9,
+	FontShadowOffset 0.001 -0.001,
+	Font "MasterFont", 0.01, //MasterFont is only valid with "DecorateFileNames,"
+}
+
+Frame "SIMPLESTATUSBAR" "MyBarEx" {
+	Width 0.25, //Default Width
+	Height 0.015, //Default Height
+	BarTexture "Replaceabletextures\Teamcolor\Teamcolor00.blp", //Default BarTexture
+	Layer "BACKGROUND" { //A simpleFrames thing, where this is placed layer wise
+		Texture "MyBarExBackground"{ //the BACKGROUND Texture named "MyBarExBackground" its also a frame and a child
+			File "Replaceabletextures\Teamcolor\Teamcolor27.blp", //Default Texture for "MyBarExBackground"
+		}
+	}
+	
+	Frame "SIMPLEFRAME" "MyBarExFrame" { //Child of "MyBarEx"
+		DecorateFileNames, //Lookup FileNames in a StringList
+		SetAllPoints, //copy "MyBarEx"
+		Layer "ARTWORK" {
+			Texture "MyBarExBorder" {
+				File "SimpleXpBarBorder", //Default Texture for "MyBarExBorder" // switch to in order to get rid of black sqaures ReplayTimelineBorder
+			}
+			String "MyBarExText" INHERITS "MyBarTextTemplate" {
+				Text "MyBarEx", //Default Text for "MyBarExText" which takes over Data from "MyBarTextTemplate"
+			}
+		}
+	}
+}
+
+Frame "TEXT" "ColumnHeaderText" {
+	FontColor 0.99 0.827 0.0705 1.0,
+	DecorateFileNames,
+	FrameFont "MasterFont", 0.011,"",
+	LayerStyle "IGNORETRACKEVENTS", 
+	FontJustificationH JUSTIFYLEFT,
+	FontJustificationV JUSTIFYMIDDLE,
+	Width  0.11f,
+	Height 0.02f,
+}
+
+Frame "TEXT" "ColumnDataText" {
+    DecorateFileNames,
+    FrameFont "MasterFont", 0.0090,"",
+    LayerStyle "IGNORETRACKEVENTS", 
+    FontJustificationH JUSTIFYLEFT,
+    FontJustificationV JUSTIFYMIDDLE,
+	Width  0.11f,
+	Height 0.02f,
+}
+
+Frame "BACKDROP" "StatisticsBoard" INHERITS "QuestButtonBaseTemplate" {
+	Width 1.0f,
+    Height 0.56f,
+	SetPoint CENTER, "ConsoleUI", CENTER, 0.0,0.0,
+
+	Frame "FRAME" "StatisticsHeader" {
+		Width  1.0f,
+		Height 0.05f,
+		SetPoint TOPLEFT,"StatisticsBoard",TOPLEFT,0.0,0.0,
+
+		Frame "TEXT" "PlayedTime" {
+			SetPoint TOPLEFT,"StatisticsHeader",TOPLEFT,0.01,-0.01,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.0115,"",
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+		}
+
+		Frame "TEXT" "WinningPlayer" {
+			SetPoint TOP,"StatisticsHeader",TOP,0,-0.01,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.0115,"",
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+		}
+
+		Frame "TEXT" "MapName" {
+			SetPoint TOPRIGHT,"StatisticsHeader",TOPRIGHT,-0.085,-0.01,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.0115,"",
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+		}
+
+		Frame "GLUETEXTBUTTON" "HideButton" INHERITS WITHCHILDREN "EscMenuButtonTemplate" {
+			SetPoint TOPRIGHT,"StatisticsHeader",TOPRIGHT,0,0,
+			Width  0.08f,
+			Height 0.03f,
+			UseActiveContext,
+			ButtonText "ScriptDialogButtonText",
+
+			Frame "TEXT" "ScriptDialogButtonText" INHERITS "EscMenuButtonTextTemplate" {
+				Text "Hide Stats",
+			}
+		}  
+	}
+}
+
+Frame "POPUPMENU" "MyPopupTemplate" {
+    Width 0.13,
+    Height 0.03,
+    PopupButtonInset 0.01,
+
+    ControlBackdrop "MyPopupTemplateBackdropTemplate",
+    Frame "BACKDROP" "MyPopupTemplateBackdropTemplate" INHERITS "EscMenuButtonBackdropTemplate" {
+    }
+
+    ControlDisabledBackdrop "MyPopupTemplateDisabledBackdropTemplate",
+    Frame "BACKDROP" "MyPopupTemplateDisabledBackdropTemplate" INHERITS "EscMenuButtonDisabledBackdropTemplate" {
+    }
+
+    PopupTitleFrame "PopupMenuTitleTemplate",
+    Frame "GLUETEXTBUTTON" "PopupMenuTitleTemplate" INHERITS WITHCHILDREN "EscMenuPopupMenuTitleTemplate" {
+    }
+
+    PopupArrowFrame "PopupMenuArrowTemplate",
+    Frame "BUTTON" "PopupMenuArrowTemplate" INHERITS WITHCHILDREN "EscMenuPopupMenuArrowTemplate" { 
+    }	
+}
+
+Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
+	Width 0.25f,
+    Height 0.33f,
+	SetPoint CENTER, "ConsoleUI", CENTER, 0.0,0.05,
+
+	Frame "TEXT" "SettingsTitle" {
+		SetPoint TOP,"SettingsView",TOP, 0, -0.01,
+		DecorateFileNames,
+		FrameFont "MasterFont", 0.03,"",
+		FontColor 1.0 0.8 0.0 1.0,
+		LayerStyle "IGNORETRACKEVENTS", 
+		FontJustificationH JUSTIFYLEFT,
+		FontJustificationV JUSTIFYMIDDLE,
+		Text "Risk Europe",
+	}
+
+	Frame "TEXT" "SettingsSubTitle" {
+		SetPoint TOP,"SettingsTitle",BOTTOM, 0, 0,
+		DecorateFileNames,
+		FrameFont "MasterFont", 0.015,"",
+		FontColor 1.0 0.8 0.0 1.0,
+		LayerStyle "IGNORETRACKEVENTS", 
+		FontJustificationH JUSTIFYLEFT,
+		FontJustificationV JUSTIFYMIDDLE,
+		Text "Settings",
+	}
+
+	Frame "FRAME" "PopupMenus" {
+		Width  0.14f,
+		Height 0.1f,
+		SetPoint TOP,"SettingsView",TOP,0.03,-0.06,
+
+		Frame "POPUPMENU" "GameTypePopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
+		SetPoint TOP,"PopupMenus",TOP,0.0,0.00,
+		PopupMenuFrame "GameTypePopupMenu",
+			Frame "MENU" "GameTypePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
+				MenuItem "Standard",     -2,
+				//MenuItem "Capitals",     -2,
+			}
+		}
+
+		Frame "POPUPMENU" "FogPopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.04,
+		PopupMenuFrame "FogPopupMenu",
+			Frame "MENU" "FogPopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
+				MenuItem "Off",     -2,
+				MenuItem "On",     -2,
+				//MenuItem "Night",     -2,
+			}
+		}
+
+		Frame "POPUPMENU" "DiplomacyPopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.08,
+    	PopupMenuFrame "DiplomacyPopupMenu",
+			Frame "MENU" "DiplomacyPopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
+				MenuItem "FFA",     -2,
+				MenuItem "Lobby Teams",     -2,
+				//MenuItem "Random Teams of: ",     -2,
+			}
+		}
+
+		Frame "POPUPMENU" "OvertimePopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.12,
+    	PopupMenuFrame "OvertimePopupMenu",
+			Frame "MENU" "OvertimePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
+				MenuItem "Off",     -2,
+				MenuItem "Turbo (Turn 30)",     -2,
+				MenuItem "Medium (Turn 60)",     -2,
+				MenuItem "Extended (Turn 120)",     -2,
+			}
+		}
+
+		Frame "GLUECHECKBOX" "PromodeCheckbox" {
+		Width 0.024,
+		Height 0.024,
+		SetPoint TOP,"PopupMenus",TOP,-0.053,-0.17,
+
+		ControlBackdrop "EscMenuCheckBoxBackdrop",
+			Frame "BACKDROP" "EscMenuCheckBoxBackdrop" {
+				DecorateFileNames,
+				BackdropBlendAll,
+				BackdropBackground  "EscMenuCheckBoxBackground",
+			}
+
+		ControlDisabledBackdrop "EscMenuDisabledCheckBoxBackdrop",
+			Frame "BACKDROP" "EscMenuDisabledCheckBoxBackdrop" {
+				DecorateFileNames,
+				BackdropBlendAll,
+				BackdropBackground  "EscMenuDisabledCheckBoxBackground",
+			}
+
+		ControlPushedBackdrop "EscMenuCheckBoxPushedBackdrop",
+			Frame "BACKDROP" "EscMenuCheckBoxPushedBackdrop" {
+				DecorateFileNames,
+				BackdropBlendAll,
+				BackdropBackground  "EscMenuCheckBoxPushedBackground",
+			}
+
+		CheckBoxCheckHighlight "EscMenuCheckHighlightTemplate",
+			Frame "HIGHLIGHT" "EscMenuCheckHighlightTemplate" {
+				DecorateFileNames,
+				HighlightType "FILETEXTURE",
+				HighlightAlphaFile "EscMenuCheckBoxCheckHighlight",
+				HighlightAlphaMode "BLEND",
+			}
+
+		CheckBoxDisabledCheckHighlight "EscMenuDisabledCheckHighlightTemplate",
+			Frame "HIGHLIGHT" "EscMenuDisabledCheckHighlightTemplate" {
+				DecorateFileNames,
+				HighlightType "FILETEXTURE",
+				HighlightAlphaFile "EscMenuDisabledCheckHighlight",
+				HighlightAlphaMode "BLEND",
+			}
+		}
+	}
+
+	Frame "FRAME" "PopupLabels" {
+		Width  0.08f,
+		Height 0.1f,
+		SetPoint TOPLEFT,"SettingsView",TOPLEFT,0.02,-0.068,
+
+		Frame "TEXT" "GameTypeLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, 0,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Game Type:",
+		}
+
+		Frame "TEXT" "FogLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.04,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Fog:",
+		}
+
+		Frame "TEXT" "DiplomacyLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.08,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS",
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Diplomacy:",
+		}
+
+		Frame "TEXT" "OvertimeLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.12,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS",
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Overtime:",
+		}
+
+		Frame "TEXT" "PromodeLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.17,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Promode?",
+		}
+	}
+
+	Frame "FRAME" "PopupMenuOptions" {
+		Width  0.1f,
+		Height 0.1f,
+		SetPoint TOPLEFT,"PopupLabels",TOPRIGHT,0.0,-0.001,
+
+		Frame "TEXT" "GameTypeOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, 0,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Standard",
+		}
+
+		Frame "TEXT" "FogOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.04,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Off",
+		}
+
+		Frame "TEXT" "DiplomacyOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.08,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "FFA",
+		}
+
+		Frame "TEXT" "OvertimeOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.12,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Off",
+		}
+
+		Frame "TEXT" "PromodeOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.17,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Off",
+		}
+	}
+}
