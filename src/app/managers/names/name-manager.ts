@@ -91,15 +91,15 @@ export class NameManager {
 	public setName(p: player, name: Names) {
 		switch (name) {
 			case 'btag':
-				SetPlayerName(p, this.names.get(p).btag);
+				SetPlayerName(p, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).btag}|r`);
 				break;
 
 			case 'acct':
-				SetPlayerName(p, this.names.get(p).acct);
+				SetPlayerName(p, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).acct}|r`);
 				break;
 
 			case 'color':
-				SetPlayerName(p, this.names.get(p).color);
+				SetPlayerName(p, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).color}|r`);
 				break;
 
 			default:

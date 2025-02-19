@@ -196,7 +196,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		PopupMenuFrame "GameTypePopupMenu",
 			Frame "MENU" "GameTypePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
 				MenuItem "Standard",     -2,
-				//MenuItem "Capitals",     -2,
+				MenuItem "Capitals",     -2,
 			}
 		}
 
@@ -224,10 +224,10 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		SetPoint TOP,"PopupMenus",TOP,0.0,-0.12,
     	PopupMenuFrame "OvertimePopupMenu",
 			Frame "MENU" "OvertimePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
-				MenuItem "Off",     -2,
 				MenuItem "Turbo (Turn 30)",     -2,
 				MenuItem "Medium (Turn 60)",     -2,
 				MenuItem "Extended (Turn 120)",     -2,
+				MenuItem "Off",     -2,
 			}
 		}
 

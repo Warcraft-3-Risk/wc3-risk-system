@@ -96,4 +96,11 @@ export class SettingsContext {
 	public isFFA(): boolean {
 		return this.settings.Diplomacy.option == 0;
 	}
+
+	/**
+	 * Checks if the game type is set to Capitals
+	 */
+	public isCapitals(): boolean {
+		return this.settings.GameType == 1;
+	}
 }

@@ -28,7 +28,7 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 			header: 'Biggest Rival',
 			textFunction: (player) => {
 				const rival = model.getRival(player);
-				return rival ? NameManager.getInstance().getDisplayName(rival.getPlayer()) : 'null';
+				return rival ? NameManager.getInstance().getDisplayName(rival.getPlayer()) : 'N/A';
 			},
 		},
 		{

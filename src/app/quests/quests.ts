@@ -1,9 +1,12 @@
+import { NameManager } from '../managers/names/name-manager';
+import { PlayerManager } from '../player/player-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { DiplomacyStringsColorFormatted } from '../settings/strategies/diplomacy-strategy';
 import { FogOptionsColorFormatted } from '../settings/strategies/fog-strategy';
 import { GameTypeOptionsColorFormatted } from '../settings/strategies/game-type-strategy';
 import { OvertimeStringsColorFormatted } from '../settings/strategies/overtime-strategy';
 import { PromodeOptionsColorFormatted } from '../settings/strategies/promode-strategy';
+import { ShuffleArray } from '../utils/utils';
 
 /**
  * Responsible for creating in-game quests.
@@ -60,13 +63,13 @@ export class Quests {
 	private static OvertimeDescription() {
 		let description: string =
 			'Overtime is a feature designed to help conclude games more efficiently by gradually reducing the number of cities required for victory. Once activated, each turn decreases the victory threshold by one city until a player wins.';
-		description += '\nThere are four Overtime settings:';
-		description += '\n1. Off: Overtime is disabled, keeping the default victory conditions.';
-		description += '\n2. Turbo Mode: Overtime begins at turn 30, accelerating the game pace early on.';
-		description += '\n3. Medium Mode: Overtime starts at turn 60, allowing for a long gameplay before the mechanic activates.';
-		description += '\n4. Extended Mode: Overtime starts at turn 120, allowing for extended gameplay before the mechanic activates.';
+		description += '\n\nThere are four Overtime settings:';
+		description += '\n1. Turbo Mode: Overtime begins at turn 30, accelerating the game pace early on. This is the default setting.';
+		description += '\n2. Medium Mode: Overtime starts at turn 60, allowing for a long gameplay before the mechanic activates.';
+		description += '\n3. Extended Mode: Overtime starts at turn 120, allowing for extended gameplay before the mechanic activates.';
+		description += '\n4. Off: Overtime is disabled.';
 
-		description += '\nThis system ensures flexibility and adaptability based on player preferences.';
+		description += '\n\nThis system ensures flexibility and adaptability based on player preferences.';
 
 		Quests.BuildQuest('Overtime Explained', description, 'ReplaceableTextures\\CommandButtons\\BTNSorceressMaster.blp', true);
 	}
@@ -74,7 +77,7 @@ export class Quests {
 	private static CameraDescription() {
 		let description: string =
 			'The camera system allows for full control of a players camera. The player can manipulate the distance, rotation, and angle of attack (AoA).';
-		description += '\nTo use the camera command you can use the keyword -cam or -zoom';
+		description += '\n\nTo use the camera command you can use the keyword -cam or -zoom';
 		description +=
 			'\nAfter the keyword you can input parameters to control the camera, the command would look like this -cam <distance> <rotation> <AoA>';
 		description +=
@@ -111,5 +114,20 @@ export class Quests {
 		description += `\nPromode: ${PromodeOptionsColorFormatted[settings.getSettings().Promode]}`;
 
 		Quests.AddQuest('Settings', description, 'ReplaceableTextures\\CommandButtons\\BTNEngineeringUpgrade.blp', false);
+	}
+
+	public static AddShuffledPlayerListQuest(): void {
+		let description: string = 'Player names:';
+		let nameList: player[] = [];
+		const playerManager = PlayerManager.getInstance();
+		const nameManager = NameManager.getInstance();
+		playerManager.players.forEach((player) => {
+			nameList.push(player.getPlayer());
+		});
+		ShuffleArray(nameList);
+		nameList.forEach((player) => {
+			description += `\n${nameManager.getBtag(player)}`;
+		});
+		Quests.AddQuest('Shuffled Player List', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 }

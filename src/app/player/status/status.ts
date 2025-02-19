@@ -1,3 +1,4 @@
+import { debugPrint } from 'src/app/utils/debug-print';
 import { ActivePlayer } from '../types/active-player';
 import { PLAYER_STATUS } from './status-enum';
 import { AliveStrategy } from './strategies/alive-strategy';
@@ -29,28 +30,35 @@ export class Status {
 		const strategy = Status.STRATEGY_MAP.get(status);
 
 		if (strategy) {
+			debugPrint('Setting player status:', status);
 			strategy.run(this.player);
+			debugPrint('Player status set:', status);
 		} else {
-			print('Unknown player status:', status);
+			debugPrint('Unknown player status:', status);
 		}
 	}
 
+	// Checks if the player is still in the match.
 	public isAlive(): boolean {
 		return this._status == PLAYER_STATUS.ALIVE;
 	}
 
+	// Checks if the player is eliminated from the match or has forfeited.
 	public isDead(): boolean {
 		return this._status == PLAYER_STATUS.DEAD;
 	}
 
+	// Checks if player status is disconnected from match.
 	public isLeft(): boolean {
 		return this._status == PLAYER_STATUS.LEFT;
 	}
 
+	// Checks if the player is without bases.
 	public isNomad(): boolean {
 		return this._status == PLAYER_STATUS.NOMAD;
 	}
 
+	// Checks if the eliminated player is STFU'ed
 	public isSTFU(): boolean {
 		return this._status == PLAYER_STATUS.STFU;
 	}
