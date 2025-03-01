@@ -473,7 +473,7 @@ export class TeamSelectionView {
 
 	public static update() {
 		const event = EventTimer.getInstance().getEvent('uiTimer');
-		BlzFrameSetText(BlzGetFrameByName('TeamSelectionTimer', 0), I2S(event.remainingTime));
+		BlzFrameSetText(BlzGetFrameByName('TeamSelectionTimer', 0), I2S(event.duration));
 	}
 
 	public static hide() {

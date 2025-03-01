@@ -1,1 +1,1 @@
-export type TimerEventType = 'uiTimer' | 'turnTimer' | 'delay' | number;
+export type TimerEventType = 'periodTimer' | number;

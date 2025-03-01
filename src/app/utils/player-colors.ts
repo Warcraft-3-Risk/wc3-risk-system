@@ -23,11 +23,11 @@ export const PLAYER_COLORS = [
 	PLAYER_COLOR_LAVENDER,
 	PLAYER_COLOR_PEANUT,
 	//Swapped Colors
-	PLAYER_COLOR_COAL,
+	PLAYER_COLOR_TURQUOISE,
 	PLAYER_COLOR_EMERALD,
 	PLAYER_COLOR_NAVY,
 	PLAYER_COLOR_MINT,
-	PLAYER_COLOR_TURQUOISE,
+	PLAYER_COLOR_COAL,
 	PLAYER_COLOR_SNOW,
 ];
 
@@ -54,11 +54,11 @@ export const PLAYER_COLOR_MAP: Map<playercolor, string> = new Map<playercolor, s
 	[PLAYER_COLOR_PEACH, 'Peach'],
 	[PLAYER_COLOR_LAVENDER, 'Lavender'],
 	[PLAYER_COLOR_PEANUT, 'Peanut'],
-	[PLAYER_COLOR_COAL, 'Coal'],
+	[PLAYER_COLOR_TURQUOISE, 'Turquoise'],
 	[PLAYER_COLOR_EMERALD, 'Emerald'],
 	[PLAYER_COLOR_NAVY, 'Navy'],
 	[PLAYER_COLOR_MINT, 'Mint'],
-	[PLAYER_COLOR_TURQUOISE, 'Turquoise'],
+	[PLAYER_COLOR_COAL, 'Coal'],
 	[PLAYER_COLOR_SNOW, 'Snow'],
 ]);
 
@@ -85,10 +85,10 @@ export const PLAYER_COLOR_CODES_MAP: Map<playercolor, string> = new Map<playerco
 	[PLAYER_COLOR_PEACH, '|cfff7a58b'],
 	[PLAYER_COLOR_LAVENDER, '|cffdbb8eb'],
 	[PLAYER_COLOR_PEANUT, '|cffa56f34'],
-	[PLAYER_COLOR_COAL, '|cff4f5055'],
+	[PLAYER_COLOR_TURQUOISE, '|cff00ebff'],
 	[PLAYER_COLOR_EMERALD, '|cff00781e'],
 	[PLAYER_COLOR_NAVY, '|cff0000c3'],
 	[PLAYER_COLOR_MINT, '|cffccff99'],
-	[PLAYER_COLOR_TURQUOISE, '|cff00ebff'],
+	[PLAYER_COLOR_COAL, '|cff4f5055'],
 	[PLAYER_COLOR_SNOW, '|cffecf0ff'],
 ]);

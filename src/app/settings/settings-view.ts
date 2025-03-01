@@ -32,7 +32,7 @@ export class SettingsView {
 	public update() {
 		const event = EventTimer.getInstance().getEvent('uiTimer');
 
-		BlzFrameSetText(this.timer, I2S(event.remainingTime));
+		BlzFrameSetText(this.timer, I2S(event.duration));
 	}
 
 	public hide() {

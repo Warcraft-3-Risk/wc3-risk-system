@@ -31,7 +31,7 @@ export class TeamSelection implements GameState {
 	private checkTimer(): void {
 		const timer: EventTimer = EventTimer.getInstance();
 
-		if (timer.getEvent('uiTimer').remainingTime <= 1) {
+		if (timer.getEvent('uiTimer').duration <= 1) {
 			timer.addEvent('delay', 1, false, () => {
 				TeamSelectionView.hide();
 				this.end();

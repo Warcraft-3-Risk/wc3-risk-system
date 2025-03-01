@@ -625,7 +625,7 @@ Q
 }
 
 STRING 7232
-// Abilities: a051 (Lowest Health Defender), Hotkey (Hotkey - Normal)
+// Abilities: a032 (Set Spawner Rally Point - Radius 6000), Hotkey (Hotkey - Normal)
 {
 W
 }
@@ -634,12 +634,6 @@ STRING 7236
 // Abilities: a004 (Adrenaline), Hotkey (Hotkey - Normal)
 {
 Q
-}
-
-STRING 7238
-// Abilities: a052 (Highest Health Defender), Hotkey (Hotkey - Normal)
-{
-W
 }
 
 STRING 7241
@@ -714,7 +708,7 @@ The selected unit will be set as the new defender|n|nThis can be used to give an
 }
 
 STRING 7284
-// Abilities: a053 (Lowest Value Defender), Hotkey (Hotkey - Normal)
+// Abilities: a033 (Set Spawner Rally Point - All), Hotkey (Hotkey - Normal)
 {
 E
 }
@@ -804,108 +798,6 @@ STRING 7307
 // Abilities: a034 (Reset All Spawner Rally Points), Hotkey (Hotkey - Normal)
 {
 Z
-}
-
-STRING 7316
-// Abilities: a051 (Lowest Health Defender), Tip (Tooltip - Normal)
-{
-Lowest Health Defender
-}
-
-STRING 7319
-// Abilities: a051 (Lowest Health Defender), Name (Name)
-{
-Lowest Health Defender
-}
-
-STRING 7320
-// Abilities: a052 (Highest Health Defender), Tip (Tooltip - Normal)
-{
-Highest Health Defender
-}
-
-STRING 7323
-// Abilities: a052 (Highest Health Defender), Name (Name)
-{
-Highest Health Defender
-}
-
-STRING 7326
-// Abilities: a053 (Lowest Value Defender), Tip (Tooltip - Normal)
-{
-Lowest Value Defender
-}
-
-STRING 7329
-// Abilities: a053 (Lowest Value Defender), Name (Name)
-{
-Lowest Value Defender
-}
-
-STRING 7330
-// Abilities: a054 (Highest Value Defender), Tip (Tooltip - Normal)
-{
-Highest Value Defender
-}
-
-STRING 7333
-// Abilities: a054 (Highest Value Defender), Name (Name)
-{
-Highest Value Defender
-}
-
-STRING 7342
-// Units: H000 (Player Tools), Name (Name)
-{
-Player Tools
-}
-
-STRING 7343
-// Units: H000 (Player Tools), Propernames (Proper Names)
-{
-Player Tools
-}
-
-STRING 7344
-// Units: H000 (Player Tools), Ubertip (Tooltip - Extended)
-{
-Options
-}
-
-STRING 7351
-// Abilities: a054 (Highest Value Defender), Hotkey (Hotkey - Normal)
-{
-E
-}
-
-STRING 7358
-// Abilities: a051 (Lowest Health Defender), Ubertip (Tooltip - Normal - Extended)
-{
-Prioritizes the lowest health unit when chosing a city defender.
-}
-
-STRING 7359
-// Abilities: a052 (Highest Health Defender), Ubertip (Tooltip - Normal - Extended)
-{
-Prioritizes the highest health unit when chosing a city defender.
-}
-
-STRING 7360
-// Abilities: a053 (Lowest Value Defender), Ubertip (Tooltip - Normal - Extended)
-{
-Prioritizes the lowest value unit when chosing a city defender.
-}
-
-STRING 7361
-// Abilities: a054 (Highest Value Defender), Ubertip (Tooltip - Normal - Extended)
-{
-Prioritizes the highest value unit when chosing a city defender.
-}
-
-STRING 7365
-// Units: H000 (Player Tools), Tip (Tooltip - Basic)
-{
-Player Tools
 }
 
 STRING 7372
@@ -1070,18 +962,6 @@ STRING 7441
 This will allow you to set the rally point of all owned spawners in a radius of 3000 from the origin of the casting spawner.
 }
 
-STRING 7442
-// Abilities: a032 (Set Spawner Rally Point - Radius 6000), Hotkey (Hotkey - Normal)
-{
-W
-}
-
-STRING 7443
-// Abilities: a033 (Set Spawner Rally Point - All), Hotkey (Hotkey - Normal)
-{
-E
-}
-
 STRING 7449
 // Units: u052 (Dummy Caster), Name (Name)
 {
@@ -1206,11 +1086,6 @@ STRING 7479
 // Abilities: a014 (Autoload - OFF), Tip (Tooltip - Normal)
 {
 |cffff8000Autoload |cff3BA0CBOff|r
-}
-
-STRING 7487
-{
-Force 1
 }
 
 STRING 7490
@@ -1421,5 +1296,20 @@ STRING 7523
 // Abilities: a002 (Dispel Magic), Ubertip (Tooltip - Normal - Extended)
 {
 Removes all buffs from units in a target area.
+}
+
+STRING 7524
+{
+Player 24
+}
+
+STRING 7525
+{
+Players
+}
+
+STRING 7527
+{
+Observer
 }
 

@@ -3,6 +3,7 @@ import { MetaGame } from './states/meta-game';
 import { ModeSelection } from './states/mode-selection';
 import { PostGame } from './states/post-game';
 import { PreGame } from './states/pre-game';
+import { Setup } from './states/setup';
 import { TeamSelection } from './states/team-selection';
 
 export class GameManager {
@@ -13,6 +14,7 @@ export class GameManager {
 	private constructor() {
 		this.stateIndex = 0;
 		this.states = [];
+		this.states.push(new Setup(this));
 		this.states.push(new ModeSelection(this));
 		this.states.push(new TeamSelection(this));
 		this.states.push(new PreGame(this));

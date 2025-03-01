@@ -12,7 +12,6 @@ export class GamePlayer implements GameEntity<Map<EntityID, KillsDeaths>> {
 	private player: player;
 	private status: Status;
 	private guardPreferences: GuardPreferences;
-	private admin: boolean;
 	private data: PlayerData;
 	private team: Team | null;
 
@@ -23,7 +22,6 @@ export class GamePlayer implements GameEntity<Map<EntityID, KillsDeaths>> {
 			health: false,
 			value: false,
 		};
-		this.admin = false;
 		this.data = new PlayerData(player);
 		this.team = null;
 	}
@@ -124,10 +122,6 @@ export class GamePlayer implements GameEntity<Map<EntityID, KillsDeaths>> {
 
 	public getGuardPreferences(): GuardPreferences {
 		return this.guardPreferences;
-	}
-
-	public isAdmin(): boolean {
-		return this.admin;
 	}
 
 	public setTeam(team: Team): void {

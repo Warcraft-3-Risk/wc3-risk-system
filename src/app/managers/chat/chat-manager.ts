@@ -1,3 +1,5 @@
+import { SetCommands } from './set-commands';
+
 export class ChatManager {
 	private static instance: ChatManager;
 	private chatActions: Map<string, Function> = new Map<string, Function>();
@@ -33,6 +35,8 @@ export class ChatManager {
 				return true;
 			})
 		);
+
+		SetCommands();
 	}
 
 	/**

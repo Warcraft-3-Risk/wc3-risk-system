@@ -3,12 +3,7 @@ import { MAP_NAME } from './app/utils/map-info';
 import { CityBuilder } from './app/city/builder/city-builder';
 import { SetCountries } from './configs/city-country-setup';
 import { NameManager } from './app/managers/names/name-manager';
-import { ChatManager } from './app/managers/chat-manager';
-import { SetConsoleUI } from './app/ui/console';
-import { Quests } from './app/quests/quests';
-import { EventTimer } from './app/timer/EventTimer';
 import { GameManager } from './app/game/game-manager';
-import { CameraManager } from './app/managers/camera-manager';
 import { ICountryData } from './app/country/builder/country-data.interface';
 import { CountryBuilder } from './app/country/builder/country-builder';
 import { SpawnerBuilder } from './app/spawner/builder/spawner-builder';
@@ -61,19 +56,13 @@ function tsMain() {
 		//Handle names to prevent namebug
 		NameManager.getInstance();
 		//Set up triggers
-		//Create Quests
-		Quests.Create();
+
 		//Set up actions on game load
 		const onLoadTimer: timer = CreateTimer();
 		TimerStart(onLoadTimer, 0.0, false, () => {
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
-			FogEnable(false);
-			FogMaskEnable(false);
-			SetConsoleUI();
-			CameraManager.getInstance();
-			ChatManager.getInstance();
-			EventTimer.getInstance();
+
 			GameManager.getInstance().start();
 		});
 	} catch (e) {
