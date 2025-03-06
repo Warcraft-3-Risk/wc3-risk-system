@@ -6,7 +6,7 @@ import { SPANWER_UNITS } from '../../spawner/spawner';
 import { UNIT_TYPE } from '../../utils/unit-types';
 import { HandleGuardDeath } from './handle-guard-death';
 import { TeamManager } from 'src/app/teams/team-manager';
-import { MatchData } from 'src/app/game/state/match-state';
+import { MatchData } from 'src/app/game/state/game-state';
 import { EVENT_ON_UNIT_KILLED } from 'src/app/utils/events/event-constants';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 

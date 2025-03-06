@@ -1,7 +1,7 @@
 import { RegionToCity } from 'src/app/city/city-map';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { StandardDistributionService } from '../../services/distribution-service/standard-distribution-service';
-import { MatchData } from '../../state/match-state';
+import { MatchData } from '../../state/game-state';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 

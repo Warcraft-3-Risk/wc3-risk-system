@@ -19,13 +19,13 @@ import {
 import { StandardMode } from './game-mode/mode/standard-mode';
 import { GameType } from '../settings/strategies/game-type-strategy';
 import { Quests } from '../quests/quests';
-import { BaseGameMode } from './game-mode/mode/base-game-mode';
+import { BaseMode } from './game-mode/mode/base-mode';
 import { StateData } from './game-mode/state/state-data';
 import { CapitalsMode } from './game-mode/mode/capitals-mode';
 
 export class EventCoordinator {
 	private static instance: EventCoordinator;
-	private _currentMode: BaseGameMode<StateData>;
+	private _currentMode: BaseMode<StateData>;
 
 	private constructor() {
 		this.registerEvents();

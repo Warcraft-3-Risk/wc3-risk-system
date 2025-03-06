@@ -1,6 +1,6 @@
 import { File } from 'w3ts';
 import { CUSTOM_MAP_DATA_MATCH_DIRECTORY, CUSTOM_MAP_DATA_MINE_TYPE_TXT } from '../utils';
-import { MatchData } from 'src/app/game/state/match-state';
+import { MatchData } from 'src/app/game/state/game-state';
 
 export class ExportEndGameScore {
 	private static getFileName = (fileName: string) => `${CUSTOM_MAP_DATA_MATCH_DIRECTORY}/${fileName}.${CUSTOM_MAP_DATA_MINE_TYPE_TXT}`;

@@ -2,7 +2,7 @@ import { StringToCountry } from 'src/app/country/country-map';
 import { VictoryManager, VictoryProgressState } from 'src/app/managers/victory-manager';
 import { CITIES_TO_WIN_WARNING_RATIO, TICK_DURATION_IN_SECONDS, TURN_DURATION_IN_SECONDS } from 'src/configs/game-settings';
 import { File } from 'w3ts';
-import { MatchData } from '../../state/match-state';
+import { MatchData } from '../../state/game-state';
 import { updateTickUI } from '../utillity/update-ui';
 import { BaseState } from '../state/base-state';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
@@ -149,24 +149,5 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
 		ScoreboardManager.getInstance().updatePartial();
-	}
-
-	onPlayerAlive(player: ActivePlayer): void {
-		onPlayerAliveHandle(player);
-	}
-	onPlayerDead(player: ActivePlayer): void {
-		onPlayerDeadHandle(player);
-	}
-	onPlayerNomad(player: ActivePlayer): void {
-		onPlayerNomadHandle(player);
-	}
-	onPlayerLeft(player: ActivePlayer): void {
-		onPlayerLeftHandle(player);
-	}
-	onPlayerSTFU(player: ActivePlayer): void {
-		onPlayerSTFUHandle(player);
-	}
-	onPlayerForfeit(player: ActivePlayer): void {
-		onPlayerForfeitHandle(player);
 	}
 }

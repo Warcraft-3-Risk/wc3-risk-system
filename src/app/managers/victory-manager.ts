@@ -2,7 +2,7 @@ import { ActivePlayer } from '../player/types/active-player';
 import { RegionToCity } from '../city/city-map';
 import { CITIES_TO_WIN_RATIO, OVERTIME_MODIFIER } from 'src/configs/game-settings';
 import { WinTracker } from '../game/services/win-tracker';
-import { MatchData } from '../game/state/match-state';
+import { MatchData } from '../game/state/game-state';
 import { PLAYER_STATUS } from '../player/status/status-enum';
 import { PlayerManager } from '../player/player-manager';
 

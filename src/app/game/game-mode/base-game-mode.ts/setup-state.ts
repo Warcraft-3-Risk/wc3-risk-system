@@ -4,19 +4,10 @@ import { PlayerManager } from 'src/app/player/player-manager';
 import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
-import { MatchData } from '../../state/match-state';
+import { MatchData } from '../../state/game-state';
 import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
-import { ActivePlayer } from 'src/app/player/types/active-player';
-import {
-	onPlayerAliveHandle,
-	onPlayerDeadHandle,
-	onPlayerNomadHandle,
-	onPlayerLeftHandle,
-	onPlayerSTFUHandle,
-	onPlayerForfeitHandle,
-} from '../utillity/on-player-status';
 import { Quests } from 'src/app/quests/quests';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
@@ -82,24 +73,5 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		Quests.getInstance().UpdateShuffledPlayerListQuest();
 
 		this.nextState(this.stateData);
-	}
-
-	onPlayerAlive(player: ActivePlayer): void {
-		onPlayerAliveHandle(player);
-	}
-	onPlayerDead(player: ActivePlayer): void {
-		onPlayerDeadHandle(player);
-	}
-	onPlayerNomad(player: ActivePlayer): void {
-		onPlayerNomadHandle(player);
-	}
-	onPlayerLeft(player: ActivePlayer): void {
-		onPlayerLeftHandle(player);
-	}
-	onPlayerSTFU(player: ActivePlayer): void {
-		onPlayerSTFUHandle(player);
-	}
-	onPlayerForfeit(player: ActivePlayer): void {
-		onPlayerForfeitHandle(player);
 	}
 }

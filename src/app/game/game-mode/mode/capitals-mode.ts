@@ -1,5 +1,5 @@
 import { City } from 'src/app/city/city';
-import { BaseGameMode } from './base-game-mode';
+import { BaseMode } from './base-mode';
 import { StateData } from '../state/state-data';
 import { SetupState } from '../base-game-mode.ts/setup-state';
 import { CityDistributeState } from '../base-game-mode.ts/city-distribute-state';
@@ -9,21 +9,25 @@ import { GameOverState } from '../base-game-mode.ts/game-over-state';
 import { ResetState } from '../base-game-mode.ts/reset-state';
 import { SetPromodeTempVisionState } from '../base-game-mode.ts/set-promode-temp-vision-state';
 import { BaseState } from '../state/base-state';
+import { CapitalsResetState } from '../capital-game-mode/capitals-reset-state';
+import { CapitalsSelectionState } from '../capital-game-mode/capitals-selection-state';
 
 export class CapitalsData implements StateData {
-	private playerCapitalSelections: Map<player, City>;
-	private capitals: Map<player, City>;
+	public playerCapitalSelections: Map<player, City>;
+	public capitals: Map<player, City>;
 }
 
-export class CapitalsMode extends BaseGameMode<CapitalsData> {
-	override setupStates() {
+export class CapitalsMode extends BaseMode<CapitalsData> {
+	protected setupStates() {
 		return [
 			new SetupState(),
+			new CapitalsSelectionState(),
 			new CityDistributeState(),
 			new SetPromodeTempVisionState(),
 			new CountdownState(),
 			new GameLoopState(),
 			new GameOverState(),
+			new CapitalsResetState(),
 			new ResetState(),
 		] as BaseState<CapitalsData>[];
 	}

@@ -1,4 +1,4 @@
-import { MatchData } from 'src/app/game/state/match-state';
+import { MatchData } from 'src/app/game/state/game-state';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { PlayGlobalSound } from 'src/app/utils/utils';
 

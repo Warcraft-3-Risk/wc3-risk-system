@@ -1,6 +1,7 @@
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import { TURN_DURATION_IN_SECONDS } from 'src/configs/game-settings';
+import { StateData } from '../game-mode/state/state-data';
 
 export type MatchState = 'modeSelection' | 'preMatch' | 'inProgress' | 'postMatch';
 
@@ -12,6 +13,7 @@ export interface GameData {
 	gameType?: GameType;
 	matchCount: number;
 	matchPlayers: ActivePlayer[];
+	stateData?: StateData;
 }
 
 export class MatchData {
@@ -37,7 +39,7 @@ export class MatchData {
 			matchCount: this.getInstance().data.matchCount + 1,
 			matchPlayers: players,
 			leader: players[0],
-		};
+		} as GameData;
 	}
 
 	private static initialGameData(): GameData {
@@ -49,7 +51,7 @@ export class MatchData {
 			gameType: null,
 			matchCount: 0,
 			matchPlayers: [],
-		};
+		} as GameData;
 	}
 
 	public static get turnCount(): number {
@@ -89,6 +91,13 @@ export class MatchData {
 	}
 	public static set gameMode(v: GameType) {
 		this.getInstance().data.gameType = v;
+	}
+
+	public static get stateData(): StateData {
+		return this.getInstance().data.stateData;
+	}
+	public static set stateData(v: StateData) {
+		this.getInstance().data.stateData = v;
 	}
 
 	public static get matchCount(): number {

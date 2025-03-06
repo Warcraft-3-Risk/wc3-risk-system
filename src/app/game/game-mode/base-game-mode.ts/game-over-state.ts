@@ -1,7 +1,7 @@
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { VictoryManager } from 'src/app/managers/victory-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
-import { MatchData } from '../../state/match-state';
+import { MatchData } from '../../state/game-state';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { BaseState } from '../state/base-state';

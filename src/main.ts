@@ -23,7 +23,7 @@ import { TimedEventManager } from './app/libs/timer/timed-event-manager';
 import { AntiSpam } from './app/triggers/anti-spam';
 import { SetCommands } from './app/commands/commands';
 import { ExportShuffledPlayerList } from './app/utils/export-statistics/export-shuffled-player-list';
-import { ModeSelection } from './app/game/state/mode-selection';
+import { ModeSelection } from './app/game/mode-selection';
 import { PlayerSetupService } from './app/game/services/player-setup-service';
 import { Wait } from './app/utils/wait';
 import { EventCoordinator } from './app/game/event-coordinator';

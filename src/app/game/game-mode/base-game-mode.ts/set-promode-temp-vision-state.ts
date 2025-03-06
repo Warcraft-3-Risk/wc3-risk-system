@@ -4,7 +4,7 @@ import { CityToCountry } from 'src/app/country/country-map';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Wait } from 'src/app/utils/wait';
-import { MatchData } from '../../state/match-state';
+import { MatchData } from '../../state/game-state';
 
 export class SetPromodeTempVisionState<T extends StateData> extends BaseState<T> {
 	onEnterState() {

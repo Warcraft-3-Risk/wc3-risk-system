@@ -1,4 +1,4 @@
-import { MatchData } from '../game/state/match-state';
+import { MatchData } from '../game/state/game-state';
 import { ChatManager } from '../managers/chat-manager';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_PLAYER_RESTART } from '../utils/events/event-constants';

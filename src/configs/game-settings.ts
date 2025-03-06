@@ -27,7 +27,7 @@ export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 export const STFU_DURATION: number = 300;
 
 //This represents whether debug messages should be printed. Default is false.
-export const SHOW_DEBUG_PRINTS = false;
+export const SHOW_DEBUG_PRINTS = true;
 
 //This represents whether player names should be exported
 export const ENABLE_EXPORT_SHUFFLED_PLAYER_LIST: boolean = false;

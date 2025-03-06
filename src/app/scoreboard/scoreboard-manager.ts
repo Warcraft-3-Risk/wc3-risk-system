@@ -1,4 +1,4 @@
-import { MatchData } from '../game/state/match-state';
+import { MatchData } from '../game/state/game-state';
 import { NameManager } from '../managers/names/name-manager';
 import { VictoryManager } from '../managers/victory-manager';
 import { ActivePlayer } from '../player/types/active-player';

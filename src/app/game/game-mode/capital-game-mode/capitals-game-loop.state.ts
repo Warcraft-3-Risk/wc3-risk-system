@@ -9,12 +9,10 @@ import { GameLoopState } from '../base-game-mode.ts/game-loop-state';
 import { CapitalsData } from '../mode/capitals-mode';
 
 export class CapitalsGameLoopMode extends GameLoopState<CapitalsData> {
-	private capitals: Map<player, City>;
-
 	override onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer): void {
 		if (preOwner == owner) return;
 
-		if (this.capitals.get(preOwner.getPlayer()) === city) {
+		if (this.stateData.capitals.get(preOwner.getPlayer()) === city) {
 			LocalMessage(
 				preOwner.getPlayer(),
 				`Your capital has been captured by ${NameManager.getInstance().getDisplayName(owner.getPlayer())}!\nYou have been eliminated!`,
@@ -39,7 +37,7 @@ export class CapitalsGameLoopMode extends GameLoopState<CapitalsData> {
 	}
 
 	onExitState(): void {
-		this.capitals?.forEach((city, _) => {
+		this.stateData.capitals?.forEach((city, _) => {
 			if (city) {
 				const unitTypeId = GetUnitTypeId(city.barrack.unit);
 				if (unitTypeId == UNIT_ID.CAPITAL || unitTypeId == UNIT_ID.CONQUERED_CAPITAL) {

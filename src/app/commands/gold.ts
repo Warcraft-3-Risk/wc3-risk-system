@@ -1,4 +1,4 @@
-import { MatchData } from '../game/state/match-state';
+import { MatchData } from '../game/state/game-state';
 import { ChatManager } from '../managers/chat-manager';
 import { NameManager } from '../managers/names/name-manager';
 import { SettingsContext } from '../settings/settings-context';

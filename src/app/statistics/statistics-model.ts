@@ -4,7 +4,7 @@ import { HexColors } from '../utils/hex-colors';
 import { AddLeadingZero } from '../utils/utils';
 import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
 import { MAP_VERSION } from '../utils/map-info';
-import { MatchData } from '../game/state/match-state';
+import { MatchData } from '../game/state/game-state';
 
 export class StatisticsModel {
 	private timePlayed: string;

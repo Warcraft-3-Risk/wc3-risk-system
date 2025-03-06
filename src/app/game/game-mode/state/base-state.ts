@@ -3,20 +3,48 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 import { StateData } from './state-data';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { EVENT_NEXT_STATE } from 'src/app/utils/events/event-constants';
+import { MatchData } from '../../state/game-state';
+import {
+	onPlayerAliveHandle,
+	onPlayerDeadHandle,
+	onPlayerNomadHandle,
+	onPlayerLeftHandle,
+	onPlayerSTFUHandle,
+	onPlayerForfeitHandle,
+} from '../utillity/on-player-status';
 
 export abstract class BaseState<T extends StateData> {
-	stateData: T;
+	get stateData(): T {
+		return MatchData.stateData as T;
+	}
+
+	set stateData(t: T) {
+		MatchData.stateData = t;
+	}
 
 	onEnterState() {}
 	onExitState() {}
 
-	onPlayerAlive(player: ActivePlayer): void {}
-	onPlayerDead(player: ActivePlayer): void {}
-	onPlayerNomad(player: ActivePlayer): void {}
-	onPlayerLeft(player: ActivePlayer): void {}
-	onPlayerSTFU(player: ActivePlayer): void {}
-	onPlayerForfeit(player: ActivePlayer): void {}
-	onPlayerRestart(player: ActivePlayer): void {}
+	onPlayerRestart(player: ActivePlayer) {}
+
+	onPlayerAlive(player: ActivePlayer): void {
+		onPlayerAliveHandle(player);
+	}
+	onPlayerDead(player: ActivePlayer): void {
+		onPlayerDeadHandle(player);
+	}
+	onPlayerNomad(player: ActivePlayer): void {
+		onPlayerNomadHandle(player);
+	}
+	onPlayerLeft(player: ActivePlayer): void {
+		onPlayerLeftHandle(player);
+	}
+	onPlayerSTFU(player: ActivePlayer): void {
+		onPlayerSTFUHandle(player);
+	}
+	onPlayerForfeit(player: ActivePlayer): void {
+		onPlayerForfeitHandle(player);
+	}
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer) {}
 	onUnitKilled(killingUnit: unit, dyingUnit: unit) {}

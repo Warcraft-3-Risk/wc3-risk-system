@@ -1,4 +1,4 @@
-import { MatchData } from 'src/app/game/state/match-state';
+import { MatchData } from 'src/app/game/state/game-state';
 import { TimedEvent } from 'src/app/libs/timer/timed-event';
 import { TimedEventManager } from 'src/app/libs/timer/timed-event-manager';
 import { NameManager } from 'src/app/managers/names/name-manager';

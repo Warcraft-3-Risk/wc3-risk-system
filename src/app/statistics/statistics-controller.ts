@@ -4,7 +4,7 @@ import { ExportEndGameScore } from '../utils/export-statistics/export-end-game-s
 import { ComputeRatio } from '../utils/utils';
 import { StatisticsModel } from './statistics-model';
 import { StatisticsView } from './statistics-view';
-import { MatchData } from '../game/state/match-state';
+import { MatchData } from '../game/state/game-state';
 
 export class StatisticsController {
 	private static instance: StatisticsController;

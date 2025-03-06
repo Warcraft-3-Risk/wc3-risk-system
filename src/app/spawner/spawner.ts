@@ -1,5 +1,5 @@
 import { UNIT_ID } from '../../configs/unit-id';
-import { MatchData } from '../game/state/match-state';
+import { MatchData } from '../game/state/game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
 import { UNIT_TYPE } from '../utils/unit-types';

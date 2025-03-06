@@ -7,7 +7,7 @@ import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { EVENT_MODE_SELECTION, EVENT_SET_GAME_MODE } from 'src/app/utils/events/event-constants';
 import { ENABLE_EXPORT_GAME_SETTINGS } from 'src/configs/game-settings';
 import { GameType } from 'src/app/settings/strategies/game-type-strategy';
-import { MatchData } from './match-state';
+import { MatchData } from './state/game-state';
 
 export class ModeSelection {
 	private ui: SettingsView;

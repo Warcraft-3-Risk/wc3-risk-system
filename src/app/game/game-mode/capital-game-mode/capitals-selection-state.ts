@@ -1,4 +1,4 @@
-import { MatchData } from '../../state/match-state';
+import { MatchData } from '../../state/game-state';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { BaseState } from '../state/base-state';
@@ -9,25 +9,26 @@ import { City } from 'src/app/city/city';
 import { LandCity } from 'src/app/city/land-city';
 import { CityToCountry } from 'src/app/country/country-map';
 import { CapitalsData } from '../mode/capitals-mode';
+import { debugPrint } from 'src/app/utils/debug-print';
 
 export class CapitalsSelectionState extends BaseState<CapitalsData> {
-	private playerCapitalSelections: Map<player, City>;
-
 	onEnterState() {
+		debugPrint('stuff');
 		this.runAsync();
 	}
 
 	async runAsync(): Promise<void> {
 		FogEnable(false);
 		BlzEnableSelections(true, false);
-
+		debugPrint('1. Capitals Selection');
 		// Initialize the player capital cities map with empty capitals
-		this.playerCapitalSelections = new Map();
+		this.stateData.playerCapitalSelections = new Map();
 
+		debugPrint('2. Capitals Selection');
 		MatchData.matchPlayers.forEach((player) => {
-			this.playerCapitalSelections.set(player.getPlayer(), undefined);
+			this.stateData.playerCapitalSelections.set(player.getPlayer(), undefined);
 		});
-
+		debugPrint('3. Capitals Selection');
 		try {
 			PlayGlobalSound('Sound\\Interface\\ArrangedTeamInvitation.flac');
 			const startDelayTimer: timer = CreateTimer();
@@ -37,6 +38,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 			CountdownMessage(`Choose Your Capital\n\nSelection ends in:\n${duration}`);
 			BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 
+			debugPrint('6. Capitals Selection');
 			TimerStart(startDelayTimer, 1, true, () => {
 				// Clears capital selection and resets selected city if player is eliminated
 				this.resetCapitalsForEliminatedPlayers();
@@ -53,7 +55,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 					EnableDragSelect(true, true);
 					PlayGlobalSound('Sound\\Interface\\Hint.flac');
 
-					this.playerCapitalSelections.forEach((city, _) => {
+					this.stateData.playerCapitalSelections.forEach((city, _) => {
 						city?.reset();
 					});
 
@@ -69,19 +71,19 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 	resetCapitalsForEliminatedPlayers(): void {
 		MatchData.matchPlayers.forEach((player) => {
 			if (player.status.isEliminated()) {
-				const city = this.playerCapitalSelections.get(player.getPlayer());
+				const city = this.stateData.playerCapitalSelections.get(player.getPlayer());
 				city?.reset();
 
-				this.playerCapitalSelections.delete(player.getPlayer());
+				this.stateData.playerCapitalSelections.delete(player.getPlayer());
 			}
 		});
 	}
 
 	// Remove player from the capital selection phase if they leave the game
 	onPlayerLeft(player: ActivePlayer): void {
-		const city = this.playerCapitalSelections.get(player.getPlayer());
+		const city = this.stateData.playerCapitalSelections.get(player.getPlayer());
 		city?.reset();
-		this.playerCapitalSelections.delete(player.getPlayer());
+		this.stateData.playerCapitalSelections.delete(player.getPlayer());
 		super.onPlayerLeft(player);
 	}
 
@@ -122,14 +124,14 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 			return;
 		}
 
-		this.playerCapitalSelections.get(player)?.reset();
+		this.stateData.playerCapitalSelections.get(player)?.reset();
 
 		(city as LandCity).setCapital();
 
 		city.changeOwner(player);
 		SetUnitOwner(city.guard.unit, player, true);
 
-		this.playerCapitalSelections.set(player, city);
+		this.stateData.playerCapitalSelections.set(player, city);
 
 		super.onCitySelected(city, player);
 	}

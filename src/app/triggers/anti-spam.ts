@@ -1,4 +1,4 @@
-import { MatchData } from '../game/state/match-state';
+import { MatchData } from '../game/state/game-state';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { PLAYER_SLOTS } from '../utils/utils';
 
