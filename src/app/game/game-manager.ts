@@ -5,70 +5,74 @@ import { PostGame } from './state/post-game';
 import { PreGame } from './state/pre-game';
 
 export class GameManager {
-	private _state: GameState;
-	private _round: number;
-	private modeSelectionState: ModeSelection;
-	private preGameState: PreGame;
-	private metaGameState: MetaGame;
-	private postGameState: PostGame;
-	private restartEnabled: boolean;
+  private _state: GameState;
+  private _round: number;
+  private modeSelectionState: ModeSelection;
+  private preGameState: PreGame;
+  private metaGameState: MetaGame;
+  private postGameState: PostGame;
+  private restartEnabled: boolean;
 
-	private static instance: GameManager;
+  private static instance: GameManager;
 
-	private constructor() {
-		this._round = 1;
+  private constructor() {
+    this._round = 1;
 
-		this.postGameState = new PostGame();
-		this.metaGameState = new MetaGame(this.postGameState);
-		this.preGameState = new PreGame(this.metaGameState);
-		this.modeSelectionState = new ModeSelection(this.preGameState);
+    this.postGameState = new PostGame();
+    this.metaGameState = new MetaGame(this.postGameState);
+    this.preGameState = new PreGame(this.metaGameState);
+    this.modeSelectionState = new ModeSelection(this.preGameState);
 
-		this.updateState(this.modeSelectionState);
-	}
+    this.updateState(this.modeSelectionState);
+  }
 
-	public static getInstance() {
-		if (this.instance == null) {
-			this.instance = new GameManager();
-		}
+  public static getInstance() {
+    if (this.instance == null) {
+      this.instance = new GameManager();
+    }
 
-		return this.instance;
-	}
+    return this.instance;
+  }
 
-	public updateState(state: GameState) {
-		this._state = state;
-		this._state.setObserver(this);
-		this._state.start();
-	}
+  public updateState(state: GameState) {
+    this._state = state;
+    this._state.setObserver(this);
+    this._state.start();
+  }
 
-	public isStateMetaGame() {
-		return this._state instanceof MetaGame;
-	}
+  public isStatePreGame() {
+    return this._state instanceof PreGame;
+  }
 
-	public isStatePostGame() {
-		return this._state instanceof PostGame;
-	}
+  public isStateMetaGame() {
+    return this._state instanceof MetaGame;
+  }
 
-	public isRestartEnabled() {
-		return this.restartEnabled;
-	}
+  public isStatePostGame() {
+    return this._state instanceof PostGame;
+  }
 
-	public setRestartEnabled(bool: boolean) {
-		this.restartEnabled = bool;
-	}
+  public isRestartEnabled() {
+    return this.restartEnabled;
+  }
 
-	public fastRestart() {
-		this.updateState(this.preGameState);
-	}
+  public setRestartEnabled(bool: boolean) {
+    this.restartEnabled = bool;
+  }
 
-	public fullRestart() {
-		this.updateState(this.modeSelectionState);
-	}
+  public fastRestart() {
+    this.updateState(this.preGameState);
+  }
 
-	public get state(): GameState {
-		return this._state;
-	}
+  public fullRestart() {
+    this.updateState(this.modeSelectionState);
+  }
 
-	public get round(): number {
-		return this._round;
-	}
+  public get state(): GameState {
+    return this._state;
+  }
+
+  public get round(): number {
+    return this._round;
+  }
 }
