@@ -4,7 +4,7 @@ import { CityToCountry } from 'src/app/country/country-map';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Wait } from 'src/app/utils/wait';
-import { MatchData } from '../../state/game-state';
+import { GlobalGameData } from '../../state/global-game-state';
 
 export class SetPromodeTempVisionState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -14,7 +14,7 @@ export class SetPromodeTempVisionState<T extends StateData> extends BaseState<T>
 	async runAsync(): Promise<void> {
 		SettingsContext.getInstance().applyStrategy('Fog');
 		if (SettingsContext.getInstance().isPromode()) {
-			const players = MatchData.matchPlayers;
+			const players = GlobalGameData.matchPlayers;
 
 			const visionMap = new Map<unit, player[]>();
 

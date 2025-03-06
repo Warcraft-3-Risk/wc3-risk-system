@@ -1,4 +1,4 @@
-import { MatchData } from '../game/state/game-state';
+import { GlobalGameData } from '../game/state/global-game-state';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { PLAYER_SLOTS } from '../utils/utils';
 
@@ -23,7 +23,7 @@ export const AntiSpam = () => {
 		t,
 		Condition(() => {
 			if (GetEventPlayerChatString().length < MINIMUM_MESSAGE_LENGTH) return false;
-			if (MatchData.matchState != 'inProgress') return false;
+			if (GlobalGameData.matchState != 'inProgress') return false;
 
 			const player: player = GetTriggerPlayer();
 

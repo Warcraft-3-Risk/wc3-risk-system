@@ -80,7 +80,7 @@ export class EventCoordinator {
 	}
 
 	public applyGameMode(gameType: GameType) {
-		this._currentMode = gameType == 'Capitals' ? (this._currentMode = new CapitalsMode()) : new StandardMode();
+		this._currentMode = gameType == 'Capitals' ? new CapitalsMode() : new StandardMode();
 		EventEmitter.getInstance().emit(EVENT_NEXT_STATE);
 	}
 }

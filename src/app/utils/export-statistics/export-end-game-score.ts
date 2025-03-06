@@ -1,6 +1,6 @@
 import { File } from 'w3ts';
 import { CUSTOM_MAP_DATA_MATCH_DIRECTORY, CUSTOM_MAP_DATA_MINE_TYPE_TXT } from '../utils';
-import { MatchData } from 'src/app/game/state/game-state';
+import { GlobalGameData } from 'src/app/game/state/global-game-state';
 
 export class ExportEndGameScore {
 	private static getFileName = (fileName: string) => `${CUSTOM_MAP_DATA_MATCH_DIRECTORY}/${fileName}.${CUSTOM_MAP_DATA_MINE_TYPE_TXT}`;
@@ -26,7 +26,7 @@ export class ExportEndGameScore {
 		}[]
 	): Promise<void> {
 		const content = this.formatData(data);
-		File.writeRaw(this.getFileName(`${MatchData.matchCount}_EndGameScore`), content, false);
+		File.writeRaw(this.getFileName(`${GlobalGameData.matchCount}_EndGameScore`), content, false);
 	}
 
 	private static formatData(

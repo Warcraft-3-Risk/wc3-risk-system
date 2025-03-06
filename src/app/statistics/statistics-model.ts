@@ -4,7 +4,7 @@ import { HexColors } from '../utils/hex-colors';
 import { AddLeadingZero } from '../utils/utils';
 import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
 import { MAP_VERSION } from '../utils/map-info';
-import { MatchData } from '../game/state/game-state';
+import { GlobalGameData } from '../game/state/global-game-state';
 
 export class StatisticsModel {
 	private timePlayed: string;
@@ -22,7 +22,7 @@ export class StatisticsModel {
 
 	public setData() {
 		this.setGameTime();
-		this.winner = MatchData.leader;
+		this.winner = GlobalGameData.leader;
 
 		this.ranks = Array.from([...this.matchPlayers]);
 		this.sortPlayersByRank(this.ranks, this.winner);

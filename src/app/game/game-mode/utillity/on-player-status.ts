@@ -1,4 +1,4 @@
-import { MatchData } from 'src/app/game/state/game-state';
+import { GlobalGameData } from 'src/app/game/state/global-game-state';
 import { TimedEvent } from 'src/app/libs/timer/timed-event';
 import { TimedEventManager } from 'src/app/libs/timer/timed-event-manager';
 import { NameManager } from 'src/app/managers/names/name-manager';
@@ -29,7 +29,7 @@ export function onPlayerDeadHandle(player: ActivePlayer): void {
 
 	// MatchData.setPlayerStatus(player, PLAYER_STATUS.DEAD);
 	if (VictoryManager.getInstance().checkKnockOutVictory()) {
-		MatchData.matchState = 'postMatch';
+		GlobalGameData.matchState = 'postMatch';
 	}
 	ScoreboardManager.getInstance().updatePartial();
 }

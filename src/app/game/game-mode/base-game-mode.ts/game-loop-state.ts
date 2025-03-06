@@ -2,7 +2,7 @@ import { StringToCountry } from 'src/app/country/country-map';
 import { VictoryManager, VictoryProgressState } from 'src/app/managers/victory-manager';
 import { CITIES_TO_WIN_WARNING_RATIO, TICK_DURATION_IN_SECONDS, TURN_DURATION_IN_SECONDS } from 'src/configs/game-settings';
 import { File } from 'w3ts';
-import { MatchData } from '../../state/game-state';
+import { GlobalGameData } from '../../state/global-game-state';
 import { updateTickUI } from '../utillity/update-ui';
 import { BaseState } from '../state/base-state';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
@@ -23,8 +23,8 @@ import { StateData } from '../state/state-data';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
-		MatchData.matchState = 'inProgress';
-		this.onStartTurn(MatchData.turnCount);
+		GlobalGameData.matchState = 'inProgress';
+		this.onStartTurn(GlobalGameData.turnCount);
 
 		const _matchLoopTimer: timer = CreateTimer();
 
@@ -39,10 +39,10 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				}
 
 				// Check if a turn has ended
-				this.onTick(MatchData.tickCounter);
+				this.onTick(GlobalGameData.tickCounter);
 
-				if (MatchData.tickCounter <= 0) {
-					this.onEndTurn(MatchData.turnCount);
+				if (GlobalGameData.tickCounter <= 0) {
+					this.onEndTurn(GlobalGameData.turnCount);
 				}
 
 				// Stop game loop if match is over
@@ -53,13 +53,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 					return;
 				}
 
-				MatchData.tickCounter--;
+				GlobalGameData.tickCounter--;
 
-				if (MatchData.tickCounter <= 0) {
-					this.onEndTurn(MatchData.turnCount);
-					MatchData.tickCounter = TURN_DURATION_IN_SECONDS;
-					MatchData.turnCount++;
-					this.onStartTurn(MatchData.turnCount);
+				if (GlobalGameData.tickCounter <= 0) {
+					this.onEndTurn(GlobalGameData.turnCount);
+					GlobalGameData.tickCounter = TURN_DURATION_IN_SECONDS;
+					GlobalGameData.turnCount++;
+					this.onStartTurn(GlobalGameData.turnCount);
 				}
 				updateTickUI();
 			} catch (error) {
@@ -70,11 +70,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	isMatchOver(): boolean {
-		return MatchData.matchState == 'postMatch';
+		return GlobalGameData.matchState == 'postMatch';
 	}
 
 	onExitState(): void {
-		MatchData.matchState = 'postMatch';
+		GlobalGameData.matchState = 'postMatch';
 		FogEnable(false);
 		BlzEnableSelections(false, false);
 	}
@@ -83,7 +83,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		VictoryManager.getInstance().updateRequiredCityCount();
 		ScoreboardManager.getInstance().updateFull();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
-		MatchData.matchPlayers
+		GlobalGameData.matchPlayers
 			.filter((x) => x.status.isActive())
 			.forEach((player) => {
 				player.giveGold();
@@ -98,7 +98,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onEndTurn(turn: number): void {
 		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
-			MatchData.matchState = 'postMatch';
+			GlobalGameData.matchState = 'postMatch';
 		}
 
 		ScoreboardManager.getInstance().updateFull();

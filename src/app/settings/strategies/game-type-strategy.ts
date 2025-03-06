@@ -1,6 +1,5 @@
 import { HexColors } from 'src/app/utils/hex-colors';
 import { SettingsStrategy } from './settings-strategy';
-import { debugPrint } from 'src/app/utils/debug-print';
 
 export type GameType = 'Standard' | 'Capitals';
 

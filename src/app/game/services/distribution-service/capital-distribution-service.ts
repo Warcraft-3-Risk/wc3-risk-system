@@ -4,7 +4,7 @@ import { CityToCountry } from 'src/app/country/country-map';
 import { ShuffleArray } from 'src/app/utils/utils';
 import { LocalMessage } from 'src/app/utils/messages';
 import { StandardDistributionService } from './standard-distribution-service';
-import { MatchData } from '../../state/game-state';
+import { GlobalGameData } from '../../state/global-game-state';
 
 /**
  * Handles the distribution of cities among active players.
@@ -33,7 +33,7 @@ export class CapitalDistributionService extends StandardDistributionService {
 
 		ShuffleArray(filteredCountries);
 
-		MatchData.matchPlayers.forEach((activePlayer) => {
+		GlobalGameData.matchPlayers.forEach((activePlayer) => {
 			const selectedCapital = this.selectedPlayerCapitalCities.get(activePlayer.getPlayer());
 			const player = activePlayer.getPlayer();
 

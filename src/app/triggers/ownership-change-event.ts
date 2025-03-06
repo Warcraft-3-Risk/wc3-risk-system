@@ -13,7 +13,7 @@ import { Region } from '../region/region';
 import { ScoreboardManager } from '../scoreboard/scoreboard-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { TeamManager } from '../teams/team-manager';
-import { MatchData } from '../game/state/game-state';
+import { GlobalGameData } from '../game/state/global-game-state';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_CITY_CAPTURE } from '../utils/events/event-constants';
 
@@ -28,7 +28,7 @@ export function OwnershipChangeEvent() {
 		t,
 		Condition(() => {
 			if (!IsUnitType(GetChangingUnit(), UNIT_TYPE.CITY)) return false;
-			if (MatchData.matchState == 'postMatch') return false;
+			if (GlobalGameData.matchState == 'postMatch') return false;
 
 			const city: City = UnitToCity.get(GetChangingUnit());
 			const country: Country = CityToCountry.get(city);
@@ -68,7 +68,7 @@ export function OwnershipChangeEvent() {
 				}
 
 				// Makes no sense to set a player as nomad during the game setup. Only during the game.
-				if (prevOwnerData.cities.cities.length == 0 && MatchData.matchState == 'inProgress') {
+				if (prevOwnerData.cities.cities.length == 0 && GlobalGameData.matchState == 'inProgress') {
 					prevOwner.status.set(PLAYER_STATUS.NOMAD);
 				}
 
@@ -90,7 +90,7 @@ export function OwnershipChangeEvent() {
 					ownerData.countries.set(country, 1);
 				}
 
-				if (MatchData.matchState == 'inProgress') {
+				if (GlobalGameData.matchState == 'inProgress') {
 					VictoryManager.getInstance().setLeader(owner);
 				}
 
@@ -120,7 +120,7 @@ export function OwnershipChangeEvent() {
 						}
 					}
 
-					if (MatchData.matchState == 'inProgress') {
+					if (GlobalGameData.matchState == 'inProgress') {
 						ScoreboardManager.getInstance().setAlert(ownerHandle, country.getName());
 					}
 				}

@@ -1,5 +1,5 @@
 import { UNIT_ID } from '../../configs/unit-id';
-import { MatchData } from '../game/state/game-state';
+import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
 import { UNIT_TYPE } from '../utils/unit-types';
@@ -61,7 +61,7 @@ export class Spawner implements Resetable, Ownable {
 	public step() {
 		if (this.getOwner() == NEUTRAL_HOSTILE) return;
 		if (GetPlayerSlotState(this.getOwner()) != PLAYER_SLOT_STATE_PLAYING) return;
-		if (MatchData.matchState != 'inProgress') return;
+		if (GlobalGameData.matchState != 'inProgress') return;
 
 		const spawnCount: number = this.spawnMap.get(this.getOwner()).length;
 

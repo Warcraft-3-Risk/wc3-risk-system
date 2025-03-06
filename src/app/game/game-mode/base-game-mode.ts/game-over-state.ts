@@ -1,7 +1,7 @@
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { VictoryManager } from 'src/app/managers/victory-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
-import { MatchData } from '../../state/game-state';
+import { GlobalGameData } from '../../state/global-game-state';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { BaseState } from '../state/base-state';
@@ -10,13 +10,13 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 
 export class GameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
-		MatchData.matchState = 'postMatch';
+		GlobalGameData.matchState = 'postMatch';
 
 		VictoryManager.getInstance().saveStats();
 
 		// Hide match scoreboard and show score screen
 		ScoreboardManager.getInstance().destroyBoards();
-		MatchData.matchPlayers.forEach((player) => {
+		GlobalGameData.matchPlayers.forEach((player) => {
 			if (SettingsContext.getInstance().isPromode()) {
 				NameManager.getInstance().setName(player.getPlayer(), 'acct');
 			} else {
@@ -34,7 +34,7 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 	}
 
 	onPlayerRestart(player: ActivePlayer) {
-		const playerIsParticipant = MatchData.matchPlayers.find((x) => x.getPlayer() == player.getPlayer());
+		const playerIsParticipant = GlobalGameData.matchPlayers.find((x) => x.getPlayer() == player.getPlayer());
 		if (playerIsParticipant) {
 			this.nextState(this.stateData);
 		}

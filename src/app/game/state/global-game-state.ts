@@ -16,17 +16,17 @@ export interface GameData {
 	stateData?: StateData;
 }
 
-export class MatchData {
-	private static instance: MatchData;
+export class GlobalGameData {
+	private static instance: GlobalGameData;
 	private data: GameData;
 
 	private constructor() {
-		this.data = MatchData.initialGameData();
+		this.data = GlobalGameData.initialGameData();
 	}
 
 	public static getInstance() {
 		if (this.instance == null) {
-			this.instance = new MatchData();
+			this.instance = new GlobalGameData();
 		}
 
 		return this.instance;
@@ -34,11 +34,13 @@ export class MatchData {
 
 	public static prepareMatchData(players: ActivePlayer[]) {
 		this.getInstance().data = {
-			...MatchData.initialGameData(),
+			...GlobalGameData.initialGameData(),
 			matchState: 'preMatch',
 			matchCount: this.getInstance().data.matchCount + 1,
 			matchPlayers: players,
 			leader: players[0],
+			stateData: { ...this.getInstance().data?.stateData },
+			gameType: this.getInstance().data.gameType,
 		} as GameData;
 	}
 

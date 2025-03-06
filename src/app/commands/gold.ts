@@ -1,4 +1,4 @@
-import { MatchData } from '../game/state/game-state';
+import { GlobalGameData } from '../game/state/global-game-state';
 import { ChatManager } from '../managers/chat-manager';
 import { NameManager } from '../managers/names/name-manager';
 import { SettingsContext } from '../settings/settings-context';
@@ -8,7 +8,7 @@ import { isNonEmptySubstring } from '../utils/utils';
 
 export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) {
 	chatManager.addCmd(['-g', '-gold'], () => {
-		if (MatchData.matchState != 'inProgress') return;
+		if (GlobalGameData.matchState != 'inProgress') return;
 		if (SettingsContext.getInstance().isFFA()) return;
 
 		const player: player = GetTriggerPlayer();

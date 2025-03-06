@@ -1,4 +1,4 @@
-import { MatchData } from '../../state/game-state';
+import { GlobalGameData } from '../../state/global-game-state';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { BaseState } from '../state/base-state';
@@ -21,11 +21,12 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 		FogEnable(false);
 		BlzEnableSelections(true, false);
 		debugPrint('1. Capitals Selection');
+		debugPrint('this.stateData is ' + this.stateData);
 		// Initialize the player capital cities map with empty capitals
 		this.stateData.playerCapitalSelections = new Map();
 
 		debugPrint('2. Capitals Selection');
-		MatchData.matchPlayers.forEach((player) => {
+		GlobalGameData.matchPlayers.forEach((player) => {
 			this.stateData.playerCapitalSelections.set(player.getPlayer(), undefined);
 		});
 		debugPrint('3. Capitals Selection');
@@ -69,7 +70,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 	}
 
 	resetCapitalsForEliminatedPlayers(): void {
-		MatchData.matchPlayers.forEach((player) => {
+		GlobalGameData.matchPlayers.forEach((player) => {
 			if (player.status.isEliminated()) {
 				const city = this.stateData.playerCapitalSelections.get(player.getPlayer());
 				city?.reset();

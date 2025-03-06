@@ -1,6 +1,6 @@
 import { RegionToCity } from 'src/app/city/city-map';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
-import { MatchData } from '../../state/game-state';
+import { GlobalGameData } from '../../state/global-game-state';
 import { BaseState } from '../state/base-state';
 import { CityToCountry } from 'src/app/country/country-map';
 import { debugPrint } from 'src/app/utils/debug-print';
@@ -20,7 +20,7 @@ export class CapitalsDistributeState extends BaseState<CapitalsData> {
 				IssueImmediateOrder(city.guard.unit, 'stop');
 
 				if (GetOwningPlayer(city.guard.unit) != NEUTRAL_HOSTILE) {
-					MatchData.matchPlayers.find((x) => x.getPlayer() == GetOwningPlayer(city.guard.unit)).trackedData.units.add(city.guard.unit);
+					GlobalGameData.matchPlayers.find((x) => x.getPlayer() == GetOwningPlayer(city.guard.unit)).trackedData.units.add(city.guard.unit);
 				}
 
 				SetUnitInvulnerable(city.guard.unit, false);

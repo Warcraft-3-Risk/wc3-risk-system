@@ -2,7 +2,7 @@ import { ActivePlayer } from '../player/types/active-player';
 import { RegionToCity } from '../city/city-map';
 import { CITIES_TO_WIN_RATIO, OVERTIME_MODIFIER } from 'src/configs/game-settings';
 import { WinTracker } from '../game/services/win-tracker';
-import { MatchData } from '../game/state/game-state';
+import { GlobalGameData } from '../game/state/global-game-state';
 import { PLAYER_STATUS } from '../player/status/status-enum';
 import { PlayerManager } from '../player/player-manager';
 
@@ -43,8 +43,8 @@ export class VictoryManager {
 	}
 
 	public setLeader(player: ActivePlayer) {
-		if (player.trackedData.cities.cities.length > MatchData.leader.trackedData.cities.cities.length) {
-			MatchData.leader = player;
+		if (player.trackedData.cities.cities.length > GlobalGameData.leader.trackedData.cities.cities.length) {
+			GlobalGameData.leader = player;
 		}
 	}
 
@@ -89,11 +89,11 @@ export class VictoryManager {
 
 	private calculateCitiesToWin(): number {
 		if (VictoryManager.OVERTIME_MODE) {
-			VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE = VictoryManager.OVERTIME_ACTIVE_AT_TURN - MatchData.turnCount;
-			VictoryManager.OVERTIME_TOTAL_TURNS = MatchData.turnCount - VictoryManager.OVERTIME_ACTIVE_AT_TURN;
+			VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE = VictoryManager.OVERTIME_ACTIVE_AT_TURN - GlobalGameData.turnCount;
+			VictoryManager.OVERTIME_TOTAL_TURNS = GlobalGameData.turnCount - VictoryManager.OVERTIME_ACTIVE_AT_TURN;
 		}
 
-		if (VictoryManager.OVERTIME_MODE && MatchData.turnCount >= VictoryManager.OVERTIME_ACTIVE_AT_TURN) {
+		if (VictoryManager.OVERTIME_MODE && GlobalGameData.turnCount >= VictoryManager.OVERTIME_ACTIVE_AT_TURN) {
 			VictoryManager.OVERTIME_ACTIVE = true;
 			return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * VictoryManager.OVERTIME_TOTAL_TURNS;
 		}
@@ -103,7 +103,7 @@ export class VictoryManager {
 
 	public checkKnockOutVictory(): boolean {
 		if (PlayerManager.getInstance().playersAliveOrNomad.size <= 1) {
-			MatchData.leader = Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())[0];
+			GlobalGameData.leader = Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())[0];
 			this.saveStats();
 			return true;
 		}
@@ -116,7 +116,7 @@ export class VictoryManager {
 	}
 
 	public updateWinTracker() {
-		this.winTracker.addWinForEntity(MatchData.leader.getPlayer());
+		this.winTracker.addWinForEntity(GlobalGameData.leader.getPlayer());
 	}
 
 	public saveStats() {
