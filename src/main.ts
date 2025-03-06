@@ -3,17 +3,23 @@ import { MAP_NAME } from './app/utils/map-info';
 import { CityBuilder } from './app/city/builder/city-builder';
 import { SetCountries } from './configs/city-country-setup';
 import { NameManager } from './app/managers/names/name-manager';
-import { GameManager } from './app/game/game-manager';
+import { GameStateManager } from './app/game/game-manager';
 import { ICountryData } from './app/country/builder/country-data.interface';
 import { CountryBuilder } from './app/country/builder/country-builder';
 import { SpawnerBuilder } from './app/spawner/builder/spawner-builder';
-import { CityBehaviorRegistry } from './app/city/behaviors/city.behavior.registry';
+import { CityBehaviorRegistry } from './app/city/behaviors/city.behavior-registry';
 import { LandCityBehavior } from './app/city/behaviors/land-city-behavior';
 import { PortCityBehavior } from './app/city/behaviors/port-city-behavior';
 import { CityType } from './app/city/city-type';
+import { CountrySetup } from './app/country/country-setup';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
+/**
+ * tsMain calls wc3 main().
+ * Anything in tsMain runs during the loading screen.
+ * Anything in the 0 seconds timer will run when the game loads in
+ */
 function tsMain() {
 	try {
 		//Load dependancies
@@ -34,26 +40,9 @@ function tsMain() {
 		SetTimeOfDay(12.0);
 		SetTimeOfDayScale(0.0);
 		SetAllyColorFilterState(0);
-
 		//Set up countries
-		CityBehaviorRegistry.registerBehavior(CityType.Land, new LandCityBehavior());
-		CityBehaviorRegistry.registerBehavior(CityType.Port, new PortCityBehavior());
-
-		const countryData: ICountryData[] = [];
-
-		SetCountries(countryData);
-
-		const contryBuilder = new CountryBuilder();
-		const cityBuilder = new CityBuilder();
-		const spawnBuilder = new SpawnerBuilder();
-
-		for (const country of countryData) {
-			contryBuilder.setData(country, cityBuilder, spawnBuilder);
-			contryBuilder.build();
-			contryBuilder.reset();
-		}
-
-		//Handle names to prevent namebug
+		CountrySetup();
+		//Change and save names to prevent namebug.
 		NameManager.getInstance();
 		//Set up triggers
 
@@ -63,7 +52,7 @@ function tsMain() {
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
 
-			GameManager.getInstance().start();
+			GameStateManager.getInstance().start();
 		});
 	} catch (e) {
 		print(e);

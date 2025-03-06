@@ -6,7 +6,7 @@ import { HelpCommand } from './commands/help';
 import { HowTo } from './commands/turorial';
 import { UICommand } from './commands/ui';
 
-export function SetCommands() {
+export function SetupChatCommands() {
 	const chatManager: ChatManager = ChatManager.getInstance();
 	const playerManager: PlayerManager = PlayerManager.getInstance();
 	const nameManager: NameManager = NameManager.getInstance();

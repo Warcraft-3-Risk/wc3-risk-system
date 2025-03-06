@@ -1,10 +1,10 @@
-import { GameManager } from '../game-manager';
+import { GameStateManager } from '../game-manager';
 import { GameState } from '../game-state';
 
 export class PostGame implements GameState {
-	private manager: GameManager;
+	private manager: GameStateManager;
 
-	public constructor(manager: GameManager) {
+	public constructor(manager: GameStateManager) {
 		this.manager = manager;
 	}
 

@@ -5,7 +5,7 @@ import { EnterRegionTrigger } from '../../triggers/enter-region-event';
 import { LeaveRegionTrigger } from '../../triggers/leave-region-event';
 import { UnitTrainedTrigger } from '../../triggers/unit-trained-event';
 import { NEUTRAL_HOSTILE } from '../../utils/utils';
-import { CityBehaviorRegistry } from '../behaviors/city.behavior.registry';
+import { CityBehaviorRegistry } from '../behaviors/city.behavior-registry';
 import { City } from '../city';
 import { ICityBuilder } from './city-builder.interface';
 import { ICityData } from './city-data.interface';

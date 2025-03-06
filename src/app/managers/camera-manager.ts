@@ -33,18 +33,8 @@ export class CameraManager {
 	private camData: Map<player, CamData> = new Map<player, CamData>();
 
 	/**
-	 * Gets the singleton instance of the CameraManager.
-	 * @returns The singleton instance.
-	 */
-	public static getInstance() {
-		if (this.instance == null) {
-			this.instance = new CameraManager();
-		}
-		return this.instance;
-	}
-
-	/**
-	 * Private constructor to initialize the CameraManager.
+	 * Setup initial camera. This will load or create a camera settings file for each player.
+	 * If the camera setting file already exists, those settings will be used instead of default.
 	 */
 	private constructor() {
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
@@ -82,6 +72,13 @@ export class CameraManager {
 		this.camReset();
 	}
 
+	public static getInstance() {
+		if (this.instance == null) {
+			this.instance = new CameraManager();
+		}
+		return this.instance;
+	}
+
 	/**
 	 * Updates camera settings based on player input.
 	 * @param player - The player whose camera settings to update.
@@ -103,7 +100,8 @@ export class CameraManager {
 	}
 
 	/**
-	 * Resets camera settings at a regular interval.
+	 * Resets camera at a regular interval.
+	 * This is done to prevent mousewheel camera movement.
 	 */
 	private camReset() {
 		const camTimer: timer = CreateTimer();

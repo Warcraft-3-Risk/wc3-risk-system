@@ -6,10 +6,10 @@ import { PreGame } from './states/pre-game';
 import { Setup } from './states/setup';
 import { TeamSelection } from './states/team-selection';
 
-export class GameManager {
+export class GameStateManager {
 	private stateIndex: number;
 	private states: GameState[];
-	private static instance: GameManager;
+	private static instance: GameStateManager;
 
 	private constructor() {
 		this.stateIndex = 0;
@@ -24,7 +24,7 @@ export class GameManager {
 
 	public static getInstance() {
 		if (this.instance == null) {
-			this.instance = new GameManager();
+			this.instance = new GameStateManager();
 		}
 
 		return this.instance;

@@ -9,9 +9,6 @@ export class NameManager {
 
 	private names: Map<player, PlayerNames>;
 
-	/**
-	 * Private constructor to ensure singleton pattern.
-	 */
 	private constructor() {
 		this.names = new Map<player, PlayerNames>();
 
@@ -23,9 +20,6 @@ export class NameManager {
 		}
 	}
 
-	/**
-	 * @returns The singleton instance of NameManager.
-	 */
 	public static getInstance() {
 		if (this.instance == null) {
 			this.instance = new NameManager();

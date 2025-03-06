@@ -1,4 +1,4 @@
-import { Bonus } from './bonus';
+import { Bonus } from './bonus.interface';
 
 export class Bounty implements Bonus {
 	public static readonly factor: number = 0.25;

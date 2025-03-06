@@ -1,5 +1,5 @@
 import { PlayerManager } from 'src/app/entity/player/player-manager';
-import { GameManager } from '../game-manager';
+import { GameStateManager } from '../game-manager';
 import { GameState } from '../game-state';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { GamePlayer } from 'src/app/entity/player/game-player';
@@ -7,9 +7,9 @@ import { PLAYER_COLORS } from 'src/app/utils/player-colors';
 import { ShuffleArray } from 'src/app/utils/utils';
 
 export class PreGame implements GameState {
-	private manager: GameManager;
+	private manager: GameStateManager;
 
-	public constructor(manager: GameManager) {
+	public constructor(manager: GameStateManager) {
 		this.manager = manager;
 	}
 

@@ -1,5 +1,4 @@
 import { GameState } from '../game/game-state';
-import { EventTimer } from '../timer/EventTimer';
 import { HexColors } from '../utils/hex-colors';
 import { GameTypeOptions } from './handlers/game-type-handler';
 import { SettingsController } from './settings-controller';
@@ -30,9 +29,8 @@ export class SettingsView {
 	}
 
 	public update() {
-		const event = EventTimer.getInstance().getEvent('uiTimer');
-
-		BlzFrameSetText(this.timer, I2S(event.duration));
+		// const event = EventTimer.getInstance().getEvent('periodTimer');
+		// BlzFrameSetText(this.timer, I2S(event.getRemainingTime()));
 	}
 
 	public hide() {
@@ -70,7 +68,7 @@ export class SettingsView {
 			t,
 			Condition(() => {
 				this.hide();
-				EventTimer.getInstance().stopEvent('uiTimer');
+				// EventTimer.getInstance().stopEvent('periodTimer');
 				this.gameState.end();
 			})
 		);

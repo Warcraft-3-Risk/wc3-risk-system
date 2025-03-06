@@ -1,5 +1,5 @@
 import { LocalMessage } from 'src/app/utils/messages';
-import { Bonus } from './bonus';
+import { Bonus } from './bonus.interface';
 import { HexColors } from 'src/app/utils/hex-colors';
 
 export class FightBonus implements Bonus {

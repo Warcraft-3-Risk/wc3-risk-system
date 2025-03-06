@@ -1,13 +1,12 @@
-import { EventTimer } from './EventTimer';
-import { TimerEventType } from './TimerEventType';
+import { TimerEventType } from './timed-event-type';
 
-export class TimerEvent {
+export class TimedEvent {
 	public id: TimerEventType;
-	protected interval: number;
-	protected duration: number;
-	protected repeating: boolean;
-	protected executeOnTick: boolean;
-	protected callback: (remainingTime?: number) => void;
+	private interval: number;
+	private duration: number;
+	private repeating: boolean;
+	private executeOnTick: boolean;
+	private callback: (remainingTime?: number) => void;
 
 	constructor(
 		id: TimerEventType,
@@ -21,10 +20,10 @@ export class TimerEvent {
 		this.duration = interval;
 		this.repeating = repeating;
 		this.executeOnTick = executeOnTick;
-		this.callback = callback;
+		this.callback = (remainingTime?: number) => callback(remainingTime);
 	}
 
-	public update(delta: number): void {
+	public update(delta: number): boolean {
 		this.duration -= delta;
 
 		if (this.executeOnTick) {
@@ -37,17 +36,17 @@ export class TimerEvent {
 			if (this.repeating) {
 				this.reset();
 			} else {
-				this.stop();
+				// Remove timer from EventTimerQueue
+				return false;
 			}
 		}
+
+		// Do not remove timer from EventTimerQueue
+		return true;
 	}
 
 	public reset(): void {
 		this.duration = this.interval;
-	}
-
-	public stop(): void {
-		EventTimer.getInstance().stopEvent(this.id);
 	}
 
 	public getRemainingTime(): number {

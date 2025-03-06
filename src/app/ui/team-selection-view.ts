@@ -2,7 +2,6 @@ import { PlayerManager } from '../entity/player/player-manager';
 import { GameState } from '../game/game-state';
 import { NameManager } from '../managers/names/name-manager';
 import { SettingsController } from '../settings/settings-controller';
-import { EventTimer } from '../timer/EventTimer';
 import { HexColors } from '../utils/hex-colors';
 
 interface playerData {
@@ -216,7 +215,7 @@ export class TeamSelectionView {
 			Condition(() => {
 				if (TeamSelectionView.bench.size <= 0) {
 					TeamSelectionView.hide();
-					EventTimer.getInstance().stopEvent('uiTimer');
+					// EventTimer.getInstance().stopEvent('periodTimer');
 					gameState.end();
 				} else {
 					//TODO Sound bite or other action
@@ -472,8 +471,8 @@ export class TeamSelectionView {
 	}
 
 	public static update() {
-		const event = EventTimer.getInstance().getEvent('uiTimer');
-		BlzFrameSetText(BlzGetFrameByName('TeamSelectionTimer', 0), I2S(event.duration));
+		// const event = EventTimer.getInstance().getEvent('periodTimer');
+		// BlzFrameSetText(BlzGetFrameByName('TeamSelectionTimer', 0), I2S(event.getRemainingTime()));
 	}
 
 	public static hide() {
