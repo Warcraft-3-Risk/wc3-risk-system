@@ -13,6 +13,15 @@ export function updateTickUI(): void {
 		PlayGlobalSound('Sound\\Interface\\BattleNetTick.flac');
 	}
 
-	BlzFrameSetText(BlzGetFrameByName('ResourceBarUpkeepText', 0), tick);
-	BlzFrameSetText(BlzGetFrameByName('ResourceBarSupplyText', 0), `${GlobalGameData.turnCount}`);
+	setTickUI(tick, GlobalGameData.turnCount.toString());
+}
+
+export function setTickUI(tickCounter: string, turnCount: string): void {
+	BlzFrameSetText(BlzGetFrameByName('ResourceBarUpkeepText', 0), `${tickCounter}`);
+	BlzFrameSetText(BlzGetFrameByName('ResourceBarSupplyText', 0), `${turnCount}`);
+}
+
+export function clearTickUI(): void {
+	BlzFrameSetText(BlzGetFrameByName('ResourceBarGoldText', 0), '');
+	setTickUI('', '');
 }

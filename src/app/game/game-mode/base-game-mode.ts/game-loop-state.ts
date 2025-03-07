@@ -11,14 +11,6 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { City } from 'src/app/city/city';
-import {
-	onPlayerAliveHandle,
-	onPlayerDeadHandle,
-	onPlayerForfeitHandle,
-	onPlayerLeftHandle,
-	onPlayerNomadHandle,
-	onPlayerSTFUHandle,
-} from '../utillity/on-player-status';
 import { StateData } from '../state/state-data';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
@@ -27,6 +19,8 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		this.onStartTurn(GlobalGameData.turnCount);
 
 		const _matchLoopTimer: timer = CreateTimer();
+
+		updateTickUI();
 
 		TimerStart(_matchLoopTimer, TICK_DURATION_IN_SECONDS, true, () => {
 			try {

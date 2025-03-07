@@ -32,6 +32,7 @@ import { EVENT_MODE_SELECTION } from './app/utils/events/event-constants';
 import { CitySelectedEvent } from './app/triggers/city-selected-event';
 import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
 import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST } from './configs/game-settings';
+import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -108,6 +109,7 @@ function tsMain() {
 		const onLoadTimer: timer = CreateTimer();
 
 		TimerStart(onLoadTimer, 0.0, false, async () => {
+			clearTickUI();
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
 			FogEnable(false);

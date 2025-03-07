@@ -11,6 +11,7 @@ import { BaseState } from '../state/base-state';
 import { CapitalsResetState } from '../capital-game-mode/capitals-reset-state';
 import { CapitalsSelectionState } from '../capital-game-mode/capitals-selection-state';
 import { CapitalsDistributeState } from '../capital-game-mode/capitals-distribute-state';
+import { WaitState } from '../base-game-mode.ts/wait-state';
 
 export class CapitalsData implements StateData {
 	public playerCapitalSelections: Map<player, City>;
@@ -21,13 +22,16 @@ export class CapitalsMode extends BaseMode<CapitalsData> {
 	protected setupStates() {
 		return [
 			new SetupState(),
+			new WaitState(2),
 			new CapitalsSelectionState(),
 			new CapitalsDistributeState(),
 			new SetPromodeTempVisionState(),
+			new WaitState(2),
 			new CountdownState(),
 			new GameLoopState(),
 			new GameOverState(),
 			new CapitalsResetState(),
+			new WaitState(1),
 			new ResetState(),
 		] as BaseState<CapitalsData>[];
 	}
