@@ -7,10 +7,13 @@ import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { ActivePlayer } from 'src/app/player/types/active-player';
+import { Quests } from 'src/app/quests/quests';
 
 export class GameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
 		GlobalGameData.matchState = 'postMatch';
+
+		Quests.getInstance().UpdateShuffledPlayerListQuest();
 
 		VictoryManager.getInstance().saveStats();
 
