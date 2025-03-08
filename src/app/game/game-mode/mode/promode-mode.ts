@@ -19,7 +19,6 @@ export class PromodeMode extends BaseMode<PromodeData> {
 			new WaitState(2),
 			new CityDistributeState(),
 			new SetPromodeTempVisionState(),
-			new WaitState(2),
 			new CountdownState(),
 			new GameLoopState(),
 			new GameOverState(),

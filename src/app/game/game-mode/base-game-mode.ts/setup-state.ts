@@ -27,12 +27,12 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		if (!SettingsContext.getInstance().isPromode()) {
 			GlobalGameData.matchPlayers.forEach((val) => {
 				NameManager.getInstance().setName(val.getPlayer(), 'color');
-				val.trackedData.reset();
 			});
 		}
 
 		// Remove irrelevant players from the game
 		GlobalGameData.matchPlayers.forEach((val) => {
+			val.trackedData.reset();
 			val.trackedData.setKDMaps();
 			if (GetPlayerSlotState(val.getPlayer()) == PLAYER_SLOT_STATE_PLAYING) {
 				val.status.set(PLAYER_STATUS.ALIVE);
