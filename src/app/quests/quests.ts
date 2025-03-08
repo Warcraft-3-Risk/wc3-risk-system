@@ -184,7 +184,7 @@ export class Quests {
 
 		const activePlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isAlive() : false));
 		activePlayers.forEach((player) => {
-			description += `\n${NameManager.getInstance().getBtag(player.getPlayer())} (${player.status ? player.status.status : 'Unknown'})`;
+			description += `\n${NameManager.getInstance().getBtag(player.getPlayer())} (${HexColors.GREEN + 'Active|r'})`;
 		});
 
 		description += `\n\n${HexColors.YELLOW}Eliminated Players|r`;
