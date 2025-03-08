@@ -29,7 +29,7 @@ export function SetCountries() {
 		],
 	});
 	CountrySettings.push({
-		name: 'Czech Republic',
+		name: 'Czechia',
 		spawnerData: {
 			unitData: { x: 1216.0, y: -1984.0 },
 		},
@@ -144,7 +144,7 @@ export function SetCountries() {
 		],
 	});
 	CountrySettings.push({
-		name: 'Turkey',
+		name: 'Türkiye',
 		spawnerData: {
 			unitData: { x: 12864.0, y: -7232.0 },
 		},
