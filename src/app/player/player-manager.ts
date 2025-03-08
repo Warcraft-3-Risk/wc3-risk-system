@@ -103,6 +103,11 @@ export class PlayerManager {
 		SetPlayerState(player, PLAYER_STATE_OBSERVER, 0);
 	}
 
+	public getHumanPlayersCount(): number {
+		return Array.from(this._playerFromHandle.values()).filter((p: ActivePlayer) => GetPlayerController(p.getPlayer()) === MAP_CONTROL_USER)
+			.length;
+	}
+
 	public isActive(player: player) {
 		return this._playerFromHandle.has(player);
 	}

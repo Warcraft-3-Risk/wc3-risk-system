@@ -30,6 +30,11 @@ export class MetaGame implements GameState {
 	public async start() {
 		try {
 			const players: ActivePlayer[] = [...PlayerManager.getInstance().players.values()];
+			const humanPlayersCount: number = PlayerManager.getInstance().getHumanPlayersCount();
+
+			if(humanPlayersCount === 1) {
+				this.manager.setRestartEnabled(true);
+			}
 
 			players.forEach((player) => {
 				SetPlayerState(player.getPlayer(), PLAYER_STATE_RESOURCE_GOLD, 0);

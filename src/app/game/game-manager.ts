@@ -40,6 +40,10 @@ export class GameManager {
 		this._state.start();
 	}
 
+	public isStatePreGame() {
+		return this._state instanceof PreGame;
+	}
+
 	public isStateMetaGame() {
 		return this._state instanceof MetaGame;
 	}
