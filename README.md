@@ -72,7 +72,7 @@ Windows Template:
 ```
 GAME_EXECUTABLE=C:\\Program Files (x86)\\Warcraft III\\_retail_\\x86_64\\Warcraft III.exe
 OUTPUT_FOLDER=C:\\Users\\{USERNAME}\\Documents\\Warcraft III\\Maps\\Download\\(0) testing
-TAG_NAME=2.7.28-preview
+TAG_NAME=2.7.4-preview
 ```
 
 MacOS Template:
@@ -80,7 +80,7 @@ MacOS Template:
 ```
 GAME_EXECUTABLE=/Applications/Warcraft III/_retail_/x86_64/Warcraft III.app/Contents/MacOS/Warcraft III
 OUTPUT_FOLDER=/Users/{USERNAME}/Library/Application Support/Blizzard/Warcraft III/Maps/Download/(0) testing
-TAG_NAME=2.7.28-preview
+TAG_NAME=2.7.4-preview
 ```
 
 Running the build command will automatically generate the path and required directories. This includes injecting the map version number. The above settings would generate a file in the output folder named `Risk Europe 2.7.4-preview.w3x`.
