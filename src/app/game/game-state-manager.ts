@@ -47,7 +47,7 @@ export class GameStateManager {
 		} else {
 			const targetIndex = this.states.findIndex((state) => state.name === stateName);
 
-			if (targetIndex == -1) {
+			if (targetIndex === -1) {
 				//TODO make some kinda of error message functionality to make errors more readable and noticable, maybe even track them and print to file at the end of a game? idk, if single player testing the file print wouldnt work once they left anyways
 				//I also don't think this error handling is really needed, but its nice while working on a big new refactor. It will help with bug catching.
 				print(`Invalid state targeted ${stateName}`);
