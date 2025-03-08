@@ -31,22 +31,22 @@ export abstract class BaseState<T extends StateData> {
 		onPlayerAliveHandle(player);
 	}
 	onPlayerDead(player: ActivePlayer): void {
-		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 		onPlayerDeadHandle(player);
+		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 	}
 	onPlayerNomad(player: ActivePlayer): void {
 		onPlayerNomadHandle(player);
 	}
 	onPlayerLeft(player: ActivePlayer): void {
-		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 		onPlayerLeftHandle(player);
+		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 	}
 	onPlayerSTFU(player: ActivePlayer): void {
 		onPlayerSTFUHandle(player);
 	}
 	onPlayerForfeit(player: ActivePlayer): void {
-		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 		onPlayerForfeitHandle(player);
+		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 	}
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer) {}
