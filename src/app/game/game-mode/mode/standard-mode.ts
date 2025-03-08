@@ -18,6 +18,7 @@ export class StandardMode extends BaseMode<StandardData> {
 			new SetupState(),
 			new WaitState(2),
 			new CityDistributeState(),
+			new WaitState(2),
 			new VisionState(),
 			new WaitState(2),
 			new CountdownState(),
