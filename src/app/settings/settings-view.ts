@@ -1,4 +1,4 @@
-import { GameState } from '../game/game-state';
+import { BaseGameState } from '../game/base-game-state';
 import { HexColors } from '../utils/hex-colors';
 import { GameTypeOptions } from './handlers/game-type-handler';
 import { SettingsController } from './settings-controller';
@@ -9,9 +9,9 @@ export class SettingsView {
 	private backdrop: framehandle;
 	private timer: framehandle;
 	private duration: number;
-	private gameState: GameState;
+	private gameState: BaseGameState;
 
-	public constructor(duration: number, gameState: GameState) {
+	public constructor(duration: number, gameState: BaseGameState) {
 		this.gameState = gameState;
 		this.duration = duration;
 		this.backdrop = BlzCreateFrame('SettingsView', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
@@ -69,7 +69,7 @@ export class SettingsView {
 			Condition(() => {
 				this.hide();
 				// EventTimer.getInstance().stopEvent('periodTimer');
-				this.gameState.end();
+				this.gameState.exit();
 			})
 		);
 	}

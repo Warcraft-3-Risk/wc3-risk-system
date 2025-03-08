@@ -12,7 +12,7 @@ export class CityBehaviorRegistry {
 		const behavior = this.behaviorMap.get(cityType);
 
 		if (!behavior) {
-			throw new Error(`No behavior registered for CityType: ${cityType}`);
+			print(`No behavior registered for CityType: ${cityType}`);
 		}
 
 		return behavior;

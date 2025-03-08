@@ -1,5 +1,5 @@
 import { PlayerManager } from '../entity/player/player-manager';
-import { GameState } from '../game/game-state';
+import { BaseGameState } from '../game/base-game-state';
 import { NameManager } from '../managers/names/name-manager';
 import { SettingsController } from '../settings/settings-controller';
 import { HexColors } from '../utils/hex-colors';
@@ -59,7 +59,7 @@ export class TeamSelectionView {
 	};
 	private static colorButtons: Map<number, Map<string, framehandle>> = new Map<number, Map<string, framehandle>>();
 
-	public static build(duration: number, gameState: GameState) {
+	public static build(duration: number, gameState: BaseGameState) {
 		if (!BlzLoadTOCFile('war3mapImported\\team_selection.toc')) {
 			print('Failed to load team_selection.toc');
 			return;
@@ -186,7 +186,7 @@ export class TeamSelectionView {
 		});
 	}
 
-	private static createTimerComponents(duration: number, gameState: GameState) {
+	private static createTimerComponents(duration: number, gameState: BaseGameState) {
 		const timer: framehandle = BlzCreateFrameByType('TEXT', 'TeamSelectionTimer', TeamSelectionView.backdrop, '', 0);
 		BlzFrameSetScale(timer, 1.2);
 		BlzFrameSetPoint(timer, FRAMEPOINT_TOPRIGHT, TeamSelectionView.backdrop, FRAMEPOINT_TOPRIGHT, -0.01, -0.01);
@@ -216,7 +216,7 @@ export class TeamSelectionView {
 				if (TeamSelectionView.bench.size <= 0) {
 					TeamSelectionView.hide();
 					// EventTimer.getInstance().stopEvent('periodTimer');
-					gameState.end();
+					gameState.exit();
 				} else {
 					//TODO Sound bite or other action
 				}

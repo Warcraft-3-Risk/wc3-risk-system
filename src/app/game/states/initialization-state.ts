@@ -1,25 +1,14 @@
-import { GameStateManager } from '../game-manager';
-import { GameState } from '../game-state';
-import { Quests } from 'src/app/quests/quests';
-import { SetConsoleUI } from 'src/app/ui/console';
 import { PlayerManager } from 'src/app/entity/player/player-manager';
-import { NameManager } from 'src/app/managers/names/name-manager';
 import { CameraManager } from 'src/app/managers/camera-manager';
 import { SetupChatCommands } from 'src/app/managers/chat/set-commands';
+import { NameManager } from 'src/app/managers/names/name-manager';
 import { TimedEventManager } from 'src/app/managers/timer/timed-event-manager';
+import { Quests } from 'src/app/quests/quests';
+import { SetConsoleUI } from 'src/app/ui/console';
+import { BaseGameState } from '../base-game-state';
 
-export class Setup implements GameState {
-	private manager: GameStateManager;
-
-	public constructor(manager: GameStateManager) {
-		this.manager = manager;
-	}
-
-	/**
-	 * Generic setup that needs to happen once when the game starts
-	 * Assume call order matters
-	 */
-	public start(): void {
+export class InitializationState extends BaseGameState {
+	public enter(): void {
 		//TODO print message for "please wait game is initilizing"
 		FogEnable(false);
 		FogMaskEnable(false);
@@ -33,13 +22,12 @@ export class Setup implements GameState {
 		//TODO TimedEventManager
 		SetupChatCommands();
 
-		this.end();
+		this.exit();
 	}
 
-	public end(): void {
-		//TODO delete Debug info
+	public exit(): void {
+		//TODO delete debug info
 		print(`Players: ${PlayerManager.getInstance().getPlayers().size}`);
-
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			if (!IsPlayerSlotState(Player(i), PLAYER_SLOT_STATE_EMPTY)) {
 				print(
@@ -48,8 +36,7 @@ export class Setup implements GameState {
 			}
 		}
 
-		//TODO load stats UI if needed
-
-		this.manager.updateState();
+		ClearTextMessages();
+		this.gameStateManager.nextState();
 	}
 }

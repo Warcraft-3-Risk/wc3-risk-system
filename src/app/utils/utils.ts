@@ -1,6 +1,3 @@
-import { AdminList } from 'src/configs/admin-list';
-import { NameManager } from '../managers/names/name-manager';
-
 /** The player object for neutral hostile units. */
 export const NEUTRAL_HOSTILE: player = Player(PLAYER_NEUTRAL_AGGRESSIVE);
 

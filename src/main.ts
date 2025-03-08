@@ -1,17 +1,8 @@
 import { W3TS_HOOK, addScriptHook } from 'w3ts/hooks';
 import { MAP_NAME } from './app/utils/map-info';
-import { CityBuilder } from './app/city/builder/city-builder';
-import { SetCountries } from './configs/city-country-setup';
-import { NameManager } from './app/managers/names/name-manager';
-import { GameStateManager } from './app/game/game-manager';
-import { ICountryData } from './app/country/builder/country-data.interface';
-import { CountryBuilder } from './app/country/builder/country-builder';
-import { SpawnerBuilder } from './app/spawner/builder/spawner-builder';
-import { CityBehaviorRegistry } from './app/city/behaviors/city.behavior-registry';
-import { LandCityBehavior } from './app/city/behaviors/land-city-behavior';
-import { PortCityBehavior } from './app/city/behaviors/port-city-behavior';
-import { CityType } from './app/city/city-type';
 import { CountrySetup } from './app/country/country-setup';
+import { GameStateManager } from './app/game/game-state-manager';
+import { NameManager } from './app/managers/names/name-manager';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -52,7 +43,7 @@ function tsMain() {
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
 
-			GameStateManager.getInstance().start();
+			GameStateManager.getInstance();
 		});
 	} catch (e) {
 		print(e);
