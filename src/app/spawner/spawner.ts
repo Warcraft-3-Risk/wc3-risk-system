@@ -1,7 +1,7 @@
 import { UNIT_ID } from '../../configs/unit-id';
+import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
-import { VictoryManager } from '../managers/victory-manager';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 
@@ -11,9 +11,10 @@ export class Spawner implements Resetable, Ownable {
 	private _unit: unit;
 	private country: string;
 	private spawnsPerStep: number;
-	private maxSpawnsPerPlayer: number;
 	private spawnMap: Map<player, unit[]>;
 	private spawnType: number;
+	private multiplier: number;
+	private spawnsPerPlayer: number;
 
 	/**
 	 * Spawner constructor.
@@ -23,14 +24,30 @@ export class Spawner implements Resetable, Ownable {
 	 * @param {number} spawnsPerPlayer - The number of units spawned per player.
 	 * @param {number} spawnTypdID - The type ID of the spawn.
 	 */
-	public constructor(unit: unit, countryName: string, spawnsPerStep: number, spawnsPerPlayer: number, spawnTypdID: number) {
+	public constructor(
+		unit: unit,
+		countryName: string,
+		spawnsPerStep: number,
+		spawnsPerPlayer: number,
+		spawnTypdID: number,
+		multiplier: number
+	) {
 		this._unit = unit;
 		this.country = countryName;
 		this.spawnsPerStep = spawnsPerStep;
-		this.maxSpawnsPerPlayer = spawnsPerPlayer;
+		this.spawnsPerPlayer = spawnsPerPlayer;
 		this.spawnType = spawnTypdID;
 		this.spawnMap = new Map<player, unit[]>();
+		this.multiplier = multiplier;
 		this.setName();
+	}
+
+	private get maxSpawnsPerPlayerWithMultiplier(): number {
+		return this.spawnsPerPlayer * this.multiplier;
+	}
+
+	private get spawnsPerStepWithMultiplier(): number {
+		return this.spawnsPerStep * this.multiplier;
 	}
 
 	/** @returns The unit associated with the spawner. */
@@ -44,13 +61,13 @@ export class Spawner implements Resetable, Ownable {
 	public step() {
 		if (this.getOwner() == NEUTRAL_HOSTILE) return;
 		if (GetPlayerSlotState(this.getOwner()) != PLAYER_SLOT_STATE_PLAYING) return;
-		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') return;
+		if (GlobalGameData.matchState != 'inProgress') return;
 
 		const spawnCount: number = this.spawnMap.get(this.getOwner()).length;
 
-		if (spawnCount >= this.maxSpawnsPerPlayer) return;
+		if (spawnCount >= this.maxSpawnsPerPlayerWithMultiplier) return;
 
-		const amount: number = Math.min(this.spawnsPerStep, this.maxSpawnsPerPlayer - spawnCount);
+		const amount: number = Math.min(this.spawnsPerStepWithMultiplier, this.maxSpawnsPerPlayerWithMultiplier - spawnCount);
 
 		for (let i = 0; i < amount; i++) {
 			let u: unit = CreateUnit(this.getOwner(), this.spawnType, GetUnitX(this.unit), GetUnitY(this.unit), 270);
@@ -131,9 +148,17 @@ export class Spawner implements Resetable, Ownable {
 		} else {
 			const spawnCount: number = this.spawnMap.get(this.getOwner()).length;
 
-			BlzSetUnitName(this.unit, `${this.country}  ${spawnCount} / ${this.maxSpawnsPerPlayer}`);
+			BlzSetUnitName(this.unit, `${this.country}  ${spawnCount} / ${this.maxSpawnsPerPlayerWithMultiplier}`);
 			SetUnitAnimation(this.unit, 'stand');
 		}
+	}
+
+	/**
+	 * Sets the multiplier for the spawner.
+	 * @param {number} multiplier - The new multiplier
+	 */
+	public setMultiplier(multiplier: number): void {
+		this.multiplier = multiplier;
 	}
 
 	/**

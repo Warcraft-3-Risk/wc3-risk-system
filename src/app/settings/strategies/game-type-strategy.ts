@@ -1,7 +1,9 @@
 import { HexColors } from 'src/app/utils/hex-colors';
 import { SettingsStrategy } from './settings-strategy';
 
-export const GameTypeOptions: Record<number, string> = {
+export type GameType = 'Standard' | 'Capitals';
+
+export const GameTypeOptions: Record<number, GameType> = {
 	0: `Standard`,
 	1: `Capitals`,
 };
@@ -14,7 +16,7 @@ export const GameTypeOptionsColorFormatted: Record<number, string> = {
 export class GameTypeStrategy implements SettingsStrategy {
 	private readonly gameType: number;
 	private readonly strategyMap: Map<number, () => void> = new Map([
-		[0, this.handleConquest],
+		[0, this.handleStandard],
 		[1, this.handleCapitals],
 	]);
 
@@ -29,11 +31,7 @@ export class GameTypeStrategy implements SettingsStrategy {
 		}
 	}
 
-	private handleConquest(): void {
-		//TODO
-	}
+	private handleStandard(): void {}
 
-	private handleCapitals(): void {
-		//TODO
-	}
+	private handleCapitals(): void {}
 }

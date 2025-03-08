@@ -1,3 +1,5 @@
+import { UNIT_ID } from 'src/configs/unit-id';
+
 export function UnitUpgradeEvent() {
 	const t: trigger = CreateTrigger();
 
@@ -11,7 +13,11 @@ export function UnitUpgradeEvent() {
 			const upgradedUnit = GetTriggerUnit();
 
 			SetAltMinimapIcon('war3mapImported\\capital_star.blp');
-			UnitSetUsesAltIcon(upgradedUnit, true);
+
+			UnitSetUsesAltIcon(
+				upgradedUnit,
+				GetUnitTypeId(upgradedUnit) == UNIT_ID.CAPITAL || GetUnitTypeId(upgradedUnit) == UNIT_ID.CONQUERED_CAPITAL
+			);
 
 			return false;
 		})

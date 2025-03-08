@@ -10,6 +10,8 @@ import { DefaultGuardType } from 'src/configs/country-settings';
  * LandCity is a variant of City for land based terrain.
  */
 export class LandCity extends City {
+	private capital: boolean;
+
 	/**
 	 * LandCity constructor.
 	 * @param rax - The city's Barracks.
@@ -67,5 +69,24 @@ export class LandCity extends City {
 	 */
 	public isPort(): boolean {
 		return false;
+	}
+
+	/**
+	 * Checks if this city type is a capital
+	 */
+	public isCapital(): boolean {
+		return false;
+	}
+
+	/**
+	 * Sets the city as a capital
+	 */
+	public setCapital(): void {
+		this.capital = true;
+	}
+
+	public reset(): void {
+		this.capital = false;
+		super.reset();
 	}
 }

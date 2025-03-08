@@ -1,10 +1,10 @@
 import { ActivePlayer } from '../player/types/active-player';
-import { TimerService } from '../game/services/timer-service';
 import { RegionToCity } from '../city/city-map';
 import { CITIES_TO_WIN_RATIO, OVERTIME_MODIFIER } from 'src/configs/game-settings';
 import { WinTracker } from '../game/services/win-tracker';
-import { NEUTRAL_HOSTILE, PLAYER_SLOTS } from '../utils/utils';
-import { UNIT_TYPE } from '../utils/unit-types';
+import { GlobalGameData } from '../game/state/global-game-state';
+import { PLAYER_STATUS } from '../player/status/status-enum';
+import { PlayerManager } from '../player/player-manager';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -18,20 +18,15 @@ export class VictoryManager {
 	public static OVERTIME_TURNS_UNTIL_ACTIVE: number = 0;
 	public static GAME_VICTORY_STATE: VictoryProgressState = 'UNDECIDED';
 
-	private _leader: ActivePlayer;
-	private players: ActivePlayer[];
-	private gameTimer: TimerService;
 	private winTracker: WinTracker;
 
 	private constructor() {
-		this.players = [];
 		this.winTracker = new WinTracker();
 
 		// since gameTimer is not set yet and CalculateCitiesToWin relies on the gameTimer, we need to manually set the cities to win
 		VictoryManager.CITIES_TO_WIN = Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO);
 
 		VictoryManager.OVERTIME_ACTIVE = false;
-		VictoryManager.OVERTIME_ACTIVE_AT_TURN = 0;
 	}
 
 	public static getInstance(): VictoryManager {
@@ -42,41 +37,27 @@ export class VictoryManager {
 		return this.instance;
 	}
 
-	public addPlayer(player: ActivePlayer) {
-		this.players.push(player);
-
-		if (!this._leader) {
-			this._leader = player;
-		}
-	}
-
-	public removePlayer(player: ActivePlayer) {
-		const index: number = this.players.indexOf(player);
-
-		if (index > -1) {
-			this.players.splice(index, 1);
-		}
-
+	public removePlayer(player: ActivePlayer, status: PLAYER_STATUS) {
+		PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), status);
 		this.checkKnockOutVictory();
 	}
 
 	public setLeader(player: ActivePlayer) {
-		if (player.trackedData.cities.cities.length > this.leader.trackedData.cities.cities.length) {
-			this._leader = player;
+		if (player.trackedData.cities.cities.length > GlobalGameData.leader.trackedData.cities.cities.length) {
+			GlobalGameData.leader = player;
 		}
 	}
 
-	public get leader(): ActivePlayer {
-		return this._leader;
-	}
-	public getFrontRunnersByThreshold(threshold: number): ActivePlayer[] {
-		return this.players
+	// This function is used to get the players who have a certain number of cities or more
+	public getOwnershipByThresholdDescending(threshold: number): ActivePlayer[] {
+		return Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
 			.filter((player) => player.trackedData.cities.cities.length >= threshold)
-			.sort((player) => player.trackedData.cities.cities.length);
+			.sort((a, b) => b.trackedData.cities.cities.length - a.trackedData.cities.cities.length);
 	}
 
+	// This function is used to get the players who have won with the most cities (many players can have the same number of cities)
 	public victors(): ActivePlayer[] {
-		let potentialVictors = this.players.filter((x) => x.trackedData.cities.cities.length >= VictoryManager.CITIES_TO_WIN);
+		let potentialVictors = this.getOwnershipByThresholdDescending(VictoryManager.CITIES_TO_WIN);
 
 		if (potentialVictors.length == 0) {
 			return [];
@@ -108,11 +89,11 @@ export class VictoryManager {
 
 	private calculateCitiesToWin(): number {
 		if (VictoryManager.OVERTIME_MODE) {
-			VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE = VictoryManager.OVERTIME_ACTIVE_AT_TURN - this.gameTimer.getTurns();
-			VictoryManager.OVERTIME_TOTAL_TURNS = this.gameTimer.getTurns() - VictoryManager.OVERTIME_ACTIVE_AT_TURN;
+			VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE = VictoryManager.OVERTIME_ACTIVE_AT_TURN - GlobalGameData.turnCount;
+			VictoryManager.OVERTIME_TOTAL_TURNS = GlobalGameData.turnCount - VictoryManager.OVERTIME_ACTIVE_AT_TURN;
 		}
 
-		if (VictoryManager.OVERTIME_MODE && this.gameTimer.getTurns() >= VictoryManager.OVERTIME_ACTIVE_AT_TURN) {
+		if (VictoryManager.OVERTIME_MODE && GlobalGameData.turnCount >= VictoryManager.OVERTIME_ACTIVE_AT_TURN) {
 			VictoryManager.OVERTIME_ACTIVE = true;
 			return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * VictoryManager.OVERTIME_TOTAL_TURNS;
 		}
@@ -121,90 +102,29 @@ export class VictoryManager {
 	}
 
 	public checkKnockOutVictory(): boolean {
-		if (this.players.length == 1) {
-			this._leader = this.players[0];
-			this.endGame();
+		if (PlayerManager.getInstance().playersAliveOrNomad.size <= 1) {
+			GlobalGameData.leader = Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())[0];
+			this.saveStats();
 			return true;
 		}
-
 		return false;
 	}
 
-	// public capitalsVictory(): ActivePlayer | null {}
-	// public checkPointVictory(): ActivePlayer | null {}
-
-	public setTimer(timer: TimerService) {
-		this.gameTimer = timer;
-	}
-
 	public reset() {
-		this.players = [];
-		this._leader = null;
 		VictoryManager.OVERTIME_ACTIVE = false;
 		VictoryManager.GAME_VICTORY_STATE = 'UNDECIDED';
 	}
 
 	public updateWinTracker() {
-		this.winTracker.addWinForEntity(this._leader.getPlayer());
+		this.winTracker.addWinForEntity(GlobalGameData.leader.getPlayer());
 	}
 
-	public endGame() {
+	public saveStats() {
 		VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
-		this.players.forEach((player) => {
+		PlayerManager.getInstance().playersAliveOrNomad.forEach((player) => {
 			if (player.trackedData.turnDied == -1) {
 				player.setEndData();
 			}
 		});
-
-		BlzEnableSelections(false, false);
-		this.gameTimer.stop();
-
-		this.pauseAllUnits();
-	}
-
-	private pauseAllUnits() {
-		// Players
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
-			const player = Player(i);
-
-			const group: group = CreateGroup();
-			GroupEnumUnitsOfPlayer(
-				group,
-				player,
-				Filter(() => {
-					const unit: unit = GetFilterUnit();
-
-					// Cancels units in training by changing ownership
-					if (IsUnitType(unit, UNIT_TYPE.BUILDING)) {
-						SetUnitOwner(unit, NEUTRAL_HOSTILE, false);
-						SetUnitOwner(unit, player, false);
-					}
-
-					// Prevents neutral buildings from attacking post-game
-					IssueImmediateOrder(unit, 'holdposition');
-					SetUnitInvulnerable(unit, true);
-				})
-			);
-			DestroyGroup(group);
-			GroupClear(group);
-		}
-
-		// Neutral
-		const group: group = CreateGroup();
-		GroupEnumUnitsOfPlayer(
-			group,
-			NEUTRAL_HOSTILE,
-			Filter(() => {
-				const unit: unit = GetFilterUnit();
-
-				// Prevents defenders from being attacked
-				if (IsUnitType(unit, UNIT_TYPE.GUARD)) {
-					IssueImmediateOrder(unit, 'holdposition');
-					SetUnitInvulnerable(unit, true);
-				}
-			})
-		);
-		DestroyGroup(group);
-		GroupClear(group);
 	}
 }

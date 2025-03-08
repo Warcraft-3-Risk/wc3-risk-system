@@ -80,9 +80,7 @@ export class StandardBoard extends Scoreboard {
 			} else {
 				this.setItemValue(`${textColor}-`, row, 2);
 			}
-
 			this.updatePlayerData(player, row, textColor, data);
-
 			row++;
 		});
 	}

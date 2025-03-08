@@ -97,6 +97,11 @@ export function SetConsoleUI() {
 			}
 		}
 	}
+
+	BlzFrameClick(BlzGetFrameByName('UpperButtonBarQuestsButton', 0));
+	BlzFrameClick(BlzGetFrameByName('QuestAcceptButton', 0));
+	BlzFrameSetSize(BlzGetFrameByName('QuestItemListContainer', 0), 0.01, 0.01);
+	BlzFrameSetSize(BlzGetFrameByName('QuestItemListScrollBar', 0), 0.001, 0.001);
 }
 
 /**

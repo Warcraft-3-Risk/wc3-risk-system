@@ -1,5 +1,4 @@
 import { SettingsContext } from 'src/app/settings/settings-context';
-import { GameManager } from '../../game/game-manager';
 import { TransportManager } from '../../managers/transport-manager';
 import { PlayerManager } from '../../player/player-manager';
 import { GamePlayer } from '../../player/types/game-player';
@@ -7,6 +6,9 @@ import { SPANWER_UNITS } from '../../spawner/spawner';
 import { UNIT_TYPE } from '../../utils/unit-types';
 import { HandleGuardDeath } from './handle-guard-death';
 import { TeamManager } from 'src/app/teams/team-manager';
+import { GlobalGameData } from 'src/app/game/state/global-game-state';
+import { EVENT_ON_UNIT_KILLED } from 'src/app/utils/events/event-constants';
+import { EventEmitter } from 'src/app/utils/events/event-emitter';
 
 export function UnitDeathEvent() {
 	const t: trigger = CreateTrigger();
@@ -18,7 +20,7 @@ export function UnitDeathEvent() {
 	TriggerAddCondition(
 		t,
 		Condition(() => {
-			if (!GameManager.getInstance().isStateMetaGame()) return false;
+			if (GlobalGameData.matchState === 'postMatch') return false;
 
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
@@ -41,6 +43,8 @@ export function UnitDeathEvent() {
 			TransportManager.getInstance().onDeath(killingUnit, dyingUnit);
 
 			if (SPANWER_UNITS.has(dyingUnit)) SPANWER_UNITS.get(dyingUnit).onDeath(dyingUnitOwnerHandle, dyingUnit);
+
+			EventEmitter.getInstance().emit(EVENT_ON_UNIT_KILLED, killingUnit, dyingUnit);
 
 			return false;
 		})

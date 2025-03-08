@@ -96,4 +96,19 @@ export class SettingsContext {
 	public isFFA(): boolean {
 		return this.settings.Diplomacy.option == 0;
 	}
+
+	/**
+	 * Checks if the game type is set to Capitals
+	 */
+	public isCapitals(): boolean {
+		return this.settings.GameType == 1;
+	}
+
+	/**
+	 * Checks if the game setting for Overtime is on or off
+	 * @returns true if overtime is on
+	 */
+	public isOvertimeOn(): boolean {
+		return this.settings.Overtime.option != 3;
+	}
 }

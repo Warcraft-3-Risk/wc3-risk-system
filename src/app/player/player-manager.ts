@@ -1,9 +1,10 @@
 import { ActivePlayer } from './types/active-player';
 import { HumanPlayer } from './types/human-player';
-import { SlavePlayer } from './types/slave-player';
 import { NameManager } from '../managers/names/name-manager';
 import { buildGuardHealthButton, buildGuardValueButton } from '../ui/player-preference-buttons';
 import { File } from 'w3ts';
+import { PLAYER_STATUS } from './status/status-enum';
+import { Status } from './status/status';
 
 const banList: string[] = [
 	'nappa#11822', //Full screen spam
@@ -21,51 +22,34 @@ export class PlayerManager {
 	private static _instance: PlayerManager;
 
 	private _playerFromHandle: Map<player, ActivePlayer>;
+	//TODO observers can just be "player" type. HOWEVER, this may come in handy later if i ever decide to implement obs that are actual players
 	private _observerFromHandle: Map<player, HumanPlayer>;
-	private _slavesFromHandle: Map<player, SlavePlayer>;
 
 	private constructor() {
 		this._playerFromHandle = new Map<player, ActivePlayer>();
 		this._observerFromHandle = new Map<player, HumanPlayer>();
-		this._slavesFromHandle = new Map<player, SlavePlayer>();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
-
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY) {
-				this._slavesFromHandle.set(player, new SlavePlayer(player));
-				continue;
-			} else {
-				// if (GetLocalPlayer() == player) {
-				// const contents: string = File.read('risk/me.pld');
-				// if (contents && contents == 'unknown') {
-				// 	CustomVictoryBJ(player, false, false);
-				// 	ClearTextMessages();
-				// this._slavesFromHandle.set(player, new SlavePlayer(player));
-				// 	continue;
-				// }
-				// }
-			}
 
 			banList.forEach((name) => {
 				if (NameManager.getInstance().getBtag(player).toLowerCase() == name) {
 					CustomVictoryBJ(player, false, false);
 					ClearTextMessages();
-					this._slavesFromHandle.set(player, new SlavePlayer(player));
-
-					// if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_PLAYING && GetLocalPlayer() == player) {
-					// 	File.write('risk/me.pld', 'unknown');
-					// }
 				}
 			});
+
+			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) == PLAYER_SLOT_STATE_LEFT) {
+				continue;
+			}
 
 			if (GetPlayerController(player) == MAP_CONTROL_USER || GetPlayerController(player) == MAP_CONTROL_COMPUTER) {
 				if (IsPlayerObserver(player)) {
 					this._observerFromHandle.set(player, new HumanPlayer(player));
 					continue;
-				} else if (!this._slavesFromHandle.has(player)) {
-					this._playerFromHandle.set(player, new HumanPlayer(player));
 				}
+
+				this._playerFromHandle.set(player, new HumanPlayer(player));
 
 				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
 				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
@@ -111,19 +95,26 @@ export class PlayerManager {
 		return this._observerFromHandle.has(player);
 	}
 
-	public isSlave(player: player) {
-		return this._slavesFromHandle.has(player);
-	}
-
 	public get players(): Map<player, ActivePlayer> {
 		return this._playerFromHandle;
+	}
+
+	public get playersAliveOrNomad(): Map<player, ActivePlayer> {
+		const filteredMap = new Map(
+			Array.from(this._playerFromHandle).filter(([key, value]) => value.status.isAlive() || value.status.isNomad())
+		);
+		return filteredMap;
 	}
 
 	public get observers(): Map<player, HumanPlayer> {
 		return this._observerFromHandle;
 	}
 
-	public get slaves(): Map<player, SlavePlayer> {
-		return this._slavesFromHandle;
+	public setPlayerStatus(v: player, status: PLAYER_STATUS) {
+		this.players.get(v).status.set(status);
+	}
+
+	public getPlayerStatus(v: player): Status {
+		return this.players.get(v).status;
 	}
 }

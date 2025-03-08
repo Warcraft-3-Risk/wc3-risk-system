@@ -5,12 +5,13 @@ import { PlayerManager } from 'src/app/player/player-manager';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { GetRandomElementFromArray } from 'src/app/utils/utils';
 import { DoublyLinkedList } from 'src/app/utils/doubly-linked-list';
+import { CITIES_PER_PLAYER_UPPER_BOUND } from 'src/configs/game-settings';
 
 /**
  * Handles the distribution of cities among active players.
  */
-export class DistributionService {
-	private citiesPerPlayerUpperBound: number = 22;
+export class StandardDistributionService {
+	private citiesPerPlayerUpperBound: number = CITIES_PER_PLAYER_UPPER_BOUND;
 	private maxCitiesPerPlayer: number;
 	private cities: City[];
 	private players: DoublyLinkedList<ActivePlayer>;
@@ -31,20 +32,17 @@ export class DistributionService {
 
 	/**
 	 * Executes the distribution algorithm.
-	 * It will run the correct algorithm based on game settings.
 	 * @param callback - Function to call after distribution is complete.
 	 */
-	public runDistro(callback: () => void) {
-		//TODO used to control which distro mode to use
-		this.standardDistro();
-
+	public runDistro(callback: () => void): void {
+		this.distribute();
 		callback();
 	}
 
 	/**
-	 * Implements the standard distribution algorithm.
+	 * Implements the distribution algorithm. You may extend this class and override this method for custom behavior for your own game mode.
 	 */
-	private standardDistro() {
+	protected distribute() {
 		try {
 			const neutralCities: City[] = [];
 			const numOfCities: number = this.cities.length;
@@ -122,7 +120,7 @@ export class DistributionService {
 	 * @param country - The country where the city is located.
 	 * @returns A boolean indicating if the city is valid for the player.
 	 */
-	private isCityValidForPlayer(player: ActivePlayer, country: Country) {
+	protected isCityValidForPlayer(player: ActivePlayer, country: Country): boolean {
 		if (!player.trackedData.countries.has(country)) {
 			player.trackedData.countries.set(country, 0);
 		}
@@ -144,8 +142,16 @@ export class DistributionService {
 	 * @param city - The city for which the ownership is to be changed.
 	 * @param player - The new owner of the city.
 	 */
-	private changeCityOwner(city: City, player: ActivePlayer) {
+	protected changeCityOwner(city: City, player: ActivePlayer) {
 		city.setOwner(player.getPlayer());
 		SetUnitOwner(city.guard.unit, player.getPlayer(), true);
 	}
+
+	protected setCities = (cities: City[]): void => {
+		this.cities = cities;
+	};
+
+	protected getCities = (): City[] => {
+		return this.cities;
+	};
 }

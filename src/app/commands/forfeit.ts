@@ -1,12 +1,13 @@
-import { GameManager } from '../game/game-manager';
+import { GlobalGameData } from '../game/state/global-game-state';
 import { ChatManager } from '../managers/chat-manager';
 import { PlayerManager } from '../player/player-manager';
-import { PLAYER_STATUS } from '../player/status/status-enum';
+import { EVENT_ON_PLAYER_FORFEIT } from '../utils/events/event-constants';
+import { EventEmitter } from '../utils/events/event-emitter';
 
-export function ForfeitCommand(chatManager: ChatManager, gameManager: GameManager, playerManager: PlayerManager) {
+export function ForfeitCommand(chatManager: ChatManager, playerManager: PlayerManager) {
 	chatManager.addCmd(['-ff', '-forfeit'], () => {
-		if (!gameManager.isStateMetaGame()) return;
-
-		playerManager.players.get(GetTriggerPlayer()).status.set(PLAYER_STATUS.DEAD);
+		if (GlobalGameData.matchState === 'postMatch') return;
+		const player = PlayerManager.getInstance().players.get(GetTriggerPlayer());
+		EventEmitter.getInstance().emit(EVENT_ON_PLAYER_FORFEIT, player);
 	});
 }

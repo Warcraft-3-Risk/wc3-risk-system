@@ -1,12 +1,12 @@
-import { GameManager } from '../game/game-manager';
+import { GlobalGameData } from '../game/state/global-game-state';
 import { ChatManager } from '../managers/chat-manager';
 import { NameManager } from '../managers/names/name-manager';
 import { PlayerManager } from '../player/player-manager';
 import { ShuffleArray } from '../utils/utils';
 
-export function NamesCommand(chatManager: ChatManager, gameManager: GameManager, playerManager: PlayerManager, nameManager: NameManager) {
+export function NamesCommand(chatManager: ChatManager, playerManager: PlayerManager, nameManager: NameManager) {
 	chatManager.addCmd(['-names', '-players'], () => {
-		if (!gameManager.isStateMetaGame()) return;
+		if (GlobalGameData.matchState != 'inProgress') return;
 
 		const player: player = GetTriggerPlayer();
 		const nameList: player[] = [];

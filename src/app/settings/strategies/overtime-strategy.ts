@@ -7,10 +7,10 @@ export interface OvertimeOptions {
 }
 
 export const OvertimeStrings: Record<number, string> = {
-	0: `Off`,
-	1: `Turbo (Turn 30)`,
-	2: `Medium (Turn 60)`,
-	3: `Extended (Turn 120)`,
+	0: `Turbo (Turn 30)`,
+	1: `Medium (Turn 60)`,
+	2: `Extended (Turn 120)`,
+	3: `Off`,
 };
 
 export const OvertimeStringsColorFormatted: Record<number, string> = {
@@ -23,10 +23,10 @@ export const OvertimeStringsColorFormatted: Record<number, string> = {
 export class OvertimeStrategy implements SettingsStrategy {
 	private readonly overtime: OvertimeOptions;
 	private readonly strategyMap: Map<number, () => void> = new Map([
-		[0, this.handleOff],
-		[1, this.handleTurboOption],
-		[2, this.handleMediumOption],
-		[3, this.handleExtendedOption],
+		[0, this.handleTurboOption],
+		[1, this.handleMediumOption],
+		[2, this.handleExtendedOption],
+		[3, this.handleOff],
 	]);
 
 	constructor(overtime: OvertimeOptions) {
@@ -56,7 +56,6 @@ export class OvertimeStrategy implements SettingsStrategy {
 	}
 
 	private handleOff(): void {
-		VictoryManager.OVERTIME_ACTIVE_AT_TURN = 0;
-		VictoryManager.OVERTIME_MODE = false;
+		VictoryManager.OVERTIME_ACTIVE_AT_TURN = undefined;
 	}
 }

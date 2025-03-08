@@ -1,13 +1,13 @@
-import { GameManager } from '../game/game-manager';
+import { GlobalGameData } from '../game/state/global-game-state';
 import { ChatManager } from '../managers/chat-manager';
 import { NameManager } from '../managers/names/name-manager';
 import { PlayerManager } from '../player/player-manager';
 import { PLAYER_STATUS } from '../player/status/status-enum';
 import { ErrorMsg } from '../utils/messages';
 
-export function MuteCommand(chatManager: ChatManager, gameManager: GameManager, nameManager: NameManager, playerManager: PlayerManager) {
+export function MuteCommand(chatManager: ChatManager, nameManager: NameManager, playerManager: PlayerManager) {
 	chatManager.addCmd(['-stfu', '-mute'], () => {
-		if (!gameManager.isStateMetaGame()) return;
+		if (GlobalGameData.matchState != 'inProgress') return;
 
 		const players: player[] = nameManager.getPlayersByAnyName(GetEventPlayerChatString().split(' ')[1]);
 		const player: player = GetTriggerPlayer();

@@ -1,11 +1,10 @@
-import { TURN_DURATION_SECONDS } from 'src/configs/game-settings';
-import { VictoryManager } from '../managers/victory-manager';
-import { PlayerManager } from '../player/player-manager';
+import { TURN_DURATION_IN_SECONDS } from 'src/configs/game-settings';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
 import { AddLeadingZero } from '../utils/utils';
 import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
 import { MAP_VERSION } from '../utils/map-info';
+import { GlobalGameData } from '../game/state/global-game-state';
 
 export class StatisticsModel {
 	private timePlayed: string;
@@ -13,14 +12,19 @@ export class StatisticsModel {
 	private winner: ActivePlayer;
 	private columns: ColumnConfig[];
 
-	constructor() {
+	private matchPlayers: ActivePlayer[];
+
+	constructor(matchPlayers: ActivePlayer[]) {
+		this.matchPlayers = matchPlayers;
+
 		this.setData();
 	}
 
 	public setData() {
 		this.setGameTime();
-		this.winner = VictoryManager.getInstance().leader;
-		this.ranks = [...PlayerManager.getInstance().players.values()];
+		this.winner = GlobalGameData.leader;
+
+		this.ranks = Array.from([...this.matchPlayers]);
 		this.sortPlayersByRank(this.ranks, this.winner);
 		this.columns = GetStatisticsColumns(this);
 	}
@@ -45,22 +49,24 @@ export class StatisticsModel {
 		let rival: ActivePlayer | null = null;
 		let maxKills = 0;
 
-		PlayerManager.getInstance().players.forEach((p) => {
-			if (p === player) return;
+		this.matchPlayers
+			.filter((x) => x.status.isActive)
+			.forEach((p) => {
+				if (p === player) return;
 
-			const killsOnPlayer = p.trackedData.killsDeaths.get(player.getPlayer()).kills;
+				const killsOnPlayer = p.trackedData.killsDeaths.get(player.getPlayer()).kills;
 
-			if (killsOnPlayer > maxKills) {
-				maxKills = killsOnPlayer;
-				rival = p;
-			}
-		});
+				if (killsOnPlayer > maxKills) {
+					maxKills = killsOnPlayer;
+					rival = p;
+				}
+			});
 
 		return rival;
 	}
 
 	private setGameTime() {
-		const turnTime: number = TURN_DURATION_SECONDS;
+		const turnTime: number = TURN_DURATION_IN_SECONDS;
 		const minutes: number = parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0))) - 1;
 		const seconds: number = turnTime - parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarUpkeepText', 0)));
 		const hours: number = Math.floor(minutes / turnTime);

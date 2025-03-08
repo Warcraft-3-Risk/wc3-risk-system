@@ -8,12 +8,14 @@ import { PLAYER_STATUS } from '../player/status/status-enum';
 import { ActivePlayer } from '../player/types/active-player';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { TrackedData } from '../player/data/tracked-data';
-import { GameManager } from '../game/game-manager';
 import { CountryToRegion } from '../region/region-map';
 import { Region } from '../region/region';
 import { ScoreboardManager } from '../scoreboard/scoreboard-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { TeamManager } from '../teams/team-manager';
+import { GlobalGameData } from '../game/state/global-game-state';
+import { EventEmitter } from '../utils/events/event-emitter';
+import { EVENT_ON_CITY_CAPTURE } from '../utils/events/event-constants';
 
 export function OwnershipChangeEvent() {
 	const t: trigger = CreateTrigger();
@@ -26,7 +28,7 @@ export function OwnershipChangeEvent() {
 		t,
 		Condition(() => {
 			if (!IsUnitType(GetChangingUnit(), UNIT_TYPE.CITY)) return false;
-			if (GameManager.getInstance().isStatePostGame()) return false;
+			if (GlobalGameData.matchState == 'postMatch') return false;
 
 			const city: City = UnitToCity.get(GetChangingUnit());
 			const country: Country = CityToCountry.get(city);
@@ -65,7 +67,8 @@ export function OwnershipChangeEvent() {
 					}
 				}
 
-				if (prevOwnerData.cities.cities.length == 0) {
+				// Makes no sense to set a player as nomad during the game setup. Only during the game.
+				if (prevOwnerData.cities.cities.length == 0 && GlobalGameData.matchState == 'inProgress') {
 					prevOwner.status.set(PLAYER_STATUS.NOMAD);
 				}
 
@@ -87,7 +90,7 @@ export function OwnershipChangeEvent() {
 					ownerData.countries.set(country, 1);
 				}
 
-				if (GameManager.getInstance().isStateMetaGame()) {
+				if (GlobalGameData.matchState == 'inProgress') {
 					VictoryManager.getInstance().setLeader(owner);
 				}
 
@@ -117,15 +120,17 @@ export function OwnershipChangeEvent() {
 						}
 					}
 
-					ScoreboardManager.getInstance().setAlert(ownerHandle, country.getName());
+					if (GlobalGameData.matchState == 'inProgress') {
+						ScoreboardManager.getInstance().setAlert(ownerHandle, country.getName());
+					}
 				}
 
 				if (teamManager) {
 					teamManager.getTeamFromPlayer(ownerHandle).updateCityCount(1);
 				}
-
-				ScoreboardManager.updateScoreboardTitle();
 			}
+
+			EventEmitter.getInstance().emit(EVENT_ON_CITY_CAPTURE, city, prevOwner, owner);
 
 			return false;
 		})
