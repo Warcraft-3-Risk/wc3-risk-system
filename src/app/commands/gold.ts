@@ -5,11 +5,11 @@ import { SettingsContext } from '../settings/settings-context';
 import { HexColors } from '../utils/hex-colors';
 import { ErrorMsg } from '../utils/messages';
 import { isNonEmptySubstring } from '../utils/utils';
+import { PlayerManager } from '../player/player-manager';
 
 export function GoldCommand(chatManager: ChatManager, gameManager: GameManager, nameManager: NameManager) {
 	chatManager.addCmd(['-g', '-gold'], () => {
 		if (!gameManager.isStateMetaGame()) return;
-		if (SettingsContext.getInstance().isFFA()) return;
 
 		const player: player = GetTriggerPlayer();
 		const sendersGold: number = GetPlayerState(player, PLAYER_STATE_RESOURCE_GOLD);
@@ -21,6 +21,16 @@ export function GoldCommand(chatManager: ChatManager, gameManager: GameManager, 
 			.filter((str) => str.trim() !== '');
 
 		let goldQty: number;
+		const humanPlayersCount: number = PlayerManager.getInstance().countHumanPlayers();
+
+		//sandbox behaviour - one human player in the game
+		if (humanPlayersCount === 1 && splitStr.length === 2) {
+			goldQty = S2I(splitStr[1]);
+			SetPlayerState(player, PLAYER_STATE_RESOURCE_GOLD, sendersGold + goldQty);
+			return DisplayTextToPlayer(player, 0, 0, `You added ${HexColors.TANGERINE}${goldQty}|r gold to yourself!`);
+		}
+
+		if (SettingsContext.getInstance().isFFA()) return;
 
 		if (splitStr.length === 3) {
 			goldQty = Math.min(S2I(splitStr[2]), sendersGold);
