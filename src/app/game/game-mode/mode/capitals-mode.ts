@@ -6,12 +6,12 @@ import { CountdownState } from '../base-game-mode.ts/countdown-state';
 import { GameLoopState } from '../base-game-mode.ts/game-loop-state';
 import { GameOverState } from '../base-game-mode.ts/game-over-state';
 import { ResetState } from '../base-game-mode.ts/reset-state';
-import { SetPromodeTempVisionState } from '../base-game-mode.ts/set-promode-temp-vision-state';
 import { BaseState } from '../state/base-state';
 import { CapitalsResetState } from '../capital-game-mode/capitals-reset-state';
 import { CapitalsSelectionState } from '../capital-game-mode/capitals-selection-state';
 import { CapitalsDistributeState } from '../capital-game-mode/capitals-distribute-state';
 import { WaitState } from '../base-game-mode.ts/wait-state';
+import { VisionState } from '../base-game-mode.ts/vision-state';
 
 export class CapitalsData implements StateData {
 	public playerCapitalSelections: Map<player, City>;
@@ -25,7 +25,7 @@ export class CapitalsMode extends BaseMode<CapitalsData> {
 			new WaitState(2),
 			new CapitalsSelectionState(),
 			new CapitalsDistributeState(),
-			new SetPromodeTempVisionState(),
+			new VisionState(),
 			new WaitState(2),
 			new CountdownState(),
 			new GameLoopState(),

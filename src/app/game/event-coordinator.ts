@@ -22,6 +22,8 @@ import { Quests } from '../quests/quests';
 import { BaseMode } from './game-mode/mode/base-mode';
 import { StateData } from './game-mode/state/state-data';
 import { CapitalsMode } from './game-mode/mode/capitals-mode';
+import { SettingsContext } from '../settings/settings-context';
+import { PromodeMode } from './game-mode/mode/promode-mode';
 
 export class EventCoordinator {
 	private static instance: EventCoordinator;
@@ -80,7 +82,15 @@ export class EventCoordinator {
 	}
 
 	public applyGameMode(gameType: GameType) {
-		this._currentMode = gameType == 'Capitals' ? new CapitalsMode() : new StandardMode();
+		if (gameType == 'Capitals') {
+			this._currentMode = new CapitalsMode();
+		} else {
+			if (SettingsContext.getInstance().isPromode()) {
+				this._currentMode = new PromodeMode();
+			} else {
+				this._currentMode = new StandardMode();
+			}
+		}
 		EventEmitter.getInstance().emit(EVENT_NEXT_STATE);
 	}
 }
