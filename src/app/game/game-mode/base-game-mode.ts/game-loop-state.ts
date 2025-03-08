@@ -12,6 +12,7 @@ import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { City } from 'src/app/city/city';
 import { StateData } from '../state/state-data';
+import { PlayerManager } from 'src/app/player/player-manager';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -143,5 +144,14 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
 		ScoreboardManager.getInstance().updatePartial();
+	}
+
+	// GameLoopState uses GlobalGameData.matchState to determine if the match is over
+	// This is preferable as it allows the state to clean up and transition to the next state
+	onPlayerRestart(player: ActivePlayer) {
+		const humanPlayersCount: number = PlayerManager.getInstance().getHumanPlayersCount();
+		if (humanPlayersCount === 1) {
+			GlobalGameData.matchState = 'postMatch';
+		}
 	}
 }
