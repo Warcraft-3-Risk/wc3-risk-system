@@ -3,7 +3,7 @@ import { GameEntity } from '../game-entity';
 import { PlayerData } from './player-data';
 import { Status } from './status/status';
 import { PLAYER_STATUS } from './status/status-enum';
-import { NameManager } from 'src/app/managers/names/name-manager';
+import { NameManager } from 'src/names/name-manager';
 import { Team } from '../team/team';
 import { EntityID } from '../entity-id';
 import { KillsDeaths } from '../data/kills-death';

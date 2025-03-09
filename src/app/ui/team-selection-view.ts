@@ -1,6 +1,6 @@
 import { PlayerManager } from '../entity/player/player-manager';
 import { BaseGameState } from '../game/base-game-state';
-import { NameManager } from '../managers/names/name-manager';
+import { NameManager } from '../../names/name-manager';
 import { SettingsController } from '../settings/settings-controller';
 import { HexColors } from '../utils/hex-colors';
 

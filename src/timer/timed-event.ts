@@ -7,6 +7,7 @@ export class TimedEvent {
 	private repeating: boolean;
 	private executeOnTick: boolean;
 	private callback: (remainingTime?: number) => void;
+	private isActive: boolean;
 
 	constructor(
 		id: TimerEventType,
@@ -21,9 +22,12 @@ export class TimedEvent {
 		this.repeating = repeating;
 		this.executeOnTick = executeOnTick;
 		this.callback = (remainingTime?: number) => callback(remainingTime);
+		this.isActive = true;
 	}
 
 	public update(delta: number): boolean {
+		if (!this.isActive) return false;
+
 		this.duration -= delta;
 
 		if (this.executeOnTick) {
@@ -36,6 +40,7 @@ export class TimedEvent {
 			if (this.repeating) {
 				this.reset();
 			} else {
+				this.isActive = false;
 				// Remove timer from EventTimerQueue
 				return false;
 			}

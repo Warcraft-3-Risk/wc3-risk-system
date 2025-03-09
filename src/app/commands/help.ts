@@ -1,4 +1,4 @@
-import { ChatManager } from '../managers/chat/chat-manager';
+import { ChatManager } from 'src/chat/chat-manager';
 import { HexColors } from '../utils/hex-colors';
 
 export function HelpCommand(chatManager: ChatManager) {

@@ -1,4 +1,4 @@
-import { ChatManager } from '../managers/chat/chat-manager';
+import { ChatManager } from 'src/chat/chat-manager';
 
 export function HowTo(chatManager: ChatManager) {
 	chatManager.addCmd(['-howto', '-tut', '-tutorial'], () => {

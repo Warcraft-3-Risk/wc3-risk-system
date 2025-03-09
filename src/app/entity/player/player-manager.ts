@@ -1,4 +1,4 @@
-import { NameManager } from 'src/app/managers/names/name-manager';
+import { NameManager } from 'src/names/name-manager';
 import { PLAYER_COLORS } from 'src/app/utils/player-colors';
 import { ShuffleArray } from 'src/app/utils/utils';
 import { GamePlayer } from './game-player';

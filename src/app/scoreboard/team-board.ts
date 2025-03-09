@@ -1,6 +1,6 @@
 import { GamePlayer } from '../entity/player/game-player';
 import { PlayerData } from '../entity/player/player-data';
-import { NameManager } from '../managers/names/name-manager';
+import { NameManager } from '../../names/name-manager';
 import { Team } from '../teams/team';
 import { TeamManager } from '../teams/team-manager';
 import { HexColors } from '../utils/hex-colors';

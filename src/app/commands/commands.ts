@@ -1,10 +1,10 @@
 import { PlayerManager } from '../entity/player/player-manager';
-import { ChatManager } from '../managers/chat/chat-manager';
-import { NameManager } from '../managers/names/name-manager';
+import { NameManager } from '../../names/name-manager';
 import { CamCommand } from './cam';
 import { HelpCommand } from './help';
 import { HowTo } from './turorial';
 import { UICommand } from './ui';
+import { ChatManager } from 'src/chat/chat-manager';
 
 export function SetCommands() {
 	const chatManager: ChatManager = ChatManager.getInstance();
