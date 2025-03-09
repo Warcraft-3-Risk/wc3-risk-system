@@ -2,6 +2,7 @@ import { NameManager } from '../managers/names/name-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { ComputeRatio } from '../utils/utils';
 import { StatisticsModel } from './statistics-model';
+import { UNIT_ID } from 'src/configs/unit-id';
 
 type TextFunction = (player: ActivePlayer) => string;
 
@@ -80,43 +81,52 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 					player.trackedData.killsDeaths.get(player.getPlayer()).deathValue
 				),
 		},
-		// {
-		// 	size: 0.06,
-		// 	header: 'SS Kills\n(Raw)',
-		// 	textFunction: (player) => `${player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`).kills}`,
-		// },
-		// {
-		// 	size: 0.06,
-		// 	header: 'SS Deaths\n(Raw)',
-		// 	textFunction: (player) => `${player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`).deaths}`,
-		// },
-		// {
-		// 	size: 0.06,
-		// 	header: 'SS KD Ratio\n(Raw)',
-		// 	textFunction: (player) =>
-		// 		ComputeRatio(
-		// 			player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`).kills,
-		// 			player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`).deaths
-		// 		),
-		// },
-		// {
-		// 	size: 0.06,
-		// 	header: 'Tank Kills\n(Raw)',
-		// 	textFunction: (player) => `${player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).kills}`,
-		// },
-		// {
-		// 	size: 0.06,
-		// 	header: 'Tank Deaths\n(Raw)',
-		// 	textFunction: (player) => `${player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).deaths}`,
-		// },
-		// {
-		// 	size: 0.06,
-		// 	header: 'Tank KD Ratio\n(Raw)',
-		// 	textFunction: (player) =>
-		// 		ComputeRatio(
-		// 			player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).kills,
-		// 			player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).deaths
-		// 		),
-		// },
+		{
+			size: 0.06,
+			header: 'SS kills\n(Value)',
+			textFunction: (player) => `${player.trackedData.killsDeaths.get(player.getPlayer()).kills}`,
+		},
+		{
+			size: 0.06,
+			header: 'SS Deaths\n(Value)',
+			textFunction: (player) =>
+				ComputeRatio(
+					player.trackedData.killsDeaths.get(player.getPlayer()).killValue,
+					player.trackedData.killsDeaths.get(player.getPlayer()).deathValue
+				),
+		},
+		{
+			size: 0.06,
+			header: 'SS KD Ratio\n(Value)',
+			textFunction: (player) =>
+				ComputeRatio(
+					player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`).kills,
+					player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`).deaths
+				),
+		},
+		{
+			size: 0.06,
+			header: 'Tank Kills\n(Value)',
+			textFunction: (player) => `${player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).kills}`,
+		},
+		{
+			size: 0.06,
+			header: 'Tank Deaths\n(Value)',
+			textFunction: (player) => `${player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).deaths}`,
+		},
+		{
+			size: 0.06,
+			header: 'Tank KD Ratio\n(Value)',
+			textFunction: (player) =>
+				ComputeRatio(
+					player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).kills,
+					player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).deaths
+				),
+		},
+		{
+			size: 0.06,
+			header: 'Denies\n(Value)',
+			textFunction: (player) => `${player.trackedData.denies}`
+		},
 	];
 }

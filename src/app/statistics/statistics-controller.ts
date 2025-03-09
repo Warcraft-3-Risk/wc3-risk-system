@@ -60,7 +60,7 @@ export class StatisticsController {
 		this.model.setData();
 		this.setPlayedTimeText();
 		this.setGameWinnerText();
-		this.view.refreshRows(this.model);
+		this.view.refreshRows();
 	}
 
 	public getModel() {
