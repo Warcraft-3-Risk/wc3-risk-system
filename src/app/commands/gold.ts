@@ -1,6 +1,7 @@
 import { GlobalGameData } from '../game/state/global-game-state';
 import { ChatManager } from '../managers/chat-manager';
 import { NameManager } from '../managers/names/name-manager';
+import { PlayerManager } from '../player/player-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { HexColors } from '../utils/hex-colors';
 import { ErrorMsg } from '../utils/messages';
@@ -9,18 +10,28 @@ import { isNonEmptySubstring } from '../utils/utils';
 export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) {
 	chatManager.addCmd(['-g', '-gold'], () => {
 		if (GlobalGameData.matchState != 'inProgress') return;
-		if (SettingsContext.getInstance().isFFA()) return;
 
 		const player: player = GetTriggerPlayer();
-		const sendersGold: number = GetPlayerState(player, PLAYER_STATE_RESOURCE_GOLD);
-
-		if (sendersGold < 1) return ErrorMsg(player, 'You have no gold to send!');
 
 		const splitStr: string[] = GetEventPlayerChatString()
 			.split(' ')
 			.filter((str) => str.trim() !== '');
 
 		let goldQty: number;
+		const humanPlayersCount: number = PlayerManager.getInstance().getHumanPlayersCount();
+
+		//sandbox behaviour - one human player in the game
+		if (humanPlayersCount === 1 && splitStr.length === 2) {
+			goldQty = S2I(splitStr[1]);
+			SetPlayerState(player, PLAYER_STATE_RESOURCE_GOLD, GetPlayerState(player, PLAYER_STATE_RESOURCE_GOLD) + goldQty);
+			return DisplayTextToPlayer(player, 0, 0, `You added ${HexColors.TANGERINE}${goldQty}|r gold to yourself!`);
+		}
+
+		if (SettingsContext.getInstance().isFFA()) return;
+
+		const sendersGold: number = GetPlayerState(player, PLAYER_STATE_RESOURCE_GOLD);
+
+		if (sendersGold < 1) return ErrorMsg(player, 'You have no gold to send!');
 
 		if (splitStr.length === 3) {
 			goldQty = Math.min(S2I(splitStr[2]), sendersGold);
