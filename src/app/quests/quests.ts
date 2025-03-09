@@ -46,7 +46,7 @@ export class Quests {
 	}
 
 	private Credits() {
-		let description: string = 'Main Dev/Code: ForLolz#11696';
+		let description: string = 'Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930';
 		description += '\nTerrain: Nerla#1510';
 		description += '\nUnits: Saran, ForLolz#11696';
 		description += '\nIcons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish';
