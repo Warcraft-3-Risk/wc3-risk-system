@@ -23,12 +23,18 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 				`Your capital has been captured by ${NameManager.getInstance().getDisplayName(owner.getPlayer())}!\nYou have been eliminated!`,
 				'Sound\\Interface\\Error.flac'
 			);
+
+			const playerIsActive = preOwner.status.isActive();
+
 			LocalMessage(
 				owner.getPlayer(),
-				`You have captured the capital of ${NameManager.getInstance().getDisplayName(preOwner.getPlayer())}!\nThey have been eliminated!`,
+				`You have captured the capital of ${NameManager.getInstance().getDisplayName(preOwner.getPlayer())}!${playerIsActive ? '\nThey have been eliminated!' : ''}`,
 				'Sound\\Interface\\Victory.flac'
 			);
-			preOwner.status.set(PLAYER_STATUS.DEAD);
+
+			if (preOwner.status.isActive()) {
+				preOwner.status.set(PLAYER_STATUS.DEAD);
+			}
 
 			if (GetUnitTypeId(city.barrack.unit) == UNIT_ID.CAPITAL) {
 				IssueImmediateOrderById(city.barrack.unit, UNIT_ID.CONQUERED_CAPITAL);
