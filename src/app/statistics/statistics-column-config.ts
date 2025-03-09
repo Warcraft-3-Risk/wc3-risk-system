@@ -80,16 +80,15 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 					player.trackedData.killsDeaths.get(player.getPlayer()).deathValue
 				),
 		},
-		// {
-		// 	size: 0.06,
-		// 	header: 'SS Kills\n(Raw)',
-		// 	textFunction: (player) => `${player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`).kills}`,
-		// },
-		// {
-		// 	size: 0.06,
-		// 	header: 'SS Deaths\n(Raw)',
-		// 	textFunction: (player) => `${player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`).deaths}`,
-		// },
+		 //{
+		 //	size: 0.06,
+		 //	header: 'SS Deaths\n(Raw)',
+		 //	textFunction: (player) => 
+		 //	ComputeRatio(
+		 //		player.trackedData.killsDeaths.get(player.getPlayer()).killValue,
+		 //		player.trackedData.killsDeaths.get(player.getPlayer()).deathValue
+		 //	),
+		 //},
 		// {
 		// 	size: 0.06,
 		// 	header: 'SS KD Ratio\n(Raw)',

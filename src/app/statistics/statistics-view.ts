@@ -12,13 +12,13 @@ export class StatisticsView {
 	private static readonly COLUMN_HEIGHT: number = 0.5;
 
 	constructor(model: StatisticsModel) {
-		this.backdrop = BlzCreateFrame('StatisticsBoard', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
-		this.header = BlzFrameGetChild(this.backdrop, 0);
-		this.minimizeButton = BlzFrameGetChild(this.header, 3);
-		this.columns = [];
-		this.rows = new Map<string, framehandle>();
-		this.buildColumns(model);
-		this.setVisibility(false);
+    		this.backdrop = BlzCreateFrame('StatisticsBoard', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
+    		this.header = BlzFrameGetChild(this.backdrop,0);
+    		this.minimizeButton = BlzFrameGetChild(this.header, 3);
+    		this.columns = [];
+	    	this.rows = new Map<string, framehandle>();
+    		this.buildColumns(model);
+	    	this.setVisibility(false);
 	}
 
 	public setVisibility(isVisible: boolean) {
@@ -89,6 +89,7 @@ export class StatisticsView {
 		const headerY: number = -0.05;
 		const rowHeight: number = StatisticsView.ROW_HEIGHT;
 		let headerX: number = 0.008;
+
 
 		model.getColumnData().forEach((entry, columnIndex) => {
 			const { size, header } = entry;
