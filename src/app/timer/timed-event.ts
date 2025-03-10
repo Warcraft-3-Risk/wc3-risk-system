@@ -2,59 +2,53 @@ import { TimerEventType } from './timed-event-type';
 
 export class TimedEvent {
 	public id: TimerEventType;
-	private interval: number;
 	private duration: number;
+	private remainingTime: number;
 	private repeating: boolean;
 	private executeOnTick: boolean;
 	private callback: (remainingTime?: number) => void;
-	private isActive: boolean;
 
 	constructor(
 		id: TimerEventType,
-		interval: number,
+		duration: number,
 		repeating: boolean,
 		executeOnTick: boolean,
 		callback: (remainingTime?: number) => void
 	) {
 		this.id = id;
-		this.interval = interval;
-		this.duration = interval;
+		this.duration = duration;
+		this.remainingTime = duration;
 		this.repeating = repeating;
 		this.executeOnTick = executeOnTick;
 		this.callback = (remainingTime?: number) => callback(remainingTime);
-		this.isActive = true;
 	}
 
 	public update(delta: number): boolean {
-		if (!this.isActive) return false;
-
-		this.duration -= delta;
-
 		if (this.executeOnTick) {
-			this.callback(this.duration);
+			this.callback(this.remainingTime);
 		}
 
-		if (this.duration <= 0) {
+		if (this.remainingTime <= 0) {
 			this.callback();
 
 			if (this.repeating) {
 				this.reset();
 			} else {
-				this.isActive = false;
 				// Remove timer from EventTimerQueue
 				return false;
 			}
 		}
 
+		this.remainingTime -= delta;
 		// Do not remove timer from EventTimerQueue
 		return true;
 	}
 
 	public reset(): void {
-		this.duration = this.interval;
+		this.remainingTime = this.duration;
 	}
 
 	public getRemainingTime(): number {
-		return this.duration;
+		return this.remainingTime;
 	}
 }

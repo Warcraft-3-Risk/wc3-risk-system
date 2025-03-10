@@ -1,1 +1,1 @@
-export type TimerEventType = string | number;
+export type TimerEventType = 'settingsSelection' | number;
