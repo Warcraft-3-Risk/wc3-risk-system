@@ -1,12 +1,12 @@
 import { BaseGameState } from './base-game-state';
-import { ModeSelectionState } from './states/mode-selection-state';
+import { SettingSelectionState } from './states/settings-selection-state';
 import { InitializationState } from './states/initialization-state';
 import { TeamSelectionState } from './states/team-selection-state';
 import { GameSetupState } from './states/game-setup-state';
 import { ActiveGameState } from './states/active-game-state';
 import { PostGameState } from './states/post-game-state';
 
-export type StateName = 'initialization' | 'modeSelection' | 'teamSelection' | 'gameSetup' | 'activeGame' | 'postGame';
+export type StateName = 'initialization' | 'settingsSelection' | 'teamSelection' | 'gameSetup' | 'activeGame' | 'postGame';
 
 interface NamedState {
 	name: StateName;
@@ -23,7 +23,7 @@ export class GameStateManager {
 		//It is possible to go to any state from any state for the purpose of resetting, but in general just calling nextState() will handle the states properly.
 		this.states = [
 			{ name: 'initialization', instance: new InitializationState(this) },
-			{ name: 'modeSelection', instance: new ModeSelectionState(this) },
+			{ name: 'settingsSelection', instance: new SettingSelectionState(this) },
 			{ name: 'teamSelection', instance: new TeamSelectionState(this) },
 			{ name: 'gameSetup', instance: new GameSetupState(this) },
 			{ name: 'activeGame', instance: new ActiveGameState(this) },
