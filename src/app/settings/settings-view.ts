@@ -86,6 +86,9 @@ export class SettingsView {
 				const teamSizeFrame: framehandle = BlzGetFrameByName('DiplomacySlider', 0);
 				const frameValue: number = R2I(BlzGetTriggerFrameValue());
 
+				BlzFrameSetEnable(fogFrame, true);
+				BlzFrameSetEnable(diploFrame, true);
+
 				this.settingsController.setGameType(frameValue);
 
 				switch (frameValue) {
@@ -95,10 +98,6 @@ export class SettingsView {
 						this.settingsController.setDiplomacy(Diplomacy.DraftTeams);
 						this.settingsController.setTeamSize(2);
 
-						BlzFrameSetValue(fogFrame, this.settingsController.getFog());
-						BlzFrameSetValue(overtimeFrame, this.settingsController.getOvertime());
-						BlzFrameSetValue(diploFrame, this.settingsController.getDiplomacy());
-						BlzFrameSetValue(teamSizeFrame, 2);
 						BlzFrameSetEnable(fogFrame, false);
 						BlzFrameSetEnable(diploFrame, false);
 						BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), true);
@@ -110,12 +109,6 @@ export class SettingsView {
 						this.settingsController.setOvertime(Overtime.Off);
 						this.settingsController.setTeamSize(2);
 
-						BlzFrameSetEnable(fogFrame, true);
-						BlzFrameSetEnable(diploFrame, true);
-						BlzFrameSetValue(fogFrame, this.settingsController.getFog());
-						BlzFrameSetValue(overtimeFrame, this.settingsController.getOvertime());
-						BlzFrameSetValue(diploFrame, this.settingsController.getDiplomacy());
-						BlzFrameSetValue(teamSizeFrame, this.settingsController.getTeamSize());
 						BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), true);
 						break;
 
@@ -124,12 +117,6 @@ export class SettingsView {
 						this.settingsController.setDiplomacy(Diplomacy.FFA);
 						this.settingsController.setTeamSize(2);
 
-						BlzFrameSetEnable(fogFrame, true);
-						BlzFrameSetEnable(diploFrame, true);
-						BlzFrameSetValue(fogFrame, this.settingsController.getFog());
-						BlzFrameSetValue(overtimeFrame, this.settingsController.getOvertime());
-						BlzFrameSetValue(diploFrame, this.settingsController.getDiplomacy());
-						BlzFrameSetValue(teamSizeFrame, this.settingsController.getTeamSize());
 						BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), false);
 						break;
 
@@ -139,16 +126,14 @@ export class SettingsView {
 						this.settingsController.setDiplomacy(Diplomacy.FFA);
 						this.settingsController.setTeamSize(2);
 
-						BlzFrameSetEnable(fogFrame, true);
-						BlzFrameSetEnable(diploFrame, true);
-						BlzFrameSetValue(fogFrame, this.settingsController.getFog());
-						BlzFrameSetValue(overtimeFrame, this.settingsController.getOvertime());
-						BlzFrameSetValue(diploFrame, this.settingsController.getDiplomacy());
-						BlzFrameSetValue(teamSizeFrame, this.settingsController.getTeamSize());
 						BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), false);
 						break;
 				}
 
+				BlzFrameSetValue(fogFrame, this.settingsController.getFog());
+				BlzFrameSetValue(overtimeFrame, this.settingsController.getOvertime());
+				BlzFrameSetValue(diploFrame, this.settingsController.getDiplomacy());
+				BlzFrameSetValue(teamSizeFrame, this.settingsController.getTeamSize());
 				this.colorizeText(`GameTypePopup`, GameTypeOptions);
 				this.colorizeText(`DiplomacyPopup`, DiplomacyOptions);
 				this.colorizeText(`FogPopup`, FogOptions);
