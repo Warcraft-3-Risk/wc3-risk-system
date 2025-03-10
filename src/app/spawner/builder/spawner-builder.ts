@@ -1,8 +1,8 @@
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
-import { UNIT_ID } from 'src/configs/unit-id';
 import { Spawner } from '../spawner';
 import { ISpawnerBuilder } from './spawner-builder.interface';
 import { ISpawnerData } from './spawner-data.interface';
+import { UNIT_ID } from 'src/app/configs/unit-id';
 
 export class SpawnerBuilder implements ISpawnerBuilder {
 	private x: number;

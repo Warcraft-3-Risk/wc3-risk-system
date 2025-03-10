@@ -1,5 +1,5 @@
-import { ChatManager } from 'src/chat/chat-manager';
 import { File } from 'w3ts';
+import { ChatManager } from '../chat/chat-manager';
 
 export function UICommand(chatManager: ChatManager) {
 	chatManager.addCmd(['-ui'], async () => {

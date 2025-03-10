@@ -1,11 +1,11 @@
 import { PlayerManager } from 'src/app/entity/player/player-manager';
 import { CameraManager } from 'src/app/libs/camera-manager';
-import { NameManager } from 'src/names/name-manager';
-import { TimedEventManager } from 'src/timer/timed-event-manager';
 import { Quests } from 'src/app/quests/quests';
 import { SetConsoleUI } from 'src/app/ui/console';
 import { BaseGameState } from '../base-game-state';
-import { SetupChatCommands } from 'src/chat/set-commands';
+import { SetupChatCommands } from 'src/app/chat/set-commands';
+import { NameManager } from 'src/app/names/name-manager';
+import { TimedEventManager } from 'src/app/timer/timed-event-manager';
 
 export class InitializationState extends BaseGameState {
 	public enter(): void {

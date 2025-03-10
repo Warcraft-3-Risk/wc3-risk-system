@@ -1,20 +1,20 @@
-import { DefaultCityType, CityGuardXOffSet, CityGuardYOffSet, CityRegionSize } from 'src/configs/city-settings';
-import { DefaultGuardType, DefaultBarrackType } from 'src/configs/country-settings';
-import { UNIT_ID } from 'src/configs/unit-id';
-import { EnterRegionTrigger } from '../../triggers/enter-region-event';
-import { LeaveRegionTrigger } from '../../triggers/leave-region-event';
-import { UnitTrainedTrigger } from '../../triggers/unit-trained-event';
-import { NEUTRAL_HOSTILE } from '../../utils/utils';
+import { DefaultCityType, CityGuardXOffSet, CityGuardYOffSet, CityRegionSize } from 'src/app/configs/city-settings';
+import { DefaultGuardType, DefaultBarrackType } from 'src/app/configs/country-settings';
+import { UNIT_ID } from 'src/app/configs/unit-id';
+import { Resetable } from 'src/app/interfaces/resettable';
+import { EnterRegionTrigger } from 'src/app/triggers/enter-region-event';
+import { LeaveRegionTrigger } from 'src/app/triggers/leave-region-event';
+import { UnitTrainedTrigger } from 'src/app/triggers/unit-trained-event';
+import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { CityBehaviorRegistry } from '../behaviors/city.behavior-registry';
 import { City } from '../city';
-import { ICityBuilder } from './city-builder.interface';
-import { ICityData } from './city-data.interface';
 import { CityType } from '../city-type';
 import { Barrack } from '../components/barrack';
 import { Guard } from '../components/guard';
-import { GuardFactory } from './guard-factory';
 import { HandleToCity } from '../handle-to-city';
-import { Resetable } from 'src/app/interfaces/resettable';
+import { ICityBuilder } from './city-builder.interface';
+import { ICityData } from './city-data.interface';
+import { GuardFactory } from './guard-factory';
 
 export class CityBuilder implements ICityBuilder, Resetable {
 	private x: number;

@@ -1,10 +1,10 @@
 import { City } from '../city/city';
 import { HandleToCity } from '../city/handle-to-city';
-import { UNIT_ID } from '../../configs/unit-id';
 import { UNIT_TYPE } from '../utils/unit-types';
-import { CityRegionSize } from 'src/configs/city-settings';
 import { CompareUnitByValue } from '../utils/unit-comparisons';
 import { GetUnitsInRangeByAllegiance } from '../utils/guard-filters';
+import { CityRegionSize } from '../configs/city-settings';
+import { UNIT_ID } from '../configs/unit-id';
 
 export const LeaveRegionTrigger: trigger = CreateTrigger();
 

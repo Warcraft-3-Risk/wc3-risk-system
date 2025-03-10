@@ -1,4 +1,4 @@
-import { UNIT_ID } from 'src/configs/unit-id';
+import { UNIT_ID } from './unit-id';
 
 /**
  * A record mapping of unit names to their corresponding IDs.

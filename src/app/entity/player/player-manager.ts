@@ -1,8 +1,8 @@
-import { NameManager } from 'src/names/name-manager';
 import { PLAYER_COLORS } from 'src/app/utils/player-colors';
 import { ShuffleArray } from 'src/app/utils/utils';
 import { GamePlayer } from './game-player';
-import { AdminList } from 'src/configs/admin-list';
+import { AdminList } from 'src/app/configs/admin-list';
+import { NameManager } from 'src/app/names/name-manager';
 
 export class PlayerManager {
 	private gamePlayers: Map<player, GamePlayer>;

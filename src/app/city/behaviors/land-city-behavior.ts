@@ -1,8 +1,8 @@
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { IsUnitMelee } from 'src/app/utils/utils';
-import { DefaultGuardType } from 'src/configs/country-settings';
 import { City } from '../city';
 import { ICityBehavior } from './city-behavior.interface';
+import { DefaultGuardType } from 'src/app/configs/country-settings';
 
 export class LandCityBehavior implements ICityBehavior {
 	public isValidGuard(city: City, unit: unit): boolean {

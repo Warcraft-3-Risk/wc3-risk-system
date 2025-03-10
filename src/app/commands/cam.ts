@@ -1,4 +1,4 @@
-import { ChatManager } from 'src/chat/chat-manager';
+import { ChatManager } from '../chat/chat-manager';
 import { CameraManager } from '../libs/camera-manager';
 
 export function CamCommand(chatManager: ChatManager) {

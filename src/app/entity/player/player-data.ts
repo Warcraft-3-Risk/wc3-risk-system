@@ -1,6 +1,5 @@
 import { Country } from 'src/app/country/country';
 import { PLAYER_SLOTS, NEUTRAL_HOSTILE } from 'src/app/utils/utils';
-import { TRACKED_UNITS } from 'src/configs/tracked-units';
 import { Bounty } from '../data/bonus/bounty';
 import { FightBonus } from '../data/bonus/fight-bonus';
 import { Cities } from '../data/cities';
@@ -10,6 +9,7 @@ import { KillsDeaths } from '../data/kills-death';
 import { SingleEntityData } from '../single-entity-data';
 import { EntityID } from '../entity-id';
 import { Resetable } from 'src/app/interfaces/resettable';
+import { TRACKED_UNITS } from 'src/app/configs/tracked-units';
 
 export class PlayerData implements Resetable, SingleEntityData {
 	private income: Income;

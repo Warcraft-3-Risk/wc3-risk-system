@@ -3,10 +3,10 @@ import { GameEntity } from '../game-entity';
 import { PlayerData } from './player-data';
 import { Status } from './status/status';
 import { PLAYER_STATUS } from './status/status-enum';
-import { NameManager } from 'src/names/name-manager';
 import { Team } from '../team/team';
 import { EntityID } from '../entity-id';
 import { KillsDeaths } from '../data/kills-death';
+import { NameManager } from 'src/app/names/name-manager';
 
 export class GamePlayer implements GameEntity<Map<EntityID, KillsDeaths>> {
 	private player: player;

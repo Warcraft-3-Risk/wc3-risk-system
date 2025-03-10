@@ -1,12 +1,12 @@
-import { UNIT_ID } from 'src/configs/unit-id';
+import { UNIT_ID } from '../configs/unit-id';
+import { Ownable } from '../interfaces/ownable';
+import { Resetable } from '../interfaces/resettable';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 import { ICityBehavior } from './behaviors/city-behavior.interface';
+import { GuardFactory } from './builder/guard-factory';
 import { Barrack } from './components/barrack';
 import { Guard } from './components/guard';
-import { GuardFactory } from './builder/guard-factory';
-import { Ownable } from '../interfaces/ownable';
-import { Resetable } from '../interfaces/resettable';
 
 export class City implements Resetable, Ownable {
 	private owner: player;

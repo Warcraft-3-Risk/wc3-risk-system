@@ -7,7 +7,7 @@ import { Country } from '../country';
 import { StringToCountry, CityToCountry } from '../country-map';
 import { SpawnerBuilder } from 'src/app/spawner/builder/spawner-builder';
 import { ISpawnerData } from 'src/app/spawner/builder/spawner-data.interface';
-import { DefaultSpawnType, SpawnLimitMultiplier } from 'src/configs/country-settings';
+import { DefaultSpawnType, SpawnLimitMultiplier } from 'src/app/configs/country-settings';
 
 export class CountryBuilder implements ICountryBuilder {
 	private name: string;

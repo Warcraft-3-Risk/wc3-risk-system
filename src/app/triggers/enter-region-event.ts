@@ -1,10 +1,10 @@
-import { CityRegionSize } from 'src/configs/city-settings';
 import { City } from '../city/city';
 import { HandleToCity } from '../city/handle-to-city';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { GetUnitsInRangeByAllegiance } from '../utils/guard-filters';
 import { CompareUnitByValue } from '../utils/unit-comparisons';
-import { UNIT_ID } from 'src/configs/unit-id';
+import { CityRegionSize } from '../configs/city-settings';
+import { UNIT_ID } from '../configs/unit-id';
 
 export const EnterRegionTrigger: trigger = CreateTrigger();
 

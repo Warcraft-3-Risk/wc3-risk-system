@@ -1,4 +1,4 @@
-import { UNIT_ID } from '../../configs/unit-id';
+import { UNIT_ID } from '../configs/unit-id';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resettable';
 import { UNIT_TYPE } from '../utils/unit-types';

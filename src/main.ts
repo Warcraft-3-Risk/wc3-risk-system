@@ -2,7 +2,7 @@ import { W3TS_HOOK, addScriptHook } from 'w3ts/hooks';
 import { MAP_NAME } from './app/utils/map-info';
 import { CountrySetup } from './app/country/country-setup';
 import { GameStateManager } from './app/game/game-state-manager';
-import { NameManager } from './names/name-manager';
+import { NameManager } from './app/names/name-manager';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 

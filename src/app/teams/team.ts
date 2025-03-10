@@ -1,4 +1,4 @@
-import { STARTING_INCOME } from 'src/configs/game-settings';
+import { STARTING_INCOME } from '../configs/game-settings';
 import { GamePlayer } from '../entity/player/game-player';
 
 export class Team {

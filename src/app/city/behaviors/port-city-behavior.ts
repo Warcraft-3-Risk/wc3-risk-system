@@ -1,8 +1,8 @@
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { IsUnitMelee } from 'src/app/utils/utils';
-import { UNIT_ID } from 'src/configs/unit-id';
 import { City } from '../city';
 import { ICityBehavior } from './city-behavior.interface';
+import { UNIT_ID } from 'src/app/configs/unit-id';
 
 export class PortCityBehavior implements ICityBehavior {
 	public isValidGuard(city: City, unit: unit): boolean {
