@@ -1,4 +1,3 @@
-import { BaseGameState } from '../game/base-game-state';
 import { HexColors } from '../utils/hex-colors';
 import { GameTypeOptions } from './handlers/game-type-handler';
 import { SettingsController } from './settings-controller';
@@ -7,13 +6,9 @@ import { FogOptions } from './strategies/fog';
 
 export class SettingsView {
 	private backdrop: framehandle;
-	private timer: framehandle;
-	private duration: number;
-	private gameState: BaseGameState;
+	private timerFrame: framehandle;
 
-	public constructor(duration: number, gameState: BaseGameState) {
-		this.gameState = gameState;
-		this.duration = duration;
+	public constructor() {
 		this.backdrop = BlzCreateFrame('SettingsView', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 		BlzFrameSetValue(BlzGetFrameByName('GameTypePopup', 0), 0);
 		BlzFrameSetValue(BlzGetFrameByName('FogPopup', 0), 0);
@@ -28,9 +23,8 @@ export class SettingsView {
 		this.playerSetup();
 	}
 
-	public update() {
-		// const event = EventTimer.getInstance().getEvent('periodTimer');
-		// BlzFrameSetText(this.timer, I2S(event.getRemainingTime()));
+	public update(time: number) {
+		BlzFrameSetText(this.timerFrame, time.toString());
 	}
 
 	public hide() {
@@ -48,10 +42,10 @@ export class SettingsView {
 		BlzFrameSetScale(timerLabel, 1.2);
 		BlzFrameSetPoint(timerLabel, FRAMEPOINT_BOTTOM, this.backdrop, FRAMEPOINT_BOTTOM, -0.008, 0.01);
 
-		this.timer = BlzCreateFrameByType('TEXT', 'SettingsHostTimer', this.backdrop, '', 0);
-		BlzFrameSetScale(this.timer, 1.2);
-		BlzFrameSetPoint(this.timer, FRAMEPOINT_LEFT, timerLabel, FRAMEPOINT_RIGHT, 0.0, 0.0);
-		BlzFrameSetText(this.timer, `${this.duration}`);
+		this.timerFrame = BlzCreateFrameByType('TEXT', 'SettingsHostTimer', this.backdrop, '', 0);
+		BlzFrameSetScale(this.timerFrame, 1.2);
+		BlzFrameSetPoint(this.timerFrame, FRAMEPOINT_LEFT, timerLabel, FRAMEPOINT_RIGHT, 0.0, 0.0);
+		BlzFrameSetText(this.timerFrame, ``);
 	}
 
 	private buildStartButton() {
@@ -68,8 +62,6 @@ export class SettingsView {
 			t,
 			Condition(() => {
 				this.hide();
-				// EventTimer.getInstance().stopEvent('periodTimer');
-				this.gameState.exit();
 			})
 		);
 	}
