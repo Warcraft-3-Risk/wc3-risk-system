@@ -26,12 +26,8 @@ export class TimedEvent {
 	public update(delta: number): boolean {
 		this.remainingTime -= delta;
 
-		if (this.executeOnTick) {
-			this.callback(this.remainingTime);
-		}
-
 		if (this.remainingTime <= 0) {
-			this.callback();
+			this.callback(this.remainingTime);
 
 			if (this.repeating) {
 				this.reset();
@@ -39,6 +35,8 @@ export class TimedEvent {
 				// Remove timer from EventTimerQueue
 				return false;
 			}
+		} else if (this.executeOnTick) {
+			this.callback(this.remainingTime);
 		}
 
 		// Do not remove timer from EventTimerQueue
