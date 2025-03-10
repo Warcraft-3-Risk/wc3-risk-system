@@ -10,26 +10,22 @@ export class SettingSelectionState extends BaseGameState {
 	public enter(): void {
 		const timerEventID: TimerEventType = 'settingsSelection';
 		const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
-		let timerDuration: number = 30;
-		this.ui = new SettingsView();
+		const timerDuration: number = 5;
+		this.ui = new SettingsView(timerDuration);
 
 		timedEventManager.addEvent(
 			new TimedEvent(timerEventID, timerDuration, false, true, (remainingTime) => {
 				if (remainingTime <= 0 || !this.ui.isVisible()) {
-					timedEventManager.stopEvent('settingsSelection');
+					timedEventManager.stopEvent(timerEventID);
 					this.exit();
 					return;
 				}
 
 				this.ui.update(remainingTime);
-
-				print(`tick ${remainingTime}`);
 			})
 		);
 	}
 	public exit(): void {
-		print('exit');
-
 		if (this.ui.isVisible()) {
 			this.ui.hide();
 		}

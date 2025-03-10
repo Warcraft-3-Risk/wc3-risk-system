@@ -8,7 +8,7 @@ export class SettingsView {
 	private backdrop: framehandle;
 	private timerFrame: framehandle;
 
-	public constructor() {
+	public constructor(timerDuration: number) {
 		this.backdrop = BlzCreateFrame('SettingsView', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 		BlzFrameSetValue(BlzGetFrameByName('GameTypePopup', 0), 0);
 		BlzFrameSetValue(BlzGetFrameByName('FogPopup', 0), 0);
@@ -21,6 +21,7 @@ export class SettingsView {
 		this.diplomacyQuantitySlider();
 		this.hostSetup();
 		this.playerSetup();
+		this.update(timerDuration);
 	}
 
 	public update(time: number) {

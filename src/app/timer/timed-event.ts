@@ -24,6 +24,8 @@ export class TimedEvent {
 	}
 
 	public update(delta: number): boolean {
+		this.remainingTime -= delta;
+
 		if (this.executeOnTick) {
 			this.callback(this.remainingTime);
 		}
@@ -39,7 +41,6 @@ export class TimedEvent {
 			}
 		}
 
-		this.remainingTime -= delta;
 		// Do not remove timer from EventTimerQueue
 		return true;
 	}
