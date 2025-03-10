@@ -92,19 +92,19 @@ export class SettingsView {
 				this.settingsController.setGameType(frameValue);
 
 				switch (frameValue) {
-					case 1: //Promode
+					case GameType.Promode:
 						this.settingsController.setFog(Fog.On);
 						this.settingsController.setOvertime(Overtime.Off);
 						this.settingsController.setDiplomacy(Diplomacy.DraftTeams);
 						BlzFrameSetEnable(fogFrame, false);
 						BlzFrameSetEnable(diploFrame, false);
 						break;
-					case 2: //Capitals
+					case GameType.Capitals:
 						this.settingsController.setFog(Fog.Night);
+						this.settingsController.setOvertime(Overtime.Turn60);
 						this.settingsController.setDiplomacy(Diplomacy.FFA);
-						this.settingsController.setOvertime(Overtime.Off);
 						break;
-					case 3: //Tournament
+					case GameType.Tournament:
 						this.settingsController.setFog(Fog.On);
 						this.settingsController.setDiplomacy(Diplomacy.FFA);
 						break;
@@ -116,11 +116,9 @@ export class SettingsView {
 				}
 
 				if (this.settingsController.getDiplomacy() != Diplomacy.FFA) {
-					print('teams');
 					this.settingsController.setTeamSize(2);
 					BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), true);
 				} else {
-					print('ffa');
 					BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), false);
 				}
 
