@@ -7,9 +7,8 @@ import { NameManager } from './app/names/name-manager';
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
 /**
- * tsMain calls wc3 main().
  * Anything in tsMain runs during the loading screen.
- * Anything in the 0 seconds timer will run when the game loads in
+ * Anything in the 0 second timer will run when the game loads in
  */
 function tsMain() {
 	try {
