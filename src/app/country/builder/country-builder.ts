@@ -44,7 +44,7 @@ export class CountryBuilder implements ICountryBuilder {
 	public build(): Country {
 		try {
 			if (!this.name || this.cities.length === 0 || !this.spawn) {
-				throw new Error("Country builder is missing required components.'");
+				print("Country builder is missing required components.'");
 			}
 
 			const country = new Country(this.name, this.cities, this.spawn);

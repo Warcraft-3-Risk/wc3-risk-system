@@ -6,7 +6,7 @@ export interface Settings {
 	PlayersPerTeam: number;
 }
 
-//Enums need to correspond with the risk.fdf file order for the popup frames menuitems
+//Enums need to correspond with the popup frames menuitems order in the risk.fdf file.
 export enum GameType {
 	Standard = 0,
 	Promode = 1,

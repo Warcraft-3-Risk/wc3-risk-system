@@ -20,11 +20,11 @@ export class SettingsView {
 		BlzFrameSetValue(BlzGetFrameByName('OvertimePopup', 0), Overtime.Turn30);
 		this.buildStartButton();
 		this.buildTimer();
-		this.gameTypePopup();
-		this.fogPopup();
-		this.diplomacyPopup();
-		this.diplomacyQuantitySlider();
-		this.overtimePopup();
+		this.gameTypePopupHandler();
+		this.fogPopupHandler();
+		this.diplomacyPopupHandler();
+		this.teamSizeSliderHandler();
+		this.overtimePopupHandler();
 		this.hostSetup();
 		this.playerSetup();
 		this.update(timerDuration);
@@ -73,7 +73,7 @@ export class SettingsView {
 		);
 	}
 
-	private gameTypePopup() {
+	private gameTypePopupHandler() {
 		const t: trigger = CreateTrigger();
 
 		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('GameTypePopup', 0), FRAMEEVENT_POPUPMENU_ITEM_CHANGED);
@@ -136,7 +136,7 @@ export class SettingsView {
 		this.colorizeText(`GameTypePopup`, GameTypeOptions);
 	}
 
-	private fogPopup() {
+	private fogPopupHandler() {
 		const t: trigger = CreateTrigger();
 
 		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('FogPopup', 0), FRAMEEVENT_POPUPMENU_ITEM_CHANGED);
@@ -153,7 +153,7 @@ export class SettingsView {
 		this.colorizeText(`FogPopup`, FogOptions);
 	}
 
-	private overtimePopup() {
+	private overtimePopupHandler() {
 		const t: trigger = CreateTrigger();
 
 		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('OvertimePopup', 0), FRAMEEVENT_POPUPMENU_ITEM_CHANGED);
@@ -170,7 +170,7 @@ export class SettingsView {
 		this.colorizeText('OvertimePopup', OvertimeOptions);
 	}
 
-	private diplomacyPopup() {
+	private diplomacyPopupHandler() {
 		const t: trigger = CreateTrigger();
 
 		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('DiplomacyPopup', 0), FRAMEEVENT_POPUPMENU_ITEM_CHANGED);
@@ -198,7 +198,7 @@ export class SettingsView {
 		this.colorizeText(`DiplomacyPopup`, DiplomacyOptions);
 	}
 
-	private diplomacyQuantitySlider() {
+	private teamSizeSliderHandler() {
 		const t: trigger = CreateTrigger();
 
 		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('DiplomacySlider', 0), FRAMEEVENT_SLIDER_VALUE_CHANGED);

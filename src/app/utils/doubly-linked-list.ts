@@ -42,7 +42,7 @@ export class DoublyLinkedList<T> {
 
 	public get(index: number): T {
 		if (index >= this.size || index < 0 || this.isEmpty()) {
-			throw new RangeError('Index out of range.');
+			print('Index out of range in Doubly Linked List');
 		}
 
 		let tmp: DoublyLinkedListNode<T> | null = this.head;

@@ -31,7 +31,7 @@ export class SettingsController {
 		if (handler) {
 			handler.applySettings(this.settings);
 		} else {
-			throw new Error('Invalid GameType handler');
+			print('Invalid GameType handler');
 		}
 	}
 
@@ -71,7 +71,7 @@ export class SettingsController {
 		return this.settings.Fog;
 	}
 
-	public getOvertime(): Overtime {
+	public getOvertime(): number {
 		return this.settings.Overtime;
 	}
 }
