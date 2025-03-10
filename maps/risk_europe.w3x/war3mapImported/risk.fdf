@@ -196,7 +196,9 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		PopupMenuFrame "GameTypePopupMenu",
 			Frame "MENU" "GameTypePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
 				MenuItem "Standard",     -2,
-				//MenuItem "Capitals",     -2,
+				MenuItem "Promode",     -2,
+				MenuItem "Capitals",     -2,
+				MenuItem "Tournament",     -2,
 			}
 		}
 
@@ -206,73 +208,74 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			Frame "MENU" "FogPopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
 				MenuItem "Off",     -2,
 				MenuItem "On",     -2,
-				//MenuItem "Night",     -2,
+				MenuItem "Night",     -2,
+			}
+		}
+
+
+		Frame "POPUPMENU" "OvertimePopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.08,
+    	PopupMenuFrame "OvertimePopupMenu",
+			Frame "MENU" "OvertimePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
+				MenuItem "Turn 30",     -2,
+				MenuItem "Turn 60",     -2,
+				MenuItem "Turn 120",     -2,
+				MenuItem "Off",     -2,
 			}
 		}
 
 		Frame "POPUPMENU" "DiplomacyPopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
-		SetPoint TOP,"PopupMenus",TOP,0.0,-0.08,
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.12,
     	PopupMenuFrame "DiplomacyPopupMenu",
 			Frame "MENU" "DiplomacyPopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
 				MenuItem "FFA",     -2,
-				MenuItem "Lobby Teams",     -2,
-				//MenuItem "Random Teams of: ",     -2,
+				MenuItem "Draft Teams",     -2,
+				MenuItem "Random Teams",     -2,
 			}
 		}
 
-		Frame "POPUPMENU" "OvertimePopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
-		SetPoint TOP,"PopupMenus",TOP,0.0,-0.12,
-    	PopupMenuFrame "OvertimePopupMenu",
-			Frame "MENU" "OvertimePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
-				MenuItem "Off",     -2,
-				MenuItem "Turbo (Turn 30)",     -2,
-				MenuItem "Medium (Turn 60)",     -2,
-				MenuItem "Extended (Turn 120)",     -2,
-			}
-		}
+		// Frame "GLUECHECKBOX" "PromodeCheckbox" {
+		// Width 0.024,
+		// Height 0.024,
+		// SetPoint TOP,"PopupMenus",TOP,-0.053,-0.17,
 
-		Frame "GLUECHECKBOX" "PromodeCheckbox" {
-		Width 0.024,
-		Height 0.024,
-		SetPoint TOP,"PopupMenus",TOP,-0.053,-0.17,
+		// ControlBackdrop "EscMenuCheckBoxBackdrop",
+		// 	Frame "BACKDROP" "EscMenuCheckBoxBackdrop" {
+		// 		DecorateFileNames,
+		// 		BackdropBlendAll,
+		// 		BackdropBackground  "EscMenuCheckBoxBackground",
+		// 	}
 
-		ControlBackdrop "EscMenuCheckBoxBackdrop",
-			Frame "BACKDROP" "EscMenuCheckBoxBackdrop" {
-				DecorateFileNames,
-				BackdropBlendAll,
-				BackdropBackground  "EscMenuCheckBoxBackground",
-			}
+		// ControlDisabledBackdrop "EscMenuDisabledCheckBoxBackdrop",
+		// 	Frame "BACKDROP" "EscMenuDisabledCheckBoxBackdrop" {
+		// 		DecorateFileNames,
+		// 		BackdropBlendAll,
+		// 		BackdropBackground  "EscMenuDisabledCheckBoxBackground",
+		// 	}
 
-		ControlDisabledBackdrop "EscMenuDisabledCheckBoxBackdrop",
-			Frame "BACKDROP" "EscMenuDisabledCheckBoxBackdrop" {
-				DecorateFileNames,
-				BackdropBlendAll,
-				BackdropBackground  "EscMenuDisabledCheckBoxBackground",
-			}
+		// ControlPushedBackdrop "EscMenuCheckBoxPushedBackdrop",
+		// 	Frame "BACKDROP" "EscMenuCheckBoxPushedBackdrop" {
+		// 		DecorateFileNames,
+		// 		BackdropBlendAll,
+		// 		BackdropBackground  "EscMenuCheckBoxPushedBackground",
+		// 	}
 
-		ControlPushedBackdrop "EscMenuCheckBoxPushedBackdrop",
-			Frame "BACKDROP" "EscMenuCheckBoxPushedBackdrop" {
-				DecorateFileNames,
-				BackdropBlendAll,
-				BackdropBackground  "EscMenuCheckBoxPushedBackground",
-			}
+		// CheckBoxCheckHighlight "EscMenuCheckHighlightTemplate",
+		// 	Frame "HIGHLIGHT" "EscMenuCheckHighlightTemplate" {
+		// 		DecorateFileNames,
+		// 		HighlightType "FILETEXTURE",
+		// 		HighlightAlphaFile "EscMenuCheckBoxCheckHighlight",
+		// 		HighlightAlphaMode "BLEND",
+		// 	}
 
-		CheckBoxCheckHighlight "EscMenuCheckHighlightTemplate",
-			Frame "HIGHLIGHT" "EscMenuCheckHighlightTemplate" {
-				DecorateFileNames,
-				HighlightType "FILETEXTURE",
-				HighlightAlphaFile "EscMenuCheckBoxCheckHighlight",
-				HighlightAlphaMode "BLEND",
-			}
-
-		CheckBoxDisabledCheckHighlight "EscMenuDisabledCheckHighlightTemplate",
-			Frame "HIGHLIGHT" "EscMenuDisabledCheckHighlightTemplate" {
-				DecorateFileNames,
-				HighlightType "FILETEXTURE",
-				HighlightAlphaFile "EscMenuDisabledCheckHighlight",
-				HighlightAlphaMode "BLEND",
-			}
-		}
+		// CheckBoxDisabledCheckHighlight "EscMenuDisabledCheckHighlightTemplate",
+		// 	Frame "HIGHLIGHT" "EscMenuDisabledCheckHighlightTemplate" {
+		// 		DecorateFileNames,
+		// 		HighlightType "FILETEXTURE",
+		// 		HighlightAlphaFile "EscMenuDisabledCheckHighlight",
+		// 		HighlightAlphaMode "BLEND",
+		// 	}
+		// }
 	}
 
 	Frame "FRAME" "PopupLabels" {
@@ -302,19 +305,8 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			Text "Fog:",
 		}
 
-		Frame "TEXT" "DiplomacyLabel" {
-			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.08,
-			DecorateFileNames,
-			FrameFont "MasterFont", 0.012,"",
-			FontColor 1.0 0.8 0.0 1.0,
-			LayerStyle "IGNORETRACKEVENTS",
-			FontJustificationH JUSTIFYLEFT,
-			FontJustificationV JUSTIFYMIDDLE,
-			Text "Diplomacy:",
-		}
-
 		Frame "TEXT" "OvertimeLabel" {
-			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.12,
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.08,
 			DecorateFileNames,
 			FrameFont "MasterFont", 0.012,"",
 			FontColor 1.0 0.8 0.0 1.0,
@@ -324,16 +316,27 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			Text "Overtime:",
 		}
 
-		Frame "TEXT" "PromodeLabel" {
-			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.17,
+		Frame "TEXT" "DiplomacyLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.12,
 			DecorateFileNames,
 			FrameFont "MasterFont", 0.012,"",
 			FontColor 1.0 0.8 0.0 1.0,
-			LayerStyle "IGNORETRACKEVENTS", 
+			LayerStyle "IGNORETRACKEVENTS",
 			FontJustificationH JUSTIFYLEFT,
 			FontJustificationV JUSTIFYMIDDLE,
-			Text "Promode?",
+			Text "Diplomacy:",
 		}
+
+		// Frame "TEXT" "PromodeLabel" {
+		// 	SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.17,
+		// 	DecorateFileNames,
+		// 	FrameFont "MasterFont", 0.012,"",
+		// 	FontColor 1.0 0.8 0.0 1.0,
+		// 	LayerStyle "IGNORETRACKEVENTS", 
+		// 	FontJustificationH JUSTIFYLEFT,
+		// 	FontJustificationV JUSTIFYMIDDLE,
+		// 	Text "Promode?",
+		// }
 	}
 
 	Frame "FRAME" "PopupMenuOptions" {
@@ -385,15 +388,15 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			Text "Off",
 		}
 
-		Frame "TEXT" "PromodeOption" {
-			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.17,
-			DecorateFileNames,
-			FrameFont "MasterFont", 0.012,"",
-			FontColor 1.0 0.8 0.0 1.0,
-			LayerStyle "IGNORETRACKEVENTS", 
-			FontJustificationH JUSTIFYLEFT,
-			FontJustificationV JUSTIFYMIDDLE,
-			Text "Off",
-		}
+		// Frame "TEXT" "PromodeOption" {
+		// 	SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.17,
+		// 	DecorateFileNames,
+		// 	FrameFont "MasterFont", 0.012,"",
+		// 	FontColor 1.0 0.8 0.0 1.0,
+		// 	LayerStyle "IGNORETRACKEVENTS", 
+		// 	FontJustificationH JUSTIFYLEFT,
+		// 	FontJustificationV JUSTIFYMIDDLE,
+		// 	Text "Off",
+		// }
 	}
 }

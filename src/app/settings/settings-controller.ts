@@ -18,6 +18,7 @@ export class SettingsController {
 				Diplomacy: 0,
 				PlayersPerTeam: 2,
 				Fog: 0,
+				Overtime: 0,
 			});
 		}
 
@@ -50,6 +51,10 @@ export class SettingsController {
 		this.settings.Fog = num;
 	}
 
+	public setOvertime(num: number) {
+		this.settings.Overtime = num;
+	}
+
 	public getGameType(): number {
 		return this.settings.GameType;
 	}
@@ -64,5 +69,9 @@ export class SettingsController {
 
 	public getFog(): number {
 		return this.settings.Fog;
+	}
+
+	public getOvertime(): number {
+		return this.settings.Overtime;
 	}
 }

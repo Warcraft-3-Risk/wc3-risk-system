@@ -3,22 +3,27 @@ import { GameTypeOptions } from './handlers/game-type-handler';
 import { SettingsController } from './settings-controller';
 import { DiplomacyOptions } from './strategies/diplomacy';
 import { FogOptions } from './strategies/fog';
+import { OvertimeOptions } from './strategies/overtime';
 
 export class SettingsView {
 	private backdrop: framehandle;
 	private timerFrame: framehandle;
+	private settingsController: SettingsController;
 
 	public constructor(timerDuration: number) {
+		this.settingsController = SettingsController.getInstance();
 		this.backdrop = BlzCreateFrame('SettingsView', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 		BlzFrameSetValue(BlzGetFrameByName('GameTypePopup', 0), 0);
 		BlzFrameSetValue(BlzGetFrameByName('FogPopup', 0), 0);
 		BlzFrameSetValue(BlzGetFrameByName('DiplomacyPopup', 0), 0);
+		BlzFrameSetValue(BlzGetFrameByName('OvertimePopup', 0), 0);
 		this.buildStartButton();
 		this.buildTimer();
 		this.gameTypePopup();
 		this.fogPopup();
 		this.diplomacyPopup();
 		this.diplomacyQuantitySlider();
+		this.overtimePopup();
 		this.hostSetup();
 		this.playerSetup();
 		this.update(timerDuration);
@@ -79,13 +84,13 @@ export class SettingsView {
 				const teamSizeFrame: framehandle = BlzGetFrameByName('DiplomacySlider', 0);
 				const frameValue: number = R2I(BlzGetTriggerFrameValue());
 
-				SettingsController.getInstance().setGameType(frameValue);
+				this.settingsController.setGameType(frameValue);
 
 				switch (frameValue) {
 					case 1: //Tournament
-						SettingsController.getInstance().setFog(1);
-						SettingsController.getInstance().setDiplomacy(0);
-						SettingsController.getInstance().setTeamSize(0);
+						this.settingsController.setFog(1);
+						this.settingsController.setDiplomacy(0);
+						this.settingsController.setTeamSize(0);
 
 						BlzFrameSetEnable(fogFrame, true);
 						BlzFrameSetEnable(diploFrame, true);
@@ -96,9 +101,9 @@ export class SettingsView {
 						break;
 
 					case 2: //Promode
-						SettingsController.getInstance().setFog(1);
-						SettingsController.getInstance().setDiplomacy(1);
-						SettingsController.getInstance().setTeamSize(2);
+						this.settingsController.setFog(1);
+						this.settingsController.setDiplomacy(1);
+						this.settingsController.setTeamSize(2);
 
 						BlzFrameSetValue(fogFrame, 1);
 						BlzFrameSetValue(diploFrame, 1);
@@ -109,9 +114,9 @@ export class SettingsView {
 						break;
 
 					case 3: //Capitals
-						SettingsController.getInstance().setFog(2);
-						SettingsController.getInstance().setDiplomacy(1);
-						SettingsController.getInstance().setTeamSize(2);
+						this.settingsController.setFog(2);
+						this.settingsController.setDiplomacy(1);
+						this.settingsController.setTeamSize(2);
 
 						BlzFrameSetEnable(fogFrame, true);
 						BlzFrameSetEnable(diploFrame, true);
@@ -122,9 +127,9 @@ export class SettingsView {
 						break;
 
 					default: //Standard
-						SettingsController.getInstance().setFog(0);
-						SettingsController.getInstance().setDiplomacy(0);
-						SettingsController.getInstance().setTeamSize(0);
+						this.settingsController.setFog(0);
+						this.settingsController.setDiplomacy(0);
+						this.settingsController.setTeamSize(0);
 						BlzFrameSetEnable(fogFrame, true);
 						BlzFrameSetEnable(diploFrame, true);
 						BlzFrameSetValue(fogFrame, 0);
@@ -152,12 +157,29 @@ export class SettingsView {
 			Condition(() => {
 				const frameValue: number = R2I(BlzGetTriggerFrameValue());
 
-				SettingsController.getInstance().setFog(frameValue);
+				this.settingsController.setFog(frameValue);
 				this.colorizeText(`FogPopup`, FogOptions);
 			})
 		);
 
 		this.colorizeText(`FogPopup`, FogOptions);
+	}
+
+	private overtimePopup() {
+		const t: trigger = CreateTrigger();
+
+		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('OvertimePopup', 0), FRAMEEVENT_POPUPMENU_ITEM_CHANGED);
+		TriggerAddCondition(
+			t,
+			Condition(() => {
+				const frameValue: number = R2I(BlzGetTriggerFrameValue());
+
+				this.settingsController.setOvertime(frameValue);
+				this.colorizeText('OvertimePopup', OvertimeOptions);
+			})
+		);
+
+		this.colorizeText('OvertimePopup', OvertimeOptions);
 	}
 
 	private diplomacyPopup() {
@@ -169,7 +191,7 @@ export class SettingsView {
 			Condition(() => {
 				const frameValue: number = R2I(BlzGetTriggerFrameValue());
 
-				SettingsController.getInstance().setDiplomacy(frameValue);
+				this.settingsController.setDiplomacy(frameValue);
 				this.colorizeText(`DiplomacyPopup`, DiplomacyOptions);
 
 				if (frameValue > 0) {
@@ -197,7 +219,7 @@ export class SettingsView {
 			Condition(() => {
 				const frameValue: number = R2I(BlzGetTriggerFrameValue());
 
-				SettingsController.getInstance().setTeamSize(frameValue);
+				this.settingsController.setTeamSize(frameValue);
 
 				if (BlzFrameIsVisible(BlzGetFrameByName('DiplomacySlider', 0))) {
 					BlzFrameSetText(BlzGetFrameByName('DiplomacySubOptionLabel', 0), `${frameValue}`);

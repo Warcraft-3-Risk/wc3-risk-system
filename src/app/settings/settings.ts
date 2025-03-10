@@ -3,4 +3,5 @@ export interface Settings {
 	Diplomacy: number;
 	PlayersPerTeam: number;
 	Fog: number;
+	Overtime: number;
 }

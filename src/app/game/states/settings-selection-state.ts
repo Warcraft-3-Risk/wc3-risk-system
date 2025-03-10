@@ -10,7 +10,7 @@ export class SettingSelectionState extends BaseGameState {
 	public enter(): void {
 		const timerEventID: TimerEventType = 'settingsSelection';
 		const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
-		const timerDuration: number = 5;
+		const timerDuration: number = 30;
 		this.ui = new SettingsView(timerDuration);
 
 		timedEventManager.addEvent(
