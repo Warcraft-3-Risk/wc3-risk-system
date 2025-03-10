@@ -3,19 +3,20 @@ import { GameTypeHandler } from './handlers/game-type-handler';
 import { PromodeHandler } from './handlers/promode';
 import { StandardHandler } from './handlers/standard';
 import { TournamentHandler } from './handlers/tournament';
+import { GameType } from './settings';
 
 export class GameTypeHandlerFactory {
-	private handlers: Map<number, GameTypeHandler>;
+	private handlers: Map<GameType, GameTypeHandler>;
 
 	constructor() {
-		this.handlers = new Map<number, GameTypeHandler>();
-		this.handlers.set(0, new StandardHandler());
-		this.handlers.set(1, new PromodeHandler());
-		this.handlers.set(2, new CapitalsHandler());
-		this.handlers.set(3, new TournamentHandler());
+		this.handlers = new Map<GameType, GameTypeHandler>();
+		this.handlers.set(GameType.Standard, new StandardHandler());
+		this.handlers.set(GameType.Promode, new PromodeHandler());
+		this.handlers.set(GameType.Capitals, new CapitalsHandler());
+		this.handlers.set(GameType.Tournament, new TournamentHandler());
 	}
 
-	public getHandler(gameType: number): GameTypeHandler {
+	public getHandler(gameType: GameType): GameTypeHandler {
 		return this.handlers.get(gameType);
 	}
 }

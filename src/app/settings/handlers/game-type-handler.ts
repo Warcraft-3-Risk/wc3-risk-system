@@ -1,11 +1,11 @@
 import { HexColors } from 'src/app/utils/hex-colors';
-import { Settings } from '../settings';
+import { GameType, Settings } from '../settings';
 
-export const GameTypeOptions: Record<number, string> = {
-	0: `${HexColors.GREEN}Standard`,
-	1: `${HexColors.GREEN}Promode`,
-	2: `${HexColors.GREEN}Capitals`,
-	3: `${HexColors.GREEN}Tournament`,
+export const GameTypeOptions: Record<GameType, string> = {
+	[GameType.Standard]: `${HexColors.GREEN}Standard`,
+	[GameType.Promode]: `${HexColors.RED}Promode`,
+	[GameType.Capitals]: `${HexColors.RED}Capitals`,
+	[GameType.Tournament]: `${HexColors.RED}Tournament`,
 };
 
 export interface GameTypeHandler {

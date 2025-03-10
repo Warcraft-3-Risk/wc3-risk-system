@@ -1,5 +1,5 @@
 import { GameTypeHandlerFactory } from './handler-factory';
-import { Settings } from './settings';
+import { Diplomacy, Fog, GameType, Overtime, Settings } from './settings';
 
 export class SettingsController {
 	private static instance: SettingsController;
@@ -14,11 +14,11 @@ export class SettingsController {
 	public static getInstance(): SettingsController {
 		if (!this.instance) {
 			this.instance = new SettingsController(<Settings>{
-				GameType: 0,
-				Diplomacy: 0,
+				GameType: GameType.Standard,
+				Fog: Fog.Off,
+				Overtime: Overtime.Turn30,
+				Diplomacy: Diplomacy.FFA,
 				PlayersPerTeam: 2,
-				Fog: 0,
-				Overtime: 0,
 			});
 		}
 
@@ -35,11 +35,11 @@ export class SettingsController {
 		}
 	}
 
-	public setGameType(num: number) {
+	public setGameType(num: GameType) {
 		this.settings.GameType = num;
 	}
 
-	public setDiplomacy(num: number) {
+	public setDiplomacy(num: Diplomacy) {
 		this.settings.Diplomacy = num;
 	}
 
@@ -47,19 +47,19 @@ export class SettingsController {
 		this.settings.PlayersPerTeam = num;
 	}
 
-	public setFog(num: number) {
+	public setFog(num: Fog) {
 		this.settings.Fog = num;
 	}
 
-	public setOvertime(num: number) {
+	public setOvertime(num: Overtime) {
 		this.settings.Overtime = num;
 	}
 
-	public getGameType(): number {
+	public getGameType(): GameType {
 		return this.settings.GameType;
 	}
 
-	public getDiplomacy(): number {
+	public getDiplomacy(): Diplomacy {
 		return this.settings.Diplomacy;
 	}
 
@@ -67,11 +67,11 @@ export class SettingsController {
 		return this.settings.PlayersPerTeam;
 	}
 
-	public getFog(): number {
+	public getFog(): Fog {
 		return this.settings.Fog;
 	}
 
-	public getOvertime(): number {
+	public getOvertime(): Overtime {
 		return this.settings.Overtime;
 	}
 }

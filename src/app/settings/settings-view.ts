@@ -1,5 +1,6 @@
 import { HexColors } from '../utils/hex-colors';
 import { GameTypeOptions } from './handlers/game-type-handler';
+import { Diplomacy, Fog, GameType, Overtime } from './settings';
 import { SettingsController } from './settings-controller';
 import { DiplomacyOptions } from './strategies/diplomacy';
 import { FogOptions } from './strategies/fog';
@@ -13,10 +14,10 @@ export class SettingsView {
 	public constructor(timerDuration: number) {
 		this.settingsController = SettingsController.getInstance();
 		this.backdrop = BlzCreateFrame('SettingsView', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
-		BlzFrameSetValue(BlzGetFrameByName('GameTypePopup', 0), 0);
-		BlzFrameSetValue(BlzGetFrameByName('FogPopup', 0), 0);
-		BlzFrameSetValue(BlzGetFrameByName('DiplomacyPopup', 0), 0);
-		BlzFrameSetValue(BlzGetFrameByName('OvertimePopup', 0), 0);
+		BlzFrameSetValue(BlzGetFrameByName('GameTypePopup', 0), GameType.Standard);
+		BlzFrameSetValue(BlzGetFrameByName('FogPopup', 0), Fog.Off);
+		BlzFrameSetValue(BlzGetFrameByName('DiplomacyPopup', 0), Diplomacy.FFA);
+		BlzFrameSetValue(BlzGetFrameByName('OvertimePopup', 0), Overtime.Turn30);
 		this.buildStartButton();
 		this.buildTimer();
 		this.gameTypePopup();
@@ -80,6 +81,7 @@ export class SettingsView {
 			t,
 			Condition(() => {
 				const fogFrame: framehandle = BlzGetFrameByName('FogPopup', 0);
+				const overtimeFrame: framehandle = BlzGetFrameByName('OvertimePopup', 0);
 				const diploFrame: framehandle = BlzGetFrameByName('DiplomacyPopup', 0);
 				const teamSizeFrame: framehandle = BlzGetFrameByName('DiplomacySlider', 0);
 				const frameValue: number = R2I(BlzGetTriggerFrameValue());
@@ -87,54 +89,62 @@ export class SettingsView {
 				this.settingsController.setGameType(frameValue);
 
 				switch (frameValue) {
-					case 1: //Tournament
-						this.settingsController.setFog(1);
-						this.settingsController.setDiplomacy(0);
-						this.settingsController.setTeamSize(0);
-
-						BlzFrameSetEnable(fogFrame, true);
-						BlzFrameSetEnable(diploFrame, true);
-						BlzFrameSetValue(fogFrame, 1);
-						BlzFrameSetValue(diploFrame, 0);
-						BlzFrameSetValue(teamSizeFrame, 0);
-						BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), false);
-						break;
-
-					case 2: //Promode
-						this.settingsController.setFog(1);
-						this.settingsController.setDiplomacy(1);
+					case 1: //Promode
+						this.settingsController.setFog(Fog.On);
+						this.settingsController.setOvertime(Overtime.Off);
+						this.settingsController.setDiplomacy(Diplomacy.DraftTeams);
 						this.settingsController.setTeamSize(2);
 
-						BlzFrameSetValue(fogFrame, 1);
-						BlzFrameSetValue(diploFrame, 1);
+						BlzFrameSetValue(fogFrame, this.settingsController.getFog());
+						BlzFrameSetValue(overtimeFrame, this.settingsController.getOvertime());
+						BlzFrameSetValue(diploFrame, this.settingsController.getDiplomacy());
 						BlzFrameSetValue(teamSizeFrame, 2);
 						BlzFrameSetEnable(fogFrame, false);
 						BlzFrameSetEnable(diploFrame, false);
 						BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), true);
 						break;
 
-					case 3: //Capitals
-						this.settingsController.setFog(2);
-						this.settingsController.setDiplomacy(1);
+					case 2: //Capitals
+						this.settingsController.setFog(Fog.Night);
+						this.settingsController.setDiplomacy(Diplomacy.FFA);
+						this.settingsController.setOvertime(Overtime.Off);
 						this.settingsController.setTeamSize(2);
 
 						BlzFrameSetEnable(fogFrame, true);
 						BlzFrameSetEnable(diploFrame, true);
-						BlzFrameSetValue(fogFrame, 2);
-						BlzFrameSetValue(diploFrame, 1);
-						BlzFrameSetValue(teamSizeFrame, 2);
+						BlzFrameSetValue(fogFrame, this.settingsController.getFog());
+						BlzFrameSetValue(overtimeFrame, this.settingsController.getOvertime());
+						BlzFrameSetValue(diploFrame, this.settingsController.getDiplomacy());
+						BlzFrameSetValue(teamSizeFrame, this.settingsController.getTeamSize());
 						BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), true);
 						break;
 
-					default: //Standard
-						this.settingsController.setFog(0);
-						this.settingsController.setDiplomacy(0);
-						this.settingsController.setTeamSize(0);
+					case 3: //Tournament
+						this.settingsController.setFog(Fog.On);
+						this.settingsController.setDiplomacy(Diplomacy.FFA);
+						this.settingsController.setTeamSize(2);
+
 						BlzFrameSetEnable(fogFrame, true);
 						BlzFrameSetEnable(diploFrame, true);
-						BlzFrameSetValue(fogFrame, 0);
-						BlzFrameSetValue(diploFrame, 0);
-						BlzFrameSetValue(teamSizeFrame, 0);
+						BlzFrameSetValue(fogFrame, this.settingsController.getFog());
+						BlzFrameSetValue(overtimeFrame, this.settingsController.getOvertime());
+						BlzFrameSetValue(diploFrame, this.settingsController.getDiplomacy());
+						BlzFrameSetValue(teamSizeFrame, this.settingsController.getTeamSize());
+						BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), false);
+						break;
+
+					default: //Standard
+						this.settingsController.setFog(Fog.Off);
+						this.settingsController.setOvertime(Overtime.Turn30);
+						this.settingsController.setDiplomacy(Diplomacy.FFA);
+						this.settingsController.setTeamSize(2);
+
+						BlzFrameSetEnable(fogFrame, true);
+						BlzFrameSetEnable(diploFrame, true);
+						BlzFrameSetValue(fogFrame, this.settingsController.getFog());
+						BlzFrameSetValue(overtimeFrame, this.settingsController.getOvertime());
+						BlzFrameSetValue(diploFrame, this.settingsController.getDiplomacy());
+						BlzFrameSetValue(teamSizeFrame, this.settingsController.getTeamSize());
 						BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), false);
 						break;
 				}
@@ -142,6 +152,7 @@ export class SettingsView {
 				this.colorizeText(`GameTypePopup`, GameTypeOptions);
 				this.colorizeText(`DiplomacyPopup`, DiplomacyOptions);
 				this.colorizeText(`FogPopup`, FogOptions);
+				this.colorizeText(`OvertimePopup`, OvertimeOptions);
 			})
 		);
 

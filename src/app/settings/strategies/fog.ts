@@ -1,7 +1,8 @@
 import { HexColors } from 'src/app/utils/hex-colors';
+import { Fog } from '../settings';
 
-export const FogOptions: Record<number, string> = {
-	0: `${HexColors.GREEN}Off`,
-	1: `${HexColors.RED}On`,
-	2: `${HexColors.RED}Night`,
+export const FogOptions: Record<Fog, string> = {
+	[Fog.Off]: `${HexColors.GREEN}Off`,
+	[Fog.On]: `${HexColors.RED}On`,
+	[Fog.Night]: `${HexColors.RED}Night`,
 };

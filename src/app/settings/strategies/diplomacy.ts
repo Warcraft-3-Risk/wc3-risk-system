@@ -1,7 +1,8 @@
 import { HexColors } from 'src/app/utils/hex-colors';
+import { Diplomacy } from '../settings';
 
-export const DiplomacyOptions: Record<number, string> = {
-	0: `${HexColors.GREEN}FFA`,
-	1: `${HexColors.RED}Draft Teams`,
-	2: `${HexColors.RED}Random Teams`,
+export const DiplomacyOptions: Record<Diplomacy, string> = {
+	[Diplomacy.FFA]: `${HexColors.GREEN}FFA`,
+	[Diplomacy.DraftTeams]: `${HexColors.RED}Draft Teams`,
+	[Diplomacy.RandomTeams]: `${HexColors.RED}Random Teams`,
 };
