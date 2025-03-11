@@ -51,6 +51,7 @@ export abstract class BaseState<T extends StateData> {
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer) {}
 	onUnitKilled(killingUnit: unit, dyingUnit: unit) {}
+	onUnitUpgrade(upgradedUnit: unit) {}
 
 	onCitySelected(city: City, player: player) {}
 

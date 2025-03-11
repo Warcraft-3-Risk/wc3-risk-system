@@ -46,4 +46,33 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 
 		super.onCityCapture(city, preOwner, owner);
 	}
+
+	onUnitUpgrade(unit: unit): void {
+		const unitTypeId = GetUnitTypeId(unit);
+
+		if (unitTypeId == UNIT_ID.CAPITAL || unitTypeId == UNIT_ID.CONQUERED_CAPITAL) {
+			if (this.stateData.capitalMinimapIcons.has(unit) && this.stateData.capitalMinimapIcons.get(unit)) {
+				DestroyMinimapIcon(this.stateData.capitalMinimapIcons.get(unit));
+			}
+			this.stateData.capitalMinimapIcons.set(unit, undefined);
+
+			if (unitTypeId == UNIT_ID.CAPITAL) {
+				this.stateData.capitalMinimapIcons.set(
+					unit,
+					CreateMinimapIconOnUnit(unit, 64, 64, 64, 'war3mapImported\\capital.blp', FOG_OF_WAR_VISIBLE)
+				);
+			}
+			if (unitTypeId == UNIT_ID.CONQUERED_CAPITAL) {
+				this.stateData.capitalMinimapIcons.set(
+					unit,
+					CreateMinimapIconOnUnit(unit, 64, 64, 64, 'war3mapImported\\captured_capital.blp', FOG_OF_WAR_VISIBLE)
+				);
+			}
+		} else {
+			if (this.stateData.capitalMinimapIcons.get(unit)) {
+				DestroyMinimapIcon(this.stateData.capitalMinimapIcons.get(unit));
+				this.stateData.capitalMinimapIcons.set(unit, undefined);
+			}
+		}
+	}
 }

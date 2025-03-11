@@ -1,4 +1,5 @@
-import { UNIT_ID } from 'src/configs/unit-id';
+import { EventEmitter } from '../utils/events/event-emitter';
+import { EVENT_ON_UNIT_UPGRADE_FINISH } from '../utils/events/event-constants';
 
 export function UnitUpgradeEvent() {
 	const t: trigger = CreateTrigger();
@@ -14,10 +15,7 @@ export function UnitUpgradeEvent() {
 
 			SetAltMinimapIcon('war3mapImported\\capital_star.blp');
 
-			UnitSetUsesAltIcon(
-				upgradedUnit,
-				GetUnitTypeId(upgradedUnit) == UNIT_ID.CAPITAL || GetUnitTypeId(upgradedUnit) == UNIT_ID.CONQUERED_CAPITAL
-			);
+			EventEmitter.getInstance().emit(EVENT_ON_UNIT_UPGRADE_FINISH, upgradedUnit);
 
 			return false;
 		})

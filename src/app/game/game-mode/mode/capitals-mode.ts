@@ -16,6 +16,7 @@ import { CapitalsGameLoopState } from '../capital-game-mode/capitals-game-loop-s
 export class CapitalsData implements StateData {
 	public playerCapitalSelections: Map<player, City>;
 	public capitals: Map<player, City>;
+	public capitalMinimapIcons = new Map<unit, minimapicon>();
 }
 
 export class CapitalsMode extends BaseMode<CapitalsData> {

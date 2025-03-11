@@ -15,6 +15,7 @@ import {
 	EVENT_QUEST_UPDATE_PLAYER_STATUS,
 	EVENT_NEXT_STATE,
 	EVENT_ON_PLAYER_RESTART,
+	EVENT_ON_UNIT_UPGRADE_FINISH,
 } from '../utils/events/event-constants';
 import { StandardMode } from './game-mode/mode/standard-mode';
 import { GameType } from '../settings/strategies/game-type-strategy';
@@ -68,6 +69,9 @@ export class EventCoordinator {
 		);
 		EventEmitter.getInstance().on(EVENT_ON_UNIT_KILLED, (killingUnit: unit, dyingUnit: unit) =>
 			this._currentMode?.getCurrentState().onUnitKilled(killingUnit, dyingUnit)
+		);
+		EventEmitter.getInstance().on(EVENT_ON_UNIT_UPGRADE_FINISH, (upgradedUnit: unit) =>
+			this._currentMode?.getCurrentState().onUnitUpgrade(upgradedUnit)
 		);
 
 		EventEmitter.getInstance().on(EVENT_ON_CITY_SELECTED, (city: City, player: player) =>
