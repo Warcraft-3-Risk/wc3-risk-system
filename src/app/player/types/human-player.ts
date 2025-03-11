@@ -5,21 +5,25 @@ export class HumanPlayer extends ActivePlayer {
 		super(player);
 	}
 
-	onKill(victom: player, unit: unit): void {
+	onKill(victim: player, unit: unit): void {
 		const killer: player = this.getPlayer();
 
 		if (!this.status.isAlive() && !this.status.isNomad()) return;
-		if (victom == killer) return;
-		if (IsPlayerAlly(victom, killer)) return;
+
+		if (victim == killer) {
+			this.trackedData.denies++;
+			return;
+		}
+		if (IsPlayerAlly(victim, killer)) return;
 
 		const val: number = GetUnitPointValue(unit);
 		const kdData = this.trackedData.killsDeaths;
 
 		kdData.get(killer).killValue += val;
-		kdData.get(victom).killValue += val;
+		kdData.get(victim).killValue += val;
 		kdData.get(`${GetUnitTypeId(unit)}`).killValue += val;
 		kdData.get(killer).kills++;
-		kdData.get(victom).kills++;
+		kdData.get(victim).kills++;
 		kdData.get(`${GetUnitTypeId(unit)}`).kills++;
 
 		this.giveGold(this.trackedData.bounty.add(val));

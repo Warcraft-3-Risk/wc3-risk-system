@@ -12,6 +12,7 @@ import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { City } from 'src/app/city/city';
 import { StateData } from '../state/state-data';
+import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
 import { PlayerManager } from 'src/app/player/player-manager';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
@@ -143,6 +144,21 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
+		const player = GetOwningPlayer(killingUnit);
+		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(player));
+
+		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit)) {
+			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
+				const text = CreateTextTag();
+				SetTextTagText(text, `${colorString}Denied`, 0.019);
+				SetTextTagPos(text, GetUnitX(dyingUnit) - 140, GetUnitY(dyingUnit) + 20, 16.0);
+				SetTextTagVisibility(text, true);
+				SetTextTagFadepoint(text, 2.0);
+				SetTextTagPermanent(text, false);
+				SetTextTagLifespan(text, 3.0);
+			}
+
+		}
 		ScoreboardManager.getInstance().updatePartial();
 	}
 
