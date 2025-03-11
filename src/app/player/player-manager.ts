@@ -91,6 +91,11 @@ export class PlayerManager {
 		return this._playerFromHandle.has(player);
 	}
 
+	public getHumanPlayersCount(): number {
+		return Array.from(this._playerFromHandle.values()).filter((p: ActivePlayer) => GetPlayerController(p.getPlayer()) === MAP_CONTROL_USER)
+			.length;
+	}
+
 	public isObserver(player: player) {
 		return this._observerFromHandle.has(player);
 	}

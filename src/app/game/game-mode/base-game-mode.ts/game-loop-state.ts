@@ -13,11 +13,9 @@ import { GlobalMessage } from 'src/app/utils/messages';
 import { City } from 'src/app/city/city';
 import { StateData } from '../state/state-data';
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
-import { HumanPlayer } from 'src/app/player/types/human-player';
+import { PlayerManager } from 'src/app/player/player-manager';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
-	private text: texttag;
-
 	onEnterState() {
 		GlobalGameData.matchState = 'inProgress';
 		this.onStartTurn(GlobalGameData.turnCount);
@@ -151,16 +149,25 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit)) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
-				this.text = CreateTextTag();
-				SetTextTagText(this.text, `${colorString}Denied`, 0.019);
-				SetTextTagPos(this.text, GetUnitX(dyingUnit) - 140, GetUnitY(dyingUnit) + 20, 16.0);
-				SetTextTagVisibility(this.text, true);
-				SetTextTagFadepoint(this.text, 2.0);
-				SetTextTagPermanent(this.text, false);
-				SetTextTagLifespan(this.text, 3.0);
+				const text = CreateTextTag();
+				SetTextTagText(text, `${colorString}Denied`, 0.019);
+				SetTextTagPos(text, GetUnitX(dyingUnit) - 140, GetUnitY(dyingUnit) + 20, 16.0);
+				SetTextTagVisibility(text, true);
+				SetTextTagFadepoint(text, 2.0);
+				SetTextTagPermanent(text, false);
+				SetTextTagLifespan(text, 3.0);
 			}
 
 		}
 		ScoreboardManager.getInstance().updatePartial();
+	}
+
+	// GameLoopState uses GlobalGameData.matchState to determine if the match is over
+	// This is preferable as it allows the state to clean up and transition to the next state
+	onPlayerRestart(player: ActivePlayer) {
+		const humanPlayersCount: number = PlayerManager.getInstance().getHumanPlayersCount();
+		if (humanPlayersCount === 1) {
+			GlobalGameData.matchState = 'postMatch';
+		}
 	}
 }

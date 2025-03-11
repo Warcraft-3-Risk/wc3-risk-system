@@ -83,12 +83,12 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 		},
 		{
 			size: 0.06,
-			header: 'SS kills\n(Value)',
+			header: 'SS kills\n(Raw)',
 			textFunction: (player) => `${player.trackedData.killsDeaths.get(player.getPlayer()).kills}`,
 		},
 		{
 			size: 0.06,
-			header: 'SS Deaths\n(Value)',
+			header: 'SS Deaths\n(Raw)',
 			textFunction: (player) =>
 				ComputeRatio(
 					player.trackedData.killsDeaths.get(player.getPlayer()).killValue,
@@ -97,7 +97,7 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 		},
 		{
 			size: 0.06,
-			header: 'SS KD Ratio\n(Value)',
+			header: 'SS KD Ratio\n(Raw)',
 			textFunction: (player) =>
 				ComputeRatio(
 					player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`).kills,
@@ -106,17 +106,17 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 		},
 		{
 			size: 0.06,
-			header: 'Tank Kills\n(Value)',
+			header: 'Tank Kills\n(Raw)',
 			textFunction: (player) => `${player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).kills}`,
 		},
 		{
-			size: 0.06,
-			header: 'Tank Deaths\n(Value)',
+			size: 0.07,
+			header: 'Tank Deaths\n(Raw)',
 			textFunction: (player) => `${player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).deaths}`,
 		},
 		{
-			size: 0.06,
-			header: 'Tank KD Ratio\n(Value)',
+			size: 0.08,
+			header: 'Tank KD Ratio\n(Raw)',
 			textFunction: (player) =>
 				ComputeRatio(
 					player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`).kills,
@@ -124,9 +124,9 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 				),
 		},
 		{
-			size: 0.06,
-			header: 'Denies\n(Value)',
-			textFunction: (player) => `${player.trackedData.denies}`
+			size: 0.05,
+			header: 'Denies\n(Raw)',
+			textFunction: (player) => `${player.trackedData.denies}`,
 		},
 	];
 }

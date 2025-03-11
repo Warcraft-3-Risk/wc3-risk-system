@@ -36,7 +36,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 			let duration: number = CAPITALS_SELECTION_PHASE;
 
 			// Prepare the countdown message
-			CountdownMessage(`Choose Your Capital\n\nSelection ends in:\n${duration}`);
+			CountdownMessage(`Left click on a city to\nchoose your capital\n\nSelection closes in\n${duration}`);
 			BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 
 			debugPrint('6. Capitals Selection');
@@ -44,7 +44,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 				// Clears capital selection and resets selected city if player is eliminated
 				this.resetCapitalsForEliminatedPlayers();
 
-				CountdownMessage(`Choose Your Capital\n\nSelection ends in:\n${duration}`);
+				CountdownMessage(`Left click on a city to\nchoose your capital\n\nSelection closes in\n${duration}`);
 				if (duration == 3) {
 					BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 				}
