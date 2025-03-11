@@ -89,7 +89,7 @@ export function onPlayerNomadHandle(player: ActivePlayer): void {
 
 export function onPlayerLeftHandle(player: ActivePlayer): void {
 	const playerStatus = PlayerManager.getInstance().getPlayerStatus(player.getPlayer());
-	if (playerStatus.isEliminated()) return;
+	if (playerStatus.isLeft()) return;
 
 	player.status.status = PLAYER_STATUS.LEFT;
 	player.setEndData();
