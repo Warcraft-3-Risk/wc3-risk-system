@@ -22,6 +22,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 		debugPrint('1. Capitals Selection');
 		debugPrint('this.stateData is ' + this.stateData);
 		// Initialize the player capital cities map with empty capitals
+		this.stateData.capitals = new Map();
 		this.stateData.playerCapitalSelections = new Map();
 
 		debugPrint('2. Capitals Selection');
@@ -54,10 +55,6 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 					EnableSelect(true, true);
 					EnableDragSelect(true, true);
 					PlayGlobalSound('Sound\\Interface\\Hint.flac');
-
-					this.stateData.playerCapitalSelections.forEach((city, _) => {
-						city?.reset();
-					});
 
 					super.nextState(this.stateData);
 				}
