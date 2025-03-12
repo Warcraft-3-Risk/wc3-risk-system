@@ -13,10 +13,10 @@ import { clearTickUI, setTickUI } from '../utillity/update-ui';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
-		this.runAsync();
+		this.run();
 	}
 
-	async runAsync(): Promise<void> {
+	run(): void {
 		FogEnable(false);
 
 		clearTickUI();

@@ -13,11 +13,10 @@ import { debugPrint } from 'src/app/utils/debug-print';
 
 export class CapitalsSelectionState extends BaseState<CapitalsData> {
 	onEnterState() {
-		debugPrint('stuff');
-		this.runAsync();
+		this.run();
 	}
 
-	async runAsync(): Promise<void> {
+	run(): void {
 		FogEnable(false);
 		BlzEnableSelections(true, false);
 		debugPrint('1. Capitals Selection');

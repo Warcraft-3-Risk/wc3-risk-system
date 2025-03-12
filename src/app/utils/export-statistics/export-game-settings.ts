@@ -12,7 +12,7 @@ export class ExportGameSettings {
 
 	private constructor() {}
 
-	public static async write(settings: SettingsContext): Promise<void> {
+	public static write(settings: SettingsContext): void {
 		let gameSettings = this.getGameSettings(settings);
 
 		File.writeRaw(this.getFileName('0_GameSettings'), gameSettings, false);

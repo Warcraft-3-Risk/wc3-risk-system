@@ -8,7 +8,6 @@ import { SetupState } from '../base-game-mode.ts/setup-state';
 import { BaseMode } from './base-mode';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
-import { WaitState } from '../base-game-mode.ts/wait-state';
 
 export class PromodeData implements StateData {}
 
@@ -16,9 +15,7 @@ export class PromodeMode extends BaseMode<PromodeData> {
 	protected setupStates() {
 		return [
 			new SetupState(),
-			new WaitState(2),
 			new CityDistributeState(),
-			new WaitState(2),
 			new SetPromodeTempVisionState(),
 			new CountdownState(),
 			new GameLoopState(),

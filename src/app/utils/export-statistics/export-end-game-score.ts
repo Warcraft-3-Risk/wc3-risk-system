@@ -7,7 +7,7 @@ export class ExportEndGameScore {
 
 	private constructor() {}
 
-	public static async write(
+	public static write(
 		data: {
 			Player: string;
 			Rank: string;
@@ -24,7 +24,7 @@ export class ExportEndGameScore {
 			KD: string;
 			BiggestRival: string;
 		}[]
-	): Promise<void> {
+	): void {
 		const content = this.formatData(data);
 		File.writeRaw(this.getFileName(`${GlobalGameData.matchCount}_EndGameScore`), content, false);
 	}

@@ -8,7 +8,7 @@ export class ExportShuffledPlayerList {
 
 	private constructor() {}
 
-	public static async write(): Promise<void> {
+	public static write(): void {
 		let nameList: player[] = [];
 
 		const playerManager = PlayerManager.getInstance();

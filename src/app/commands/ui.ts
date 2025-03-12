@@ -2,7 +2,7 @@ import { File } from 'w3ts';
 import { ChatManager } from '../managers/chat-manager';
 
 export function UICommand(chatManager: ChatManager) {
-	chatManager.addCmd(['-ui'], async () => {
+	chatManager.addCmd(['-ui'], () => {
 		const player: player = GetTriggerPlayer();
 
 		const healthButton = BlzGetFrameByName('GuardButton', GetPlayerId(player));
