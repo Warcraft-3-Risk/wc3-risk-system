@@ -1,4 +1,3 @@
-import { ResetState } from '../base-game-mode.ts/reset-state';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { CapitalsData } from '../mode/capitals-mode';
 import { BaseState } from '../state/base-state';

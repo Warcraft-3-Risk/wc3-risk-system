@@ -2,17 +2,29 @@ import { CountdownMessage } from 'src/app/utils/messages';
 import { PlayGlobalSound } from 'src/app/utils/utils';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
+import { HexColors } from 'src/app/utils/hex-colors';
 
 export class CountdownState<T extends StateData> extends BaseState<T> {
+	private initialDuration: number;
+
+	public constructor(duration: number = 10) {
+		super();
+		this.initialDuration = duration;
+	}
+
 	onEnterState() {
 		try {
 			PlayGlobalSound('Sound\\Interface\\ArrangedTeamInvitation.flac');
 			const startDelayTimer: timer = CreateTimer();
-			let duration: number = 3;
+			let duration: number = this.initialDuration;
+			BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
+			CountdownMessage(`The Game will start in:\n${duration}`);
 			TimerStart(startDelayTimer, 1, true, () => {
-				CountdownMessage(`The Game will start in:\n${duration}`);
-				if (duration == 3) {
-					BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
+				BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
+				if (duration <= 2) {
+					CountdownMessage(`${HexColors.RED}The Game will start in:\n${duration}|r`);
+				} else {
+					CountdownMessage(`The Game will start in:\n${duration}`);
 				}
 				if (duration <= 0) {
 					PauseTimer(startDelayTimer);
