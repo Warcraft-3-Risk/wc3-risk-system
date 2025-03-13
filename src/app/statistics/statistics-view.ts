@@ -118,7 +118,11 @@ export class StatisticsView {
 
 		const buttonTrigger: trigger = CreateTrigger();
 		BlzTriggerRegisterFrameEvent(buttonTrigger, button, FRAMEEVENT_CONTROL_CLICK);
-		TriggerAddAction(buttonTrigger, onClick);
+		TriggerAddAction(buttonTrigger, () => {
+			if(GetLocalPlayer() == GetTriggerPlayer()){
+				onClick();
+			}
+		});
 
 		return button;
 	}
@@ -166,13 +170,17 @@ export class StatisticsView {
 		BlzFrameSetPoint(this.pageIndicator, FRAMEPOINT_CENTER, this.footerBackdrop, FRAMEPOINT_CENTER, 0, 0);
 
 		this.leftButton = this.CreateFooterButton(this.footerBackdrop, 'LeftFooterButton', 'Previous', -0.1, () => {
-			this.page.previousPage();
-			this.updatePaginationButtons();
+			if (GetLocalPlayer() == GetLocalPlayer()) {
+				this.page.previousPage();
+				this.updatePaginationButtons();
+			}
 		});
 
 		this.rightButton = this.CreateFooterButton(this.footerBackdrop, 'RightFooterButton', 'Next', 0.1, () => {
-			this.page.nextPage();
-			this.updatePaginationButtons();
+			if (GetLocalPlayer() == GetLocalPlayer()) {
+				this.page.nextPage();
+				this.updatePaginationButtons();
+			}
 		});
 	}
 

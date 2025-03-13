@@ -1,5 +1,4 @@
 import { CityDistributeState } from '../base-game-mode.ts/city-distribute-state';
-import { CountdownState } from '../base-game-mode.ts/countdown-state';
 import { GameLoopState } from '../base-game-mode.ts/game-loop-state';
 import { GameOverState } from '../base-game-mode.ts/game-over-state';
 import { ResetState } from '../base-game-mode.ts/reset-state';
@@ -8,7 +7,7 @@ import { SetupState } from '../base-game-mode.ts/setup-state';
 import { BaseMode } from './base-mode';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
-import { WaitState } from '../base-game-mode.ts/wait-state';
+import { PromodeCountdownState } from '../promode-game-mode/promode-countdown-state';
 
 export class PromodeData implements StateData {}
 
@@ -16,11 +15,9 @@ export class PromodeMode extends BaseMode<PromodeData> {
 	protected setupStates() {
 		return [
 			new SetupState(),
-			new WaitState(2),
 			new CityDistributeState(),
-			new WaitState(2),
 			new SetPromodeTempVisionState(),
-			new CountdownState(),
+			new PromodeCountdownState(),
 			new GameLoopState(),
 			new GameOverState(),
 			new ResetState(),

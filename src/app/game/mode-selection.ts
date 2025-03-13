@@ -30,7 +30,7 @@ export class ModeSelection {
 		return this.instance;
 	}
 
-	public async run(): Promise<void> {
+	public run(): void {
 		this.ui.show();
 		if (NameManager.getInstance().getAcct(Player(23)) == 'RiskBot') {
 			const settingsContext: SettingsContext = SettingsContext.getInstance();
@@ -60,7 +60,7 @@ export class ModeSelection {
 		}
 	}
 
-	public async end(): Promise<void> {
+	public end(): void {
 		const settings: SettingsContext = SettingsContext.getInstance();
 		settings.initStrategies();
 		settings.applyStrategy('GameType');

@@ -4,10 +4,10 @@ import { SettingsContext } from 'src/app/settings/settings-context';
 
 export class VisionState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
-		this.runAsync();
+		this.run();
 	}
 
-	async runAsync(): Promise<void> {
+	run(): void {
 		SettingsContext.getInstance().applyStrategy('Fog');
 
 		ClearTextMessages();

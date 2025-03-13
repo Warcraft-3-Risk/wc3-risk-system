@@ -108,7 +108,7 @@ function tsMain() {
 		//Set up actions on game load
 		const onLoadTimer: timer = CreateTimer();
 
-		TimerStart(onLoadTimer, 0.0, false, async () => {
+		TimerStart(onLoadTimer, 0.0, false, () => {
 			clearTickUI();
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
@@ -137,8 +137,6 @@ function tsMain() {
 			if (ENABLE_EXPORT_SHUFFLED_PLAYER_LIST) {
 				ExportShuffledPlayerList.write();
 			}
-
-			await Wait.forSeconds(2);
 
 			EventEmitter.getInstance().emit(EVENT_MODE_SELECTION);
 		});
