@@ -17,6 +17,7 @@ export class SettingSelectionState extends BaseGameState {
 			new TimedEvent(timerEventID, timerDuration, false, true, (remainingTime) => {
 				if (remainingTime <= 0 || !this.ui.isVisible()) {
 					timedEventManager.stopEvent(timerEventID);
+					this.ui.hide();
 					this.exit();
 					return;
 				}
@@ -26,10 +27,6 @@ export class SettingSelectionState extends BaseGameState {
 		);
 	}
 	public exit(): void {
-		if (this.ui.isVisible()) {
-			this.ui.hide();
-		}
-
 		this.gameStateManager.nextState();
 	}
 }

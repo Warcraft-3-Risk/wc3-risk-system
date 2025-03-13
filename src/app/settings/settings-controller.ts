@@ -1,5 +1,5 @@
 import { GameTypeHandlerFactory } from './handler-factory';
-import { Diplomacy, Fog, GameType, Overtime, Settings } from './settings';
+import { Diplomacy, Fog, GameType, TeamSize, Overtime, Settings } from './settings';
 
 export class SettingsController {
 	private static instance: SettingsController;
@@ -18,7 +18,7 @@ export class SettingsController {
 				Fog: Fog.Off,
 				Overtime: Overtime.Turn30,
 				Diplomacy: Diplomacy.FFA,
-				PlayersPerTeam: 2,
+				PlayersPerTeam: TeamSize.Two,
 			});
 		}
 
@@ -43,7 +43,7 @@ export class SettingsController {
 		this.settings.Diplomacy = num;
 	}
 
-	public setTeamSize(num: number) {
+	public setTeamSize(num: TeamSize) {
 		this.settings.PlayersPerTeam = num;
 	}
 
@@ -63,7 +63,7 @@ export class SettingsController {
 		return this.settings.Diplomacy;
 	}
 
-	public getTeamSize(): number {
+	public getTeamSize(): TeamSize {
 		return this.settings.PlayersPerTeam;
 	}
 

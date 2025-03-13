@@ -36,12 +36,11 @@ function tsMain() {
 		NameManager.getInstance();
 		//Set up triggers
 
-		//Set up actions on game load
+		//This timer will expire once in loaded into game.
 		const onLoadTimer: timer = CreateTimer();
-		TimerStart(onLoadTimer, 0.0, false, () => {
+		TimerStart(onLoadTimer, 1.0, false, () => {
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
-
 			GameStateManager.getInstance();
 		});
 	} catch (e) {

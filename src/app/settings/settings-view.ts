@@ -1,6 +1,6 @@
 import { HexColors } from '../utils/hex-colors';
 import { GameTypeOptions } from './handlers/game-type-handler';
-import { Diplomacy, Fog, GameType, Overtime } from './settings';
+import { Diplomacy, Fog, GameType, TeamSize, Overtime } from './settings';
 import { SettingsController } from './settings-controller';
 import { DiplomacyOptions } from './strategies/diplomacy';
 import { FogOptions } from './strategies/fog';
@@ -16,8 +16,10 @@ export class SettingsView {
 		this.backdrop = BlzCreateFrame('SettingsView', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 		BlzFrameSetValue(BlzGetFrameByName('GameTypePopup', 0), GameType.Standard);
 		BlzFrameSetValue(BlzGetFrameByName('FogPopup', 0), Fog.Off);
-		BlzFrameSetValue(BlzGetFrameByName('DiplomacyPopup', 0), Diplomacy.FFA);
 		BlzFrameSetValue(BlzGetFrameByName('OvertimePopup', 0), Overtime.Turn30);
+		BlzFrameSetValue(BlzGetFrameByName('DiplomacyPopup', 0), Diplomacy.FFA);
+		BlzFrameSetValue(BlzGetFrameByName('TeamSizeSlider', 0), TeamSize.Two);
+		BlzFrameSetText(BlzGetFrameByName('TeamSizeLabel', 0), `   ${HexColors.GREEN}0|r`);
 		this.buildStartButton();
 		this.buildTimer();
 		this.gameTypePopupHandler();
@@ -83,7 +85,8 @@ export class SettingsView {
 				const fogFrame: framehandle = BlzGetFrameByName('FogPopup', 0);
 				const overtimeFrame: framehandle = BlzGetFrameByName('OvertimePopup', 0);
 				const diploFrame: framehandle = BlzGetFrameByName('DiplomacyPopup', 0);
-				const teamSizeFrame: framehandle = BlzGetFrameByName('DiplomacySlider', 0);
+				const teamSizeSliderFrame: framehandle = BlzGetFrameByName('TeamSizeSlider', 0);
+				const teamSizeFrame: framehandle = BlzGetFrameByName('TeamSizeLabel', 0);
 				const frameValue: number = R2I(BlzGetTriggerFrameValue());
 
 				BlzFrameSetEnable(fogFrame, true);
@@ -108,7 +111,7 @@ export class SettingsView {
 						this.settingsController.setFog(Fog.On);
 						this.settingsController.setDiplomacy(Diplomacy.FFA);
 						break;
-					default: //Standard
+					default: //GameType.Standard
 						this.settingsController.setFog(Fog.Off);
 						this.settingsController.setOvertime(Overtime.Turn30);
 						this.settingsController.setDiplomacy(Diplomacy.FFA);
@@ -116,16 +119,18 @@ export class SettingsView {
 				}
 
 				if (this.settingsController.getDiplomacy() != Diplomacy.FFA) {
-					this.settingsController.setTeamSize(2);
-					BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), true);
+					this.settingsController.setTeamSize(TeamSize.Two);
+					BlzFrameSetVisible(teamSizeSliderFrame, true);
+					BlzFrameSetText(teamSizeFrame, `${HexColors.WHITE}${this.settingsController.getTeamSize()}|r`);
 				} else {
-					BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), false);
+					BlzFrameSetVisible(teamSizeSliderFrame, false);
+					BlzFrameSetText(teamSizeFrame, `   ${HexColors.GREEN}0|r`);
 				}
 
 				BlzFrameSetValue(fogFrame, this.settingsController.getFog());
 				BlzFrameSetValue(overtimeFrame, this.settingsController.getOvertime());
 				BlzFrameSetValue(diploFrame, this.settingsController.getDiplomacy());
-				BlzFrameSetValue(teamSizeFrame, this.settingsController.getTeamSize());
+				BlzFrameSetValue(teamSizeSliderFrame, this.settingsController.getTeamSize());
 				this.colorizeText(`GameTypePopup`, GameTypeOptions);
 				this.colorizeText(`DiplomacyPopup`, DiplomacyOptions);
 				this.colorizeText(`FogPopup`, FogOptions);
@@ -183,14 +188,11 @@ export class SettingsView {
 				this.colorizeText(`DiplomacyPopup`, DiplomacyOptions);
 
 				if (frameValue > 0) {
-					BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), true);
-					BlzFrameSetText(
-						BlzGetFrameByName('DiplomacySubOptionLabel', 0),
-						`${R2I(BlzFrameGetValue(BlzGetFrameByName('DiplomacySlider', 0)))}`
-					);
+					BlzFrameSetVisible(BlzGetFrameByName('TeamSizeSlider', 0), true);
+					BlzFrameSetText(BlzGetFrameByName('TeamSizeLabel', 0), `${HexColors.WHITE}${this.settingsController.getTeamSize()}|r`);
 				} else {
-					BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), false);
-					BlzFrameSetText(BlzGetFrameByName('DiplomacySubOptionLabel', 0), `FFA`);
+					BlzFrameSetVisible(BlzGetFrameByName('TeamSizeSlider', 0), false);
+					BlzFrameSetText(BlzGetFrameByName('TeamSizeLabel', 0), `   ${HexColors.GREEN}0|r`);
 				}
 			})
 		);
@@ -201,7 +203,7 @@ export class SettingsView {
 	private teamSizeSliderHandler() {
 		const t: trigger = CreateTrigger();
 
-		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('DiplomacySlider', 0), FRAMEEVENT_SLIDER_VALUE_CHANGED);
+		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('TeamSizeSlider', 0), FRAMEEVENT_SLIDER_VALUE_CHANGED);
 		TriggerAddCondition(
 			t,
 			Condition(() => {
@@ -209,16 +211,15 @@ export class SettingsView {
 
 				this.settingsController.setTeamSize(frameValue);
 
-				if (BlzFrameIsVisible(BlzGetFrameByName('DiplomacySlider', 0))) {
-					BlzFrameSetText(BlzGetFrameByName('DiplomacySubOptionLabel', 0), `${frameValue}`);
+				if (BlzFrameIsVisible(BlzGetFrameByName('TeamSizeSlider', 0))) {
+					BlzFrameSetText(BlzGetFrameByName('TeamSizeLabel', 0), `${HexColors.WHITE}${this.settingsController.getTeamSize()}|r`);
 				} else {
-					BlzFrameSetText(BlzGetFrameByName('DiplomacySubOptionLabel', 0), `FFA`);
+					BlzFrameSetText(BlzGetFrameByName('TeamSizeLabel', 0), `   ${HexColors.GREEN}0|r`);
 				}
 			})
 		);
 
-		BlzFrameSetVisible(BlzGetFrameByName('DiplomacySlider', 0), false);
-		BlzFrameSetText(BlzGetFrameByName('DiplomacySubOptionLabel', 0), `FFA`);
+		BlzFrameSetVisible(BlzGetFrameByName('TeamSizeSlider', 0), false);
 	}
 
 	private colorizeText(frameName: string, optionsType: Record<number, string>) {
@@ -239,7 +240,7 @@ export class SettingsView {
 		if (GetLocalPlayer() != Player(0)) {
 			BlzFrameSetVisible(BlzGetFrameByName('PopupMenus', 0), false);
 			BlzFrameSetVisible(BlzGetFrameByName('StartButton', 0), false);
-			BlzFrameSetVisible(BlzGetFrameByName('DiplomacySubOptionLabel', 0), false);
+			BlzFrameSetVisible(BlzGetFrameByName('TeamSizeLabel', 0), false);
 		}
 	}
 }

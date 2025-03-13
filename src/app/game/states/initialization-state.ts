@@ -10,6 +10,7 @@ import { TimedEventManager } from 'src/app/timer/timed-event-manager';
 export class InitializationState extends BaseGameState {
 	public enter(): void {
 		//TODO print message for "please wait game is initilizing"
+		//TODO fill a global array with players that matter for the purpose of iterating through it as needed
 		FogEnable(false);
 		FogMaskEnable(false);
 		SetConsoleUI();
@@ -36,7 +37,7 @@ export class InitializationState extends BaseGameState {
 			}
 		}
 
-		ClearTextMessages();
+		//ClearTextMessages();
 		this.gameStateManager.nextState();
 	}
 }

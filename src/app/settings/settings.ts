@@ -32,3 +32,12 @@ export enum Diplomacy {
 	DraftTeams = 1,
 	RandomTeams = 2,
 }
+
+//This enum does not correspond to anything in the fdf files and can be freely changed. It is here to avoid magic numbers.
+export enum TeamSize {
+	Two = 2,
+	Three = 3,
+	Four = 4,
+	Five = 5,
+	Six = 6,
+}

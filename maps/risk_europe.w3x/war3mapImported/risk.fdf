@@ -234,48 +234,15 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			}
 		}
 
-		// Frame "GLUECHECKBOX" "PromodeCheckbox" {
-		// Width 0.024,
-		// Height 0.024,
-		// SetPoint TOP,"PopupMenus",TOP,-0.053,-0.17,
-
-		// ControlBackdrop "EscMenuCheckBoxBackdrop",
-		// 	Frame "BACKDROP" "EscMenuCheckBoxBackdrop" {
-		// 		DecorateFileNames,
-		// 		BackdropBlendAll,
-		// 		BackdropBackground  "EscMenuCheckBoxBackground",
-		// 	}
-
-		// ControlDisabledBackdrop "EscMenuDisabledCheckBoxBackdrop",
-		// 	Frame "BACKDROP" "EscMenuDisabledCheckBoxBackdrop" {
-		// 		DecorateFileNames,
-		// 		BackdropBlendAll,
-		// 		BackdropBackground  "EscMenuDisabledCheckBoxBackground",
-		// 	}
-
-		// ControlPushedBackdrop "EscMenuCheckBoxPushedBackdrop",
-		// 	Frame "BACKDROP" "EscMenuCheckBoxPushedBackdrop" {
-		// 		DecorateFileNames,
-		// 		BackdropBlendAll,
-		// 		BackdropBackground  "EscMenuCheckBoxPushedBackground",
-		// 	}
-
-		// CheckBoxCheckHighlight "EscMenuCheckHighlightTemplate",
-		// 	Frame "HIGHLIGHT" "EscMenuCheckHighlightTemplate" {
-		// 		DecorateFileNames,
-		// 		HighlightType "FILETEXTURE",
-		// 		HighlightAlphaFile "EscMenuCheckBoxCheckHighlight",
-		// 		HighlightAlphaMode "BLEND",
-		// 	}
-
-		// CheckBoxDisabledCheckHighlight "EscMenuDisabledCheckHighlightTemplate",
-		// 	Frame "HIGHLIGHT" "EscMenuDisabledCheckHighlightTemplate" {
-		// 		DecorateFileNames,
-		// 		HighlightType "FILETEXTURE",
-		// 		HighlightAlphaFile "EscMenuDisabledCheckHighlight",
-		// 		HighlightAlphaMode "BLEND",
-		// 	}
-		// }
+		Frame "SLIDER" "TeamSizeSlider" INHERITS WITHCHILDREN "EscMenuSliderTemplate" {
+			SetPoint TOP,"PopupMenus",TOP,0.0,-0.168,
+			Height 0.012,
+			Width 0.12,
+            SliderMinValue 2,
+            SliderMaxValue 6,
+            SliderInitialValue 2,
+            SliderStepSize 1,
+		}
 	}
 
 	Frame "FRAME" "PopupLabels" {
@@ -327,16 +294,27 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			Text "Diplomacy:",
 		}
 
-		// Frame "TEXT" "PromodeLabel" {
-		// 	SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.17,
-		// 	DecorateFileNames,
-		// 	FrameFont "MasterFont", 0.012,"",
-		// 	FontColor 1.0 0.8 0.0 1.0,
-		// 	LayerStyle "IGNORETRACKEVENTS", 
-		// 	FontJustificationH JUSTIFYLEFT,
-		// 	FontJustificationV JUSTIFYMIDDLE,
-		// 	Text "Promode?",
-		// }
+		Frame "TEXT" "TeamSizeSliderLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.16,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Team Size:",
+		}
+
+		Frame "TEXT" "TeamSizeLabel" {
+			SetPoint TOPLEFT,"TeamSizeSliderLabel",TOPRIGHT, 0.005, 0.0,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "",
+		}
 	}
 
 	Frame "FRAME" "PopupMenuOptions" {

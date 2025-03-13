@@ -1,8 +1,8 @@
 {
-	"name": "wc3-ts-template",
-	"version": "1.1.0",
+	"name": "wc3-risk-system",
+	"version": "3.0",
 	"description": "",
-	"author": "TriggerHappy",
+	"author": "Snour",
 	"license": "MIT",
 	"main": "src/main.ts",
 	"scripts": {
