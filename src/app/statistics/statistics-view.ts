@@ -118,7 +118,11 @@ export class StatisticsView {
 
 		const buttonTrigger: trigger = CreateTrigger();
 		BlzTriggerRegisterFrameEvent(buttonTrigger, button, FRAMEEVENT_CONTROL_CLICK);
-		TriggerAddAction(buttonTrigger, onClick);
+		TriggerAddAction(buttonTrigger, () => {
+			if(GetLocalPlayer() == GetTriggerPlayer()){
+				onClick();
+			}
+		});
 
 		return button;
 	}
