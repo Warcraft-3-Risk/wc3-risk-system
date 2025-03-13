@@ -1,9 +1,9 @@
-import { CapitalsHandler } from './handlers/capitals';
-import { GameTypeHandler } from './handlers/game-type-handler';
-import { PromodeHandler } from './handlers/promode';
-import { StandardHandler } from './handlers/standard';
-import { TournamentHandler } from './handlers/tournament';
-import { GameType } from './settings';
+import { GameType } from '../settings';
+import { CapitalsHandler } from './capitals-handler';
+import { GameTypeHandler } from './game-type-handler.interface';
+import { PromodeHandler } from './promode-handler';
+import { StandardHandler } from './standard-handler';
+import { TournamentHandler } from './tournament-handler';
 
 export class GameTypeHandlerFactory {
 	private handlers: Map<GameType, GameTypeHandler>;

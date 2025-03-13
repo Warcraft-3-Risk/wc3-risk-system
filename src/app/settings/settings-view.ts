@@ -1,10 +1,6 @@
 import { HexColors } from '../utils/hex-colors';
-import { GameTypeOptions } from './handlers/game-type-handler';
-import { Diplomacy, Fog, GameType, TeamSize, Overtime } from './settings';
+import { Diplomacy, Fog, GameType, TeamSize, Overtime, DiplomacyOptions, FogOptions, OvertimeOptions, GameTypeOptions } from './settings';
 import { SettingsController } from './settings-controller';
-import { DiplomacyOptions } from './strategies/diplomacy';
-import { FogOptions } from './strategies/fog';
-import { OvertimeOptions } from './strategies/overtime';
 
 export class SettingsView {
 	private backdrop: framehandle;

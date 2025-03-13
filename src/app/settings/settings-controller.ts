@@ -1,5 +1,5 @@
-import { GameTypeHandlerFactory } from './handler-factory';
-import { Diplomacy, Fog, GameType, TeamSize, Overtime, Settings } from './settings';
+import { GameTypeHandlerFactory } from './game_type_handlers/game-type-handler-factory';
+import { GameType, Fog, Overtime, Diplomacy, TeamSize, Settings } from './settings';
 
 export class SettingsController {
 	private static instance: SettingsController;

@@ -27,6 +27,8 @@ export class SettingSelectionState extends BaseGameState {
 		);
 	}
 	public exit(): void {
+		//TODO Apply Settings here
+		//I may choose to apply settings elsewhere, which is why this is just a todo for now
 		this.gameStateManager.nextState();
 	}
 }
