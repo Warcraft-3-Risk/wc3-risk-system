@@ -27,7 +27,7 @@ export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 export const STFU_DURATION: number = 300;
 
 //This represents whether debug messages should be printed. Default is false.
-export const SHOW_DEBUG_PRINTS = true;
+export const SHOW_DEBUG_PRINTS = false;
 
 //This represents whether player names should be exported
 export const ENABLE_EXPORT_SHUFFLED_PLAYER_LIST: boolean = false;
@@ -39,4 +39,4 @@ export const ENABLE_EXPORT_GAME_SETTINGS: boolean = false;
 export const ENABLE_EXPORT_END_GAME_SCORE: boolean = true;
 
 //This represents how long the capitals selection phase should last in seconds. Default is 30 seconds.
-export const CAPITALS_SELECTION_PHASE: number = 10;
+export const CAPITALS_SELECTION_PHASE: number = 30;
