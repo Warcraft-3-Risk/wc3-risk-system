@@ -1,5 +1,5 @@
 import { PLAYER_COLORS } from 'src/app/utils/player-colors';
-import { ShuffleArray } from 'src/app/utils/utils';
+import { GiveFullVision, IsObserver, ShuffleArray } from 'src/app/utils/utils';
 import { GamePlayer } from './game-player';
 import { AdminList } from 'src/app/configs/admin-list';
 import { NameManager } from 'src/app/names/name-manager';
@@ -41,8 +41,10 @@ export class PlayerManager {
 			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY) continue;
 
 			// Check for obs and set as real obs if the player is not an admin
-			if (GetPlayerId(player) == 21) {
+			if (IsObserver(player)) {
+				GiveFullVision(player);
 				this.observer = player;
+				//23 is White
 				nameManager.setColor(player, PLAYER_COLORS[23]);
 				nameManager.setName(player, 'btag');
 

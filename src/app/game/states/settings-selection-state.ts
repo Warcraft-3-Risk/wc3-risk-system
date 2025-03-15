@@ -3,6 +3,7 @@ import { BaseGameState } from '../base-game-state';
 import { TimedEvent } from 'src/app/timer/timed-event';
 import { TimedEventManager } from 'src/app/timer/timed-event-manager';
 import { TimerEventType } from 'src/app/timer/timed-event-type';
+import { SettingsController } from 'src/app/settings/settings-controller';
 
 export class SettingSelectionState extends BaseGameState {
 	private ui: SettingsView;
@@ -27,8 +28,7 @@ export class SettingSelectionState extends BaseGameState {
 		);
 	}
 	public exit(): void {
-		//TODO Apply Settings here
-		//I may choose to apply settings elsewhere, which is why this is just a todo for now
+		SettingsController.getInstance().applySettings();
 		this.gameStateManager.nextState();
 	}
 }

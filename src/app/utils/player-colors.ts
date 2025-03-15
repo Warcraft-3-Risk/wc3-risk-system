@@ -1,7 +1,6 @@
 /**
  * A list of player colors. Some colors have been rearranged from their default Wc3 positions.
  * This is done to prevent using similar colors in small games.
- * The following colors have been swapped: Snow 22, Turquoise 15, Mint 19, Navy 14, Emerald 23, Coal 20
  */
 export const PLAYER_COLORS = [
 	PLAYER_COLOR_RED,

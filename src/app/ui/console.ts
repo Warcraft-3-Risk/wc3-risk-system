@@ -111,9 +111,9 @@ export function AllyMenuFFASetup() {
 	tempText += '|n|cffffffff-ng (restarts the game if its over)';
 	tempText += '|n|cffffffff-names displays a list of alive/nomad players in game';
 	tempText += '|n|cffffffff-stfu <player name/color> (mutes a player for 300 seconds)';
+	tempText += '|n|cffffffff-howto displays a short tutorial on how to play';
+	tempText += '|n|cffffffff-gold <player name/color> <amount> Sends gold to the specified player, Only for teams or single player';
 	tempText += '|n|n|cffffcc00Hotkeys:|r';
-	tempText += '|n|cffffffff F1 (selects player tools)';
-	tempText += '|n|cffffffff F7 (cycles scoreboard)';
 	tempText += '|n|cffffffff F8 (cycles owned spawners)';
 
 	BlzFrameSetText(AllyMenuTitle, tempText);

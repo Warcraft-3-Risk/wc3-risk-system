@@ -76,21 +76,21 @@ export class NameManager {
 
 	/**
 	 * Sets the name of a player based on a specified type ('btag', 'acct', or 'color').
-	 * @param p - The player object.
+	 * @param player - The player object.
 	 * @param name - The type of name to set.
 	 */
-	public setName(p: player, name: Names) {
+	public setName(player: player, name: Names) {
 		switch (name) {
 			case 'btag':
-				SetPlayerName(p, this.names.get(p).getBtag());
+				SetPlayerName(player, this.names.get(player).getBtag());
 				break;
 
 			case 'acct':
-				SetPlayerName(p, this.names.get(p).getAcct());
+				SetPlayerName(player, this.names.get(player).getAcct());
 				break;
 
 			case 'color':
-				SetPlayerName(p, this.names.get(p).getColor());
+				SetPlayerName(player, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(player))}${this.names.get(player).getColor()}|r`);
 				break;
 
 			default:

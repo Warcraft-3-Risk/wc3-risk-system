@@ -1,14 +1,24 @@
-import { GameTypeHandlerFactory } from './game_type_handlers/game-type-handler-factory';
 import { GameType, Fog, Overtime, Diplomacy, TeamSize, Settings } from './settings';
+import { DiplomacyStrategy } from './strategies/diplomacy-strategy';
+import { FogStrategy } from './strategies/fog-strategy';
+import { GameTypeStrategy } from './strategies/game-type-strategy';
+import { OvertimeStrategy } from './strategies/overtime-strategy';
+import { SettingsStrategy } from './strategies/settings-strategies.interface';
 
 export class SettingsController {
 	private static instance: SettingsController;
 	private settings: Settings;
-	private handlerFactory: GameTypeHandlerFactory;
+	private strategies: Set<SettingsStrategy>;
 
 	constructor(settings: Settings) {
 		this.settings = settings;
-		this.handlerFactory = new GameTypeHandlerFactory();
+
+		this.strategies = new Set<SettingsStrategy>([
+			new GameTypeStrategy(),
+			new FogStrategy(),
+			new OvertimeStrategy(),
+			new DiplomacyStrategy(),
+		]);
 	}
 
 	public static getInstance(): SettingsController {
@@ -26,13 +36,7 @@ export class SettingsController {
 	}
 
 	public applySettings(): void {
-		const handler = this.handlerFactory.getHandler(this.settings.GameType);
-
-		if (handler) {
-			handler.applySettings(this.settings);
-		} else {
-			print('Invalid GameType handler');
-		}
+		this.strategies.forEach((strategy) => strategy.apply(this));
 	}
 
 	public setGameType(num: GameType) {

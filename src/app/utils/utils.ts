@@ -4,6 +4,16 @@ export const NEUTRAL_HOSTILE: player = Player(PLAYER_NEUTRAL_AGGRESSIVE);
 /** The number of player slots in the game, excluding neutral players. */
 export const PLAYER_SLOTS: number = bj_MAX_PLAYERS - 1;
 
+export const OBSERVER_PLAYER_SLOT = 21;
+
+export function IsObserver(player: player) {
+	return GetPlayerId(player) === OBSERVER_PLAYER_SLOT;
+}
+
+export function GiveFullVision(player: player) {
+	FogModifierStart(CreateFogModifierRect(player, FOG_OF_WAR_VISIBLE, GetWorldBounds(), true, false));
+}
+
 /**
  * Play a local sound for a specific player.
  * @param soundPath - The path of the sound file to play.

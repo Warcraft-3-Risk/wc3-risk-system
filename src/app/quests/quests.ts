@@ -7,12 +7,11 @@ export class Quests {
 		Quests.Credits();
 		Quests.Tutorial();
 		Quests.ArmyComposition();
-		Quests.OvertimeDescription();
 		Quests.CameraDescription();
 	}
 
 	private static Credits() {
-		let description: string = 'Main Dev/Code: ForLolz#11696';
+		let description: string = 'Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930';
 		description += '\nTerrain: Nerla#1510';
 		description += '\nUnits: Saran, ForLolz#11696';
 		description += '\nIcons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish';
@@ -51,20 +50,6 @@ export class Quests {
 		Quests.BuildQuest('Army Composition', description, 'ReplaceableTextures\\WorldEditUI\\Editor-MultipleUnits.blp', true);
 	}
 
-	private static OvertimeDescription() {
-		let description: string =
-			'Overtime is a feature designed to help conclude games more efficiently by gradually reducing the number of cities required for victory. Once activated, each turn decreases the victory threshold by one city until a player wins.';
-		description += '\nThere are four Overtime settings:';
-		description += '\n1. Off: Overtime is disabled, keeping the default victory conditions.';
-		description += '\n2. Turbo Mode: Overtime begins at turn 30, accelerating the game pace early on.';
-		description += '\n3. Medium Mode: Overtime starts at turn 60, allowing for a long gameplay before the mechanic activates.';
-		description += '\n4. Extended Mode: Overtime starts at turn 120, allowing for extended gameplay before the mechanic activates.';
-
-		description += '\nThis system ensures flexibility and adaptability based on player preferences.';
-
-		Quests.BuildQuest('Overtime Explained', description, 'ReplaceableTextures\\CommandButtons\\BTNSorceressMaster.blp', true);
-	}
-
 	private static CameraDescription() {
 		let description: string =
 			'The camera system allows for full control of a players camera. The player can manipulate the distance, rotation, and angle of attack (AoA).';
@@ -79,7 +64,7 @@ export class Quests {
 		description +=
 			'\nThis distance must be between 1000 and 8500, The rotation must be between 0 and 360, the AoA must be between 270 and 350';
 
-		Quests.BuildQuest('Camera Explained', description, 'ReplaceableTextures\\WorldEditUI\\Doodad-Cinematic.blp', true);
+		Quests.BuildQuest('Camera Controls', description, 'ReplaceableTextures\\WorldEditUI\\Doodad-Cinematic.blp', true);
 	}
 
 	private static BuildQuest(title: string, description: string, icon: string, required: boolean) {

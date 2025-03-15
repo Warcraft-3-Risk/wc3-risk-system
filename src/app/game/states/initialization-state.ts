@@ -15,7 +15,6 @@ export class InitializationState extends BaseGameState {
 		FogMaskEnable(false);
 		SetConsoleUI();
 		Quests.Create();
-		NameManager.getInstance();
 		TimedEventManager.getInstance();
 		CameraManager.getInstance();
 		PlayerManager.getInstance();
