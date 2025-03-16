@@ -1,6 +1,7 @@
 import { PLAYER_COLOR_CODES_MAP, PLAYER_COLOR_MAP } from 'src/app/utils/player-colors';
 import { PlayerNames } from './player-names';
 import { isNonEmptySubstring } from 'src/app/utils/utils';
+import { PlayerList } from '../entity/player/player-list';
 
 type Names = 'btag' | 'acct' | 'color';
 
@@ -31,24 +32,18 @@ export class NameManager {
 	/**
 	 * Searches for players by a substring match of their name, color, or BattleTag.
 	 * @param string - The string to search for.
-	 * @returns Array of player objects that match the criteria.
+	 * @returns Set of player objects that match the criteria.
 	 */
-	public getPlayersByAnyName(string: string): player[] {
-		const foundPlayers: player[] = [];
+	public getPlayersByAnyName(string: string): Set<player> {
+		const foundPlayers = new Set<player>();
 
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			const player = Player(i);
-
-			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_PLAYING) continue;
-
-			if (isNonEmptySubstring(string, this.getColor(player))) {
-				foundPlayers.push(player);
-			}
-
-			if (isNonEmptySubstring(string, this.getBtag(player))) {
-				foundPlayers.push(player);
-			}
-		}
+		PlayerList.getInstance()
+			.getPlayers()
+			.forEach((player) => {
+				if (isNonEmptySubstring(string, this.getColor(player)) || isNonEmptySubstring(string, this.getBtag(player))) {
+					foundPlayers.add(player);
+				}
+			});
 
 		return foundPlayers;
 	}
@@ -61,15 +56,13 @@ export class NameManager {
 	public getPlayerFromBtag(string: string): player | null {
 		let result: player = null;
 
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			const player = Player(i);
-
-			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_PLAYING) continue;
-
-			if (isNonEmptySubstring(string, this.getBtag(player))) {
-				result = player;
-			}
-		}
+		PlayerList.getInstance()
+			.getPlayers()
+			.forEach((player) => {
+				if (isNonEmptySubstring(string, this.getBtag(player))) {
+					result = player;
+				}
+			});
 
 		return result;
 	}

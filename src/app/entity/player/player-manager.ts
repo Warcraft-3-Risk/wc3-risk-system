@@ -3,6 +3,7 @@ import { GiveFullVision, IsObserver, ShuffleArray } from 'src/app/utils/utils';
 import { GamePlayer } from './game-player';
 import { AdminList } from 'src/app/configs/admin-list';
 import { NameManager } from 'src/app/names/name-manager';
+import { PlayerList } from './player-list';
 
 export class PlayerManager {
 	private gamePlayers: Map<player, GamePlayer>;
@@ -34,29 +35,25 @@ export class PlayerManager {
 	private setup(): void {
 		const nameManager: NameManager = NameManager.getInstance();
 
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			const player = Player(i);
+		PlayerList.getInstance()
+			.getPlayers()
+			.forEach((player) => {
+				if (IsObserver(player)) {
+					GiveFullVision(player);
+					this.observer = player;
+					//23 is Snow
+					nameManager.setColor(player, PLAYER_COLORS[23]);
+					nameManager.setName(player, 'btag');
 
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_LEFT) continue;
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY) continue;
+					const playerName = nameManager.getBtag(player);
 
-			// Check for obs and set as real obs if the player is not an admin
-			if (IsObserver(player)) {
-				GiveFullVision(player);
-				this.observer = player;
-				//23 is White
-				nameManager.setColor(player, PLAYER_COLORS[23]);
-				nameManager.setName(player, 'btag');
-
-				const playerName = nameManager.getBtag(player);
-
-				if (!AdminList.includes(playerName)) {
-					SetPlayerState(this.observer, PLAYER_STATE_OBSERVER, 1);
+					if (!AdminList.includes(playerName)) {
+						SetPlayerState(this.observer, PLAYER_STATE_OBSERVER, 1);
+					}
+				} else {
+					this.gamePlayers.set(player, new GamePlayer(player));
 				}
-			} else {
-				this.gamePlayers.set(player, new GamePlayer(player));
-			}
-		}
+			});
 
 		//Set up player colors and names
 		const colors: playercolor[] = PLAYER_COLORS.slice(0, this.gamePlayers.size);

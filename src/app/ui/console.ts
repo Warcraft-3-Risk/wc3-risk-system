@@ -1,5 +1,4 @@
 import { MAP_VERSION } from '../utils/map-info';
-import { PLAYER_SLOTS } from '../utils/utils';
 
 /**
  * Sets up the console UI for the game.
@@ -70,7 +69,7 @@ export function SetConsoleUI() {
 	BlzCreateFrame('GlobalMessageFrame', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 	BlzCreateFrame('CountdownFrame', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 
-	for (let i = 0; i < PLAYER_SLOTS; i++) {
+	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 		const player = Player(i);
 
 		if (GetPlayerController(player) == MAP_CONTROL_USER) {

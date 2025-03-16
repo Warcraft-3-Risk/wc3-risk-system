@@ -6,6 +6,7 @@ import { BaseGameState } from '../base-game-state';
 import { SetupChatCommands } from 'src/app/chat/set-commands';
 import { NameManager } from 'src/app/names/name-manager';
 import { TimedEventManager } from 'src/app/timer/timed-event-manager';
+import { PlayerList } from 'src/app/entity/player/player-list';
 
 export class InitializationState extends BaseGameState {
 	public enter(): void {
@@ -17,6 +18,7 @@ export class InitializationState extends BaseGameState {
 		Quests.Create();
 		TimedEventManager.getInstance();
 		CameraManager.getInstance();
+		PlayerList.getInstance();
 		PlayerManager.getInstance();
 		//TODO Transports
 		//TODO TimedEventManager
@@ -28,13 +30,15 @@ export class InitializationState extends BaseGameState {
 	public exit(): void {
 		//TODO delete debug info
 		print(`Players: ${PlayerManager.getInstance().getPlayers().size}`);
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			if (!IsPlayerSlotState(Player(i), PLAYER_SLOT_STATE_EMPTY)) {
-				print(
-					`Player Name: ${NameManager.getInstance().getBtag(Player(i))} Slot: ${GetPlayerId(Player(i))} Color: ${NameManager.getInstance().getColor(Player(i))}`
-				);
-			}
-		}
+		PlayerList.getInstance()
+			.getPlayers()
+			.forEach((player) => {
+				if (!IsPlayerSlotState(player, PLAYER_SLOT_STATE_EMPTY)) {
+					print(
+						`Player Name: ${NameManager.getInstance().getBtag(player)} Slot: ${GetPlayerId(player)} Color: ${NameManager.getInstance().getColor(player)}`
+					);
+				}
+			});
 
 		//ClearTextMessages();
 		this.gameStateManager.nextState();

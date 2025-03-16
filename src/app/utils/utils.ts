@@ -1,15 +1,22 @@
 /** The player object for neutral hostile units. */
 export const NEUTRAL_HOSTILE: player = Player(PLAYER_NEUTRAL_AGGRESSIVE);
 
-/** The number of player slots in the game, excluding neutral players. */
-export const PLAYER_SLOTS: number = bj_MAX_PLAYERS - 1;
-
+/** The player slot that holds the player that acts as observer */
 export const OBSERVER_PLAYER_SLOT = 21;
 
+/**
+ * Checks if a player is in the fake observer slot.
+ * @param player The player to check.
+ * @returns boolean
+ */
 export function IsObserver(player: player) {
 	return GetPlayerId(player) === OBSERVER_PLAYER_SLOT;
 }
 
+/**
+ * Gives full map vision to a player.
+ * @param player The player to give vision to.
+ */
 export function GiveFullVision(player: player) {
 	FogModifierStart(CreateFogModifierRect(player, FOG_OF_WAR_VISIBLE, GetWorldBounds(), true, false));
 }

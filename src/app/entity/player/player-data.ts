@@ -1,5 +1,5 @@
 import { Country } from 'src/app/country/country';
-import { PLAYER_SLOTS, NEUTRAL_HOSTILE, IsObserver } from 'src/app/utils/utils';
+import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Bounty } from '../data/bonus/bounty';
 import { FightBonus } from '../data/bonus/fight-bonus';
 import { Cities } from '../data/cities';
@@ -10,6 +10,7 @@ import { SingleEntityData } from '../single-entity-data';
 import { EntityID } from '../entity-id';
 import { Resetable } from 'src/app/interfaces/resettable';
 import { TRACKED_UNITS } from 'src/app/configs/tracked-units';
+import { PlayerList } from './player-list';
 
 export class PlayerData implements Resetable, SingleEntityData {
 	private income: Income;
@@ -114,22 +115,16 @@ export class PlayerData implements Resetable, SingleEntityData {
 	}
 
 	public setKDMaps() {
-		//TODO think of a good way to do this without needing to iterate using player_slots.
-		//Ideally we have an array of players that matter, ie non obs/left/isPlaying
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
-			const player: player = Player(i);
-
-			if (IsObserver(player)) continue;
-			if (!IsPlayerSlotState(player, PLAYER_SLOT_STATE_PLAYING)) continue;
-			if (IsPlayerSlotState(player, PLAYER_SLOT_STATE_LEFT)) continue;
-
-			this.killsDeaths.set(player, {
-				killValue: 0,
-				deathValue: 0,
-				kills: 0,
-				deaths: 0,
+		PlayerList.getInstance()
+			.getPlayers()
+			.forEach((player) => {
+				this.killsDeaths.set(player, {
+					killValue: 0,
+					deathValue: 0,
+					kills: 0,
+					deaths: 0,
+				});
 			});
-		}
 
 		this.killsDeaths.set(NEUTRAL_HOSTILE, {
 			killValue: 0,
