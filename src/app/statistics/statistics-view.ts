@@ -23,6 +23,9 @@ export class StatisticsView {
 	constructor(model: StatisticsModel) {
 		this.model = model;
 		this.backdrop = BlzCreateFrame('StatisticsBoard', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
+		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
+		BlzFrameSetSize(this.backdrop, 1, 0.64);
+
 		this.footerBackdrop = BlzCreateFrameByType('BACKDROP', 'FooterBackdrop', this.backdrop, '', 0);
 		this.header = BlzFrameGetChild(this.backdrop, 0);
 		this.minimizeButton = BlzFrameGetChild(this.header, 3);
@@ -30,11 +33,12 @@ export class StatisticsView {
 		this.rows = new Map<string, framehandle>();
 
 		this.setupPaginationUI();
-
 		this.buildColumns();
 		this.page = new StatisticsPage(this.model, this.pageIndicator, StatisticsView.COLUMNS_PER_PAGE, StatisticsView.PINNED_COLUMNS, () =>
 			this.updateColumnVisibility()
 		);
+
+		this.updateColumnVisibility();
 
 		this.setVisibility(false);
 		this.updatePaginationButtons();
@@ -87,8 +91,8 @@ export class StatisticsView {
 
 	public showStats(player: player): void {
 		if (GetLocalPlayer() == player) {
-			BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.3);
-			BlzFrameSetSize(this.backdrop, 1, 0.56);
+			BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
+			BlzFrameSetSize(this.backdrop, 1, 0.64);
 			BlzFrameSetText(this.minimizeButton, 'Hide Stats');
 
 			this.updateColumnVisibility();
@@ -119,7 +123,7 @@ export class StatisticsView {
 		const buttonTrigger: trigger = CreateTrigger();
 		BlzTriggerRegisterFrameEvent(buttonTrigger, button, FRAMEEVENT_CONTROL_CLICK);
 		TriggerAddAction(buttonTrigger, () => {
-			if(GetLocalPlayer() == GetTriggerPlayer()){
+			if (GetLocalPlayer() == GetTriggerPlayer()) {
 				onClick();
 			}
 		});

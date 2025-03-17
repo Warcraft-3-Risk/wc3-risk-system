@@ -147,7 +147,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		const player = GetOwningPlayer(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(player));
 
-		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit)) {
+		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
 				const text = CreateTextTag();
 				SetTextTagText(text, `${colorString}Denied`, 0.019);
@@ -157,7 +157,6 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				SetTextTagPermanent(text, false);
 				SetTextTagLifespan(text, 3.0);
 			}
-
 		}
 		ScoreboardManager.getInstance().updatePartial();
 	}
