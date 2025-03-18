@@ -149,13 +149,8 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		const player = GetOwningPlayer(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(player));
 
-<<<<<<< Updated upstream
 		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
-=======
-		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit)) {
-			if (!IsUnitType(killingUnit, UNIT_TYPE.CITY) && !IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
->>>>>>> Stashed changes
 				const text = CreateTextTag();
 				SetTextTagText(text, `${colorString}Denied`, 0.019);
 				SetTextTagPos(text, GetUnitX(dyingUnit) - 140, GetUnitY(dyingUnit) + 20, 16.0);
