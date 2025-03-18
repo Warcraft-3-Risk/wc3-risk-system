@@ -66,6 +66,7 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 		// If enemy team then don't swap
 		const shareTeam = TeamManager.getInstance().getTeamFromPlayer(GetOwningPlayer(targetedUnit)).playerIsInTeam(city.getOwner());
 		if (!shareTeam) {
+			LocalMessage(triggerPlayer, `You can not swap the guard with an enemy unit!`, 'Sound\\Interface\\Error.flac');
 			return;
 		}
 
@@ -80,11 +81,7 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 		if (unitTypeId == UNIT_ID.CAPITAL && !isActive) {
 			city.onCast(targetedUnit);
 		} else {
-			LocalMessage(
-				triggerPlayer,
-				`You can not swap guard with ${NameManager.getInstance().getDisplayName(city.getOwner())}'s capital!`,
-				'Sound\\Interface\\Error.flac'
-			);
+			LocalMessage(triggerPlayer, `You can not swap the guard of an allied capital!`, 'Sound\\Interface\\Error.flac');
 		}
 	}
 }
