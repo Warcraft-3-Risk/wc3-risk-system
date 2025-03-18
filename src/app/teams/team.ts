@@ -31,6 +31,10 @@ export class Team {
 		return this.teamMembers;
 	}
 
+	public playerIsInTeam(player: player) {
+		return this.teamMembers.find((x) => x.getPlayer() == player) != undefined;
+	}
+
 	public updateIncome(delta: number) {
 		this.income += delta;
 	}

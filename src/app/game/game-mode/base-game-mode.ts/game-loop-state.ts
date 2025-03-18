@@ -14,6 +14,8 @@ import { City } from 'src/app/city/city';
 import { StateData } from '../state/state-data';
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
 import { PlayerManager } from 'src/app/player/player-manager';
+import { UNIT_TYPE } from 'src/app/utils/unit-types';
+import { UnitToCity } from 'src/app/city/city-map';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -147,8 +149,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		const player = GetOwningPlayer(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(player));
 
+<<<<<<< Updated upstream
 		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
+=======
+		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit)) {
+			if (!IsUnitType(killingUnit, UNIT_TYPE.CITY) && !IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
+>>>>>>> Stashed changes
 				const text = CreateTextTag();
 				SetTextTagText(text, `${colorString}Denied`, 0.019);
 				SetTextTagPos(text, GetUnitX(dyingUnit) - 140, GetUnitY(dyingUnit) + 20, 16.0);
@@ -168,5 +175,9 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		if (humanPlayersCount === 1) {
 			GlobalGameData.matchState = 'postMatch';
 		}
+	}
+
+	onSwapGuard(targetedUnit: unit, city: City, triggerPlayer: player): void {
+		city.onCast(targetedUnit);
 	}
 }

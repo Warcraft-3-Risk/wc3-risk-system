@@ -2,7 +2,6 @@ import { CountdownMessage } from 'src/app/utils/messages';
 import { PlayGlobalSound } from 'src/app/utils/utils';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
-import { HexColors } from 'src/app/utils/hex-colors';
 
 export class CountdownState<T extends StateData> extends BaseState<T> {
 	private initialDuration: number;
@@ -21,11 +20,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 			CountdownMessage(`The Game will start in:\n${duration}`);
 			TimerStart(startDelayTimer, 1, true, () => {
 				BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
-				if (duration <= 2) {
-					CountdownMessage(`${HexColors.RED}The Game will start in:\n${duration}|r`);
-				} else {
-					CountdownMessage(`The Game will start in:\n${duration}`);
-				}
+				CountdownMessage(`The Game will start in:\n${duration}`);
 				if (duration <= 0) {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);

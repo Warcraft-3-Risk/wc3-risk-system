@@ -9,7 +9,8 @@ import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { Quests } from 'src/app/quests/quests';
-import { clearTickUI, setTickUI } from '../utillity/update-ui';
+import { clearTickUI } from '../utillity/update-ui';
+import { TeamManager } from 'src/app/teams/team-manager';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -59,6 +60,8 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		if (SettingsContext.getInstance().isFFA() || GlobalGameData.matchPlayers.length <= 2) {
 			ScoreboardManager.getInstance().ffaSetup(GlobalGameData.matchPlayers);
 		} else {
+			const teams = [...TeamManager.getInstance().getTeams()];
+			teams.forEach((team) => team.reset());
 			ScoreboardManager.getInstance().teamSetup();
 		}
 

@@ -54,6 +54,8 @@ export abstract class BaseState<T extends StateData> {
 
 	onCitySelected(city: City, player: player) {}
 
+	onSwapGuard(targetedUnit: unit, city: City, triggerPlayer: player) {}
+
 	nextState(stateData: T) {
 		this.onExitState();
 		EventEmitter.getInstance().emit(EVENT_NEXT_STATE, this.stateData);

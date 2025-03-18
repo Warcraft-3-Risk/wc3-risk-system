@@ -43,8 +43,8 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 			TimerStart(startDelayTimer, 1, true, () => {
 				// Clears capital selection and resets selected city if player is eliminated
 				this.resetCapitalsForEliminatedPlayers();
-
 				CountdownMessage(`Left click on a city to\nchoose your capital\n\nSelection closes in\n${duration}`);
+
 				if (duration == 3) {
 					BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 				}

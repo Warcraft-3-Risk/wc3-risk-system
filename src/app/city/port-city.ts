@@ -61,11 +61,11 @@ export class PortCity extends City {
 	 * Handles the casting event.
 	 * If the targeted unit is not a guard or a transport, performs the casting actions.
 	 */
-	public onCast(): void {
-		if (IsUnitType(GetSpellTargetUnit(), UNIT_TYPE.GUARD)) return;
-		if (IsUnitType(GetSpellTargetUnit(), UNIT_TYPE.TRANSPORT)) return;
+	public onCast(targetedUnit: unit): void {
+		if (IsUnitType(targetedUnit, UNIT_TYPE.GUARD)) return;
+		if (IsUnitType(targetedUnit, UNIT_TYPE.TRANSPORT)) return;
 
-		this.castHandler();
+		this.castHandler(targetedUnit);
 	}
 
 	/**

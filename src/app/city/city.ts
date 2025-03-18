@@ -32,7 +32,7 @@ export abstract class City implements Resetable, Ownable {
 
 	public abstract isValidGuard(unit: unit): boolean;
 	public abstract onUnitTrain(unit: unit): void;
-	public abstract onCast(): void;
+	public abstract onCast(targetingUnit: unit): void;
 	public abstract isPort(): boolean;
 	public abstract isCapital(): boolean;
 
@@ -114,7 +114,7 @@ export abstract class City implements Resetable, Ownable {
 	 * It changes the city's guard to the unit targeted by the spell,
 	 * and repositions the old guard to the location of the targeted unit.
 	 */
-	protected castHandler() {
+	protected castHandler(targetingUnit: unit): void {
 		const targUnit: unit = GetSpellTargetUnit();
 		const x: number = GetUnitX(targUnit);
 		const y: number = GetUnitY(targUnit);
