@@ -145,4 +145,8 @@ export abstract class City implements Resetable, Ownable {
 			}
 		}
 	}
+
+	public isCapturedCapital(): boolean {
+		return GetUnitTypeId(this.barrack.unit) == UNIT_ID.CONQUERED_CAPITAL;
+	}
 }
