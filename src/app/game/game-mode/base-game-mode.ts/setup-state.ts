@@ -10,13 +10,8 @@ import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { Quests } from 'src/app/quests/quests';
 import { clearTickUI } from '../utillity/update-ui';
-<<<<<<< HEAD
 import { TeamManager } from 'src/app/teams/team-manager';
 import { TreeManager } from '../../services/tree-service';
-=======
-import { TreeManager } from '../../services/tree-service';
-import { debugPrint } from 'src/app/utils/debug-print';
->>>>>>> 1fd32ac2f9e3f2e761b1f17df7c4928111d9a2d6
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
