@@ -5,6 +5,12 @@ import { Barracks } from './components/barracks';
 import { Guard } from './components/guard';
 import { IsUnitMelee } from '../utils/utils';
 import { DefaultGuardType } from 'src/configs/country-settings';
+import { UNIT_ID } from 'src/configs/unit-id';
+import { CityToCountry } from '../country/country-map';
+import { PlayerManager } from '../player/player-manager';
+import { TeamManager } from '../teams/team-manager';
+import { debugPrint } from '../utils/debug-print';
+import { LocalMessage } from '../utils/messages';
 
 /**
  * LandCity is a variant of City for land based terrain.
@@ -62,6 +68,45 @@ export class LandCity extends City {
 		if (IsUnitType(targetedUnit, UNIT_TYPE.GUARD)) return;
 
 		this.castHandler(targetedUnit);
+
+		// Not a capital then swap
+		// if (!this.isCapital()) {
+		// 	debugPrint('Not a capital then swap');
+		// 	this.castHandler(targetedUnit);
+		// 	return;
+		// }
+
+		// // If same owner then swap
+		// if (GetOwningPlayer(targetedUnit) === this.getOwner()) {
+		// 	debugPrint('If same owner then swap');
+		// 	this.castHandler(targetedUnit);
+		// 	return;
+		// }
+
+		// // If enemy team then don't swap
+		// const shareTeam = TeamManager.getInstance().getTeamFromPlayer(GetOwningPlayer(targetedUnit)).playerIsInTeam(this.getOwner());
+		// if (!shareTeam) {
+		// 	debugPrint("If enemy team then don't swap");
+		// 	LocalMessage(triggerPlayer, `You can not swap the guard with an enemy unit!`, 'Sound\\Interface\\Error.flac');
+		// 	return;
+		// }
+
+		// // If is keep then swap
+		// const unitTypeId = GetUnitTypeId(this.barrack.unit);
+		// if (unitTypeId == UNIT_ID.CONQUERED_CAPITAL) {
+		// 	debugPrint('If is keep then swap');
+		// 	this.castHandler(targetedUnit);
+		// }
+
+		// // Owner of capital is alive
+		// const isActive = PlayerManager.getInstance().getPlayerStatus(this.getOwner()).isActive();
+		// if (unitTypeId == UNIT_ID.CAPITAL && !isActive) {
+		// 	debugPrint('Owner of capital is alive');
+		// 	this.castHandler(targetedUnit);
+		// } else {
+		// 	debugPrint('You can not swap the guard of an allied capital!');
+		// 	LocalMessage(triggerPlayer, `You can not swap the guard of an allied capital!`, 'Sound\\Interface\\Error.flac');
+		// }
 	}
 
 	/**
@@ -75,7 +120,7 @@ export class LandCity extends City {
 	 * Checks if this city type is a capital
 	 */
 	public isCapital(): boolean {
-		return false;
+		return this.capital;
 	}
 
 	/**
@@ -83,13 +128,17 @@ export class LandCity extends City {
 	 */
 	public setCapital(): void {
 		this.capital = true;
+		CityToCountry.get(this).getSpawn().setMultiplier(2);
+		IssueImmediateOrderById(this.barrack.unit, UNIT_ID.CAPITAL);
 	}
 
 	/**
 	 * Resets city to default state
 	 */
-	public reset(): void {
+	public override reset(): void {
 		this.capital = false;
+		CityToCountry.get(this).getSpawn().setMultiplier(1);
+		IssueImmediateOrderById(this.barrack.unit, UNIT_ID.CITY);
 		super.reset();
 	}
 }

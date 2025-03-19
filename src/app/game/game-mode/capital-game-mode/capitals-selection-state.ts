@@ -121,9 +121,11 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 			return;
 		}
 
-		this.stateData.playerCapitalSelections.get(player)?.reset();
+		const capital = this.stateData.playerCapitalSelections.get(player);
 
-		(city as LandCity).setCapital();
+		if (capital instanceof LandCity) {
+			capital.reset();
+		}
 
 		city.changeOwner(player);
 		SetUnitOwner(city.guard.unit, player, true);

@@ -9,6 +9,7 @@ import { PlayerManager } from 'src/app/player/player-manager';
 import { Country } from 'src/app/country/country';
 import { ShuffleArray } from 'src/app/utils/utils';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { LandCity } from 'src/app/city/land-city';
 
 export class CapitalsDistributeCapitalsState extends BaseState<CapitalsData> {
 	onEnterState() {
@@ -75,10 +76,9 @@ export class CapitalsDistributeCapitalsState extends BaseState<CapitalsData> {
 		});
 
 		this.stateData.capitals.forEach((city, player) => {
-			if (city) {
-				CityToCountry.get(city).getSpawn().setMultiplier(2);
+			if (city instanceof LandCity) {
 				PingMinimapLocForPlayer(player, city.barrack.location, 20);
-				IssueImmediateOrderById(city.barrack.unit, UNIT_ID.CAPITAL);
+				city.setCapital();
 			}
 		});
 		this.nextState(this.stateData);
