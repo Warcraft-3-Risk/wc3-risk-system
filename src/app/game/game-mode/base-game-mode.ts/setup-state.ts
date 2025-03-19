@@ -9,7 +9,9 @@ import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { Quests } from 'src/app/quests/quests';
-import { clearTickUI, setTickUI } from '../utillity/update-ui';
+import { clearTickUI } from '../utillity/update-ui';
+import { TreeManager } from '../../services/tree-service';
+import { debugPrint } from 'src/app/utils/debug-print';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -74,6 +76,11 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		StatisticsController.getInstance().useCurrentActivePlayers();
 
 		Quests.getInstance().UpdateShuffledPlayerListQuest();
+
+		// To reset and reduce tree hp on first turn
+		if (GlobalGameData.turnCount === 0) {
+			TreeManager.getInstance().reset();
+		}
 
 		this.nextState(this.stateData);
 	}
