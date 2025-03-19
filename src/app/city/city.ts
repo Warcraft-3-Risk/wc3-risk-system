@@ -32,7 +32,7 @@ export abstract class City implements Resetable, Ownable {
 
 	public abstract isValidGuard(unit: unit): boolean;
 	public abstract onUnitTrain(unit: unit): void;
-	public abstract onCast(targetedUnit: unit): void;
+	public abstract onCast(targetedUnit: unit, triggerPlayer: player): void;
 	public abstract isPort(): boolean;
 	public abstract isCapital(): boolean;
 

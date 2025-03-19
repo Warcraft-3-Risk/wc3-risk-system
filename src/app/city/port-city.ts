@@ -61,7 +61,7 @@ export class PortCity extends City {
 	 * Handles the casting event.
 	 * If the targeted unit is not a guard or a transport, performs the casting actions.
 	 */
-	public onCast(targetedUnit: unit): void {
+	public onCast(targetedUnit: unit, triggerPlayer: player): void {
 		if (IsUnitType(targetedUnit, UNIT_TYPE.GUARD)) return;
 		if (IsUnitType(targetedUnit, UNIT_TYPE.TRANSPORT)) return;
 

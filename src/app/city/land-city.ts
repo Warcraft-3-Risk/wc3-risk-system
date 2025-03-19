@@ -63,50 +63,48 @@ export class LandCity extends City {
 	 * Handles the casting event.
 	 * If the targeted unit is not a ship or a guard, performs the casting actions.
 	 */
-	public onCast(targetedUnit: unit): void {
+	public onCast(targetedUnit: unit, triggerPlayer: player): void {
 		if (IsUnitType(targetedUnit, UNIT_TYPE.SHIP)) return;
 		if (IsUnitType(targetedUnit, UNIT_TYPE.GUARD)) return;
 
-		this.castHandler(targetedUnit);
-
+		// city.onCast(targetedUnit, triggerPlayer);
 		// Not a capital then swap
-		// if (!this.isCapital()) {
-		// 	debugPrint('Not a capital then swap');
-		// 	this.castHandler(targetedUnit);
-		// 	return;
-		// }
+		if (!this.isCapital()) {
+			debugPrint('Not a capital then swap');
+			this.castHandler(targetedUnit);
+			return;
+		}
 
-		// // If same owner then swap
-		// if (GetOwningPlayer(targetedUnit) === this.getOwner()) {
-		// 	debugPrint('If same owner then swap');
-		// 	this.castHandler(targetedUnit);
-		// 	return;
-		// }
+		// If owner then swap
+		if (GetOwningPlayer(targetedUnit) === this.getOwner()) {
+			debugPrint('If same owner then swap');
+			this.castHandler(targetedUnit);
+			return;
+		}
 
-		// // If enemy team then don't swap
-		// const shareTeam = TeamManager.getInstance().getTeamFromPlayer(GetOwningPlayer(targetedUnit)).playerIsInTeam(this.getOwner());
-		// if (!shareTeam) {
-		// 	debugPrint("If enemy team then don't swap");
-		// 	LocalMessage(triggerPlayer, `You can not swap the guard with an enemy unit!`, 'Sound\\Interface\\Error.flac');
-		// 	return;
-		// }
+		// If enemy team then don't swap
+		const shareTeam = TeamManager.getInstance().getTeamFromPlayer(GetOwningPlayer(targetedUnit)).playerIsInTeam(this.getOwner());
+		if (!shareTeam) {
+			debugPrint("If enemy team then don't swap");
+			LocalMessage(triggerPlayer, `You can only switch guards with an ally unit!`, 'Sound\\Interface\\Error.flac');
+			return;
+		}
 
-		// // If is keep then swap
-		// const unitTypeId = GetUnitTypeId(this.barrack.unit);
-		// if (unitTypeId == UNIT_ID.CONQUERED_CAPITAL) {
-		// 	debugPrint('If is keep then swap');
-		// 	this.castHandler(targetedUnit);
-		// }
+		// If captured capital then swap
+		const unitTypeId = GetUnitTypeId(this.barrack.unit);
+		if (unitTypeId == UNIT_ID.CONQUERED_CAPITAL) {
+			this.castHandler(targetedUnit);
+			return;
+		}
 
-		// // Owner of capital is alive
-		// const isActive = PlayerManager.getInstance().getPlayerStatus(this.getOwner()).isActive();
-		// if (unitTypeId == UNIT_ID.CAPITAL && !isActive) {
-		// 	debugPrint('Owner of capital is alive');
-		// 	this.castHandler(targetedUnit);
-		// } else {
-		// 	debugPrint('You can not swap the guard of an allied capital!');
-		// 	LocalMessage(triggerPlayer, `You can not swap the guard of an allied capital!`, 'Sound\\Interface\\Error.flac');
-		// }
+		// Owner of capital is alive
+		if (unitTypeId == UNIT_ID.CAPITAL) {
+			debugPrint('You can not swap the guard of an allied capital!');
+			LocalMessage(triggerPlayer, `You can not swap the guard of an allied capital!`, 'Sound\\Interface\\Error.flac');
+			return;
+		}
+
+		throw new Error('LandCity.onCast: Not supported scenario');
 	}
 
 	/**
