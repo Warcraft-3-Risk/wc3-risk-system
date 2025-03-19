@@ -7,6 +7,7 @@ export const EVENT_ON_PLAYER_FORFEIT: string = 'onPlayerForfeit';
 export const EVENT_ON_PLAYER_RESTART: string = 'onPlayerRestart';
 export const EVENT_ON_CITY_CAPTURE: string = 'onCityCapture';
 export const EVENT_ON_UNIT_KILLED: string = 'onUnitKilled';
+export const EVENT_ON_SWAP_GUARD: string = 'onSwapGuard';
 
 export const EVENT_ON_CITY_SELECTED: string = 'onCitySelected';
 

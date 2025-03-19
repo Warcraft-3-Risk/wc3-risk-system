@@ -3,6 +3,8 @@ import { UnitToCity } from '../city/city-map';
 import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { PLAYER_SLOTS } from '../utils/utils';
+import { EventEmitter } from '../utils/events/event-emitter';
+import { EVENT_ON_SWAP_GUARD } from '../utils/events/event-constants';
 
 export function SpellEffectEvent() {
 	const t: trigger = CreateTrigger();
@@ -20,7 +22,7 @@ export function SpellEffectEvent() {
 
 			switch (GetSpellAbilityId()) {
 				case ABILITY_ID.SWAP:
-					UnitToCity.get(GetTriggerUnit()).onCast();
+					EventEmitter.getInstance().emit(EVENT_ON_SWAP_GUARD, GetSpellTargetUnit(), UnitToCity.get(GetTriggerUnit()), player);
 					break;
 				// case ABILITY_ID.LOW_HEALTH_DEFENDER:
 				// 	player.options.health = false;

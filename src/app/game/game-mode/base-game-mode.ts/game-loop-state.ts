@@ -169,4 +169,8 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			GlobalGameData.matchState = 'postMatch';
 		}
 	}
+
+	onSwapGuard(targetedUnit: unit, city: City, triggerPlayer: player): void {
+		city.onCast(targetedUnit, triggerPlayer);
+	}
 }

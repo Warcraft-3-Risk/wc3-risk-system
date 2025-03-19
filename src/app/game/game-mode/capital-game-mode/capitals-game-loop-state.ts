@@ -7,6 +7,7 @@ import { CityToCountry } from 'src/app/country/country-map';
 import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
 import { LocalMessage } from 'src/app/utils/messages';
 import { UNIT_ID } from 'src/configs/unit-id';
+import { debugPrint } from 'src/app/utils/debug-print';
 
 export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 	onEnterState() {
@@ -45,5 +46,10 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 		}
 
 		super.onCityCapture(city, preOwner, owner);
+	}
+
+	override onSwapGuard(targetedUnit: unit, city: City, triggerPlayer: player): void {
+		debugPrint('onSwapGuard');
+		city.onCast(targetedUnit, triggerPlayer);
 	}
 }

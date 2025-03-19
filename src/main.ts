@@ -25,7 +25,6 @@ import { SetCommands } from './app/commands/commands';
 import { ExportShuffledPlayerList } from './app/utils/export-statistics/export-shuffled-player-list';
 import { ModeSelection } from './app/game/mode-selection';
 import { PlayerSetupService } from './app/game/services/player-setup-service';
-import { Wait } from './app/utils/wait';
 import { EventCoordinator } from './app/game/event-coordinator';
 import { EventEmitter } from './app/utils/events/event-emitter';
 import { EVENT_MODE_SELECTION } from './app/utils/events/event-constants';
