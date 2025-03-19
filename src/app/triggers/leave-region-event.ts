@@ -21,8 +21,10 @@ export function LeaveRegionEvent() {
 			//Filter for owned guards
 			GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitOwnedByPlayer);
 
-			//No valid owned guards found, check for allies
-			if (BlzGroupGetSize(g) == 0) GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitAlly);
+			//No valid owned guards found, check for allies (not applicable for capitals)
+			if (BlzGroupGetSize(g) == 0 && (!city.isCapital() || city.isCapturedCapital)) {
+				GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitAlly);
+			}
 
 			//No valid owned or allied guards found, create a dummy for city owner.
 			if (BlzGroupGetSize(g) == 0 && !city.isValidGuard(guardChoice)) {
