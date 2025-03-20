@@ -1,15 +1,18 @@
 import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
-import { PLAYER_SLOTS } from '../utils/utils';
+import { SettingsContext } from '../settings/settings-context';
+import { arrayRange, PLAYER_SLOTS, ShuffleArray } from '../utils/utils';
 import { Team } from './team';
 
 export class TeamManager {
 	private teams: Map<number, Team>;
+	private playersTeam: Map<player, Team>;
 	private static instance: TeamManager;
 
 	private constructor() {
+		this.playersTeam = new Map<player, Team>();
 		this.teams = new Map<number, Team>();
-		const teams: Map<number, ActivePlayer[]> = new Map<number, ActivePlayer[]>();
+		const tempTeams: Map<number, ActivePlayer[]> = new Map<number, ActivePlayer[]>();
 
 		for (let i = 0; i < PLAYER_SLOTS; i++) {
 			const player = PlayerManager.getInstance().players.get(Player(i));
@@ -24,18 +27,28 @@ export class TeamManager {
 
 			const teamNumber = GetPlayerTeam(playerHandle) + 1;
 
-			if (!teams.has(teamNumber)) {
-				teams.set(teamNumber, [player]);
+			if (!tempTeams.has(teamNumber)) {
+				tempTeams.set(teamNumber, [player]);
 			} else {
-				teams.get(teamNumber).push(player);
+				tempTeams.get(teamNumber).push(player);
 			}
 		}
 
-		teams.forEach((players, teamNumber) => {
-			if (!this.teams.has(teamNumber)) {
-				const alliance = new Team(players);
+		let randomTeamNumber = arrayRange(0, PlayerManager.getInstance().players.size, 1);
 
-				this.teams.set(teamNumber, alliance);
+		let playersInTeams = Array.from(tempTeams.values());
+		ShuffleArray(playersInTeams);
+
+		// Assign players to teams in random order
+		playersInTeams.forEach((players) => {
+			const rand = randomTeamNumber.shift() + 1;
+			if (!this.teams.has(rand)) {
+				const alliance = new Team(players, rand);
+				this.teams.set(rand, alliance);
+
+				players.forEach((player) => {
+					this.playersTeam.set(player.getPlayer(), alliance);
+				});
 			}
 		});
 	}
@@ -53,11 +66,15 @@ export class TeamManager {
 	}
 
 	public getTeamFromNumber(teamNum: number): Team {
-		return this.teams.get(teamNum + 1);
+		return this.teams.get(teamNum);
 	}
 
 	public getTeamFromPlayer(player: player): Team {
-		return this.teams.get(GetPlayerTeam(player) + 1);
+		return this.playersTeam.get(player);
+	}
+
+	public getTeamNumberFromPlayer(player: player): number {
+		return this.playersTeam.get(player).getNumber();
 	}
 
 	public allowFullSharedControl() {
