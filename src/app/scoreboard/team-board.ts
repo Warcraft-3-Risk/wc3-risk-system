@@ -170,7 +170,7 @@ export class TeamBoard extends Scoreboard {
 		let teamPrefix: string = '';
 
 		if (!this.showTeamTotals) {
-			teamPrefix = `${HexColors.TANGERINE}[${GetPlayerTeam(playerHandle) + 1}]|r`;
+			teamPrefix = `${HexColors.TANGERINE}[${TeamManager.getInstance().getTeamNumberFromPlayer(playerHandle)}]|r`;
 		}
 
 		this.setItemValue(`${teamPrefix}${NameManager.getInstance().getDisplayName(playerHandle)}`, row, this.PLAYER_COL);

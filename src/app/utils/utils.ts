@@ -146,3 +146,14 @@ export function ComputeRatio(dividend: number, divisor: number): string {
 
 	return (dividend / divisor).toFixed(2);
 }
+
+/**
+ * Gives a number range from start to stop with a given step.
+ * @param start The starting number of the range.
+ * @param stop The ending number of the range.
+ * @param step The step between each number in the range.
+ * @return An array of numbers from start to stop with the given step.
+ */
+export function arrayRange(start: number, stop: number, step: number) {
+	return Array.from({ length: (stop - start) / step + 1 }, (value, index) => start + index * step);
+}

@@ -9,8 +9,8 @@ export class Team {
 	private kills: number;
 	private deaths: number;
 
-	public constructor(players: ActivePlayer[]) {
-		this.teamNumber = GetPlayerTeam(players[0].getPlayer()) + 1;
+	public constructor(players: ActivePlayer[], teamNumber: number) {
+		this.teamNumber = teamNumber;
 		this.teamMembers = [];
 
 		players.forEach((player) => {
