@@ -58,7 +58,7 @@ export function EnterRegionEvent() {
 			g = null;
 			guardChoice = null;
 
-			return false;
+			return true;
 		})
 	);
 }

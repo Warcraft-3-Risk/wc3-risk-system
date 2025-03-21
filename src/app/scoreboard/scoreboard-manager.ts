@@ -2,7 +2,6 @@ import { GamePlayer } from '../entity/player/game-player';
 import { ObserverBoard } from './observer-board';
 import { Scoreboard } from './scoreboard';
 import { StandardBoard } from './standard-board';
-import { TeamBoard } from './team-board';
 
 export type ScoreboardTypes = 'standard' | 'obs';
 
@@ -25,9 +24,9 @@ export class ScoreboardManager {
 		this.scoreboards.standard = new StandardBoard(players);
 	}
 
-	public teamSetup() {
-		this.scoreboards.standard = new TeamBoard();
-	}
+	// public teamSetup() {
+	// 	this.scoreboards.standard = new TeamBoard();
+	// }
 
 	public obsSetup(players: GamePlayer[], observers: player[]) {
 		if (observers.length >= 1) {

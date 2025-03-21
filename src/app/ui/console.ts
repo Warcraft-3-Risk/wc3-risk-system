@@ -134,5 +134,6 @@ export function AllyMenuFFASetup() {
 		BlzFrameSetVisible(BlzGetFrameByName('GoldBackdrop', i), false);
 		BlzFrameSetVisible(BlzGetFrameByName('GoldText', i), false);
 		BlzFrameSetVisible(BlzGetFrameByName('UnitsCheckBox', i), false);
+		BlzFrameSetVisible(BlzGetFrameByName('PlayerBanner', i), false);
 	}
 }

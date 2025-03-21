@@ -67,6 +67,8 @@ export class SettingsView {
 			t,
 			Condition(() => {
 				this.hide();
+
+				return true;
 			})
 		);
 	}
@@ -131,6 +133,8 @@ export class SettingsView {
 				this.colorizeText(`DiplomacyPopup`, DiplomacyOptions);
 				this.colorizeText(`FogPopup`, FogOptions);
 				this.colorizeText(`OvertimePopup`, OvertimeOptions);
+
+				return true;
 			})
 		);
 
@@ -148,6 +152,8 @@ export class SettingsView {
 
 				this.settingsController.setFog(frameValue);
 				this.colorizeText(`FogPopup`, FogOptions);
+
+				return true;
 			})
 		);
 
@@ -165,6 +171,8 @@ export class SettingsView {
 
 				this.settingsController.setOvertime(frameValue);
 				this.colorizeText('OvertimePopup', OvertimeOptions);
+
+				return true;
 			})
 		);
 
@@ -190,6 +198,8 @@ export class SettingsView {
 					BlzFrameSetVisible(BlzGetFrameByName('TeamSizeSlider', 0), false);
 					BlzFrameSetText(BlzGetFrameByName('TeamSizeLabel', 0), `   ${HexColors.GREEN}0|r`);
 				}
+
+				return true;
 			})
 		);
 
@@ -212,6 +222,8 @@ export class SettingsView {
 				} else {
 					BlzFrameSetText(BlzGetFrameByName('TeamSizeLabel', 0), `   ${HexColors.GREEN}0|r`);
 				}
+
+				return true;
 			})
 		);
 

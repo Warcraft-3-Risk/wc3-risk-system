@@ -19,7 +19,7 @@ export function UnitTrainedEvent() {
 				player.getData().getUnits().add(trainedUnit);
 			}
 
-			return false;
+			return true;
 		})
 	);
 }

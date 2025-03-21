@@ -40,7 +40,7 @@ export function LeaveRegionEvent() {
 			g = null;
 			guardChoice = null;
 
-			return false;
+			return true;
 		})
 	);
 }
