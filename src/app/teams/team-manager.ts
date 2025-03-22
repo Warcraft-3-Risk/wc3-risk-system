@@ -83,6 +83,10 @@ export class TeamManager {
 		});
 	}
 
+	public getActiveTeams(): Team[] {
+		return this.getTeams().filter((team) => team.getMembers().find(x => x.status.isActive()));
+	}
+
 	public static breakTeams() {
 		for (let i = 0; i < PLAYER_SLOTS; i++) {
 			const playerA: player = Player(i);
