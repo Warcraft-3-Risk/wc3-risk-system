@@ -17,14 +17,14 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 
 		StatisticsController.getInstance().setViewVisibility(false);
 
+		print('Resetting countries...');
+		resetCountries();
+		await Wait.forSeconds(1);
 		print('Removing units...');
 		removeUnits();
 		await Wait.forSeconds(1);
 		print('Resuming units...');
 		resumingUnits();
-		await Wait.forSeconds(1);
-		print('Resetting countries...');
-		resetCountries();
 		await Wait.forSeconds(1);
 		print('Resetting trees...');
 		TreeManager.getInstance().reset();
