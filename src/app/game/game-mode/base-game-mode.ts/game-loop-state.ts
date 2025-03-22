@@ -77,7 +77,6 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onStartTurn(turn: number): void {
-		VictoryManager.getInstance().updateRequiredCityCount();
 		ScoreboardManager.getInstance().updateFull();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		GlobalGameData.matchPlayers
@@ -108,16 +107,16 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	private messageGameState() {
 		let playersToAnnounce = VictoryManager.getInstance().getOwnershipByThresholdDescending(
-			VictoryManager.CITIES_TO_WIN * CITIES_TO_WIN_WARNING_RATIO
+			VictoryManager.getCityCountWin() * CITIES_TO_WIN_WARNING_RATIO
 		);
 
 		if (playersToAnnounce.length == 0) return;
 
 		function cityCountDescription(candidate: ActivePlayer, state: VictoryProgressState) {
-			if (state == 'TIE' && candidate.trackedData.cities.cities.length >= VictoryManager.CITIES_TO_WIN) {
+			if (state == 'TIE' && candidate.trackedData.cities.cities.length >= VictoryManager.getCityCountWin()) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
-				return `needs ${HexColors.RED}${VictoryManager.CITIES_TO_WIN - candidate.trackedData.cities.cities.length}|r more to win!`;
+				return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - candidate.trackedData.cities.cities.length}|r more to win!`;
 			}
 		}
 

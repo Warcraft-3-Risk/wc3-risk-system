@@ -12,16 +12,12 @@ export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
 export class VictoryManager {
 	private static instance: VictoryManager;
-	public static CITIES_TO_WIN: number;
 	public static GAME_VICTORY_STATE: VictoryProgressState = 'UNDECIDED';
 
 	private winTracker: WinTracker;
 
 	private constructor() {
 		this.winTracker = new WinTracker();
-
-		// since gameTimer is not set yet and CalculateCitiesToWin relies on the gameTimer, we need to manually set the cities to win
-		VictoryManager.CITIES_TO_WIN = Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO);
 	}
 
 	public static getInstance(): VictoryManager {
@@ -52,7 +48,7 @@ export class VictoryManager {
 
 	// This function is used to get the players who have won with the most cities (many players can have the same number of cities)
 	public victors(): ActivePlayer[] {
-		let potentialVictors = this.getOwnershipByThresholdDescending(VictoryManager.CITIES_TO_WIN);
+		let potentialVictors = this.getOwnershipByThresholdDescending(VictoryManager.getCityCountWin());
 
 		if (potentialVictors.length == 0) {
 			return [];
@@ -63,8 +59,6 @@ export class VictoryManager {
 	}
 
 	public updateAndGetGameState(): VictoryProgressState {
-		this.updateRequiredCityCount();
-
 		let playerWinCandidates = this.victors();
 
 		if (playerWinCandidates.length == 0) {
@@ -78,11 +72,7 @@ export class VictoryManager {
 		return VictoryManager.GAME_VICTORY_STATE;
 	}
 
-	public updateRequiredCityCount() {
-		VictoryManager.CITIES_TO_WIN = this.calculateCitiesToWin();
-	}
-
-	private calculateCitiesToWin(): number {
+	public static getCityCountWin(): number {
 		if (OvertimeManager.isOvertimeEnabled() && GlobalGameData.turnCount >= OvertimeManager.getOvertimeSettingValue()) {
 			return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * OvertimeManager.getTurnCountPostOvertime();
 		}

@@ -84,13 +84,13 @@ export class ScoreboardManager {
 				this.setTitle(
 					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${
 						GlobalGameData.leader.trackedData.cities.cities.length
-					}/${HexColors.RED}${VictoryManager.CITIES_TO_WIN}|r ${HexColors.RED}(Overtime)|r`
+					}/${HexColors.RED}${VictoryManager.getCityCountWin()}|r ${HexColors.RED}(Overtime)|r`
 				);
 			} else {
 				this.setTitle(
 					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${
 						GlobalGameData.leader.trackedData.cities.cities.length
-					}/${VictoryManager.CITIES_TO_WIN}${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`
+					}/${VictoryManager.getCityCountWin()}${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`
 				);
 			}
 		}
