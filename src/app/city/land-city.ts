@@ -7,7 +7,6 @@ import { IsUnitMelee } from '../utils/utils';
 import { DefaultGuardType } from 'src/configs/country-settings';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { CityToCountry } from '../country/country-map';
-import { PlayerManager } from '../player/player-manager';
 import { TeamManager } from '../teams/team-manager';
 import { debugPrint } from '../utils/debug-print';
 import { LocalMessage } from '../utils/messages';
@@ -133,10 +132,10 @@ export class LandCity extends City {
 	/**
 	 * Resets city to default state
 	 */
-	public override reset(): void {
+	public reset(): void {
+		super.reset();
 		this.capital = false;
 		CityToCountry.get(this).getSpawn().setMultiplier(1);
 		IssueImmediateOrderById(this.barrack.unit, UNIT_ID.CITY);
-		super.reset();
 	}
 }

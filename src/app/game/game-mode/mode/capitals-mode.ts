@@ -6,7 +6,6 @@ import { CountdownState } from '../base-game-mode.ts/countdown-state';
 import { GameOverState } from '../base-game-mode.ts/game-over-state';
 import { ResetState } from '../base-game-mode.ts/reset-state';
 import { BaseState } from '../state/base-state';
-import { CapitalsResetState } from '../capital-game-mode/capitals-reset-state';
 import { CapitalsSelectionState } from '../capital-game-mode/capitals-selection-state';
 import { CapitalsDistributeState } from '../capital-game-mode/capitals-distribute-state';
 import { VisionState } from '../base-game-mode.ts/vision-state';
@@ -29,7 +28,6 @@ export class CapitalsMode extends BaseMode<CapitalsData> {
 			new CountdownState(),
 			new CapitalsGameLoopState(),
 			new GameOverState(),
-			new CapitalsResetState(),
 			new ResetState(),
 		] as BaseState<CapitalsData>[];
 	}
