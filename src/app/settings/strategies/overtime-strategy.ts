@@ -1,6 +1,9 @@
 import { VictoryManager } from 'src/app/managers/victory-manager';
 import { SettingsStrategy } from './settings-strategy';
 import { HexColors } from 'src/app/utils/hex-colors';
+import { OvertimeManager } from 'src/app/managers/overtime-manager';
+
+export type OvertimeSetting = 30 | 60 | 120 | undefined;
 
 export interface OvertimeOptions {
 	option: number;
@@ -41,21 +44,19 @@ export class OvertimeStrategy implements SettingsStrategy {
 	}
 
 	private handleTurboOption(): void {
-		VictoryManager.OVERTIME_ACTIVE_AT_TURN = 30;
-		VictoryManager.OVERTIME_MODE = true;
+		OvertimeManager.getInstance().setOvertimeSetting(30);
 	}
 
 	private handleMediumOption(): void {
-		VictoryManager.OVERTIME_ACTIVE_AT_TURN = 60;
-		VictoryManager.OVERTIME_MODE = true;
+		('');
+		OvertimeManager.getInstance().setOvertimeSetting(60);
 	}
 
 	private handleExtendedOption(): void {
-		VictoryManager.OVERTIME_ACTIVE_AT_TURN = 120;
-		VictoryManager.OVERTIME_MODE = true;
+		OvertimeManager.getInstance().setOvertimeSetting(120);
 	}
 
 	private handleOff(): void {
-		VictoryManager.OVERTIME_ACTIVE_AT_TURN = undefined;
+		OvertimeManager.getInstance().setOvertimeSetting(undefined);
 	}
 }

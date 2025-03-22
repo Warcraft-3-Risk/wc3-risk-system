@@ -6,6 +6,7 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { PLAYER_STATUS } from '../player/status/status-enum';
 import { PlayerManager } from '../player/player-manager';
 import { TeamManager } from '../teams/team-manager';
+import { OvertimeManager } from './overtime-manager';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -13,8 +14,6 @@ export class VictoryManager {
 	private static instance: VictoryManager;
 	public static CITIES_TO_WIN: number;
 	public static OVERTIME_ACTIVE: boolean = false;
-	public static OVERTIME_MODE: boolean;
-	public static OVERTIME_ACTIVE_AT_TURN: number;
 	public static OVERTIME_TOTAL_TURNS: number = 0;
 	public static OVERTIME_TURNS_UNTIL_ACTIVE: number = 0;
 	public static GAME_VICTORY_STATE: VictoryProgressState = 'UNDECIDED';
@@ -89,12 +88,12 @@ export class VictoryManager {
 	}
 
 	private calculateCitiesToWin(): number {
-		if (VictoryManager.OVERTIME_MODE) {
-			VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE = VictoryManager.OVERTIME_ACTIVE_AT_TURN - GlobalGameData.turnCount;
-			VictoryManager.OVERTIME_TOTAL_TURNS = GlobalGameData.turnCount - VictoryManager.OVERTIME_ACTIVE_AT_TURN;
+		if (OvertimeManager.isOvertimeEnabled()) {
+			VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE = OvertimeManager.getOvertimeSettingValue() - GlobalGameData.turnCount;
+			VictoryManager.OVERTIME_TOTAL_TURNS = GlobalGameData.turnCount - OvertimeManager.getOvertimeSettingValue();
 		}
 
-		if (VictoryManager.OVERTIME_MODE && GlobalGameData.turnCount >= VictoryManager.OVERTIME_ACTIVE_AT_TURN) {
+		if (OvertimeManager.isOvertimeEnabled() && GlobalGameData.turnCount >= OvertimeManager.getOvertimeSettingValue()) {
 			VictoryManager.OVERTIME_ACTIVE = true;
 			return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * VictoryManager.OVERTIME_TOTAL_TURNS;
 		}
@@ -103,7 +102,7 @@ export class VictoryManager {
 	}
 
 	public checkKnockOutVictory(): boolean {
-		const activeTeams = TeamManager.getInstance().getActiveTeams()
+		const activeTeams = TeamManager.getInstance().getActiveTeams();
 		if (activeTeams.length <= 1) {
 			GlobalGameData.leader = activeTeams[0].getMembersSortedByIncome()[0];
 			this.saveStats();

@@ -1,5 +1,6 @@
 import { GlobalGameData } from '../game/state/global-game-state';
 import { NameManager } from '../managers/names/name-manager';
+import { OvertimeManager } from '../managers/overtime-manager';
 import { VictoryManager } from '../managers/victory-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
@@ -89,7 +90,7 @@ export class ScoreboardManager {
 				this.setTitle(
 					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${
 						GlobalGameData.leader.trackedData.cities.cities.length
-					}/${VictoryManager.CITIES_TO_WIN}${VictoryManager.OVERTIME_MODE ? ` (Overtime in: ${VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE})` : ''}`
+					}/${VictoryManager.CITIES_TO_WIN}${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE})` : ''}`
 				);
 			}
 		}
