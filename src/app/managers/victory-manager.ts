@@ -5,6 +5,7 @@ import { WinTracker } from '../game/services/win-tracker';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { PLAYER_STATUS } from '../player/status/status-enum';
 import { PlayerManager } from '../player/player-manager';
+import { TeamManager } from '../teams/team-manager';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -102,6 +103,13 @@ export class VictoryManager {
 	}
 
 	public checkKnockOutVictory(): boolean {
+		const activeTeams = TeamManager.getInstance().getActiveTeams()
+		if (activeTeams.length <= 1) {
+			GlobalGameData.leader = activeTeams[0].getMembersSortedByIncome()[0];
+			this.saveStats();
+			return true;
+		}
+
 		if (PlayerManager.getInstance().playersAliveOrNomad.size <= 1) {
 			GlobalGameData.leader = Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())[0];
 			this.saveStats();
