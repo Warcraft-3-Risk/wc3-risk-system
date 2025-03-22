@@ -29,13 +29,19 @@ export class TeamSelectionView implements Resetable {
 			return;
 		}
 
+		if (!BlzLoadTOCFile('war3mapImported\\components.toc')) {
+			print('Failed to load components.toc');
+			return;
+		}
+
 		this.bench = new Set<player>();
 		this.playerData = new Map<player, playerData>();
 		this.teams = new Map<number, TeamData>();
 
 		this.backdrop = BlzCreateFrame('TeamOptionsBackdrop', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
-		BlzFrameSetPoint(this.backdrop, FRAMEPOINT_CENTER, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_CENTER, 0, 0);
+		BlzFrameSetPoint(this.backdrop, FRAMEPOINT_CENTER, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_CENTER, 0, -0.01);
 		this.buildBench();
+		// this.buildTeams();
 		// this.update(timerDuration);
 	}
 
@@ -67,19 +73,19 @@ export class TeamSelectionView implements Resetable {
 				this.bench.add(player);
 			});
 
-		let x: number = 0;
+		let frameIndex: number = 0;
 		let initialOffset: number = -0.003;
 		const offSetModifier: number = -0.012;
 		const parentFrame: framehandle = BlzGetFrameByName('BenchButton', 0);
 
 		this.bench.forEach((player) => {
-			const playerList: framehandle = BlzCreateFrameByType('TEXT', 'PlayerBench', parentFrame, '', x);
+			const playerList: framehandle = BlzCreateFrame('TextTemplateSm', parentFrame, 5, frameIndex);
 
 			BlzFrameSetPoint(playerList, FRAMEPOINT_TOP, parentFrame, FRAMEPOINT_BOTTOM, 0.0, initialOffset);
 			BlzFrameSetText(playerList, `${NameManager.getInstance().getAcct(player)}`);
-			this.playerData.set(player, { bench: x, team: -1, slot: -1 });
+			this.playerData.set(player, { bench: frameIndex, team: -1, slot: -1 });
 
-			x++;
+			frameIndex++;
 			initialOffset += offSetModifier;
 		});
 	}
@@ -102,6 +108,11 @@ export class TeamSelectionView implements Resetable {
 				return true;
 			})
 		);
+	}
+
+	private buildTeams(): void {
+		const editBoxFrame: framehandle = BlzCreateFrame('EditBoxTemplate', this.backdrop, 0, 0);
+		BlzFrameSetPoint(editBoxFrame, FRAMEPOINT_CENTER, this.backdrop, FRAMEPOINT_CENTER, 0, 0);
 	}
 
 	// private leaveTeam(player: player) {
