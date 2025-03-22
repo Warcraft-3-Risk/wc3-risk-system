@@ -80,7 +80,7 @@ export class ScoreboardManager {
 
 	public updateScoreboardTitle() {
 		if (GlobalGameData.leader) {
-			if (VictoryManager.OVERTIME_ACTIVE) {
+			if (OvertimeManager.isOvertimeActive()) {
 				this.setTitle(
 					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${
 						GlobalGameData.leader.trackedData.cities.cities.length
@@ -90,7 +90,7 @@ export class ScoreboardManager {
 				this.setTitle(
 					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${
 						GlobalGameData.leader.trackedData.cities.cities.length
-					}/${VictoryManager.CITIES_TO_WIN}${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE})` : ''}`
+					}/${VictoryManager.CITIES_TO_WIN}${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`
 				);
 			}
 		}

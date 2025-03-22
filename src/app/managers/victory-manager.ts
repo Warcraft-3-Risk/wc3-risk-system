@@ -13,9 +13,6 @@ export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 export class VictoryManager {
 	private static instance: VictoryManager;
 	public static CITIES_TO_WIN: number;
-	public static OVERTIME_ACTIVE: boolean = false;
-	public static OVERTIME_TOTAL_TURNS: number = 0;
-	public static OVERTIME_TURNS_UNTIL_ACTIVE: number = 0;
 	public static GAME_VICTORY_STATE: VictoryProgressState = 'UNDECIDED';
 
 	private winTracker: WinTracker;
@@ -25,8 +22,6 @@ export class VictoryManager {
 
 		// since gameTimer is not set yet and CalculateCitiesToWin relies on the gameTimer, we need to manually set the cities to win
 		VictoryManager.CITIES_TO_WIN = Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO);
-
-		VictoryManager.OVERTIME_ACTIVE = false;
 	}
 
 	public static getInstance(): VictoryManager {
@@ -88,14 +83,8 @@ export class VictoryManager {
 	}
 
 	private calculateCitiesToWin(): number {
-		if (OvertimeManager.isOvertimeEnabled()) {
-			VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE = OvertimeManager.getOvertimeSettingValue() - GlobalGameData.turnCount;
-			VictoryManager.OVERTIME_TOTAL_TURNS = GlobalGameData.turnCount - OvertimeManager.getOvertimeSettingValue();
-		}
-
 		if (OvertimeManager.isOvertimeEnabled() && GlobalGameData.turnCount >= OvertimeManager.getOvertimeSettingValue()) {
-			VictoryManager.OVERTIME_ACTIVE = true;
-			return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * VictoryManager.OVERTIME_TOTAL_TURNS;
+			return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * OvertimeManager.getTurnCountPostOvertime();
 		}
 
 		return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO);
@@ -118,7 +107,6 @@ export class VictoryManager {
 	}
 
 	public reset() {
-		VictoryManager.OVERTIME_ACTIVE = false;
 		VictoryManager.GAME_VICTORY_STATE = 'UNDECIDED';
 	}
 
