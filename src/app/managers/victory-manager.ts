@@ -9,6 +9,7 @@ import { TeamManager } from '../teams/team-manager';
 import { OvertimeManager } from './overtime-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { getCityCount, ParticipantEntity } from '../utils/participant-entity';
+import { Team } from '../teams/team';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -36,23 +37,18 @@ export class VictoryManager {
 	}
 
 	public setLeader(player: ActivePlayer) {
-		if (player.trackedData.cities.cities.length > GlobalGameData.leader.trackedData.cities.cities.length) {
+		if (player.trackedData.cities.cities.length > getCityCount(GlobalGameData.leader)) {
 			GlobalGameData.leader = player;
 		}
 	}
 
 	// This function is used to get the players who have a certain number of cities or more
 	public getOwnershipByThresholdDescending(threshold: number): ParticipantEntity[] {
-		if (SettingsContext.getInstance().isFFA()) {
-			return Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
-				.filter((player) => player.trackedData.cities.cities.length >= threshold)
-				.sort((a, b) => b.trackedData.cities.cities.length - a.trackedData.cities.cities.length);
-		} else {
-			return TeamManager.getInstance()
-				.getActiveTeams()
-				.filter((team) => team.getCities() >= threshold)
-				.sort((a, b) => b.getCities() - a.getCities());
-		}
+		const participants: ParticipantEntity[] = SettingsContext.getInstance().isFFA()
+			? Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
+			: TeamManager.getInstance().getActiveTeams();
+
+		return participants.filter((participant) => getCityCount(participant) >= threshold).sort((a, b) => getCityCount(b) - getCityCount(a));
 	}
 
 	// This function is used to get the players who have won with the most cities (many players can have the same number of cities)
@@ -94,7 +90,7 @@ export class VictoryManager {
 		if (!SettingsContext.getInstance().isFFA()) {
 			const activeTeams = TeamManager.getInstance().getActiveTeams();
 			if (activeTeams.length <= 1) {
-				GlobalGameData.leader = activeTeams[0].getMembersSortedByIncome()[0];
+				GlobalGameData.leader = activeTeams[0].getMemberWithHighestIncome();
 				this.saveStats();
 				return true;
 			}
@@ -113,7 +109,11 @@ export class VictoryManager {
 	}
 
 	public updateWinTracker() {
-		this.winTracker.addWinForEntity(GlobalGameData.leader.getPlayer());
+		if (GlobalGameData.leader instanceof ActivePlayer) {
+			this.winTracker.addWinForEntity(GlobalGameData.leader.getPlayer());
+		} else {
+			this.winTracker.addWinForEntity((GlobalGameData.leader as Team).getMemberWithHighestIncome().getPlayer());
+		}
 	}
 
 	public saveStats() {

@@ -91,6 +91,10 @@ export class Team {
 		});
 	}
 
+	public getMemberWithHighestIncome(): ActivePlayer {
+		return this.getMembersSortedByIncome()[0];
+	}
+
 	public giveTeamFullControl() {
 		for (let i = 0; i < this.teamMembers.length; i++) {
 			const playerA = this.teamMembers[i].getPlayer();

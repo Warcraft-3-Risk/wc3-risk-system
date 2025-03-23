@@ -4,6 +4,7 @@ import { OvertimeManager } from '../managers/overtime-manager';
 import { VictoryManager } from '../managers/victory-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
+import { getCityCount, getDisplayName } from '../utils/participant-entity';
 import { ObserverBoard } from './observer-board';
 import { Scoreboard } from './scoreboard';
 import { StandardBoard } from './standard-board';
@@ -80,19 +81,14 @@ export class ScoreboardManager {
 
 	public updateScoreboardTitle() {
 		if (GlobalGameData.leader) {
-			if (OvertimeManager.isOvertimeActive()) {
-				this.setTitle(
-					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${
-						GlobalGameData.leader.trackedData.cities.cities.length
-					}/${HexColors.RED}${VictoryManager.getCityCountWin()}|r ${HexColors.RED}(Overtime)|r`
-				);
-			} else {
-				this.setTitle(
-					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${
-						GlobalGameData.leader.trackedData.cities.cities.length
-					}/${VictoryManager.getCityCountWin()}${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`
-				);
-			}
+			const test = OvertimeManager.isOvertimeActive()
+				? ` ${HexColors.RED}(Overtime)|r`
+				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
+			this.setTitle(
+				`${getDisplayName(GlobalGameData.leader)} ${getCityCount(
+					GlobalGameData.leader
+				)}/${HexColors.RED}${VictoryManager.getCityCountWin()}|r${test}`
+			);
 		}
 	}
 }
