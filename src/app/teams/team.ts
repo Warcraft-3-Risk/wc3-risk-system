@@ -80,7 +80,7 @@ export class Team {
 	}
 
 	public getMembersSortedByIncome(): ActivePlayer[] {
-		return this.teamMembers.sort((pA, pB) => {
+		return this.teamMembers.slice().sort((pA, pB) => {
 			const playerAIncome: number = pA.trackedData.income.income;
 			const playerBIncome: number = pB.trackedData.income.income;
 

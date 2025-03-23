@@ -61,7 +61,7 @@ export class VictoryManager {
 			return [];
 		}
 
-		let max = getCityCount(potentialVictors.sort((x) => getCityCount(x))[0]);
+		let max = getCityCount(potentialVictors.sort((a, b) => getCityCount(b) - getCityCount(a))[0]);
 		return potentialVictors.filter((x) => getCityCount(x) == max);
 	}
 
