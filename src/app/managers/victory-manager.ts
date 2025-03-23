@@ -36,9 +36,11 @@ export class VictoryManager {
 		this.checkKnockOutVictory();
 	}
 
-	public setLeader(player: ActivePlayer) {
-		if (player.trackedData.cities.cities.length > getCityCount(GlobalGameData.leader)) {
-			GlobalGameData.leader = player;
+	public setLeader(participant: ParticipantEntity) {
+		if (GlobalGameData.leader == undefined) {
+			GlobalGameData.leader = participant;
+		} else if (getCityCount(participant) > getCityCount(GlobalGameData.leader)) {
+			GlobalGameData.leader = participant;
 		}
 	}
 

@@ -1,6 +1,5 @@
 import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
-import { SettingsContext } from '../settings/settings-context';
 import { arrayRange, PLAYER_SLOTS, ShuffleArray } from '../utils/utils';
 import { Team } from './team';
 
@@ -84,7 +83,7 @@ export class TeamManager {
 	}
 
 	public getActiveTeams(): Team[] {
-		return this.getTeams().filter((team) => team.getMembers().find(x => x.status.isActive()));
+		return this.getTeams().filter((team) => team.getMembers().find((member) => member.status.isActive()));
 	}
 
 	public static breakTeams() {

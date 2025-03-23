@@ -9,7 +9,7 @@ export type MatchState = 'modeSelection' | 'preMatch' | 'inProgress' | 'postMatc
 export interface GameData {
 	turn: number;
 	ticks: number;
-	leader: ParticipantEntity;
+	leader?: ParticipantEntity;
 	matchState: MatchState;
 	gameType?: GameType;
 	matchCount: number;
@@ -39,7 +39,7 @@ export class GlobalGameData {
 			matchState: 'preMatch',
 			matchCount: this.getInstance().data.matchCount + 1,
 			matchPlayers: players,
-			leader: players[0],
+			leader: undefined,
 			stateData: { ...this.getInstance().data?.stateData },
 			gameType: this.getInstance().data.gameType,
 		} as GameData;
@@ -49,7 +49,7 @@ export class GlobalGameData {
 		return {
 			turn: 0,
 			ticks: TURN_DURATION_IN_SECONDS,
-			leader: null,
+			leader: undefined,
 			matchState: 'modeSelection',
 			gameType: null,
 			matchCount: 0,

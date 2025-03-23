@@ -5,7 +5,7 @@ import { AddLeadingZero } from '../utils/utils';
 import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
 import { MAP_VERSION } from '../utils/map-info';
 import { GlobalGameData } from '../game/state/global-game-state';
-import { Team } from '../teams/team';
+import { getHighestPriorityParticipant } from '../utils/participant-entity';
 
 export class StatisticsModel {
 	private timePlayed: string;
@@ -23,10 +23,7 @@ export class StatisticsModel {
 
 	public setData() {
 		this.setGameTime();
-		this.winner =
-			GlobalGameData.leader instanceof ActivePlayer
-				? (GlobalGameData.leader as ActivePlayer)
-				: (GlobalGameData.leader as Team).getMemberWithHighestIncome();
+		this.winner = getHighestPriorityParticipant(GlobalGameData.leader);
 
 		this.ranks = Array.from([...this.matchPlayers]);
 		this.sortPlayersByRank(this.ranks, this.winner);
