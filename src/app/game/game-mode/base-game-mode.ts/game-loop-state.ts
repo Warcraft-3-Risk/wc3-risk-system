@@ -15,6 +15,7 @@ import { StateData } from '../state/state-data';
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { OvertimeManager } from 'src/app/managers/overtime-manager';
+import { Team } from 'src/app/teams/team';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -112,7 +113,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		if (playersToAnnounce.length == 0) return;
 
-		function cityCountDescription(candidate: ActivePlayer, state: VictoryProgressState) {
+		function playerCityCountDescription(candidate: ActivePlayer, state: VictoryProgressState) {
 			if (state == 'TIE' && candidate.trackedData.cities.cities.length >= VictoryManager.getCityCountWin()) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
@@ -120,10 +121,24 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			}
 		}
 
-		function announceCandidate(candidate: ActivePlayer, state: VictoryProgressState): string {
+		function playerAnnounceCandidate(candidate: ActivePlayer, state: VictoryProgressState): string {
 			let line = `${NameManager.getInstance().getDisplayName(candidate.getPlayer())} owns ${HexColors.RED}${
 				candidate.trackedData.cities.cities.length
-			}|r cities and ${cityCountDescription(candidate, state)}`;
+			}|r cities and ${playerCityCountDescription(candidate, state)}`;
+
+			return line;
+		}
+
+		function teamCityCountDescription(candidate: Team, state: VictoryProgressState) {
+			if (state == 'TIE' && candidate.getCities() >= VictoryManager.getCityCountWin()) {
+				return `is ${HexColors.RED}TIED|r to win!`;
+			} else {
+				return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - candidate.getCities()}|r more to win!`;
+			}
+		}
+
+		function teamAnnounceCandidate(candidate: Team, state: VictoryProgressState): string {
+			let line = `${HexColors.WHITE}Team ${candidate.getNumber()}|r owns ${HexColors.RED}${candidate.getCities()}|r cities and ${teamCityCountDescription(candidate, state)}`;
 
 			return line;
 		}
@@ -133,9 +148,20 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				? `${OvertimeManager.isOvertimeActive() ? `${HexColors.RED}TIED!\nGAME EXTENDED BY ONE ROUND!|r` : ''}`
 				: '';
 		const overtimeMessage = OvertimeManager.isOvertimeActive() ? `${HexColors.RED}OVERTIME!|r` : '';
-		const playerMessages = playersToAnnounce.map((player) => announceCandidate(player, VictoryManager.GAME_VICTORY_STATE)).join('\n');
 
-		GlobalMessage([tiedMessage, overtimeMessage, playerMessages].join('\n\n'), 'Sound\\Interface\\ItemReceived.flac', 4);
+		if (playersToAnnounce[0] instanceof Team) {
+			const playerMessages = playersToAnnounce
+				.map((player) => teamAnnounceCandidate(player as Team, VictoryManager.GAME_VICTORY_STATE))
+				.join('\n');
+
+			GlobalMessage([tiedMessage, overtimeMessage, playerMessages].join('\n\n'), 'Sound\\Interface\\ItemReceived.flac', 4);
+		} else {
+			const playerMessages = playersToAnnounce
+				.map((player) => playerAnnounceCandidate(player as ActivePlayer, VictoryManager.GAME_VICTORY_STATE))
+				.join('\n');
+
+			GlobalMessage([tiedMessage, overtimeMessage, playerMessages].join('\n\n'), 'Sound\\Interface\\ItemReceived.flac', 4);
+		}
 	}
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer): void {

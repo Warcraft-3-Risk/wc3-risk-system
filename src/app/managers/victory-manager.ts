@@ -7,6 +7,8 @@ import { PLAYER_STATUS } from '../player/status/status-enum';
 import { PlayerManager } from '../player/player-manager';
 import { TeamManager } from '../teams/team-manager';
 import { OvertimeManager } from './overtime-manager';
+import { SettingsContext } from '../settings/settings-context';
+import { getCityCount, ParticipantEntity } from '../utils/participant-entity';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -40,22 +42,29 @@ export class VictoryManager {
 	}
 
 	// This function is used to get the players who have a certain number of cities or more
-	public getOwnershipByThresholdDescending(threshold: number): ActivePlayer[] {
-		return Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
-			.filter((player) => player.trackedData.cities.cities.length >= threshold)
-			.sort((a, b) => b.trackedData.cities.cities.length - a.trackedData.cities.cities.length);
+	public getOwnershipByThresholdDescending(threshold: number): ParticipantEntity[] {
+		if (SettingsContext.getInstance().isFFA()) {
+			return Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
+				.filter((player) => player.trackedData.cities.cities.length >= threshold)
+				.sort((a, b) => b.trackedData.cities.cities.length - a.trackedData.cities.cities.length);
+		} else {
+			return TeamManager.getInstance()
+				.getActiveTeams()
+				.filter((team) => team.getCities() >= threshold)
+				.sort((a, b) => b.getCities() - a.getCities());
+		}
 	}
 
 	// This function is used to get the players who have won with the most cities (many players can have the same number of cities)
-	public victors(): ActivePlayer[] {
+	public victors(): ParticipantEntity[] {
 		let potentialVictors = this.getOwnershipByThresholdDescending(VictoryManager.getCityCountWin());
 
 		if (potentialVictors.length == 0) {
 			return [];
 		}
 
-		let max = potentialVictors.sort((x) => x.trackedData.cities.cities.length)[0].trackedData.cities.cities.length;
-		return potentialVictors.filter((x) => x.trackedData.cities.cities.length == max);
+		let max = getCityCount(potentialVictors.sort((x) => getCityCount(x))[0]);
+		return potentialVictors.filter((x) => getCityCount(x) == max);
 	}
 
 	public updateAndGetGameState(): VictoryProgressState {
@@ -81,11 +90,14 @@ export class VictoryManager {
 	}
 
 	public checkKnockOutVictory(): boolean {
-		const activeTeams = TeamManager.getInstance().getActiveTeams();
-		if (activeTeams.length <= 1) {
-			GlobalGameData.leader = activeTeams[0].getMembersSortedByIncome()[0];
-			this.saveStats();
-			return true;
+		// TeamManager needs to be aware if there is are teams in the game. This is to be used here.
+		if (!SettingsContext.getInstance().isFFA()) {
+			const activeTeams = TeamManager.getInstance().getActiveTeams();
+			if (activeTeams.length <= 1) {
+				GlobalGameData.leader = activeTeams[0].getMembersSortedByIncome()[0];
+				this.saveStats();
+				return true;
+			}
 		}
 
 		if (PlayerManager.getInstance().playersAliveOrNomad.size <= 1) {
