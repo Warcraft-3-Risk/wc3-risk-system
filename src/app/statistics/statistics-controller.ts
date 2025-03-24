@@ -51,6 +51,10 @@ export class StatisticsController {
 	}
 
 	public setGameWinnerText() {
+		if (!this.model.getWinner()) {
+			return;
+		}
+
 		const winner: player = this.model.getWinner().getPlayer();
 		const name: string = getWinnerParticipantName(winner);
 
