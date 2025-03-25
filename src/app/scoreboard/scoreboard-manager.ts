@@ -96,6 +96,12 @@ export class ScoreboardManager {
 					GlobalGameData.leader
 				)}/${HexColors.RED}${VictoryManager.getCityCountWin()}|r${overtimeSuffix}`
 			);
+		} else {
+			const overtimeSuffix = OvertimeManager.isOvertimeActive()
+				? ` ${HexColors.RED}(Overtime)|r`
+				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
+
+			this.setTitle(`N/A ${overtimeSuffix}`);
 		}
 	}
 }
