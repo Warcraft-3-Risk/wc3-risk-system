@@ -39,11 +39,19 @@ export function getParticipantByActivePlayer(activePlayer: ActivePlayer): Partic
 	}
 }
 
-export function getParticipantNamePrefixedWithTeamNumber(player: player): string {
+export function getParticipantNamePrefixedWithOptionalTeamNumber(player: player): string {
 	if (SettingsContext.getInstance().isFFA()) {
 		return NameManager.getInstance().getDisplayName(player);
 	} else {
 		return `${HexColors.WHITE}[${TeamManager.getInstance().getTeamFromPlayer(player).getNumber()}]|r ${NameManager.getInstance().getDisplayName(player)}|r`;
+	}
+}
+
+export function getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player: player): string {
+	if (SettingsContext.getInstance().isFFA()) {
+		return `${NameManager.getInstance().getColorCode(player)}${NameManager.getInstance().getBtag(player)}|r`;
+	} else {
+		return `${HexColors.WHITE}[${TeamManager.getInstance().getTeamFromPlayer(player).getNumber()}]|r ${NameManager.getInstance().getColorCode(player)}${NameManager.getInstance().getBtag(player)}|r`;
 	}
 }
 
