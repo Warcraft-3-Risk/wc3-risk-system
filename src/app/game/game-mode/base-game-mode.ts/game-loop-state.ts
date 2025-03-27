@@ -58,6 +58,8 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 					GlobalGameData.tickCounter = TURN_DURATION_IN_SECONDS;
 					GlobalGameData.turnCount++;
 					this.onStartTurn(GlobalGameData.turnCount);
+
+					VictoryManager.getInstance().updateAndGetGameState();
 				}
 				updateTickUI();
 			} catch (error) {

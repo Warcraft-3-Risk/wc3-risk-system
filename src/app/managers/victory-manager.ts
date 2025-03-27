@@ -80,7 +80,7 @@ export class VictoryManager {
 	}
 
 	public static getCityCountWin(): number {
-		if (OvertimeManager.isOvertimeEnabled() && GlobalGameData.turnCount >= OvertimeManager.getOvertimeSettingValue()) {
+		if (OvertimeManager.isOvertimeActive()) {
 			return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * OvertimeManager.getTurnCountPostOvertime();
 		}
 
