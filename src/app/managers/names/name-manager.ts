@@ -111,7 +111,7 @@ export class NameManager {
 	 * @param p - The player object.
 	 * @returns The display name of the player, including color codes.
 	 */
-	public getDisplayName(p: player) {
+	public getDisplayName(p: player): string {
 		return `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${GetPlayerName(p)}|r`;
 	}
 
@@ -119,7 +119,7 @@ export class NameManager {
 	 * @param p - The player object.
 	 * @returns The BattleTag of the player.
 	 */
-	public getBtag(p: player) {
+	public getBtag(p: player): string {
 		return this.names.get(p).btag;
 	}
 
@@ -127,7 +127,7 @@ export class NameManager {
 	 * @param p - The player object.
 	 * @returns The account name of the player.
 	 */
-	public getAcct(p: player) {
+	public getAcct(p: player): string {
 		return this.names.get(p).acct;
 	}
 
@@ -135,7 +135,15 @@ export class NameManager {
 	 * @param p - The player object.
 	 * @returns The color name of the player.
 	 */
-	public getColor(p: player) {
+	public getColorCode(p: player): string {
+		return `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}`;
+	}
+
+	/**
+	 * @param p - The player object.
+	 * @returns The color name of the player.
+	 */
+	public getColor(p: player): string {
 		return this.names.get(p).color;
 	}
 
@@ -144,7 +152,7 @@ export class NameManager {
 	 * @param p - The player object.
 	 * @param color - The new color.
 	 */
-	public setColor(p: player, color: playercolor) {
+	public setColor(p: player, color: playercolor): void {
 		const colorName: string = PLAYER_COLOR_MAP.get(color);
 
 		SetPlayerColor(p, color);

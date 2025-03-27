@@ -79,6 +79,22 @@ export class Team {
 		});
 	}
 
+	public getMembersSortedByIncome(): ActivePlayer[] {
+		return this.teamMembers.slice().sort((pA, pB) => {
+			const playerAIncome: number = pA.trackedData.income.income;
+			const playerBIncome: number = pB.trackedData.income.income;
+
+			if (playerAIncome < playerBIncome) return 1;
+			if (playerAIncome > playerBIncome) return -1;
+
+			return 0;
+		});
+	}
+
+	public getMemberWithHighestIncome(): ActivePlayer {
+		return this.getMembersSortedByIncome()[0];
+	}
+
 	public giveTeamFullControl() {
 		for (let i = 0; i < this.teamMembers.length; i++) {
 			const playerA = this.teamMembers[i].getPlayer();
