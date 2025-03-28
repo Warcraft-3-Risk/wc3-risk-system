@@ -35,8 +35,6 @@ export function onPlayerDeadHandle(player: ActivePlayer): void {
 }
 
 export function onPlayerNomadHandle(player: ActivePlayer): void {
-	PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), PLAYER_STATUS.NOMAD);
-
 	if (player.trackedData.units.size <= 0) {
 		player.status.set(PLAYER_STATUS.DEAD);
 		return;
