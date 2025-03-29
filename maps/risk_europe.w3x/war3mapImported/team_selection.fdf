@@ -1,14 +1,73 @@
 IncludeFile "war3mapimported\components.fdf",
 IncludeFile "UI\FrameDef\UI\EscMenuTemplates.fdf",
 
-Frame "BACKDROP" "TeamOptionsBackdrop" INHERITS "BackdropTemplate" {
+//Team Selection components
+Frame "GLUETEXTBUTTON" "SlotButtonTemplate" INHERITS WITHCHILDREN "ButtonTemplateSm" {
+    Width 0.095,
+    Height 0.02,
+
+    ButtonText "SlotButtonTextTemplate",
+    Frame "TEXT" "SlotButtonTextTemplate" INHERITS "TextTemplateXXSm" {
+        Text "Open Slot (Member)",
+    }
+}
+
+Frame "FRAME" "TeamContainerTemplate" {
+    UseActiveContext,
+    Width 0.11,
+    Height 0.20,
+
+    Frame "BACKDROP" "TeamOptionsButtonBackdrop" {
+        UseActiveContext,
+        SetPoint TOPLEFT, "TeamContainerTemplate", TOPLEFT, 0.0, 0.0,
+        Height 0.018,
+        Width 0.018,
+        BackdropBackground  "UI\Widgets\EscMenu\Human\quest-normal-background.blp",
+        BackdropBackgroundInsets 0.002 0.002 0.002 0.002,
+        BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+        BackdropCornerSize  0.004,
+        BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-button-border-up.blp",
+
+        Frame "GLUETEXTBUTTON" "TeamOptionsButton" {
+            UseActiveContext,
+            SetPoint CENTER, "TeamOptionsButtonBackdrop", CENTER, 0.0, 0.0,
+            Height 0.012,
+            Width 0.012,
+            ControlStyle "AUTOTRACK|HIGHLIGHTONMOUSEOVER",
+            
+            ControlBackdrop "TeamOptionsButtonBackdropFill",
+            Frame "BACKDROP" "TeamOptionsButtonBackdropFill" {
+                UseActiveContext,
+                BackdropBlendAll,        
+                BackdropBackground "war3mapImported\gear.blp",
+            }
+
+            ControlMouseOverHighlight "TeamOptionsButtonHighlight",
+            Frame "HIGHLIGHT" "TeamOptionsButtonHighlight" {
+                UseActiveContext,
+                HighlightType "FILETEXTURE",
+                HighlightAlphaFile "UI\Widgets\EscMenu\Orc\orc-options-button-highlight.blp",
+                HighlightAlphaMode "ADD",
+            }
+        }
+    }
+
+    Frame "TEXT" "TeamName" INHERITS "TextTemplateSm" {
+        UseActiveContext,
+        SetPoint LEFT, "TeamOptionsButton", RIGHT, 0.005, 0.0,
+        Text "",
+    }
+}
+
+//Main frame
+Frame "BACKDROP" "TeamSelectionBackdrop" INHERITS "BackdropTemplate" {
     BackdropCornerSize 0.02,
-    Width 1.00,
+    Width 0.65,
     Height 0.585,
 
-    Frame "TEXT" "TeamOptionsTitle" INHERITS "TextTemplateXXLg" {
+    Frame "TEXT" "TeamSelectionTitle" INHERITS "TextTemplateXXLg" {
         FontColor 1 0.8 0 1.0,
-        SetPoint TOP, "TeamOptionsBackdrop", TOP, 0.0, -0.01,
+        SetPoint TOP, "TeamSelectionBackdrop", TOP, 0.0, -0.01,
         Width 0.2,
         Height 0.02,
         Text "Team Selection"
@@ -16,13 +75,13 @@ Frame "BACKDROP" "TeamOptionsBackdrop" INHERITS "BackdropTemplate" {
 
     Frame "TEXT" "BenchTitle" INHERITS "TextTemplateMd" {
         FontColor 1 0.8 0 1.0,
-        SetPoint TOP, "TeamOptionsBackdrop", TOPRIGHT, -0.02, -0.04,
-        Width 0.18,
+        SetPoint TOPRIGHT, "TeamSelectionBackdrop", TOPRIGHT, -0.01, -0.04,
+        Width 0.1,
         Height 0.02,
         Text "Player Bench"
     }
 
-    Frame "GLUETEXTBUTTON" "BenchButton" INHERITS WITHCHILDREN "EscMenuButtonTemplate" {
+    Frame "GLUETEXTBUTTON" "BenchButton" INHERITS WITHCHILDREN "ButtonTemplateMd" {
         SetPoint TOP, "BenchTitle", BOTTOM, 0.0, 0.0,
         Width 0.095,
         Height 0.025,
@@ -36,7 +95,7 @@ Frame "BACKDROP" "TeamOptionsBackdrop" INHERITS "BackdropTemplate" {
     }
 
     Frame "TEXT" "TimerLabel" INHERITS "TextTemplateMd" {
-        SetPoint BOTTOMRIGHT, "TeamOptionsBackdrop", BOTTOMRIGHT, -0.01, 0.01,
+        SetPoint BOTTOM, "TeamSelectionBackdrop", BOTTOM, 0.0, 0.01,
         Text "Start in: ",
     }
 }

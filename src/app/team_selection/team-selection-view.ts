@@ -1,6 +1,7 @@
 import { PlayerList } from '../entity/player/player-list';
 import { Resetable } from '../interfaces/resettable';
 import { NameManager } from '../names/name-manager';
+import { SettingsController } from '../settings/settings-controller';
 
 interface playerData {
 	bench: number;
@@ -38,10 +39,10 @@ export class TeamSelectionView implements Resetable {
 		this.playerData = new Map<player, playerData>();
 		this.teams = new Map<number, TeamData>();
 
-		this.backdrop = BlzCreateFrame('TeamOptionsBackdrop', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
+		this.backdrop = BlzCreateFrame('TeamSelectionBackdrop', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 		BlzFrameSetPoint(this.backdrop, FRAMEPOINT_CENTER, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_CENTER, 0, -0.01);
 		this.buildBench();
-		// this.buildTeams();
+		this.buildTeamContainers();
 		// this.update(timerDuration);
 	}
 
@@ -110,9 +111,42 @@ export class TeamSelectionView implements Resetable {
 		);
 	}
 
-	private buildTeams(): void {
-		const editBoxFrame: framehandle = BlzCreateFrame('EditBoxTemplate', this.backdrop, 0, 0);
-		BlzFrameSetPoint(editBoxFrame, FRAMEPOINT_CENTER, this.backdrop, FRAMEPOINT_CENTER, 0, 0);
+	private buildTeamContainers(): void {
+		const playersPerTeam: number = SettingsController.getInstance().getTeamSize();
+		const rows: number = 3;
+		const teamsPerRow: number = 4;
+		let teamNumber: number = 1;
+		let yOffset: number = -0.04;
+
+		for (let i = 0; i < rows; i++) {
+			this.buildTeamContainerRow(yOffset, playersPerTeam, teamNumber, teamsPerRow);
+			teamNumber += teamsPerRow;
+			yOffset += -0.16;
+		}
+	}
+
+	private buildTeamContainerRow(yOffset: number, playersPerTeam: number, teamNumber: number, teamsPerRow: number) {
+		let xOffset: number = 0.01;
+
+		for (let i = 0; i < teamsPerRow; i++) {
+			const teamContainerFrame: framehandle = BlzCreateFrame('TeamContainerTemplate', this.backdrop, 0, teamNumber);
+			BlzFrameSetPoint(teamContainerFrame, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, xOffset, yOffset);
+			const teamNameFrame: framehandle = BlzGetFrameByName('TeamName', teamNumber);
+			BlzFrameSetText(teamNameFrame, `Team ${teamNumber}`);
+			const slotContext: number = teamNumber * 100;
+			const firstSlotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, slotContext); //context = 100
+			BlzFrameSetPoint(firstSlotFrame, FRAMEPOINT_TOP, teamContainerFrame, FRAMEPOINT_TOP, -0.005, -0.02);
+			BlzFrameSetText(firstSlotFrame, 'Open Slot (Captain)');
+
+			for (let j = 1; j < playersPerTeam; j++) {
+				const slotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, slotContext + j); //context = 100 + 1
+				const parentFrame: framehandle = BlzGetFrameByName('SlotButtonTemplate', slotContext + j - 1); //context = 100 + j - 1
+				BlzFrameSetPoint(slotFrame, FRAMEPOINT_TOP, parentFrame, FRAMEPOINT_BOTTOM, 0.0, -0.001);
+			}
+
+			teamNumber++;
+			xOffset += 0.13;
+		}
 	}
 
 	// private leaveTeam(player: player) {

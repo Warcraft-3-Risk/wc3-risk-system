@@ -1,3 +1,11 @@
+Frame "TEXT" "TextTemplateXXSm" {
+    FrameFont "Fonts\BLQ55Web.ttf", 0.006, "",
+    FontColor 1.0 1.0 1.0,
+    FontFlags "IGNORENEWLINES|NOWRAP",
+    FontJustificationH JUSTIFYCENTER,
+    FontJustificationV JUSTIFYMIDDLE,
+}
+
 Frame "TEXT" "TextTemplateXSm" {
     FrameFont "Fonts\BLQ55Web.ttf", 0.008, "",
     FontColor 1.0 1.0 1.0,
@@ -9,7 +17,7 @@ Frame "TEXT" "TextTemplateXSm" {
 Frame "TEXT" "TextTemplateSm" {
     FrameFont "Fonts\BLQ55Web.ttf", 0.01, "",
     FontColor 1.0 1.0 1.0,
-    FontFlags "IGNORENEWLINES",
+    FontFlags "IGNORENEWLINES | NOWRAP",
     FontJustificationH JUSTIFYCENTER,
     FontJustificationV JUSTIFYMIDDLE,
 }
@@ -36,6 +44,106 @@ Frame "BACKDROP" "BackdropTemplate" {
     BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
     BackdropCornerSize  0.0125,
     BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-menu-border.blp",
+}
+
+Frame "BACKDROP" "ButtonBackdropTemplate" {
+    BackdropTileBackground,
+    BackdropBackground  "UI\Widgets\EscMenu\Human\human-options-menu-background.blp",
+    BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+    BackdropBackgroundSize  0.256,
+    BackdropBackgroundInsets 0.005 0.005 0.005 0.005,
+    BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-button-border-up.blp",
+}
+
+Frame "BACKDROP" "ButtonPushedBackdropTemplate" {
+    BackdropTileBackground,
+    BackdropBackground  "UI\Widgets\EscMenu\Human\human-options-menu-background.blp",
+    BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+    BackdropBackgroundSize  0.256,
+    BackdropBackgroundInsets 0.005 0.005 0.005 0.005,
+    BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-button-border-down.blp",
+}
+
+Frame "BACKDROP" "ButtonDisabledBackdropTemplate" {
+    BackdropTileBackground,
+    BackdropBackground  "UI\Widgets\EscMenu\Human\human-options-button-background-disabled.blp",
+    BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+    BackdropBackgroundSize  0.256,
+    BackdropBackgroundInsets 0.005 0.005 0.005 0.005,
+    BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-button-border-up.blp",
+}
+
+Frame "BACKDROP" "ButtonDisabledPushedBackdropTemplate" {
+    BackdropTileBackground,
+    BackdropBackground  "UI\Widgets\EscMenu\Human\human-options-button-background-disabled.blp",
+    BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+    BackdropBackgroundSize  0.256,
+    BackdropBackgroundInsets 0.005 0.005 0.005 0.005,
+    BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-button-border-down.blp",
+}
+
+Frame "HIGHLIGHT" "ButtonMouseOverHighlightTemplate" {
+    HighlightType "FILETEXTURE",
+    HighlightAlphaFile "UI\Widgets\EscMenu\Orc\orc-options-button-highlight.blp",
+    HighlightAlphaMode "ADD",
+}
+
+Frame "GLUETEXTBUTTON" "ButtonTemplateMd" {
+    ControlStyle "AUTOTRACK|HIGHLIGHTONMOUSEOVER",
+    ButtonPushedTextOffset 0.002 -0.002,    
+
+    ControlBackdrop "ButtonBackdropTemplate",
+    Frame "BACKDROP" "ButtonBackdropTemplate" INHERITS "ButtonBackdropTemplate" {
+        BackdropCornerSize  0.0125,
+    }
+
+    ControlPushedBackdrop "ButtonPushedBackdropTemplate",
+    Frame "BACKDROP" "ButtonPushedBackdropTemplate" INHERITS "ButtonPushedBackdropTemplate" {
+        BackdropCornerSize  0.0125,
+    }
+
+    ControlDisabledBackdrop "ButtonDisabledBackdropTemplate",
+    Frame "BACKDROP" "ButtonDisabledBackdropTemplate" INHERITS "ButtonDisabledBackdropTemplate" {
+        BackdropCornerSize  0.0125,
+    }
+
+    ControlDisabledPushedBackdrop "ButtonDisabledPushedBackdropTemplate",
+    Frame "BACKDROP" "ButtonDisabledPushedBackdropTemplate" INHERITS "ButtonDisabledPushedBackdropTemplate" {
+        BackdropCornerSize  0.0125,
+    }
+
+    ControlMouseOverHighlight "ButtonMouseOverHighlightTemplate",
+    Frame "HIGHLIGHT" "ButtonMouseOverHighlightTemplate" INHERITS "ButtonMouseOverHighlightTemplate" {
+    }
+}
+
+Frame "GLUETEXTBUTTON" "ButtonTemplateSm" {
+    ControlStyle "AUTOTRACK|HIGHLIGHTONMOUSEOVER",
+    ButtonPushedTextOffset 0.002 -0.002,    
+
+    ControlBackdrop "ButtonBackdropTemplate",
+    Frame "BACKDROP" "ButtonBackdropTemplate" INHERITS "ButtonBackdropTemplate" {
+        BackdropCornerSize  0.008,
+    }
+
+    ControlPushedBackdrop "ButtonPushedBackdropTemplate",
+    Frame "BACKDROP" "ButtonPushedBackdropTemplate" INHERITS "ButtonPushedBackdropTemplate" {
+        BackdropCornerSize  0.008,
+    }
+
+    ControlDisabledBackdrop "ButtonDisabledBackdropTemplate",
+    Frame "BACKDROP" "ButtonDisabledBackdropTemplate" INHERITS "ButtonDisabledBackdropTemplate" {
+        BackdropCornerSize  0.008,
+    }
+
+    ControlDisabledPushedBackdrop "ButtonDisabledPushedBackdropTemplate",
+    Frame "BACKDROP" "ButtonDisabledPushedBackdropTemplate" INHERITS "ButtonDisabledPushedBackdropTemplate" {
+        BackdropCornerSize  0.008,
+    }
+
+    ControlMouseOverHighlight "ButtonMouseOverHighlightTemplate",
+    Frame "HIGHLIGHT" "ButtonMouseOverHighlightTemplate" INHERITS "ButtonMouseOverHighlightTemplate" {
+    }
 }
 
 Frame "EDITBOX" "EditBoxTemplate" {

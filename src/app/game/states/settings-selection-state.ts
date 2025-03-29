@@ -28,7 +28,7 @@ export class SettingSelectionState extends BaseGameState {
 		);
 	}
 	public exit(): void {
-		SettingsController.getInstance().applySettings();
+		// SettingsController.getInstance().applySettings();
 		this.gameStateManager.nextState();
 	}
 }
