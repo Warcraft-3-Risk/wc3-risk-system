@@ -39,16 +39,16 @@ export class PlayerManager {
 				}
 			});
 
+			if (IsPlayerObserver(player)) {
+				this._observerFromHandle.set(player, new HumanPlayer(player));
+				continue;
+			}
+
 			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) == PLAYER_SLOT_STATE_LEFT) {
 				continue;
 			}
 
 			if (GetPlayerController(player) == MAP_CONTROL_USER || GetPlayerController(player) == MAP_CONTROL_COMPUTER) {
-				if (IsPlayerObserver(player)) {
-					this._observerFromHandle.set(player, new HumanPlayer(player));
-					continue;
-				}
-
 				this._playerFromHandle.set(player, new HumanPlayer(player));
 
 				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
@@ -102,6 +102,10 @@ export class PlayerManager {
 
 	public get players(): Map<player, ActivePlayer> {
 		return this._playerFromHandle;
+	}
+
+	public setObserver(player: player) {
+		this._observerFromHandle.set(player, new HumanPlayer(player))
 	}
 
 	public get playersAliveOrNomad(): Map<player, ActivePlayer> {

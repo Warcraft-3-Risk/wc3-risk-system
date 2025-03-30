@@ -12,7 +12,8 @@ import { Quests } from 'src/app/quests/quests';
 import { clearTickUI } from '../utillity/update-ui';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { TreeManager } from '../../services/tree-service';
-
+import { debugPrint } from 'src/app/utils/debug-print'
+import { HumanPlayer } from '../../../player/types/human-player';
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
 		this.run();
@@ -20,9 +21,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 
 	run(): void {
 		FogEnable(false);
-
 		clearTickUI();
-
 		StatisticsController.getInstance().setViewVisibility(false);
 
 		// Assign player names as colors for non-promode games
@@ -40,13 +39,11 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 				val.status.set(PLAYER_STATUS.ALIVE);
 			} else {
 				val.status.set(PLAYER_STATUS.LEFT);
-
 				PlayerManager.getInstance().players.delete(val.getPlayer());
 			}
 		});
 
 		const players = [...PlayerManager.getInstance().players.values()];
-
 		GlobalGameData.prepareMatchData(players);
 
 		// Prepare stat tracking
@@ -58,6 +55,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			player.trackedData.bonus.repositon();
 		});
 
+		// Setting up the scoreboard
 		if (SettingsContext.getInstance().isFFA() || GlobalGameData.matchPlayers.length <= 2) {
 			ScoreboardManager.getInstance().ffaSetup(GlobalGameData.matchPlayers);
 		} else {
@@ -66,17 +64,15 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			ScoreboardManager.getInstance().teamSetup();
 		}
 
-		ScoreboardManager.getInstance().obsSetup(GlobalGameData.matchPlayers, [...PlayerManager.getInstance().observers.keys()]);
+		const observerKeys = [...PlayerManager.getInstance().observers.keys()];
+		ScoreboardManager.getInstance().obsSetup(GlobalGameData.matchPlayers, observerKeys);
 
 		VictoryManager.getInstance().updateAndGetGameState();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
-
 		EnableSelect(false, false);
 		EnableDragSelect(false, false);
 		FogEnable(true);
-
 		StatisticsController.getInstance().useCurrentActivePlayers();
-
 		Quests.getInstance().UpdateShuffledPlayerListQuest();
 
 		// To reset and reduce tree hp on first turn

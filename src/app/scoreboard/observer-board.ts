@@ -15,23 +15,32 @@ export class ObserverBoard extends Scoreboard {
 	private readonly DEATHS_COL: number = 6;
 	private readonly STATUS_COL: number = 7;
 
+
+	private playerActions: Map<player, { total: number, lastCheck: number }> = new Map();
+	private updateTimer: timer;
+
 	public constructor(players: ActivePlayer[]) {
 		super();
 
 		this.players = players;
 		this.size = this.players.length + 3;
 		ShuffleArray(this.players);
-		MultiboardSetColumnCount(this.board, 7);
+
+		for (const player of this.players) {
+			this.playerActions.set(player.getPlayer(), { total: 0, lastCheck: 0 });
+		}
+
+		MultiboardSetColumnCount(this.board, 8);
 
 		for (let i = 1; i <= this.size; i++) {
 			MultiboardSetRowCount(this.board, MultiboardGetRowCount(this.board) + 1);
-			this.setItemWidth(6.2, i, this.PLAYER_COL);
-			this.setItemWidth(4.5, i, this.INCOME_COL);
-			this.setItemWidth(3.3, i, this.GOLD_COL);
-			this.setItemWidth(3.0, i, this.CITIES_COL);
-			this.setItemWidth(3.9, i, this.KILLS_COL);
-			this.setItemWidth(3.9, i, this.DEATHS_COL);
-			this.setItemWidth(3.0, i, this.STATUS_COL);
+			this.setItemWidth(7.0, i, this.PLAYER_COL);
+			this.setItemWidth(5.0, i, this.INCOME_COL);
+			this.setItemWidth(3.9, i, this.GOLD_COL);
+			this.setItemWidth(4.4, i, this.CITIES_COL);
+			this.setItemWidth(4.5, i, this.KILLS_COL);
+			this.setItemWidth(4.5, i, this.DEATHS_COL);
+			this.setItemWidth(3.8, i, this.STATUS_COL);
 		}
 
 		this.setItemValue(`${HexColors.TANGERINE}Player|r`, 1, this.PLAYER_COL);
@@ -41,6 +50,7 @@ export class ObserverBoard extends Scoreboard {
 		this.setItemValue(`${HexColors.TANGERINE}Kills|r`, 1, this.KILLS_COL);
 		this.setItemValue(`${HexColors.TANGERINE}Deaths|r`, 1, this.DEATHS_COL);
 		this.setItemValue(`${HexColors.TANGERINE}Status|r`, 1, this.STATUS_COL);
+
 		this.setItemWidth(20.0, this.size, this.PLAYER_COL);
 		this.setItemWidth(0.0, this.size, this.INCOME_COL);
 		this.setItemWidth(0.0, this.size, this.GOLD_COL);
@@ -55,6 +65,11 @@ export class ObserverBoard extends Scoreboard {
 		MultiboardMinimize(this.board, true);
 		MultiboardMinimize(this.board, false);
 		this.setVisibility(false);
+
+		this.updateTimer = CreateTimer();
+		TimerStart(this.updateTimer, 1.0, true, () => {
+			this.updatePartial();
+		});
 	}
 
 	public updateFull(): void {
@@ -74,18 +89,6 @@ export class ObserverBoard extends Scoreboard {
 			player.trackedData.income.delta = 0;
 			const data: TrackedData = player.trackedData;
 			const textColor: string = HexColors.WHITE;
-
-			if (player.status.isAlive() || player.status.isNomad()) {
-				this.setItemValue(
-					`${textColor}${player.trackedData.income.income - player.trackedData.income.delta}(${this.getIncomeDelta(
-						player.trackedData.income.delta
-					)})`,
-					row,
-					this.INCOME_COL
-				);
-			} else {
-				this.setItemValue(`${textColor}`, row, 2);
-			}
 
 			this.setColumns(player, row, textColor, data);
 			row++;
@@ -113,6 +116,11 @@ export class ObserverBoard extends Scoreboard {
 	}
 
 	public destroy() {
+		if (this.updateTimer) {
+			DestroyTimer(this.updateTimer);
+			this.updateTimer = null;
+		}
+
 		this.players = null;
 		DestroyMultiboard(this.board);
 		this.board = null;
@@ -130,10 +138,12 @@ export class ObserverBoard extends Scoreboard {
 				this.INCOME_COL
 			);
 		} else {
-			this.setItemValue(`${textColor}-`, row, 2);
+			this.setItemValue(`${textColor}-`, row, this.INCOME_COL);
 		}
 
-		this.setItemValue(`${textColor}${GetPlayerState(player.getPlayer(), PLAYER_STATE_RESOURCE_GOLD)}`, row, this.GOLD_COL);
+		const playerGold = GetPlayerState(player.getPlayer(), PLAYER_STATE_RESOURCE_GOLD);
+		this.setItemValue(`${textColor}${playerGold}`, row, this.GOLD_COL);
+
 		this.setItemValue(`${textColor}${data.cities.cities.length}`, row, this.CITIES_COL);
 		this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).killValue}`, row, this.KILLS_COL);
 		this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);

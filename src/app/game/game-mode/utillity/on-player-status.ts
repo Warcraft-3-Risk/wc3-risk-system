@@ -9,6 +9,7 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
+import { debugPrint } from '../../../utils/debug-print';
 
 export function onPlayerAliveHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.ALIVE;
@@ -27,7 +28,6 @@ export function onPlayerDeadHandle(player: ActivePlayer): void {
 
 	GlobalMessage(`${NameManager.getInstance().getDisplayName(player.getPlayer())} has been defeated!`, 'Sound\\Interface\\SecretFound.flac');
 
-	// MatchData.setPlayerStatus(player, PLAYER_STATUS.DEAD);
 	if (VictoryManager.getInstance().checkKnockOutVictory()) {
 		GlobalGameData.matchState = 'postMatch';
 	}

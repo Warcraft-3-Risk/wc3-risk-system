@@ -2,6 +2,7 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { NameManager } from '../managers/names/name-manager';
 import { VictoryManager } from '../managers/victory-manager';
 import { ActivePlayer } from '../player/types/active-player';
+import { HumanPlayer } from '../player/types/human-player';
 import { HexColors } from '../utils/hex-colors';
 import { ObserverBoard } from './observer-board';
 import { Scoreboard } from './scoreboard';
@@ -81,14 +82,12 @@ export class ScoreboardManager {
 		if (GlobalGameData.leader) {
 			if (VictoryManager.OVERTIME_ACTIVE) {
 				this.setTitle(
-					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${
-						GlobalGameData.leader.trackedData.cities.cities.length
+					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${GlobalGameData.leader.trackedData.cities.cities.length
 					}/${HexColors.RED}${VictoryManager.CITIES_TO_WIN}|r ${HexColors.RED}(Overtime)|r`
 				);
 			} else {
 				this.setTitle(
-					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${
-						GlobalGameData.leader.trackedData.cities.cities.length
+					`${NameManager.getInstance().getDisplayName(GlobalGameData.leader.getPlayer())} ${GlobalGameData.leader.trackedData.cities.cities.length
 					}/${VictoryManager.CITIES_TO_WIN}${VictoryManager.OVERTIME_MODE ? ` (Overtime in: ${VictoryManager.OVERTIME_TURNS_UNTIL_ACTIVE})` : ''}`
 				);
 			}
