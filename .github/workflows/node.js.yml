@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*.*.*' # Trigger only on tags matching semantic versioning, e.g., v1.0.0-alpha.1
+      - 'v*.*' # Trigger only on tags matching semantic versioning, e.g., v1.0.0-alpha.1
 env:
   OUTPUT_FOLDER: './artifact'
 
@@ -19,7 +19,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '16' # Use the desired Node.js version
+          node-version: '22' # Use the desired Node.js version
       - name: Generate SemVer suffix
         id: semver
         run: |

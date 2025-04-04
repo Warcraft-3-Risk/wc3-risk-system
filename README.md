@@ -72,7 +72,7 @@ Windows Template:
 ```
 GAME_EXECUTABLE=C:\\Program Files (x86)\\Warcraft III\\_retail_\\x86_64\\Warcraft III.exe
 OUTPUT_FOLDER=C:\\Users\\{USERNAME}\\Documents\\Warcraft III\\Maps\\Download\\(0) testing
-TAG_NAME=2.7.4-preview
+TAG_NAME=dev
 ```
 
 MacOS Template:
@@ -80,7 +80,7 @@ MacOS Template:
 ```
 GAME_EXECUTABLE=/Applications/Warcraft III/_retail_/x86_64/Warcraft III.app/Contents/MacOS/Warcraft III
 OUTPUT_FOLDER=/Users/{USERNAME}/Library/Application Support/Blizzard/Warcraft III/Maps/Download/(0) testing
-TAG_NAME=2.7.4-preview
+TAG_NAME=dev
 ```
 
 Running the build command will automatically generate the path and required directories. This includes injecting the map version number. The above settings would generate a file in the output folder named `Risk Europe 2.7.4-preview.w3x`.
@@ -107,15 +107,15 @@ TODO
 
 ## Publish builds
 
-This project uses Github Actions to publish its builds. Maps are named `Risk Europe v[Major].[Minor].[Patch].w3x`. Example, `Risk Europe v2.6.2.w3x`.
+This project uses Github Actions to publish its builds. Maps are named `Risk Europe v[Major].[Minor].w3x`. Example, `Risk Europe v2.6.w3x`.
 
 The fastest way to publish a new build as a release based on the main branch is to push a tag.
 
 Run the following commands:
 
 ```
-git tag v2.6.2
-git push origin v2.6.2
+git tag v2.6
+git push origin v2.6
 ```
 
 Replace the values as you see fit.
