@@ -107,15 +107,15 @@ TODO
 
 ## Publish builds
 
-This project uses Github Actions to publish its builds. Maps are named `Risk Europe v[Major].[Minor].w3x`. Example, `Risk Europe v2.6.w3x`.
+This project uses Github Actions to publish its builds. Maps are named `Risk Europe v[Major].[Minor].w3x`. Example, `Risk Europe v2.60.w3x`.
 
 The fastest way to publish a new build as a release based on the main branch is to push a tag.
 
 Run the following commands:
 
 ```
-git tag v2.6
-git push origin v2.6
+git tag v2.60
+git push origin v2.60
 ```
 
 Replace the values as you see fit.
