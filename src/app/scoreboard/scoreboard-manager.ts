@@ -86,11 +86,11 @@ export class ScoreboardManager {
 			} else {
 				debugPrint('Leader is an Team');
 			}
-
+			
 			const overtimeSuffix = OvertimeManager.isOvertimeActive()
 				? ` ${HexColors.RED}(Overtime)|r`
 				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
-
+			
 			this.setTitle(
 				`${getDisplayName(GlobalGameData.leader)} ${getCityCount(
 					GlobalGameData.leader
@@ -100,7 +100,6 @@ export class ScoreboardManager {
 			const overtimeSuffix = OvertimeManager.isOvertimeActive()
 				? ` ${HexColors.RED}(Overtime)|r`
 				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
-
 			this.setTitle(`Risk Europe${overtimeSuffix}`);
 		}
 	}
