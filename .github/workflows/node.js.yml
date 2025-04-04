@@ -3,7 +3,7 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*.*' # Trigger only on tags matching semantic versioning, e.g., v1.0.0-alpha.1
+      - 'v*.*' # Trigger only on tags matching versioning, e.g., v1.0
 env:
   OUTPUT_FOLDER: './artifact'
 
@@ -20,10 +20,10 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '22' # Use the desired Node.js version
-      - name: Generate SemVer suffix
-        id: semver
+      - name: Generate version suffix
+        id: version
         run: |
-          # Extract SemVer suffix from the tag
+          # Extract version suffix from the tag
           TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
 
@@ -37,7 +37,7 @@ jobs:
 
       - name: Package the application
         run: |
-          # Include SemVer suffix in the package name
+          # Include version suffix in the package name
           PACKAGE_NAME="my-app-${TAG_NAME}.tgz"
           npm pack
           mv *.tgz $PACKAGE_NAME
@@ -50,8 +50,9 @@ jobs:
           TAG_NAME: ${{ env.TAG_NAME }}
         with:
           tag: ${{ env.TAG_NAME }}
-          name: Release ${{ env.TAG_NAME }}
+          name: ${{ env.TAG_NAME }}
           draft: false
           prerelease: true
           artifacts: ${{env.OUTPUT_FOLDER}}/Risk Europe ${{ env.TAG_NAME }}.w3x
           replacesArtifacts: true
+          generateReleaseNotes: true
