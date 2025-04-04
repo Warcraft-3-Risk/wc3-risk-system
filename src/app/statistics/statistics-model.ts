@@ -5,6 +5,10 @@ import { AddLeadingZero } from '../utils/utils';
 import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
 import { MAP_VERSION } from '../utils/map-info';
 import { GlobalGameData } from '../game/state/global-game-state';
+import { getCityCount, getHighestPriorityParticipant } from '../utils/participant-entity';
+import { SettingsContext } from '../settings/settings-context';
+import { TeamManager } from '../teams/team-manager';
+import { Team } from '../teams/team';
 
 export class StatisticsModel {
 	private timePlayed: string;
@@ -22,10 +26,20 @@ export class StatisticsModel {
 
 	public setData() {
 		this.setGameTime();
-		this.winner = GlobalGameData.leader;
+		this.winner = getHighestPriorityParticipant(GlobalGameData.leader);
 
-		this.ranks = Array.from([...this.matchPlayers]);
-		this.sortPlayersByRank(this.ranks, this.winner);
+		if (SettingsContext.getInstance().isFFA()) {
+			this.ranks = Array.from([...this.matchPlayers]);
+			this.sortPlayersByRank(this.ranks, this.winner);
+		} else {
+			this.ranks = Array.from([
+				...this.sortTeamsByRank(
+					TeamManager.getInstance().getTeams(),
+					this.winner ? TeamManager.getInstance().getTeamFromPlayer(this.winner.getPlayer()) : undefined
+				),
+			]);
+		}
+
 		this.columns = GetStatisticsColumns(this);
 	}
 
@@ -77,7 +91,7 @@ export class StatisticsModel {
 		this.timePlayed = `${HexColors.TANGERINE}Game Time:|r ${formattedTime}\n${HexColors.TANGERINE}Total Turns:|r ${totalTurns.toFixed(2)}\n${HexColors.TANGERINE}Version:|r v${MAP_VERSION}`;
 	}
 
-	private sortPlayersByRank(players: ActivePlayer[], winner: ActivePlayer) {
+	private sortPlayersByRank(players: ActivePlayer[], winner?: ActivePlayer): ActivePlayer[] {
 		return players.sort((playerA, playerB) => {
 			if (playerA === winner) return -1;
 			if (playerB === winner) return 1;
@@ -88,5 +102,32 @@ export class StatisticsModel {
 
 			return playerB.trackedData.cities.cities.length - playerA.trackedData.cities.cities.length;
 		});
+	}
+
+	private sortTeamsByRank(teams: Team[], winner?: Team): ActivePlayer[] {
+		const sortedTeams = teams.sort((teamA, teamB) => {
+			if (teamA.getNumber() === winner?.getNumber()) {
+				return -1;
+			}
+			if (teamB.getNumber() === winner?.getNumber()) {
+				return 1;
+			}
+
+			// Sort teams by who has members that have lived the longest
+			const teamAPlayers = teamA.getMembers();
+			const teamBPlayers = teamB.getMembers();
+
+			const teamALongestLife = Math.max(...teamAPlayers.map((player) => player.trackedData.turnDied));
+			const teamBLongestLife = Math.max(...teamBPlayers.map((player) => player.trackedData.turnDied));
+
+			if (teamALongestLife !== teamBLongestLife) {
+				return teamBLongestLife - teamALongestLife;
+			}
+
+			return getCityCount(teamB) - getCityCount(teamA);
+		});
+
+		const winningPlayer = getHighestPriorityParticipant(winner);
+		return sortedTeams.flatMap((team) => this.sortPlayersByRank(team.getMembers(), winningPlayer));
 	}
 }

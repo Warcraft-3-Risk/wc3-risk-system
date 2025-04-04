@@ -1,5 +1,6 @@
 import { NameManager } from '../managers/names/name-manager';
 import { ActivePlayer } from '../player/types/active-player';
+import { getParticipantNamePrefixedWithOptionalTeamNumber } from '../utils/participant-entity';
 import { ComputeRatio } from '../utils/utils';
 import { StatisticsModel } from './statistics-model';
 import { UNIT_ID } from 'src/configs/unit-id';
@@ -17,7 +18,7 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 		{
 			size: 0.11,
 			header: 'Player Names',
-			textFunction: (player) => NameManager.getInstance().getDisplayName(player.getPlayer()),
+			textFunction: (player) => getParticipantNamePrefixedWithOptionalTeamNumber(player.getPlayer()),
 		},
 		{
 			size: 0.04,

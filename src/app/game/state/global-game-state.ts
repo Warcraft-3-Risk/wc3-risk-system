@@ -2,13 +2,14 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import { TURN_DURATION_IN_SECONDS } from 'src/configs/game-settings';
 import { StateData } from '../game-mode/state/state-data';
+import { ParticipantEntity } from 'src/app/utils/participant-entity';
 
 export type MatchState = 'modeSelection' | 'preMatch' | 'inProgress' | 'postMatch';
 
 export interface GameData {
 	turn: number;
 	ticks: number;
-	leader: ActivePlayer;
+	leader?: ParticipantEntity;
 	matchState: MatchState;
 	gameType?: GameType;
 	matchCount: number;
@@ -38,7 +39,7 @@ export class GlobalGameData {
 			matchState: 'preMatch',
 			matchCount: this.getInstance().data.matchCount + 1,
 			matchPlayers: players,
-			leader: players[0],
+			leader: undefined,
 			stateData: { ...this.getInstance().data?.stateData },
 			gameType: this.getInstance().data.gameType,
 		} as GameData;
@@ -48,7 +49,7 @@ export class GlobalGameData {
 		return {
 			turn: 0,
 			ticks: TURN_DURATION_IN_SECONDS,
-			leader: null,
+			leader: undefined,
 			matchState: 'modeSelection',
 			gameType: null,
 			matchCount: 0,
@@ -70,10 +71,10 @@ export class GlobalGameData {
 		this.getInstance().data.ticks = v;
 	}
 
-	public static get leader(): ActivePlayer {
+	public static get leader(): ParticipantEntity {
 		return this.getInstance().data.leader;
 	}
-	public static set leader(v: ActivePlayer) {
+	public static set leader(v: ParticipantEntity) {
 		this.getInstance().data.leader = v;
 	}
 
