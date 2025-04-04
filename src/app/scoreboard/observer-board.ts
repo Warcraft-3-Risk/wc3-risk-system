@@ -15,10 +15,6 @@ export class ObserverBoard extends Scoreboard {
 	private readonly DEATHS_COL: number = 6;
 	private readonly STATUS_COL: number = 7;
 
-
-	private playerActions: Map<player, { total: number, lastCheck: number }> = new Map();
-	private updateTimer: timer;
-
 	public constructor(players: ActivePlayer[]) {
 		super();
 
@@ -26,29 +22,25 @@ export class ObserverBoard extends Scoreboard {
 		this.size = this.players.length + 3;
 		ShuffleArray(this.players);
 
-		for (const player of this.players) {
-			this.playerActions.set(player.getPlayer(), { total: 0, lastCheck: 0 });
-		}
-
-		MultiboardSetColumnCount(this.board, 8);
+		MultiboardSetColumnCount(this.board, 7);
 
 		for (let i = 1; i <= this.size; i++) {
 			MultiboardSetRowCount(this.board, MultiboardGetRowCount(this.board) + 1);
-			this.setItemWidth(7.0, i, this.PLAYER_COL);
-			this.setItemWidth(5.0, i, this.INCOME_COL);
-			this.setItemWidth(3.9, i, this.GOLD_COL);
-			this.setItemWidth(4.4, i, this.CITIES_COL);
-			this.setItemWidth(4.5, i, this.KILLS_COL);
-			this.setItemWidth(4.5, i, this.DEATHS_COL);
+			this.setItemWidth(6.2, i, this.PLAYER_COL);
+			this.setItemWidth(3.9, i, this.INCOME_COL);
+			this.setItemWidth(3.0, i, this.GOLD_COL);
+			this.setItemWidth(2.6, i, this.CITIES_COL);
+			this.setItemWidth(3.9, i, this.KILLS_COL);
+			this.setItemWidth(3.9, i, this.DEATHS_COL);
 			this.setItemWidth(3.8, i, this.STATUS_COL);
 		}
 
 		this.setItemValue(`${HexColors.TANGERINE}Player|r`, 1, this.PLAYER_COL);
-		this.setItemValue(`${HexColors.TANGERINE}Income|r`, 1, this.INCOME_COL);
-		this.setItemValue(`${HexColors.TANGERINE}Gold|r`, 1, this.GOLD_COL);
-		this.setItemValue(`${HexColors.TANGERINE}Cities|r`, 1, this.CITIES_COL);
-		this.setItemValue(`${HexColors.TANGERINE}Kills|r`, 1, this.KILLS_COL);
-		this.setItemValue(`${HexColors.TANGERINE}Deaths|r`, 1, this.DEATHS_COL);
+		this.setItemValue(`${HexColors.TANGERINE}Inc|r`, 1, this.INCOME_COL);
+		this.setItemValue(`${HexColors.TANGERINE}G|r`, 1, this.GOLD_COL);
+		this.setItemValue(`${HexColors.TANGERINE}C|r`, 1, this.CITIES_COL);
+		this.setItemValue(`${HexColors.TANGERINE}K|r`, 1, this.KILLS_COL);
+		this.setItemValue(`${HexColors.TANGERINE}D|r`, 1, this.DEATHS_COL);
 		this.setItemValue(`${HexColors.TANGERINE}Status|r`, 1, this.STATUS_COL);
 
 		this.setItemWidth(20.0, this.size, this.PLAYER_COL);
@@ -66,10 +58,6 @@ export class ObserverBoard extends Scoreboard {
 		MultiboardMinimize(this.board, false);
 		this.setVisibility(false);
 
-		this.updateTimer = CreateTimer();
-		TimerStart(this.updateTimer, 1.0, true, () => {
-			this.updatePartial();
-		});
 	}
 
 	public updateFull(): void {
@@ -116,11 +104,6 @@ export class ObserverBoard extends Scoreboard {
 	}
 
 	public destroy() {
-		if (this.updateTimer) {
-			DestroyTimer(this.updateTimer);
-			this.updateTimer = null;
-		}
-
 		this.players = null;
 		DestroyMultiboard(this.board);
 		this.board = null;
