@@ -94,8 +94,29 @@ Frame "BACKDROP" "TeamSelectionBackdrop" INHERITS "BackdropTemplate" {
         }
     }
 
-    Frame "TEXT" "TimerLabel" INHERITS "TextTemplateMd" {
-        SetPoint BOTTOM, "TeamSelectionBackdrop", BOTTOM, 0.0, 0.01,
-        Text "Start in: ",
+    Frame "GLUETEXTBUTTON" "TeamSelectionStartButton" INHERITS WITHCHILDREN "ButtonTemplateMd" {
+        SetPoint BOTTOM, "TeamSelectionBackdrop", BOTTOM, 0.0, 0.021,
+        Width 0.095,
+        Height 0.025,
+
+        ButtonText "TeamSelectionStartButtonText",
+        Frame "TEXT" "TeamSelectionStartButtonText" INHERITS "TextTemplateMd" {
+            FontColor 1 0.8 0 1.0,
+            Text "Start Game",
+            FontJustificationOffset 0.0 -0.002,
+        }
+    }
+
+    Frame "TEXT" "TeamSelectionTimerLabel" INHERITS "TextTemplateSm" {
+        SetPoint TOP, "TeamSelectionStartButton", BOTTOM, -0.012, -0.004,
+        Width 0.065,
+        FontColor 1 0.8 0 1.0,
+        Text "Auto-start in:",
+    }
+
+    Frame "TEXT" "TeamSelectionTimerAmount" INHERITS "TextTemplateSm" {
+        SetPoint LEFT, "TeamSelectionTimerLabel", RIGHT, 0.0, 0.0,
+        FontColor 1 0.8 0 1.0,
+        Text "300",
     }
 }
