@@ -101,7 +101,7 @@ export class ScoreboardManager {
 				? ` ${HexColors.RED}(Overtime)|r`
 				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
 
-			this.setTitle(`N/A ${overtimeSuffix}`);
+			this.setTitle(`Risk Europe${overtimeSuffix}`);
 		}
 	}
 }
