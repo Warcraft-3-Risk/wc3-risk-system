@@ -1,49 +1,30 @@
-import { PlayerList } from '../entity/player/player-list';
 import { Resetable } from '../interfaces/resettable';
 import { NameManager } from '../names/name-manager';
 import { SettingsController } from '../settings/settings-controller';
-
-interface playerData {
-	bench: number;
-	team: number;
-	slot: number;
-}
-
-interface TeamData {
-	players: Set<player>;
-	slots: boolean[];
-	captain: player | null;
-	color: string | null;
-}
+import { TeamSelectionModel } from './team-selection-model';
 
 export class TeamSelectionView implements Resetable {
-	public static instance: TeamSelectionView;
-	private bench: Set<player>;
-	private playerData: Map<player, playerData>;
-	private teams: Map<number, TeamData>;
 	private backdrop: framehandle;
 	private timerFrame: framehandle;
+	private teamSlotFrames: Map<number, framehandle[]>;
 
-	public constructor(timerDuration: number) {
+	public constructor(model: TeamSelectionModel) {
 		if (!BlzLoadTOCFile('war3mapImported\\team_selection.toc')) {
 			print('Failed to load team_selection.toc');
+
 			return;
 		}
 
-		if (!BlzLoadTOCFile('war3mapImported\\components.toc')) {
-			print('Failed to load components.toc');
-			return;
-		}
-
-		this.bench = new Set<player>();
-		this.playerData = new Map<player, playerData>();
-		this.teams = new Map<number, TeamData>();
-
-		this.backdrop = BlzCreateFrame('TeamSelectionBackdrop', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
+		this.teamSlotFrames = new Map<number, framehandle[]>();
+		this.backdrop = BlzCreateFrame('TeamSelectionBackdrop', BlzGetOriginFrame(ORIGIN_FRAME_WORLD_FRAME, 0), 0, 0);
 		BlzFrameSetPoint(this.backdrop, FRAMEPOINT_CENTER, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_CENTER, 0, -0.01);
-		this.buildBench();
+		const startButton: framehandle = BlzFrameGetChild(this.backdrop, 3);
+		const mouseControlFrame = BlzCreateSimpleFrame('TeamSelectionFunctionalStartButton', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0);
+		BlzFrameSetPoint(mouseControlFrame, FRAMEPOINT_CENTER, startButton, FRAMEPOINT_CENTER, 0, -0.002);
+		BlzFrameSetSize(mouseControlFrame, BlzFrameGetWidth(startButton), BlzFrameGetHeight(startButton) - 0.002);
+		BlzFrameSetEnable(startButton, false);
+		this.renderBench(model);
 		this.buildTeamContainers();
-		// this.update(timerDuration);
 	}
 
 	public reset(): void {
@@ -54,61 +35,30 @@ export class TeamSelectionView implements Resetable {
 		BlzFrameSetText(this.timerFrame, time.toString());
 	}
 
-	public hide(): void {
-		BlzFrameSetEnable(this.backdrop, false);
-		BlzFrameSetVisible(this.backdrop, false);
+	public setVisibility(visibility: boolean): void {
+		BlzFrameSetEnable(this.backdrop, visibility);
+		BlzFrameSetVisible(this.backdrop, visibility);
+		BlzFrameSetEnable(BlzGetFrameByName('TeamSelectionFunctionalStartButton', 0), false);
 	}
 
 	public isVisible(): boolean {
 		return BlzFrameIsVisible(this.backdrop);
 	}
 
-	public removePlayer(): void {
-		//TODO Used to remove a player from the team selection system when they leave the game
-	}
+	public refreshBench(model: TeamSelectionModel): void {}
 
-	private buildBench(): void {
-		PlayerList.getInstance()
-			.getPlayers()
-			.forEach((player) => {
-				this.bench.add(player);
-			});
-
-		let frameIndex: number = 0;
-		let initialOffset: number = -0.003;
-		const offSetModifier: number = -0.012;
+	private renderBench(model: TeamSelectionModel): void {
 		const parentFrame: framehandle = BlzGetFrameByName('BenchButton', 0);
+		const step: number = -0.012;
+		let yOffset: number = -0.003;
 
-		this.bench.forEach((player) => {
-			const playerList: framehandle = BlzCreateFrame('TextTemplateSm', parentFrame, 5, frameIndex);
+		model.playerData.forEach((playerData, player) => {
+			const textFrame: framehandle = BlzCreateFrame('TextTemplateSm', parentFrame, 0, model.playerData.get(player).benchSlot);
+			BlzFrameSetPoint(textFrame, FRAMEPOINT_TOP, parentFrame, FRAMEPOINT_BOTTOM, 0.0, yOffset);
+			BlzFrameSetText(textFrame, `${NameManager.getInstance().getAcct(player)}`);
 
-			BlzFrameSetPoint(playerList, FRAMEPOINT_TOP, parentFrame, FRAMEPOINT_BOTTOM, 0.0, initialOffset);
-			BlzFrameSetText(playerList, `${NameManager.getInstance().getAcct(player)}`);
-			this.playerData.set(player, { bench: frameIndex, team: -1, slot: -1 });
-
-			frameIndex++;
-			initialOffset += offSetModifier;
+			yOffset += step;
 		});
-	}
-
-	private handleBenchButton(): void {
-		const trigger: trigger = CreateTrigger();
-
-		BlzTriggerRegisterFrameEvent(trigger, BlzGetFrameByName('BenchButton', 0), FRAMEEVENT_CONTROL_CLICK);
-
-		TriggerAddCondition(
-			trigger,
-			Condition(() => {
-				const triggerPlayer: player = GetTriggerPlayer();
-				const playerData = this.playerData.get(triggerPlayer);
-
-				// if (playerData && playerData.team != -1) {
-				// 	this.leaveTeam(triggerPlayer);
-				// }
-
-				return true;
-			})
-		);
 	}
 
 	private buildTeamContainers(): void {
@@ -130,59 +80,29 @@ export class TeamSelectionView implements Resetable {
 
 		for (let i = 0; i < teamsPerRow; i++) {
 			const teamContainerFrame: framehandle = BlzCreateFrame('TeamContainerTemplate', this.backdrop, 0, teamNumber);
+			const slotContext: number = teamNumber * 100;
+			const slotFrames: framehandle[] = [];
 			BlzFrameSetPoint(teamContainerFrame, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, xOffset, yOffset);
 			const teamNameFrame: framehandle = BlzGetFrameByName('TeamName', teamNumber);
 			BlzFrameSetText(teamNameFrame, `Team ${teamNumber}`);
-			const slotContext: number = teamNumber * 100;
-			const firstSlotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, slotContext); //context = 100
-			BlzFrameSetPoint(firstSlotFrame, FRAMEPOINT_TOP, teamContainerFrame, FRAMEPOINT_TOP, -0.005, -0.02);
-			BlzFrameSetText(firstSlotFrame, 'Open Slot (Captain)');
+			const captainSlotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, slotContext);
+			BlzFrameSetPoint(captainSlotFrame, FRAMEPOINT_TOP, teamContainerFrame, FRAMEPOINT_TOP, -0.005, -0.02);
+			BlzFrameSetText(captainSlotFrame, 'Open Slot (Captain)');
+
+			slotFrames.push(captainSlotFrame);
 
 			for (let j = 1; j < playersPerTeam; j++) {
-				const slotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, slotContext + j); //context = 100 + 1
-				const parentFrame: framehandle = BlzGetFrameByName('SlotButtonTemplate', slotContext + j - 1); //context = 100 + j - 1
+				const slotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, slotContext + j);
+				const parentFrame: framehandle = BlzGetFrameByName('SlotButtonTemplate', slotContext + j - 1);
+
 				BlzFrameSetPoint(slotFrame, FRAMEPOINT_TOP, parentFrame, FRAMEPOINT_BOTTOM, 0.0, -0.001);
+
+				slotFrames.push(slotFrame);
 			}
 
+			this.teamSlotFrames.set(teamNumber, slotFrames);
 			teamNumber++;
 			xOffset += 0.13;
 		}
 	}
-
-	// private leaveTeam(player: player) {
-	// 	const playerData = this.playerData.get(player);
-
-	// 	if (playerData && playerData.team != -1) {
-	// 		BlzFrameSetText(BlzGetFrameByName(`TeamSlot`, playerData.slot), `-`);
-	// 		this.teams.get(playerData.team).slots[playerData.slot] = false;
-	// 		BlzFrameSetText(BlzGetFrameByName('PlayerList', playerData.bench), `${NameManager.getInstance().getAcct(player)}`);
-	// 		this.teams.get(playerData.team)?.players.delete(player);
-
-	// 		if (this.teams.get(playerData.team)?.captain === player) {
-	// 			this.reassignCaptain(playerData.team);
-	// 		}
-
-	// 		playerData.slot = -1;
-	// 		playerData.team = -1;
-	// 	}
-	// }
-
-	// private reassignCaptain(teamNumber: number) {
-	// 	const teamData = this.teams.get(teamNumber);
-
-	// 	if (teamData) {
-	// 		const previousCaptain = teamData.captain;
-	// 		const playersIterator = teamData.players.values();
-	// 		const newCaptain = playersIterator.next().value || null;
-	// 		teamData.captain = newCaptain;
-
-	// 		if (previousCaptain && previousCaptain == GetLocalPlayer()) {
-	// 			BlzFrameSetEnable(BlzGetFrameByName('EscMenuEditBoxTemplate', teamNumber), false);
-	// 		}
-
-	// 		if (newCaptain && newCaptain == GetLocalPlayer()) {
-	// 			BlzFrameSetEnable(BlzGetFrameByName('EscMenuEditBoxTemplate', teamNumber), true);
-	// 		}
-	// 	}
-	// }
 }

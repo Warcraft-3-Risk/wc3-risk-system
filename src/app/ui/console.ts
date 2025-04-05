@@ -137,3 +137,17 @@ export function AllyMenuFFASetup() {
 		BlzFrameSetVisible(BlzGetFrameByName('PlayerBanner', i), false);
 	}
 }
+
+/**
+ * Sets the visibility the default Warcraft 3 top and bottom UI, excludes the top ui buttons
+ * @param hide boolean to control visibility of default UI
+ */
+export function HideDefaultUI(hide: boolean) {
+	BlzFrameSetVisible(BlzGetFrameByName('ConsoleTopBar', 0), !hide);
+	BlzFrameSetVisible(BlzGetFrameByName('ResourceBarFrame', 0), !hide);
+	BlzFrameSetVisible(BlzGetFrameByName('ConsoleBottomBar', 0), !hide);
+	BlzFrameSetVisible(BlzGetFrameByName('ConsoleUIBackdrop', 0), !hide);
+	BlzFrameSetVisible(BlzGetFrameByName('MiniMapFrame', 0), !hide);
+	BlzFrameSetVisible(BlzFrameGetChild(BlzGetFrameByName('ConsoleUI', 0), 4), !hide);
+	BlzFrameSetVisible(BlzFrameGetChild(BlzFrameGetChild(BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 5), 0), !hide);
+}

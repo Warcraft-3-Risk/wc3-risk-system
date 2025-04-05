@@ -84,7 +84,7 @@ Frame "BACKDROP" "ButtonDisabledPushedBackdropTemplate" {
 
 Frame "HIGHLIGHT" "ButtonMouseOverHighlightTemplate" {
     HighlightType "FILETEXTURE",
-    HighlightAlphaFile "UI\Widgets\EscMenu\Orc\orc-options-button-highlight.blp",
+    HighlightAlphaFile "UI\Widgets\EscMenu\Human\human-options-button-highlight.blp",
     HighlightAlphaMode "ADD",
 }
 
@@ -144,6 +144,34 @@ Frame "GLUETEXTBUTTON" "ButtonTemplateSm" {
     ControlMouseOverHighlight "ButtonMouseOverHighlightTemplate",
     Frame "HIGHLIGHT" "ButtonMouseOverHighlightTemplate" INHERITS "ButtonMouseOverHighlightTemplate" {
     }
+}
+
+Texture "MouseControlButtonTemplateHighlight" {
+    File "UI\Widgets\EscMenu\Human\human-options-button-highlight.blp",
+    AlphaMode "ADD",
+}
+
+String "SimpleButtonTemplateString" {
+    Font "Fonts\BLQ55Web.ttf", 0.012,
+    FontColor 1.0 0.8 0.0,
+    FontFlags "IGNORENEWLINES",
+    FontJustificationH JUSTIFYCENTER,
+    FontJustificationV JUSTIFYMIDDLE,
+}
+
+Frame "GLUETEXTBUTTON" "VisualButtonTemplate" {
+    ControlBackdrop "ButtonBackdropTemplate",
+    Frame "BACKDROP" "ButtonBackdropTemplate" INHERITS "ButtonBackdropTemplate" {
+        BackdropCornerSize  0.0125,
+    }
+}
+
+Frame "SIMPLEBUTTON" "MouseControlButtonTemplate" {
+    Width 0.0,
+    Height 0.0,
+    UseHighlight "MouseControlButtonTemplateHighlight",
+    NormalText "SimpleButtonTemplateString" "Start",
+    DisabledText "SimpleButtonTemplateString" "",
 }
 
 Frame "EDITBOX" "EditBoxTemplate" {

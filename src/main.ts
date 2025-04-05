@@ -3,6 +3,7 @@ import { MAP_NAME } from './app/utils/map-info';
 import { CountrySetup } from './app/country/country-setup';
 import { GameStateManager } from './app/game/game-state-manager';
 import { NameManager } from './app/names/name-manager';
+import { HideDefaultUI } from './app/ui/console';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -41,6 +42,7 @@ function tsMain() {
 		TimerStart(onLoadTimer, 1.0, false, () => {
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
+			HideDefaultUI(true);
 			GameStateManager.getInstance();
 		});
 	} catch (e) {

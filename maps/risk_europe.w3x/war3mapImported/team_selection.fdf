@@ -12,6 +12,9 @@ Frame "GLUETEXTBUTTON" "SlotButtonTemplate" INHERITS WITHCHILDREN "ButtonTemplat
     }
 }
 
+Frame "SIMPLEBUTTON" "TeamSelectionFunctionalStartButton" INHERITS "MouseControlButtonTemplate" {
+}
+
 Frame "FRAME" "TeamContainerTemplate" {
     UseActiveContext,
     Width 0.11,
@@ -94,17 +97,10 @@ Frame "BACKDROP" "TeamSelectionBackdrop" INHERITS "BackdropTemplate" {
         }
     }
 
-    Frame "GLUETEXTBUTTON" "TeamSelectionStartButton" INHERITS WITHCHILDREN "ButtonTemplateMd" {
+    Frame "GLUETEXTBUTTON" "TeamSelectionStartButton" INHERITS WITHCHILDREN "VisualButtonTemplate" {
         SetPoint BOTTOM, "TeamSelectionBackdrop", BOTTOM, 0.0, 0.021,
         Width 0.095,
         Height 0.025,
-
-        ButtonText "TeamSelectionStartButtonText",
-        Frame "TEXT" "TeamSelectionStartButtonText" INHERITS "TextTemplateMd" {
-            FontColor 1 0.8 0 1.0,
-            Text "Start Game",
-            FontJustificationOffset 0.0 -0.002,
-        }
     }
 
     Frame "TEXT" "TeamSelectionTimerLabel" INHERITS "TextTemplateSm" {
