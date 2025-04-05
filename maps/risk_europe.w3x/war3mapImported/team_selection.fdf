@@ -15,6 +15,9 @@ Frame "GLUETEXTBUTTON" "SlotButtonTemplate" INHERITS WITHCHILDREN "ButtonTemplat
 Frame "SIMPLEBUTTON" "TeamSelectionFunctionalStartButton" INHERITS "MouseControlButtonTemplate" {
 }
 
+Frame "TEXT" "BenchSlotText" INHERITS "TextTemplateSm" {
+}
+
 Frame "FRAME" "TeamContainerTemplate" {
     UseActiveContext,
     Width 0.11,

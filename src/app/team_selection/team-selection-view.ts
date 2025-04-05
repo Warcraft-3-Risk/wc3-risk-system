@@ -1,9 +1,9 @@
 import { Resetable } from '../interfaces/resettable';
 import { NameManager } from '../names/name-manager';
 import { SettingsController } from '../settings/settings-controller';
-import { TeamSelectionModel } from './team-selection-model';
+import { PlayerData, TeamSelectionModel } from './team-selection-model';
 
-export class TeamSelectionView implements Resetable {
+export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 	private backdrop: framehandle;
 	private timerFrame: framehandle;
 	private teamSlotFrames: Map<number, framehandle[]>;
@@ -27,8 +27,19 @@ export class TeamSelectionView implements Resetable {
 		this.buildTeamContainers();
 	}
 
-	public reset(): void {
-		//TODO complete reset to prepare for new game/team selection state
+	public reset(model: TeamSelectionModel): void {
+		const data: Map<player, PlayerData> = model.getPlayerData();
+
+		data.forEach((playerData, player) => {
+			const textFrame: framehandle = BlzGetFrameByName('BenchSlotText', data.get(player).benchSlot);
+			BlzFrameSetText(textFrame, `${NameManager.getInstance().getAcct(player)}`);
+		});
+
+		this.teamSlotFrames.forEach((slotFrames) => {
+			slotFrames.forEach((frame, index) => {
+				index === 0 ? BlzFrameSetText(frame, 'Open Slot (Captain)') : BlzFrameSetText(frame, 'Open Slot (Member)');
+			});
+		});
 	}
 
 	public update(time: number): void {
@@ -45,15 +56,48 @@ export class TeamSelectionView implements Resetable {
 		return BlzFrameIsVisible(this.backdrop);
 	}
 
-	public refreshBench(model: TeamSelectionModel): void {}
+	public addPlayerToBench(player: player, benchSlot: number): void {
+		const textFrame: framehandle = BlzGetFrameByName('BenchSlotText', benchSlot);
+		BlzFrameSetText(textFrame, `${NameManager.getInstance().getAcct(player)}`);
+	}
+
+	public removePlayerFromBench(benchSlot: number): void {
+		const textFrame: framehandle = BlzGetFrameByName('BenchSlotText', benchSlot);
+		BlzFrameSetText(textFrame, `-`);
+	}
+
+	public addPlayerToTeam(player: player, model: TeamSelectionModel): void {
+		const data = model.getPlayerData().get(player);
+
+		if (!data) return;
+
+		const slotFrame = this.teamSlotFrames.get(data.teamNumber)[data.teamSlot];
+
+		if (!slotFrame) return;
+
+		BlzFrameSetText(slotFrame, `${NameManager.getInstance().getAcct(player)}`);
+	}
+
+	public removePlayerFromTeam(player: player, model: TeamSelectionModel) {
+		const data = model.getPlayerData().get(player);
+
+		if (!data || data.teamNumber === -1) return;
+
+		const slotFrame = this.teamSlotFrames.get(data.teamNumber)[data.teamSlot];
+
+		if (!slotFrame) return;
+
+		data.teamSlot === 0 ? BlzFrameSetText(slotFrame, 'Open Slot (Captain)') : BlzFrameSetText(slotFrame, 'Open Slot (Member)');
+	}
 
 	private renderBench(model: TeamSelectionModel): void {
+		const data: Map<player, PlayerData> = model.getPlayerData();
 		const parentFrame: framehandle = BlzGetFrameByName('BenchButton', 0);
 		const step: number = -0.012;
 		let yOffset: number = -0.003;
 
-		model.playerData.forEach((playerData, player) => {
-			const textFrame: framehandle = BlzCreateFrame('TextTemplateSm', parentFrame, 0, model.playerData.get(player).benchSlot);
+		data.forEach((playerData, player) => {
+			const textFrame: framehandle = BlzCreateFrame('BenchSlotText', parentFrame, 0, data.get(player).benchSlot);
 			BlzFrameSetPoint(textFrame, FRAMEPOINT_TOP, parentFrame, FRAMEPOINT_BOTTOM, 0.0, yOffset);
 			BlzFrameSetText(textFrame, `${NameManager.getInstance().getAcct(player)}`);
 
@@ -88,6 +132,7 @@ export class TeamSelectionView implements Resetable {
 			const captainSlotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, slotContext);
 			BlzFrameSetPoint(captainSlotFrame, FRAMEPOINT_TOP, teamContainerFrame, FRAMEPOINT_TOP, -0.005, -0.02);
 			BlzFrameSetText(captainSlotFrame, 'Open Slot (Captain)');
+			BlzFrameSetEnable(BlzFrameGetChild(teamContainerFrame, 0), false);
 
 			slotFrames.push(captainSlotFrame);
 
@@ -104,5 +149,9 @@ export class TeamSelectionView implements Resetable {
 			teamNumber++;
 			xOffset += 0.13;
 		}
+	}
+
+	private disableTeamSettingsButtons() {
+		//TODO
 	}
 }

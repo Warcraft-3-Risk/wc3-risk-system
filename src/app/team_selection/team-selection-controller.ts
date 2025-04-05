@@ -1,6 +1,6 @@
 import { PlayerList } from '../entity/player/player-list';
 import { Resetable } from '../interfaces/resettable';
-import { TeamSelectionModel } from './team-selection-model';
+import { PlayerData, TeamSelectionModel } from './team-selection-model';
 import { TeamSelectionView } from './team-selection-view';
 
 export class TeamSelectionController implements Resetable {
@@ -10,8 +10,7 @@ export class TeamSelectionController implements Resetable {
 
 	private constructor() {
 		this.model = new TeamSelectionModel();
-		this.setupInitialBench();
-
+		this.buildBench();
 		this.view = new TeamSelectionView(this.model);
 		this.registerBenchClick();
 	}
@@ -25,7 +24,8 @@ export class TeamSelectionController implements Resetable {
 	}
 
 	public reset(): void {
-		throw new Error('Method not implemented.');
+		this.model.reset();
+		this.view.reset(this.model);
 	}
 
 	public isVisible(): boolean {
@@ -40,7 +40,7 @@ export class TeamSelectionController implements Resetable {
 		this.view.update(time);
 	}
 
-	private setupInitialBench(): void {
+	private buildBench(): void {
 		let index = 0;
 
 		for (const player of PlayerList.getInstance().getPlayers()) {
@@ -57,12 +57,20 @@ export class TeamSelectionController implements Resetable {
 			trigger,
 			Condition(() => {
 				const player = GetTriggerPlayer();
+				const playerData: PlayerData = this.model.getPlayerData().get(player);
+
+				if (!playerData || playerData.teamNumber === -1) return true;
 
 				this.model.removePlayerFromTeam(player);
-				// this.view.refresh(this.model);
+				this.view.removePlayerFromTeam(player, this.model);
+				this.view.addPlayerToBench(player, playerData.benchSlot);
 
 				return true;
 			})
 		);
+	}
+
+	private registerTeamButtonClick(): void {
+		//TODO
 	}
 }
