@@ -3,10 +3,17 @@ import { NameManager } from '../names/name-manager';
 import { SettingsController } from '../settings/settings-controller';
 import { PlayerData, TeamSelectionModel } from './team-selection-model';
 
+export interface SlotFrameData {
+	context: number;
+	teamNumber: number;
+	isCaptainSlot: boolean;
+}
+
 export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 	private backdrop: framehandle;
 	private timerFrame: framehandle;
-	private teamSlotFrames: Map<number, framehandle[]>;
+	private slotFrameData: Map<framehandle, SlotFrameData>;
+	private slotFrameLookup: Map<string, framehandle>;
 
 	public constructor(model: TeamSelectionModel) {
 		if (!BlzLoadTOCFile('war3mapImported\\team_selection.toc')) {
@@ -15,7 +22,8 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 			return;
 		}
 
-		this.teamSlotFrames = new Map<number, framehandle[]>();
+		this.slotFrameData = new Map<framehandle, SlotFrameData>();
+		this.slotFrameLookup = new Map<string, framehandle>();
 		this.backdrop = BlzCreateFrame('TeamSelectionBackdrop', BlzGetOriginFrame(ORIGIN_FRAME_WORLD_FRAME, 0), 0, 0);
 		BlzFrameSetPoint(this.backdrop, FRAMEPOINT_CENTER, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_CENTER, 0, -0.01);
 		const startButton: framehandle = BlzFrameGetChild(this.backdrop, 3);
@@ -25,6 +33,7 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 		BlzFrameSetEnable(startButton, false);
 		this.renderBench(model);
 		this.buildTeamContainers();
+		this.disableTeamSettingsButtons();
 	}
 
 	public reset(model: TeamSelectionModel): void {
@@ -35,10 +44,8 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 			BlzFrameSetText(textFrame, `${NameManager.getInstance().getAcct(player)}`);
 		});
 
-		this.teamSlotFrames.forEach((slotFrames) => {
-			slotFrames.forEach((frame, index) => {
-				index === 0 ? BlzFrameSetText(frame, 'Open Slot (Captain)') : BlzFrameSetText(frame, 'Open Slot (Member)');
-			});
+		this.slotFrameData.forEach((data, frame) => {
+			data.isCaptainSlot === true ? BlzFrameSetText(frame, 'Open Slot (Captain)') : BlzFrameSetText(frame, 'Open Slot (Member)');
 		});
 	}
 
@@ -71,23 +78,44 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 
 		if (!data) return;
 
-		const slotFrame = this.teamSlotFrames.get(data.teamNumber)[data.teamSlot];
+		const key = `${data.teamNumber}-${data.teamSlot}`;
+		const slotFrame = this.slotFrameLookup.get(key);
 
 		if (!slotFrame) return;
 
-		BlzFrameSetText(slotFrame, `${NameManager.getInstance().getAcct(player)}`);
+		BlzFrameSetText(slotFrame, NameManager.getInstance().getAcct(player));
 	}
 
-	public removePlayerFromTeam(player: player, model: TeamSelectionModel) {
+	public removePlayerFromTeam(player: player, model: TeamSelectionModel): void {
 		const data = model.getPlayerData().get(player);
 
 		if (!data || data.teamNumber === -1) return;
 
-		const slotFrame = this.teamSlotFrames.get(data.teamNumber)[data.teamSlot];
+		const key = `${data.teamNumber}-${data.teamSlot}`;
+		const slotFrame = this.slotFrameLookup.get(key);
 
 		if (!slotFrame) return;
 
-		data.teamSlot === 0 ? BlzFrameSetText(slotFrame, 'Open Slot (Captain)') : BlzFrameSetText(slotFrame, 'Open Slot (Member)');
+		const slotInfo = this.slotFrameData.get(slotFrame);
+		const text = slotInfo?.isCaptainSlot ? 'Open Slot (Captain)' : 'Open Slot (Member)';
+		BlzFrameSetText(slotFrame, text);
+	}
+
+	public getSlotFrameData(): Map<framehandle, SlotFrameData> {
+		return this.slotFrameData;
+	}
+
+	public getSlotFrameKeys(): Map<string, framehandle> {
+		return this.slotFrameLookup;
+	}
+
+	public disableTeamSettingsButtons() {
+		let teamNumber: number = 1;
+
+		for (let i = 1; i <= 12; i++) {
+			BlzFrameSetEnable(BlzGetFrameByName('TeamOptionsButton', teamNumber), false); //TODO test to make sure this works
+			teamNumber++;
+		}
 	}
 
 	private renderBench(model: TeamSelectionModel): void {
@@ -125,33 +153,37 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 		for (let i = 0; i < teamsPerRow; i++) {
 			const teamContainerFrame: framehandle = BlzCreateFrame('TeamContainerTemplate', this.backdrop, 0, teamNumber);
 			const slotContext: number = teamNumber * 100;
-			const slotFrames: framehandle[] = [];
 			BlzFrameSetPoint(teamContainerFrame, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, xOffset, yOffset);
 			const teamNameFrame: framehandle = BlzGetFrameByName('TeamName', teamNumber);
 			BlzFrameSetText(teamNameFrame, `Team ${teamNumber}`);
 			const captainSlotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, slotContext);
 			BlzFrameSetPoint(captainSlotFrame, FRAMEPOINT_TOP, teamContainerFrame, FRAMEPOINT_TOP, -0.005, -0.02);
 			BlzFrameSetText(captainSlotFrame, 'Open Slot (Captain)');
-			BlzFrameSetEnable(BlzFrameGetChild(teamContainerFrame, 0), false);
 
-			slotFrames.push(captainSlotFrame);
+			this.storeFrameData(captainSlotFrame, slotContext, teamNumber, true);
 
 			for (let j = 1; j < playersPerTeam; j++) {
-				const slotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, slotContext + j);
-				const parentFrame: framehandle = BlzGetFrameByName('SlotButtonTemplate', slotContext + j - 1);
+				const context: number = slotContext + j;
+				const slotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, context);
+				const parentFrame: framehandle = BlzGetFrameByName('SlotButtonTemplate', context - 1);
 
 				BlzFrameSetPoint(slotFrame, FRAMEPOINT_TOP, parentFrame, FRAMEPOINT_BOTTOM, 0.0, -0.001);
 
-				slotFrames.push(slotFrame);
+				this.storeFrameData(slotFrame, context, teamNumber, false);
 			}
 
-			this.teamSlotFrames.set(teamNumber, slotFrames);
 			teamNumber++;
 			xOffset += 0.13;
 		}
 	}
 
-	private disableTeamSettingsButtons() {
-		//TODO
+	private storeFrameData(frame: framehandle, context: number, teamNumber: number, isCaptain: boolean) {
+		this.slotFrameData.set(frame, {
+			context: context,
+			teamNumber: teamNumber,
+			isCaptainSlot: isCaptain,
+		});
+
+		this.slotFrameLookup.set(`${teamNumber}-${context}`, frame);
 	}
 }

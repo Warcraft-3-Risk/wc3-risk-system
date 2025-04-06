@@ -1,5 +1,6 @@
 import { PlayerList } from '../entity/player/player-list';
 import { Resetable } from '../interfaces/resettable';
+import { SettingsController } from '../settings/settings-controller';
 import { PlayerData, TeamSelectionModel } from './team-selection-model';
 import { TeamSelectionView } from './team-selection-view';
 
@@ -13,6 +14,7 @@ export class TeamSelectionController implements Resetable {
 		this.buildBench();
 		this.view = new TeamSelectionView(this.model);
 		this.registerBenchClick();
+		this.registerTeamButtonClick();
 	}
 
 	public static getInstance(): TeamSelectionController {
@@ -71,6 +73,24 @@ export class TeamSelectionController implements Resetable {
 	}
 
 	private registerTeamButtonClick(): void {
-		//TODO
+		const trigger = CreateTrigger();
+
+		this.view.getSlotFrameData().forEach((data, frame) => {
+			BlzTriggerRegisterFrameEvent(trigger, frame, FRAMEEVENT_CONTROL_CLICK);
+		});
+
+		TriggerAddCondition(
+			trigger,
+			Condition(() => {
+				//TODO
+				//This will need TODO the following (feel free to update the order)
+				//If player is on bench, remove player from bench in view
+				//If player is on a team, remove player from team in view/model & place player on new team in view/model
+				//Ensure captains are handled properly by checking if its a captain slot
+				//If they are clicking a slot they are already in, return true and do nothing
+
+				return true;
+			})
+		);
 	}
 }
