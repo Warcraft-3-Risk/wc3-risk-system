@@ -30,7 +30,7 @@ export class TeamSelectionState extends BaseGameState {
 					return;
 				}
 
-				teamSelectionController.update(remainingTime);
+				teamSelectionController.updateTimer(remainingTime);
 			})
 		);
 	}

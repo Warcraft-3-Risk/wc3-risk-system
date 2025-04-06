@@ -1,7 +1,6 @@
 import { PlayerList } from '../entity/player/player-list';
 import { Resetable } from '../interfaces/resettable';
-import { SettingsController } from '../settings/settings-controller';
-import { PlayerData, TeamSelectionModel } from './team-selection-model';
+import { PlayerData, TeamSelectionModel, TeamSlotData } from './team-selection-model';
 import { TeamSelectionView } from './team-selection-view';
 
 export class TeamSelectionController implements Resetable {
@@ -27,6 +26,7 @@ export class TeamSelectionController implements Resetable {
 
 	public reset(): void {
 		this.model.reset();
+		this.buildBench();
 		this.view.reset(this.model);
 	}
 
@@ -38,36 +38,41 @@ export class TeamSelectionController implements Resetable {
 		this.view.setVisibility(visibility);
 	}
 
-	public update(time: number): void {
-		this.view.update(time);
+	public updateTimer(time: number): void {
+		this.view.updateTimer(time);
 	}
 
 	private buildBench(): void {
 		let index = 0;
 
 		for (const player of PlayerList.getInstance().getPlayers()) {
-			this.model.addPlayerToBench(player, index);
+			this.model.registerPlayer(player, index);
 			index++;
 		}
 	}
 
 	private registerBenchClick(): void {
 		const trigger = CreateTrigger();
+
 		BlzTriggerRegisterFrameEvent(trigger, BlzGetFrameByName('BenchButton', 0), FRAMEEVENT_CONTROL_CLICK);
 
 		TriggerAddCondition(
 			trigger,
 			Condition(() => {
-				const player = GetTriggerPlayer();
-				const playerData: PlayerData = this.model.getPlayerData().get(player);
+				try {
+					const player = GetTriggerPlayer();
+					const playerData: PlayerData = this.model.getPlayerDataForPlayer(player);
 
-				if (!playerData || playerData.teamNumber === -1) return true;
+					if (playerData.teamNumber === -1) return true;
 
-				this.model.removePlayerFromTeam(player);
-				this.view.removePlayerFromTeam(player, this.model);
-				this.view.addPlayerToBench(player, playerData.benchSlot);
+					this.view.removePlayerFromTeam(player, this.model);
+					this.model.removePlayerFromTeam(player, playerData.teamNumber);
+					this.view.addPlayerToBench(player, playerData.benchSlotIndex);
 
-				return true;
+					return true;
+				} catch (error) {
+					print(`error ${error}`);
+				}
 			})
 		);
 	}
@@ -75,21 +80,37 @@ export class TeamSelectionController implements Resetable {
 	private registerTeamButtonClick(): void {
 		const trigger = CreateTrigger();
 
-		this.view.getSlotFrameData().forEach((data, frame) => {
-			BlzTriggerRegisterFrameEvent(trigger, frame, FRAMEEVENT_CONTROL_CLICK);
+		this.model.getTeamSlotData().forEach((slotData) => {
+			BlzTriggerRegisterFrameEvent(trigger, slotData.frame, FRAMEEVENT_CONTROL_CLICK);
 		});
 
 		TriggerAddCondition(
 			trigger,
 			Condition(() => {
-				//TODO
-				//This will need TODO the following (feel free to update the order)
-				//If player is on bench, remove player from bench in view
-				//If player is on a team, remove player from team in view/model & place player on new team in view/model
-				//Ensure captains are handled properly by checking if its a captain slot
-				//If they are clicking a slot they are already in, return true and do nothing
+				try {
+					const clickedFrame: framehandle = BlzGetTriggerFrame();
+					const clickedSlot: TeamSlotData = this.model.getTeamSlotForFrame(clickedFrame);
+					const player: player = GetTriggerPlayer();
+					const playerData: PlayerData = this.model.getPlayerDataForPlayer(player);
 
-				return true;
+					if (playerData.slotIndex === clickedSlot.slotIndex) return true;
+
+					if (playerData.teamNumber !== -1) {
+						this.view.removePlayerFromTeam(player, this.model);
+						this.model.removePlayerFromTeam(player, playerData.teamNumber);
+					} else {
+						this.view.removePlayerFromBench(playerData.benchSlotIndex);
+					}
+
+					const isCaptain: boolean = clickedSlot.isCaptainSlot;
+
+					this.model.addPlayerToTeam(player, clickedSlot.teamNumber, clickedSlot.slotIndex, isCaptain);
+					this.view.addPlayerToTeam(player, this.model);
+
+					return true;
+				} catch (error) {
+					print(`error ${error}`);
+				}
 			})
 		);
 	}
