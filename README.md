@@ -32,7 +32,7 @@ My risk system is designed for fellow Warcraft 3 enthusiasts who crave a unique 
 ## Features
 
 - Typescript based project that requires no code changes outside of configs to be fully useable
-- Easily configure codebase through clear and conside config files, no code editing needed!
+- Easily configure codebase through clear and concise config files, no code editing needed!
 - Support for 2-23 Players in Free-For-All or Team Games.
 - Support for Single Player training mode
 - In game settings that allow host to change various aspects of the session. (Victory Conditions, Diplomacy, Fog of War, Gold Sending, Promode)
