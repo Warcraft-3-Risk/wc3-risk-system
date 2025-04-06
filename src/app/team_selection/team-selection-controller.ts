@@ -59,20 +59,16 @@ export class TeamSelectionController implements Resetable {
 		TriggerAddCondition(
 			trigger,
 			Condition(() => {
-				try {
-					const player = GetTriggerPlayer();
-					const playerData: PlayerData = this.model.getPlayerDataForPlayer(player);
+				const player = GetTriggerPlayer();
+				const playerData: PlayerData = this.model.getPlayerDataForPlayer(player);
 
-					if (playerData.teamNumber === -1) return true;
+				if (playerData.teamNumber === -1) return true;
 
-					this.view.removePlayerFromTeam(player, this.model);
-					this.model.removePlayerFromTeam(player, playerData.teamNumber);
-					this.view.addPlayerToBench(player, playerData.benchSlotIndex);
+				this.view.removePlayerFromTeam(player, this.model);
+				this.model.removePlayerFromTeam(player, playerData.teamNumber);
+				this.view.addPlayerToBench(player, playerData.benchSlotIndex);
 
-					return true;
-				} catch (error) {
-					print(`error ${error}`);
-				}
+				return true;
 			})
 		);
 	}
@@ -87,30 +83,26 @@ export class TeamSelectionController implements Resetable {
 		TriggerAddCondition(
 			trigger,
 			Condition(() => {
-				try {
-					const clickedFrame: framehandle = BlzGetTriggerFrame();
-					const clickedSlot: TeamSlotData = this.model.getTeamSlotForFrame(clickedFrame);
-					const player: player = GetTriggerPlayer();
-					const playerData: PlayerData = this.model.getPlayerDataForPlayer(player);
+				const clickedFrame: framehandle = BlzGetTriggerFrame();
+				const clickedSlot: TeamSlotData = this.model.getTeamSlotForFrame(clickedFrame);
+				const player: player = GetTriggerPlayer();
+				const playerData: PlayerData = this.model.getPlayerDataForPlayer(player);
 
-					if (playerData.slotIndex === clickedSlot.slotIndex) return true;
+				if (playerData.slotIndex === clickedSlot.slotIndex) return true;
 
-					if (playerData.teamNumber !== -1) {
-						this.view.removePlayerFromTeam(player, this.model);
-						this.model.removePlayerFromTeam(player, playerData.teamNumber);
-					} else {
-						this.view.removePlayerFromBench(playerData.benchSlotIndex);
-					}
-
-					const isCaptain: boolean = clickedSlot.isCaptainSlot;
-
-					this.model.addPlayerToTeam(player, clickedSlot.teamNumber, clickedSlot.slotIndex, isCaptain);
-					this.view.addPlayerToTeam(player, this.model);
-
-					return true;
-				} catch (error) {
-					print(`error ${error}`);
+				if (playerData.teamNumber !== -1) {
+					this.view.removePlayerFromTeam(player, this.model);
+					this.model.removePlayerFromTeam(player, playerData.teamNumber);
+				} else {
+					this.view.removePlayerFromBench(playerData.benchSlotIndex);
 				}
+
+				const isCaptain: boolean = clickedSlot.isCaptainSlot;
+
+				this.model.addPlayerToTeam(player, clickedSlot.teamNumber, clickedSlot.slotIndex, isCaptain);
+				this.view.addPlayerToTeam(player, this.model);
+
+				return true;
 			})
 		);
 	}
