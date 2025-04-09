@@ -10,7 +10,7 @@ export class TeamSelectionController implements Resetable {
 
 	private constructor() {
 		this.model = new TeamSelectionModel();
-		this.buildBench();
+		this.registerPlayers();
 		this.view = new TeamSelectionView(this.model);
 		this.registerBenchClick();
 		this.registerTeamButtonClick();
@@ -26,7 +26,7 @@ export class TeamSelectionController implements Resetable {
 
 	public reset(): void {
 		this.model.reset();
-		this.buildBench();
+		this.registerPlayers();
 		this.view.reset(this.model);
 	}
 
@@ -42,7 +42,7 @@ export class TeamSelectionController implements Resetable {
 		this.view.updateTimer(time);
 	}
 
-	private buildBench(): void {
+	private registerPlayers(): void {
 		let index = 0;
 
 		for (const player of PlayerList.getInstance().getPlayers()) {

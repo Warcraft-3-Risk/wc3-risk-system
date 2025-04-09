@@ -16,8 +16,10 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 
 		this.backdrop = BlzCreateFrame('TeamSelectionBackdrop', BlzGetOriginFrame(ORIGIN_FRAME_WORLD_FRAME, 0), 0, 0);
 		BlzFrameSetPoint(this.backdrop, FRAMEPOINT_CENTER, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_CENTER, 0, -0.01);
+
 		const startButton: framehandle = BlzFrameGetChild(this.backdrop, 3);
 		const mouseControlFrame = BlzCreateSimpleFrame('TeamSelectionFunctionalStartButton', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0);
+
 		BlzFrameSetPoint(mouseControlFrame, FRAMEPOINT_CENTER, startButton, FRAMEPOINT_CENTER, 0, -0.002);
 		BlzFrameSetSize(mouseControlFrame, BlzFrameGetWidth(startButton), BlzFrameGetHeight(startButton) - 0.002);
 		BlzFrameSetEnable(startButton, false);
@@ -36,9 +38,7 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 			}
 		});
 
-		const teamSlotDataMap = model.getTeamSlotData();
-
-		teamSlotDataMap.forEach((slotData, context) => {
+		model.getTeamSlotData().forEach((slotData) => {
 			const frameText = slotData.isCaptainSlot ? 'Open Slot (Captain)' : 'Open Slot (Member)';
 
 			BlzFrameSetText(slotData.frame, frameText);
@@ -61,11 +61,13 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 
 	public addPlayerToBench(player: player, benchSlot: number): void {
 		const textFrame: framehandle = BlzGetFrameByName('BenchSlotText', benchSlot);
+
 		BlzFrameSetText(textFrame, `${NameManager.getInstance().getAcct(player)}`);
 	}
 
 	public removePlayerFromBench(benchSlot: number): void {
 		const textFrame: framehandle = BlzGetFrameByName('BenchSlotText', benchSlot);
+
 		BlzFrameSetText(textFrame, `-`);
 	}
 
