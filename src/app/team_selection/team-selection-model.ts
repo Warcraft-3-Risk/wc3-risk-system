@@ -134,4 +134,8 @@ export class TeamSelectionModel implements Resetable {
 	public getTeamData(): Map<number, TeamData> {
 		return this.teamData;
 	}
+
+	public getTeamDataForTeam(teamNumber: number): TeamData {
+		return this.teamData.get(teamNumber);
+	}
 }

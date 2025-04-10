@@ -34,7 +34,7 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 			BlzFrameSetText(benchSlotFrame, `${NameManager.getInstance().getAcct(player)}`);
 
 			if (model.getTeamData().get(playerData.teamNumber).captain === player) {
-				this.setEnableTeamSettingButtonForPlayer(playerData.teamNumber, player, false);
+				this.setEnableTeamNameEditBoxForPlayer(playerData.teamNumber, player, false);
 			}
 		});
 
@@ -78,7 +78,7 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 		BlzFrameSetText(slotData.frame, NameManager.getInstance().getAcct(player));
 
 		if (slotData.isCaptainSlot) {
-			this.setEnableTeamSettingButtonForPlayer(playerData.teamNumber, player, true);
+			this.setEnableTeamNameEditBoxForPlayer(playerData.teamNumber, player, true);
 		}
 	}
 
@@ -90,8 +90,14 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 		BlzFrameSetText(slotData.frame, frameText);
 
 		if (slotData.isCaptainSlot) {
-			this.setEnableTeamSettingButtonForPlayer(playerData.teamNumber, player, false);
+			this.setEnableTeamNameEditBoxForPlayer(playerData.teamNumber, player, false);
+			this.setTeamName(playerData.teamNumber, `Team ${playerData.teamNumber}`);
 		}
+	}
+
+	public setTeamName(teamNumber: number, teamName: string) {
+		BlzFrameSetText(BlzGetFrameByName('TeamName', teamNumber), teamName);
+		BlzFrameSetText(BlzGetFrameByName('TeamNameEditBox', teamNumber), teamName);
 	}
 
 	private renderBench(model: TeamSelectionModel): void {
@@ -138,11 +144,8 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 			const teamContainerFrame: framehandle = BlzCreateFrame('TeamContainerTemplate', this.backdrop, 0, teamNumber);
 
 			BlzFrameSetPoint(teamContainerFrame, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, xOffset, yOffset);
-			this.disableTeamSettingButton(teamNumber);
-
-			const teamNameFrame: framehandle = BlzGetFrameByName('TeamName', teamNumber);
-
-			BlzFrameSetText(teamNameFrame, `Team ${teamNumber}`);
+			BlzFrameSetText(BlzGetFrameByName('TeamName', teamNumber), `Team ${teamNumber}`);
+			BlzFrameSetText(BlzGetFrameByName('TeamNameEditBox', teamNumber), `Team ${teamNumber}`);
 
 			const index: number = model.generateTeamSlotIndex();
 			const captainSlotFrame: framehandle = BlzCreateFrame('SlotButtonTemplate', teamContainerFrame, 0, index);
@@ -150,6 +153,7 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 			BlzFrameSetPoint(captainSlotFrame, FRAMEPOINT_TOP, teamContainerFrame, FRAMEPOINT_TOP, -0.005, -0.02);
 			BlzFrameSetText(captainSlotFrame, 'Open Slot (Captain)');
 
+			this.disableTeamNameEditBox(teamNumber);
 			model.registerTeamSlot(index, captainSlotFrame, teamNumber, true);
 
 			for (let j = 1; j < playersPerTeam; j++) {
@@ -167,13 +171,14 @@ export class TeamSelectionView implements Resetable<TeamSelectionModel> {
 		}
 	}
 
-	private setEnableTeamSettingButtonForPlayer(teamNumber: number, player: player, enabled: boolean) {
+	private setEnableTeamNameEditBoxForPlayer(teamNumber: number, player: player, visible: boolean) {
 		if (GetLocalPlayer() === player) {
-			BlzFrameSetEnable(BlzGetFrameByName('TeamOptionsButton', teamNumber), enabled);
+			BlzFrameSetVisible(BlzGetFrameByName('TeamNameEditBox', teamNumber), visible);
+			BlzFrameSetVisible(BlzGetFrameByName('TeamName', teamNumber), !visible);
 		}
 	}
 
-	private disableTeamSettingButton(teamNumber: number) {
-		BlzFrameSetEnable(BlzGetFrameByName('TeamOptionsButton', teamNumber), false);
+	private disableTeamNameEditBox(teamNumber: number) {
+		BlzFrameSetVisible(BlzGetFrameByName('TeamNameEditBox', teamNumber), false);
 	}
 }

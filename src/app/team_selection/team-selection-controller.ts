@@ -14,6 +14,7 @@ export class TeamSelectionController implements Resetable {
 		this.view = new TeamSelectionView(this.model);
 		this.registerBenchClick();
 		this.registerTeamButtonClick();
+		this.registerTeamNameBoxEnterPush();
 	}
 
 	public static getInstance(): TeamSelectionController {
@@ -83,8 +84,8 @@ export class TeamSelectionController implements Resetable {
 		TriggerAddCondition(
 			trigger,
 			Condition(() => {
-				const clickedFrame: framehandle = BlzGetTriggerFrame();
-				const clickedSlot: TeamSlotData = this.model.getTeamSlotForFrame(clickedFrame);
+				const triggerFrame: framehandle = BlzGetTriggerFrame();
+				const clickedSlot: TeamSlotData = this.model.getTeamSlotForFrame(triggerFrame);
 				const player: player = GetTriggerPlayer();
 				const playerData: PlayerData = this.model.getPlayerDataForPlayer(player);
 
@@ -101,6 +102,27 @@ export class TeamSelectionController implements Resetable {
 
 				this.model.addPlayerToTeam(player, clickedSlot.teamNumber, clickedSlot.slotIndex, isCaptain);
 				this.view.addPlayerToTeam(player, this.model);
+
+				return true;
+			})
+		);
+	}
+
+	private registerTeamNameBoxEnterPush(): void {
+		const trigger = CreateTrigger();
+
+		this.model.getTeamData().forEach((teamData) => {
+			BlzTriggerRegisterFrameEvent(trigger, BlzGetFrameByName('TeamNameEditBox', teamData.number), FRAMEEVENT_EDITBOX_ENTER);
+		});
+
+		TriggerAddCondition(
+			trigger,
+			Condition(() => {
+				const frameText: string = BlzFrameGetText(BlzGetTriggerFrame());
+				const teamNumber: number = this.model.getPlayerDataForPlayer(GetTriggerPlayer()).teamNumber;
+
+				this.model.getTeamDataForTeam(teamNumber).name = frameText;
+				this.view.setTeamName(teamNumber, frameText);
 
 				return true;
 			})

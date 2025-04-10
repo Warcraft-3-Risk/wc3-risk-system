@@ -23,45 +23,52 @@ Frame "FRAME" "TeamContainerTemplate" {
     Width 0.11,
     Height 0.20,
 
-    Frame "BACKDROP" "TeamOptionsButtonBackdrop" {
-        UseActiveContext,
-        SetPoint TOPLEFT, "TeamContainerTemplate", TOPLEFT, 0.0, 0.0,
-        Height 0.018,
-        Width 0.018,
-        BackdropBackground  "UI\Widgets\EscMenu\Human\quest-normal-background.blp",
-        BackdropBackgroundInsets 0.002 0.002 0.002 0.002,
-        BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
-        BackdropCornerSize  0.004,
-        BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-button-border-up.blp",
+    // Frame "BACKDROP" "TeamOptionsButtonBackdrop" {
+    //     UseActiveContext,
+    //     SetPoint TOPLEFT, "TeamContainerTemplate", TOPLEFT, 0.0, 0.0,
+    //     Height 0.018,
+    //     Width 0.018,
+    //     BackdropBackground  "UI\Widgets\EscMenu\Human\quest-normal-background.blp",
+    //     BackdropBackgroundInsets 0.002 0.002 0.002 0.002,
+    //     BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+    //     BackdropCornerSize  0.004,
+    //     BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-button-border-up.blp",
 
-        Frame "GLUETEXTBUTTON" "TeamOptionsButton" {
-            UseActiveContext,
-            SetPoint CENTER, "TeamOptionsButtonBackdrop", CENTER, 0.0, 0.0,
-            Height 0.012,
-            Width 0.012,
-            ControlStyle "AUTOTRACK|HIGHLIGHTONMOUSEOVER",
+    //     Frame "GLUETEXTBUTTON" "TeamOptionsButton" {
+    //         UseActiveContext,
+    //         SetPoint CENTER, "TeamOptionsButtonBackdrop", CENTER, 0.0, 0.0,
+    //         Height 0.012,
+    //         Width 0.012,
+    //         ControlStyle "AUTOTRACK|HIGHLIGHTONMOUSEOVER",
             
-            ControlBackdrop "TeamOptionsButtonBackdropFill",
-            Frame "BACKDROP" "TeamOptionsButtonBackdropFill" {
-                UseActiveContext,
-                BackdropBlendAll,        
-                BackdropBackground "war3mapImported\gear.blp",
-            }
+    //         ControlBackdrop "TeamOptionsButtonBackdropFill",
+    //         Frame "BACKDROP" "TeamOptionsButtonBackdropFill" {
+    //             UseActiveContext,
+    //             BackdropBlendAll,        
+    //             BackdropBackground "war3mapImported\gear.blp",
+    //         }
 
-            ControlMouseOverHighlight "TeamOptionsButtonHighlight",
-            Frame "HIGHLIGHT" "TeamOptionsButtonHighlight" {
-                UseActiveContext,
-                HighlightType "FILETEXTURE",
-                HighlightAlphaFile "UI\Widgets\EscMenu\Orc\orc-options-button-highlight.blp",
-                HighlightAlphaMode "ADD",
-            }
-        }
-    }
+    //         ControlMouseOverHighlight "TeamOptionsButtonHighlight",
+    //         Frame "HIGHLIGHT" "TeamOptionsButtonHighlight" {
+    //             UseActiveContext,
+    //             HighlightType "FILETEXTURE",
+    //             HighlightAlphaFile "UI\Widgets\EscMenu\Orc\orc-options-button-highlight.blp",
+    //             HighlightAlphaMode "ADD",
+    //         }
+    //     }
+    // }
 
     Frame "TEXT" "TeamName" INHERITS "TextTemplateSm" {
         UseActiveContext,
-        SetPoint LEFT, "TeamOptionsButton", RIGHT, 0.005, 0.0,
+        SetPoint TOP, "TeamContainerTemplate", TOP, -0.005, -0.007,
         Text "",
+    }
+
+    Frame "EDITBOX" "TeamNameEditBox" INHERITS WITHCHILDREN "EditBoxTemplate" {
+        UseActiveContext,
+        SetPoint TOP, "TeamContainerTemplate", TOP, -0.005, 0.0,
+        Width 0.095,
+        Height 0.02,
     }
 }
 
