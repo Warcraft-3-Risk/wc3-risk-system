@@ -199,4 +199,24 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onSwapGuard(targetedUnit: unit, city: City, triggerPlayer: player): void {
 		city.onCast(targetedUnit, triggerPlayer);
 	}
+
+	onPlayerLeft(player: ActivePlayer): void {
+		super.onPlayerLeft(player);
+
+		VictoryManager.getInstance().updateAndGetGameState();
+
+		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
+			GlobalGameData.matchState = 'postMatch';
+		}
+	}
+
+	onPlayerForfeit(player: ActivePlayer): void {
+		super.onPlayerForfeit(player);
+
+		VictoryManager.getInstance().updateAndGetGameState();
+
+		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
+			GlobalGameData.matchState = 'postMatch';
+		}
+	}
 }

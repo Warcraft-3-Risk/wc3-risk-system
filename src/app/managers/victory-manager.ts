@@ -66,6 +66,16 @@ export class VictoryManager {
 	}
 
 	public updateAndGetGameState(): VictoryProgressState {
+		// Quickly decide game is there is only one player or team alive
+		const participants: ParticipantEntity[] = SettingsContext.getInstance().isFFA()
+			? Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
+			: TeamManager.getInstance().getActiveTeams();
+
+		if (participants.length == 1) {
+			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
+			return VictoryManager.GAME_VICTORY_STATE;
+		}
+
 		let playerWinCandidates = this.victors();
 
 		if (playerWinCandidates.length == 0) {
