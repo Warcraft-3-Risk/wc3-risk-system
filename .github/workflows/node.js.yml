@@ -21,29 +21,40 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Generate version suffix
+        id: version
+        run: |
+          # Extract version suffix from the tag
+          TAG_NAME=${GITHUB_REF#refs/tags/}
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: npm install
 
       - name: Build the application
+        env:
+          TAG_NAME: ${{ env.TAG_NAME }}
         run: npm run build
-
-      - name: Create output folder
-        run: mkdir -p ${{ env.OUTPUT_FOLDER }}
 
       - name: Package the application
         run: |
-          PACKAGE_NAME="my-app-${{ github.event.release.tag_name }}.tgz"
+          # Include version suffix in the package name
+          PACKAGE_NAME="my-app-${TAG_NAME}.tgz"
           npm pack
-          mv *.tgz ${{ env.OUTPUT_FOLDER }}/$PACKAGE_NAME
+          mv *.tgz $PACKAGE_NAME
+        env:
+          TAG_NAME: ${{ env.TAG_NAME }}
 
       - name: Upload artifact to release
         uses: ncipollo/release-action@v1
+        env:
+          TAG_NAME: ${{ env.TAG_NAME }}
         with:
-          artifacts: '${{ env.OUTPUT_FOLDER }}/*.tgz'
-          tag: ${{ github.event.release.tag_name }}
-          name: ${{ github.event.release.name }}
+          tag: ${{ env.TAG_NAME }}
+          name: ${{ env.TAG_NAME }}
           draft: false
-          prerelease: ${{ github.event.release.prerelease }}
+          prerelease: true
+          artifacts: ${{env.OUTPUT_FOLDER}}/Risk Europe ${{ env.TAG_NAME }}.w3x
           replacesArtifacts: true
           generateReleaseNotes: true
           allowUpdates: true
