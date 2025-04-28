@@ -36,34 +36,9 @@ jobs:
           TAG_NAME: ${{ env.TAG_NAME }}
         run: npm run build
 
-      - name: Package the application
+      - name: Upload packaged app using GitHub CLI
         run: |
-          # Include version suffix in the package name
-          PACKAGE_NAME="my-app-${TAG_NAME}.tgz"
-          npm pack
-          mv *.tgz $PACKAGE_NAME
+          gh release upload "${{ github.event.release.tag_name }}" "${{ env.OUTPUT_FOLDER }}/Risk Europe ${{ env.TAG_NAME }}.w3x" --clobber
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ env.TAG_NAME }}
-
-      - name: Upload artifact to release
-        uses: ncipollo/release-action@v1
-        env:
-          TAG_NAME: ${{ env.TAG_NAME }}
-        with:
-          tag: ${{ env.TAG_NAME }}
-          name: ${{ env.TAG_NAME }}
-          draft: false
-          prerelease: false
-          artifacts: ${{env.OUTPUT_FOLDER}}/Risk Europe ${{ env.TAG_NAME }}.w3x
-          replacesArtifacts: true
-          generateReleaseNotes: true
-          allowUpdates: true
-      - name: Upload packaged app to GitHub Release
-        uses: actions/upload-release-asset@v1
-        env:
-          TAG_NAME: ${{ env.TAG_NAME }}
-        with:
-          upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ${{env.OUTPUT_FOLDER}}/Risk Europe ${{ env.TAG_NAME }}.w3x
-          asset_name: Risk Europe ${{ env.TAG_NAME }}.w3x
-          asset_content_type: application/octet-stream
