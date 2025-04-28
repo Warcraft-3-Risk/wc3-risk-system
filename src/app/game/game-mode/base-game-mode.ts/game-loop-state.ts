@@ -117,7 +117,14 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			if (state == 'TIE' && candidate.trackedData.cities.cities.length >= VictoryManager.getCityCountWin()) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
-				return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - candidate.trackedData.cities.cities.length}|r more to win!`;
+				const remainingCities = VictoryManager.getCityCountWin() - candidate.trackedData.cities.cities.length;
+				if (remainingCities < 0) {
+					return `satisfies the city count to win!`;
+				} else if (remainingCities == 0) {
+					return `must maintain their city count this round to win!`;
+				} else {
+					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - candidate.trackedData.cities.cities.length}|r more to win!`;
+				}
 			}
 		}
 
@@ -133,7 +140,14 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			if (state == 'TIE' && candidate.getCities() >= VictoryManager.getCityCountWin()) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
-				return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - candidate.getCities()}|r more to win!`;
+				const remainingCities = VictoryManager.getCityCountWin() - candidate.getCities();
+				if (remainingCities < 0) {
+					return `satisfies the city count to win!`;
+				} else if (remainingCities == 0) {
+					return `must maintain their city count this round to win!`;
+				} else {
+					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - candidate.getCities()}|r more to win!`;
+				}
 			}
 		}
 
