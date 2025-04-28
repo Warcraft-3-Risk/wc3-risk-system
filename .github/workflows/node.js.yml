@@ -46,3 +46,4 @@ jobs:
           prerelease: ${{ github.event.release.prerelease }}
           replacesArtifacts: true
           generateReleaseNotes: true
+          allowUpdates: true
