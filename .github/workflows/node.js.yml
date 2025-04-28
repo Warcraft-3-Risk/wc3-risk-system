@@ -1,9 +1,9 @@
 name: Build and Release
 
 on:
-  push:
-    tags:
-      - '*.*' # Trigger only on tags matching versioning, e.g., v1.0
+  release:
+    types: [published] # Triggers when a new release is published
+
 env:
   OUTPUT_FOLDER: './artifact'
 
@@ -19,40 +19,30 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '22' # Use the desired Node.js version
-      - name: Generate version suffix
-        id: version
-        run: |
-          # Extract version suffix from the tag
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+          node-version: '22'
 
       - name: Install dependencies
         run: npm install
 
       - name: Build the application
-        env:
-          TAG_NAME: ${{ env.TAG_NAME }}
         run: npm run build
+
+      - name: Create output folder
+        run: mkdir -p ${{ env.OUTPUT_FOLDER }}
 
       - name: Package the application
         run: |
-          # Include version suffix in the package name
-          PACKAGE_NAME="my-app-${TAG_NAME}.tgz"
+          PACKAGE_NAME="my-app-${{ github.event.release.tag_name }}.tgz"
           npm pack
-          mv *.tgz $PACKAGE_NAME
-        env:
-          TAG_NAME: ${{ env.TAG_NAME }}
+          mv *.tgz ${{ env.OUTPUT_FOLDER }}/$PACKAGE_NAME
 
       - name: Upload artifact to release
         uses: ncipollo/release-action@v1
-        env:
-          TAG_NAME: ${{ env.TAG_NAME }}
         with:
-          tag: ${{ env.TAG_NAME }}
-          name: ${{ env.TAG_NAME }}
+          artifacts: '${{ env.OUTPUT_FOLDER }}/*.tgz'
+          tag: ${{ github.event.release.tag_name }}
+          name: ${{ github.event.release.name }}
           draft: false
-          prerelease: true
-          artifacts: ${{env.OUTPUT_FOLDER}}/Risk Europe ${{ env.TAG_NAME }}.w3x
+          prerelease: ${{ github.event.release.prerelease }}
           replacesArtifacts: true
           generateReleaseNotes: true
