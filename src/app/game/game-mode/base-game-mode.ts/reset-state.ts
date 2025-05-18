@@ -12,8 +12,6 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 	}
 
 	async runAsync(): Promise<void> {
-		FogEnable(false);
-
 		StatisticsController.getInstance().setViewVisibility(false);
 
 		print('Resetting countries...');

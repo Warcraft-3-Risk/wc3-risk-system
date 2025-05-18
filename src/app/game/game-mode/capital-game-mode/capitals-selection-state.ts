@@ -10,6 +10,7 @@ import { LandCity } from 'src/app/city/land-city';
 import { CityToCountry } from 'src/app/country/country-map';
 import { CapitalsData } from '../mode/capitals-mode';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { FogManager } from 'src/app/managers/fog-manager';
 
 export class CapitalsSelectionState extends BaseState<CapitalsData> {
 	onEnterState() {
@@ -17,7 +18,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 	}
 
 	run(): void {
-		FogEnable(false);
+		FogManager.getInstance().turnFogOff();
 		BlzEnableSelections(true, false);
 		debugPrint('1. Capitals Selection');
 		debugPrint('this.stateData is ' + this.stateData);

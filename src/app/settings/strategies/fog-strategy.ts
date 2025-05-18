@@ -14,7 +14,6 @@ export const FogOptionsColorFormatted: Record<number, string> = {
 };
 
 export class FogStrategy implements SettingsStrategy {
-	//private static fogService: FogService;
 	private readonly fog: number;
 	private readonly strategyMap: Map<number, () => void> = new Map([
 		[0, this.handleOff],
@@ -24,7 +23,6 @@ export class FogStrategy implements SettingsStrategy {
 
 	constructor(fog: number) {
 		this.fog = fog;
-		//FogStrategy.fogService = new FogService();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player: player = Player(i);
@@ -42,17 +40,9 @@ export class FogStrategy implements SettingsStrategy {
 		}
 	}
 
-	private handleOff(): void {
-		//FogStrategy.fogService.off();
-		FogEnable(false);
-	}
+	private handleOff(): void {}
 
-	private handleOn(): void {
-		//FogStrategy.fogService.on();
-		FogEnable(true);
-	}
+	private handleOn(): void {}
 
-	private handleNight(): void {
-		// handle night case
-	}
+	private handleNight(): void {}
 }

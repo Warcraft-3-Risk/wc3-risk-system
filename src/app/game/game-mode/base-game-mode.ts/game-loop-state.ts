@@ -16,6 +16,9 @@ import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { OvertimeManager } from 'src/app/managers/overtime-manager';
 import { Team } from 'src/app/teams/team';
+import { SettingsContext } from 'src/app/settings/settings-context';
+import { debugPrint } from 'src/app/utils/debug-print';
+import { FogManager } from 'src/app/managers/fog-manager';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -73,11 +76,66 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onExitState(): void {
 		GlobalGameData.matchState = 'postMatch';
-		FogEnable(false);
+		FogManager.getInstance().turnFogOff();
 		BlzEnableSelections(false, false);
 	}
 
+	updateFogSettings(turn: number): void {
+		if (!SettingsContext.getInstance().isNightFogOn()) {
+			return;
+		}
+
+		// Match day/night cycle to 2 turns
+		SetTimeOfDayScale(2);
+
+		// First turn should always be half day
+		if (turn === 0) {
+			debugPrint('first turn, turning off fog');
+			SetTimeOfDay(12.0);
+			FogManager.getInstance().turnFogOff();
+			return;
+		}
+
+		const phase = (turn - 1) % 4;
+
+		// 0 = dusk
+		// 1 = night
+		// 2 = dawn
+		// 3 = day
+
+		// dusk
+		if (phase == 0) {
+			debugPrint('Phase is dusk (0), turning on fog');
+			SetTimeOfDay(18.0);
+			FogManager.getInstance().turnFogOn();
+			return;
+		}
+
+		if (phase == 1) {
+			debugPrint('Phase is night (1), turning on fog');
+			SetTimeOfDay(0.0);
+			FogManager.getInstance().turnFogOn();
+			return;
+		}
+
+		if (phase == 2) {
+			debugPrint('Phase is dawn (2), turning off fog');
+			SetTimeOfDay(6.0);
+			FogManager.getInstance().turnFogOff();
+			return;
+		}
+
+		if (phase == 3) {
+			debugPrint('Phase is day (3), turning off fog');
+			SetTimeOfDay(12.0);
+			FogManager.getInstance().turnFogOff();
+			return;
+		}
+	}
+
 	onStartTurn(turn: number): void {
+		this.updateFogSettings(turn);
+
 		ScoreboardManager.getInstance().updateFull();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		GlobalGameData.matchPlayers
@@ -232,5 +290,9 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
 			GlobalGameData.matchState = 'postMatch';
 		}
+	}
+
+	onPlayerDead(player: ActivePlayer): void {
+		super.onPlayerDead(player);
 	}
 }
