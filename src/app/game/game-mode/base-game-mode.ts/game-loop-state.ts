@@ -290,12 +290,9 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
 			GlobalGameData.matchState = 'postMatch';
 		}
-
-		FogManager.getInstance().turnFogOff();
 	}
 
 	onPlayerDead(player: ActivePlayer): void {
 		super.onPlayerDead(player);
-		FogManager.getInstance().turnFogOff();
 	}
 }
