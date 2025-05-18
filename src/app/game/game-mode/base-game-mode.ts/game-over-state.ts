@@ -8,6 +8,7 @@ import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { Quests } from 'src/app/quests/quests';
+import { FogManager } from 'src/app/managers/fog-manager';
 
 export class GameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -34,6 +35,11 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 			StatisticsController.getInstance().setViewVisibility(true);
 			StatisticsController.getInstance().writeStatisticsData();
 		}
+
+		FogManager.getInstance().turnFogOff();
+
+		SetTimeOfDayScale(0);
+		SetTimeOfDay(12.0);
 	}
 
 	onPlayerRestart(player: ActivePlayer) {

@@ -85,6 +85,10 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		});
 
 		// Initialize fog for all players
+		FogEnable(true);
+		SetTimeOfDayScale(0);
+		SetTimeOfDay(12.0);
+
 		if (SettingsContext.getInstance().isFogOff() || SettingsContext.getInstance().isNightFogOn()) {
 			FogManager.getInstance().turnFogOff();
 		} else if (SettingsContext.getInstance().isFogOn()) {
