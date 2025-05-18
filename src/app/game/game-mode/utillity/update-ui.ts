@@ -1,4 +1,5 @@
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
+import { SettingsContext } from 'src/app/settings/settings-context';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { PlayGlobalSound } from 'src/app/utils/utils';
 
@@ -13,15 +14,27 @@ export function updateTickUI(): void {
 		PlayGlobalSound('Sound\\Interface\\BattleNetTick.flac');
 	}
 
-	setTickUI(tick, GlobalGameData.turnCount.toString());
+	const nightPhaseBasedOnTurn = SettingsContext.getInstance().isNightFogOn() ? getDayNightName(GlobalGameData.turnCount) : undefined;
+	setTickUI(tick, GlobalGameData.turnCount.toString() + (nightPhaseBasedOnTurn ? ` ${nightPhaseBasedOnTurn}` : ''));
 }
 
 export function setTickUI(tickCounter: string, turnCount: string): void {
 	BlzFrameSetText(BlzGetFrameByName('ResourceBarUpkeepText', 0), `${tickCounter}`);
+
 	BlzFrameSetText(BlzGetFrameByName('ResourceBarSupplyText', 0), `${turnCount}`);
 }
 
 export function clearTickUI(): void {
 	BlzFrameSetText(BlzGetFrameByName('ResourceBarGoldText', 0), '');
 	setTickUI('', '');
+}
+
+function getDayNightName(turn: number): string {
+	// 0 = dusk
+	// 1 = night
+	// 2 = dawn
+	// 3 = day
+	const list = ['Dusk', 'Night', 'Dawn', 'Day'];
+	const phase = (turn - 1) % 4;
+	return list[phase];
 }

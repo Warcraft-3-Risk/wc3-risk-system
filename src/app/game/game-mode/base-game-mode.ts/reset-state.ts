@@ -5,6 +5,7 @@ import { resetCountries } from '../utillity/reset-countries';
 import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
+import { FogManager } from 'src/app/managers/fog-manager';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -12,7 +13,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 	}
 
 	async runAsync(): Promise<void> {
-		FogEnable(false);
+		FogManager.getInstance().turnFogOff();
 
 		StatisticsController.getInstance().setViewVisibility(false);
 

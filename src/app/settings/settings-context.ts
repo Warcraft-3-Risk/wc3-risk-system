@@ -83,10 +83,26 @@ export class SettingsContext {
 
 	/**
 	 * Checks if the game setting for Fog is on or off
+	 * @returns true if fog is off
+	 */
+	public isFogOff(): boolean {
+		return this.settings.Fog == 0;
+	}
+
+	/**
+	 * Checks if the game setting for Fog is on or off
 	 * @returns true if fog is on
 	 */
 	public isFogOn(): boolean {
 		return this.settings.Fog == 1;
+	}
+
+	/**
+	 * Checks if the game setting for Night Fog is on or off
+	 * @returns true if fog is on
+	 */
+	public isNightFogOn(): boolean {
+		return this.settings.Fog == 2;
 	}
 
 	/**
