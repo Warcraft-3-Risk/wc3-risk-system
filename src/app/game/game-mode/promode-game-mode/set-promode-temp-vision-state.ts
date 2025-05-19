@@ -1,12 +1,12 @@
-import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { CityToCountry } from 'src/app/country/country-map';
-import { SettingsContext } from 'src/app/settings/settings-context';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Wait } from 'src/app/utils/wait';
 import { GlobalGameData } from '../../state/global-game-state';
+import { ApplyFogState } from '../base-game-mode.ts/apply-fog-state';
+import { SettingsContext } from 'src/app/settings/settings-context';
 
-export class SetPromodeTempVisionState<T extends StateData> extends BaseState<T> {
+export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogState<T> {
 	onEnterState() {
 		this.runAsync();
 	}

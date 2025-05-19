@@ -11,6 +11,7 @@ import { CapitalsDistributeState } from '../capital-game-mode/capitals-distribut
 import { VisionState } from '../base-game-mode.ts/vision-state';
 import { CapitalsGameLoopState } from '../capital-game-mode/capitals-game-loop-state';
 import { CapitalsDistributeCapitalsState } from '../capital-game-mode/capitals-distribute-capitals-state';
+import { ApplyFogState } from '../base-game-mode.ts/apply-fog-state';
 
 export class CapitalsData implements StateData {
 	public playerCapitalSelections: Map<player, City>;
@@ -21,6 +22,7 @@ export class CapitalsMode extends BaseMode<CapitalsData> {
 	protected setupStates() {
 		return [
 			new SetupState(),
+			new ApplyFogState(),
 			new CapitalsSelectionState(),
 			new CapitalsDistributeCapitalsState(),
 			new CapitalsDistributeState(),

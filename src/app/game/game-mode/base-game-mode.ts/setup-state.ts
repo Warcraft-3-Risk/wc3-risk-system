@@ -12,7 +12,6 @@ import { Quests } from 'src/app/quests/quests';
 import { clearTickUI } from '../utillity/update-ui';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { TreeManager } from '../../services/tree-service';
-import { FogManager } from 'src/app/managers/fog-manager';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -77,22 +76,6 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		// To reset and reduce tree hp on first turn
 		if (GlobalGameData.turnCount === 0) {
 			TreeManager.getInstance().reset();
-		}
-
-		// Setup fog tracking for players
-		players.forEach((player) => {
-			FogManager.getInstance().add(player.getPlayer());
-		});
-
-		// Initialize fog for all players
-		FogEnable(true);
-		SetTimeOfDayScale(0);
-		SetTimeOfDay(12.0);
-
-		if (SettingsContext.getInstance().isFogOff() || SettingsContext.getInstance().isNightFogOn()) {
-			FogManager.getInstance().turnFogOff();
-		} else if (SettingsContext.getInstance().isFogOn()) {
-			FogManager.getInstance().turnFogOn();
 		}
 
 		this.nextState(this.stateData);
