@@ -25,9 +25,8 @@ export class FogManager {
 	 * @param who - The player to manage.
 	 */
 	public add(who: player) {
-		if (this._fog.get(who)) {
-			DestroyFogModifier(this._fog.get(who));
-			this._fog.delete(who);
+		if (this._fog.has(who)) {
+			return;
 		}
 
 		this._fog.set(who, CreateFogModifierRect(who, FOG_OF_WAR_VISIBLE, GetPlayableMapRect(), true, false));

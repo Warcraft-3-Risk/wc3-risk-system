@@ -8,6 +8,7 @@ import { BaseMode } from './base-mode';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { VisionState } from '../base-game-mode.ts/vision-state';
+import { ApplyFogState } from '../base-game-mode.ts/apply-fog-state';
 
 export class StandardData implements StateData {}
 
@@ -15,6 +16,7 @@ export class StandardMode extends BaseMode<StandardData> {
 	protected setupStates() {
 		return [
 			new SetupState(),
+			new ApplyFogState(),
 			new CityDistributeState(),
 			new VisionState(),
 			new CountdownState(),
