@@ -41,6 +41,12 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			}
 		});
 
+		TeamManager.getInstance()
+			.getTeams()
+			.forEach((team) => {
+				team.reset();
+			});
+
 		const players = [...PlayerManager.getInstance().players.values()];
 		GlobalGameData.prepareMatchData(players);
 
@@ -56,9 +62,13 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		// Setting up the scoreboard
 		if (SettingsContext.getInstance().isFFA() || GlobalGameData.matchPlayers.length <= 2) {
 			ScoreboardManager.getInstance().ffaSetup(GlobalGameData.matchPlayers);
+			// get random player from list
+			GlobalGameData.leader = GlobalGameData.matchPlayers[Math.floor(Math.random() * GlobalGameData.matchPlayers.length)];
 		} else {
 			const teams = [...TeamManager.getInstance().getTeams()];
 			teams.forEach((team) => team.reset());
+			// get random team from list
+			GlobalGameData.leader = teams[Math.floor(Math.random() * teams.length)];
 			ScoreboardManager.getInstance().teamSetup();
 		}
 
