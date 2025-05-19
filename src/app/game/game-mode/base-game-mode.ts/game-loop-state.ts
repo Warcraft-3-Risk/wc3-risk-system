@@ -76,7 +76,6 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onExitState(): void {
 		GlobalGameData.matchState = 'postMatch';
-		FogManager.getInstance().turnFogOff();
 		BlzEnableSelections(false, false);
 	}
 

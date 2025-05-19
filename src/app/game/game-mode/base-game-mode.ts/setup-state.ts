@@ -89,10 +89,10 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		SetTimeOfDayScale(0);
 		SetTimeOfDay(12.0);
 
-		if (SettingsContext.getInstance().isFogOff() || SettingsContext.getInstance().isNightFogOn()) {
-			FogManager.getInstance().turnFogOff();
-		} else if (SettingsContext.getInstance().isFogOn()) {
+		if (SettingsContext.getInstance().isPromode() || SettingsContext.getInstance().isFogOn()) {
 			FogManager.getInstance().turnFogOn();
+		} else if (SettingsContext.getInstance().isFogOff() || SettingsContext.getInstance().isNightFogOn()) {
+			FogManager.getInstance().turnFogOff();
 		}
 
 		this.nextState(this.stateData);
