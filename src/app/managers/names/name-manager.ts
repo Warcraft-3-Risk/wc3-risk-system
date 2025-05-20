@@ -2,7 +2,7 @@ import { PLAYER_COLOR_CODES_MAP, PLAYER_COLOR_MAP } from 'src/app/utils/player-c
 import { PlayerNames } from './player-names';
 import { isNonEmptySubstring } from 'src/app/utils/utils';
 
-type Names = 'btag' | 'acct' | 'color';
+type Names = 'btag' | 'acct' | 'color' | 'country';
 
 /**
  * Singleton class responsible for managing player names.
@@ -102,6 +102,10 @@ export class NameManager {
 				SetPlayerName(p, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).color}|r`);
 				break;
 
+			case 'country':
+				SetPlayerName(p, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).country}|r`);
+				break;
+
 			default:
 				break;
 		}
@@ -158,5 +162,22 @@ export class NameManager {
 		SetPlayerColor(p, color);
 
 		this.names.get(p).color = colorName;
+	}
+
+	/**
+	 * Sets the country of a player.
+	 * @param p - The player object.
+	 * @param country - The new country name.
+	 */
+	public setCountry(p: player, country: string): void {
+		this.names.get(p).country = country;
+	}
+
+	/**
+	 * @param p - The player object.
+	 * @returns The country name of the player.
+	 */
+	public getCountry(p: player): string {
+		return this.names.get(p).country;
 	}
 }

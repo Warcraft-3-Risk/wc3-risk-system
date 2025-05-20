@@ -5,6 +5,7 @@ export class PlayerNames {
 	private readonly _btag: string;
 	private readonly _acct: string;
 	private _color: string;
+	private _country?: string;
 
 	/**
 	 * Initializes the BattleTag and account name based on the provided name.
@@ -51,5 +52,20 @@ export class PlayerNames {
 	 */
 	public get color() {
 		return this._color;
+	}
+
+	/**
+	 * Sets the country name for the player.
+	 * @param country - The new country code.
+	 */
+	public set country(country: string) {
+		this._country = country;
+	}
+
+	/**
+	 * @returns The country name of the player.
+	 */
+	public get country() {
+		return this._country;
 	}
 }
