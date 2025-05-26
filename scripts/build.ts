@@ -28,16 +28,21 @@ function main() {
 		fs.mkdirSync(config.outputFolder);
 	}
 
+	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
+
 	const distDir = `./dist/${config.mapFolder}`;
 	const ddsDir = path.join(__dirname, '..', distDir, 'war3mapPreview.dds');
-	const mapName = `${config.mapName} ${config.mapVersion}.w3x`;
+	const mapName = `${config.mapName} ${config.mapVersion}${w3cModeEnabled ? ' w3c' : ''}.w3x`;
+	const formattedMapName = mapName.replaceAll(' ', '_');
+
+	console.log(config);
 
 	if (fs.existsSync(ddsDir)) {
 		const copyDest = path.join(__dirname, '..', distDir, 'war3mapMap.dds');
 		fs.renameSync(ddsDir, copyDest);
 	}
 
-	createMapFromDir(`${config.outputFolder}/${mapName}`, distDir);
+	createMapFromDir(`${config.outputFolder}/${formattedMapName}`, distDir);
 }
 
 /**
@@ -105,12 +110,13 @@ function updateStrings(wtsDir: string | undefined, w3iDir: string | undefined, c
 function updateTsFileWithConfig() {
 	const config: IProjectConfig = loadJsonFile('config.json');
 	const tsFilePath = path.join(__dirname, '..', 'src/app/utils', 'map-info.ts'); // Replace with your file path
+	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
 
 	const fileContent = `
 	//Do not edit - this will automatically update based on the project config.json upon building the map
 	export const MAP_NAME: string = '${config.mapName}';
 	export const MAP_VERSION: string = '${config.mapVersion}';
-	export const W3C_MODE_ENABLED: boolean = ${config.w3cModeEnabled ? config.w3cModeEnabled : false};
+	export const W3C_MODE_ENABLED: boolean = ${w3cModeEnabled};
   `;
 
 	fs.writeFileSync(tsFilePath, fileContent);

@@ -57,7 +57,7 @@ jobs:
 
       - name: Upload packaged app using GitHub CLI
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" "${{ env.OUTPUT_FOLDER }}/Risk_Europe_${{ env.TAG_NAME }}${{ matrix.w3c_mode_name }}.w3x" --clobber
+          gh release upload "${{ github.event.release.tag_name }}" "${{ env.OUTPUT_FOLDER }}/Risk Europe ${{ env.TAG_NAME }}${{ matrix.w3c_mode }}.w3x" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ env.TAG_NAME }}
