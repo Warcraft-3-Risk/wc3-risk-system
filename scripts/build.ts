@@ -35,8 +35,6 @@ function main() {
 	const mapName = `${config.mapName} ${config.mapVersion}${w3cModeEnabled ? ' w3c' : ''}.w3x`;
 	const formattedMapName = mapName.replaceAll(' ', '_');
 
-	console.log(config);
-
 	if (fs.existsSync(ddsDir)) {
 		const copyDest = path.join(__dirname, '..', distDir, 'war3mapMap.dds');
 		fs.renameSync(ddsDir, copyDest);
