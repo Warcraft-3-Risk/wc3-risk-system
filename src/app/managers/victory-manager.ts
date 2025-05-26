@@ -128,6 +128,17 @@ export class VictoryManager {
 		}
 	}
 
+	public wonBestOf(matches: number): player | undefined {
+		if (this.winTracker.playedBestOf(matches)) {
+			return this.winTracker.getEntityWithMostWins();
+		}
+		return undefined;
+	}
+
+	public getLoser(): player | undefined {
+		return this.winTracker.getEntityWithLeastWins();
+	}
+
 	public saveStats() {
 		VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
 		PlayerManager.getInstance().playersAliveOrNomad.forEach((player) => {
