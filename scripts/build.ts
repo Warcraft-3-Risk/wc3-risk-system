@@ -110,7 +110,7 @@ function updateTsFileWithConfig() {
 	//Do not edit - this will automatically update based on the project config.json upon building the map
 	export const MAP_NAME: string = '${config.mapName}';
 	export const MAP_VERSION: string = '${config.mapVersion}';
-	export const W3C_MODE_ENABLED: boolean = ${config.w3cModeEnabled};
+	export const W3C_MODE_ENABLED: boolean = ${config.w3cModeEnabled ? config.w3cModeEnabled : false};
   `;
 
 	fs.writeFileSync(tsFilePath, fileContent);
