@@ -16,7 +16,6 @@ jobs:
       matrix:
         os: [windows-latest] # Optional if you want to test on both OSs
         w3c_mode: [true, false]
-        w3c_mode_name: ['_w3c', '']
 
     env:
       W3C_MODE_ENABLED: ${{ matrix.w3c_mode }}
