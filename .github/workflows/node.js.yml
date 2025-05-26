@@ -21,12 +21,19 @@ jobs:
         with:
           node-version: '22'
 
-      - name: Generate version suffix
-        id: version
+      - name: Generate version suffix (Linux)
+        if: runner.os == 'Linux'
+        shell: bash
         run: |
-          # Extract version suffix from the tag
           TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+
+      - name: Generate version suffix (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $TAG_NAME = $env:GITHUB_REF -replace 'refs/tags/', ''
+          echo "TAG_NAME=$TAG_NAME" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install dependencies
         run: npm install
