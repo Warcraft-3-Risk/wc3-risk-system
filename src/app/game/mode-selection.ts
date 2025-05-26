@@ -8,6 +8,7 @@ import { EVENT_MODE_SELECTION, EVENT_SET_GAME_MODE } from 'src/app/utils/events/
 import { ENABLE_EXPORT_GAME_SETTINGS } from 'src/configs/game-settings';
 import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import { GlobalGameData } from './state/global-game-state';
+import { W3C_MODE_ENABLED } from '../utils/map-info';
 
 export class ModeSelection {
 	private ui: SettingsView;
@@ -31,6 +32,17 @@ export class ModeSelection {
 	}
 
 	public run(): void {
+		if (W3C_MODE_ENABLED) {
+			const settingsContext: SettingsContext = SettingsContext.getInstance();
+			settingsContext.getSettings().Promode = 1;
+			settingsContext.getSettings().GameType = 0;
+			settingsContext.getSettings().Fog = 1;
+			settingsContext.getSettings().Diplomacy.option = 1;
+			settingsContext.getSettings().Overtime.option = 3;
+			this.end();
+			return;
+		}
+
 		this.ui.show();
 		if (NameManager.getInstance().getAcct(Player(23)) == 'RiskBot') {
 			const settingsContext: SettingsContext = SettingsContext.getInstance();

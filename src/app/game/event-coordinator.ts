@@ -25,6 +25,8 @@ import { StateData } from './game-mode/state/state-data';
 import { CapitalsMode } from './game-mode/mode/capitals-mode';
 import { SettingsContext } from '../settings/settings-context';
 import { PromodeMode } from './game-mode/mode/promode-mode';
+import { W3CMode } from './game-mode/mode/w3c-mode';
+import { W3C_MODE_ENABLED } from '../utils/map-info';
 
 export class EventCoordinator {
 	private static instance: EventCoordinator;
@@ -90,7 +92,9 @@ export class EventCoordinator {
 		if (gameType == 'Capitals') {
 			this._currentMode = new CapitalsMode();
 		} else {
-			if (SettingsContext.getInstance().isPromode()) {
+			if (W3C_MODE_ENABLED) {
+				this._currentMode = new W3CMode();
+			} else if (SettingsContext.getInstance().isPromode()) {
 				this._currentMode = new PromodeMode();
 			} else {
 				this._currentMode = new StandardMode();

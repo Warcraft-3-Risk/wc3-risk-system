@@ -14,6 +14,9 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 	}
 
 	async runAsync(): Promise<void> {
+		print('Preparing to reset match...');
+		await Wait.forSeconds(10);
+
 		StatisticsController.getInstance().setViewVisibility(false);
 
 		FogManager.getInstance().turnFogOff();

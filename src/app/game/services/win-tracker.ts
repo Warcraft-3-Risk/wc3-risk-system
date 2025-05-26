@@ -1,3 +1,4 @@
+import { debugPrint } from 'src/app/utils/debug-print';
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
 import { PLAYER_SLOTS } from 'src/app/utils/utils';
 
@@ -45,6 +46,21 @@ export class WinTracker {
 		this.updateUI();
 	}
 
+	public playedBestOf(matches: number): boolean {
+		let entities = Array.from(this.entityData.values());
+
+		const playedMatchCount = entities.some((entityData) => {
+			if (entityData.wins >= matches) {
+				this.currentLeader = entityData.entity;
+				return true;
+			}
+		});
+
+		debugPrint(`Played matches: ${playedMatchCount}`, 'WinTracker');
+
+		return playedMatchCount;
+	}
+
 	public getEntityWithMostWins(): player {
 		let entities = Array.from(this.entityData.values());
 
@@ -53,6 +69,16 @@ export class WinTracker {
 		}
 
 		return entities[0].wins > entities[1].wins ? entities[0].entity : entities[1].entity;
+	}
+
+	public getEntityWithLeastWins(): player {
+		let entities = Array.from(this.entityData.values());
+
+		if (entities[0].wins === entities[1].wins) {
+			return this.currentLeader;
+		}
+
+		return entities[0].wins < entities[1].wins ? entities[0].entity : entities[1].entity;
 	}
 
 	private updateUI() {
