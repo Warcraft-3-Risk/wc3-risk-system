@@ -10,7 +10,7 @@ env:
 jobs:
   build:
     permissions: write-all
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
@@ -34,7 +34,7 @@ jobs:
       - name: Build the application
         env:
           TAG_NAME: ${{ env.TAG_NAME }}
-          W3C_MODE_ENABLED: true
+          # W3C_MODE_ENABLED: ${{ env.W3C_MODE_ENABLED }}
         run: npm run build
 
       - name: Upload packaged app using GitHub CLI
