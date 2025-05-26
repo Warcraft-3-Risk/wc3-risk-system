@@ -106,9 +106,6 @@ function updateTsFileWithConfig() {
 	const config: IProjectConfig = loadJsonFile('config.json');
 	const tsFilePath = path.join(__dirname, '..', 'src/app/utils', 'map-info.ts'); // Replace with your file path
 
-	// removing ' at the start and end of the boolean value
-	console.log('Hello', config);
-
 	const fileContent = `
 	//Do not edit - this will automatically update based on the project config.json upon building the map
 	export const MAP_NAME: string = '${config.mapName}';
