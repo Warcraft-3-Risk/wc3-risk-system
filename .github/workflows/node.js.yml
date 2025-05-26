@@ -12,6 +12,15 @@ jobs:
     permissions: write-all
     runs-on: windows-latest
 
+    strategy:
+      matrix:
+        os: [windows-latest] # Optional if you want to test on both OSs
+        w3c_mode: [true, false]
+        w3c_mode_name: ['_w3c', '']
+
+    env:
+      W3C_MODE_ENABLED: ${{ matrix.w3c_mode }}
+
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
@@ -27,6 +36,7 @@ jobs:
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
+          echo "W3C_MODE_ENABLED=${W3C_MODE_ENABLED}" >> $GITHUB_ENV
 
       - name: Generate version suffix (Windows)
         if: runner.os == 'Windows'
@@ -34,6 +44,7 @@ jobs:
         run: |
           $TAG_NAME = $env:GITHUB_REF -replace 'refs/tags/', ''
           echo "TAG_NAME=$TAG_NAME" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "W3C_MODE_ENABLED=$env:W3C_MODE_ENABLED" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install dependencies
         run: npm install
@@ -46,7 +57,7 @@ jobs:
 
       - name: Upload packaged app using GitHub CLI
         run: |
-          gh release upload "${{ github.event.release.tag_name }}" "${{ env.OUTPUT_FOLDER }}/Risk Europe ${{ env.TAG_NAME }}.w3x" --clobber
+          gh release upload "${{ github.event.release.tag_name }}" "${{ env.OUTPUT_FOLDER }}/Risk_Europe_${{ env.TAG_NAME }}${{ matrix.w3c_mode_name }}.w3x" --clobber
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG_NAME: ${{ env.TAG_NAME }}
