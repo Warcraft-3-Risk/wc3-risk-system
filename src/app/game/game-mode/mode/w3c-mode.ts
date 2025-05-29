@@ -8,12 +8,14 @@ import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { PromodeCountdownState } from '../promode-game-mode/promode-countdown-state';
 import { W3CGameOverState } from '../w3c-mode/w3c-game-over-state';
+import { W3CMatchValidationState } from '../w3c-mode/w3c-match-validation-state';
 
 export class PromodeData implements StateData {}
 
 export class W3CMode extends BaseMode<PromodeData> {
 	protected setupStates() {
 		return [
+			new W3CMatchValidationState(),
 			new SetupState(),
 			new CityDistributeState(),
 			new SetPromodeTempVisionState(),
