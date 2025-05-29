@@ -11,6 +11,7 @@ import { RestartCommand } from './restart';
 import { HowTo } from './turorial';
 import { UICommand } from './ui';
 import { W3CDrawCommand } from './w3c-draw';
+import { W3CGGCommand } from './w3c-gg';
 
 export function SetCommands() {
 	const chatManager: ChatManager = ChatManager.getInstance();
@@ -27,4 +28,5 @@ export function SetCommands() {
 	UICommand(chatManager);
 	HowTo(chatManager);
 	W3CDrawCommand(chatManager);
+	W3CGGCommand(chatManager);
 }
