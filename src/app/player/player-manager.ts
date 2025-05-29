@@ -91,9 +91,12 @@ export class PlayerManager {
 		return this._playerFromHandle.has(player);
 	}
 
+	public getHumanPlayers(): ActivePlayer[] {
+		return Array.from(this._playerFromHandle.values()).filter((p: ActivePlayer) => GetPlayerController(p.getPlayer()) === MAP_CONTROL_USER);
+	}
+
 	public getHumanPlayersCount(): number {
-		return Array.from(this._playerFromHandle.values()).filter((p: ActivePlayer) => GetPlayerController(p.getPlayer()) === MAP_CONTROL_USER)
-			.length;
+		return this.getHumanPlayers().length;
 	}
 
 	public isObserver(player: player) {
@@ -105,7 +108,7 @@ export class PlayerManager {
 	}
 
 	public setObserver(player: player) {
-		this._observerFromHandle.set(player, new HumanPlayer(player))
+		this._observerFromHandle.set(player, new HumanPlayer(player));
 	}
 
 	public get playersAliveOrNomad(): Map<player, ActivePlayer> {
