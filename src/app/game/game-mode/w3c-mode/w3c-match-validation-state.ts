@@ -15,7 +15,7 @@ export class W3CMatchValidationState<T extends StateData> extends BaseState<T> {
 		// If there are no human players, we cannot proceed with the match and they win by default after a delay
 		if (humanPlayers.length < 2) {
 			await Wait.forSeconds(1);
-			GlobalMessage('Not players to start the match. You win by default', 'Sound\\Interface\\ItemReceived.flac', 10);
+			GlobalMessage('No human opponents found. You win by default!', 'Sound\\Interface\\ItemReceived.flac', 10);
 			await Wait.forSeconds(3);
 			CustomVictoryBJ(humanPlayers[0].getPlayer(), true, true);
 			return;
