@@ -15,7 +15,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 
 	async runAsync(): Promise<void> {
 		print('Preparing to reset match...');
-		await Wait.forSeconds(10);
+		await Wait.forSeconds(2);
 
 		StatisticsController.getInstance().setViewVisibility(false);
 
