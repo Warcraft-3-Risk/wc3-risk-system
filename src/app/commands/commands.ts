@@ -10,6 +10,7 @@ import { NamesCommand } from './names';
 import { RestartCommand } from './restart';
 import { HowTo } from './turorial';
 import { UICommand } from './ui';
+import { W3CDrawCommand } from './w3c-draw';
 
 export function SetCommands() {
 	const chatManager: ChatManager = ChatManager.getInstance();
@@ -25,4 +26,5 @@ export function SetCommands() {
 	HelpCommand(chatManager);
 	UICommand(chatManager);
 	HowTo(chatManager);
+	W3CDrawCommand(chatManager);
 }
