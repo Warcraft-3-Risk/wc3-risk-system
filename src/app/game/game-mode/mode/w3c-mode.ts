@@ -1,8 +1,8 @@
-import { CityDistributeState } from '../base-game-mode.ts/city-distribute-state';
-import { GameLoopState } from '../base-game-mode.ts/game-loop-state';
-import { ResetState } from '../base-game-mode.ts/reset-state';
+import { CityDistributeState } from '../base-game-mode/city-distribute-state';
+import { GameLoopState } from '../base-game-mode/game-loop-state';
+import { ResetState } from '../base-game-mode/reset-state';
 import { SetPromodeTempVisionState } from '../promode-game-mode/set-promode-temp-vision-state';
-import { SetupState } from '../base-game-mode.ts/setup-state';
+import { SetupState } from '../base-game-mode/setup-state';
 import { BaseMode } from './base-mode';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';

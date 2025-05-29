@@ -1,14 +1,14 @@
-import { CityDistributeState } from '../base-game-mode.ts/city-distribute-state';
-import { CountdownState } from '../base-game-mode.ts/countdown-state';
-import { GameLoopState } from '../base-game-mode.ts/game-loop-state';
-import { GameOverState } from '../base-game-mode.ts/game-over-state';
-import { ResetState } from '../base-game-mode.ts/reset-state';
-import { SetupState } from '../base-game-mode.ts/setup-state';
+import { CityDistributeState } from '../base-game-mode/city-distribute-state';
+import { CountdownState } from '../base-game-mode/countdown-state';
+import { GameLoopState } from '../base-game-mode/game-loop-state';
+import { GameOverState } from '../base-game-mode/game-over-state';
+import { ResetState } from '../base-game-mode/reset-state';
+import { SetupState } from '../base-game-mode/setup-state';
 import { BaseMode } from './base-mode';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
-import { VisionState } from '../base-game-mode.ts/vision-state';
-import { ApplyFogState } from '../base-game-mode.ts/apply-fog-state';
+import { VisionState } from '../base-game-mode/vision-state';
+import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 
 export class StandardData implements StateData {}
 

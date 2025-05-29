@@ -3,7 +3,7 @@ import { CityToCountry } from 'src/app/country/country-map';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Wait } from 'src/app/utils/wait';
 import { GlobalGameData } from '../../state/global-game-state';
-import { ApplyFogState } from '../base-game-mode.ts/apply-fog-state';
+import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { SettingsContext } from 'src/app/settings/settings-context';
 
 export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogState<T> {

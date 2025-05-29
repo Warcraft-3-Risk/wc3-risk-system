@@ -1,7 +1,7 @@
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { City } from 'src/app/city/city';
-import { GameLoopState } from '../base-game-mode.ts/game-loop-state';
+import { GameLoopState } from '../base-game-mode/game-loop-state';
 import { CapitalsData } from '../mode/capitals-mode';
 import { CityToCountry } from 'src/app/country/country-map';
 import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
