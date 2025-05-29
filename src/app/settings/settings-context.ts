@@ -5,6 +5,7 @@ import { GameTypeStrategy } from './strategies/game-type-strategy';
 import { PromodeStrategy } from './strategies/promode-strategy';
 import { Settings } from './settings';
 import { OvertimeStrategy } from './strategies/overtime-strategy';
+import { W3C_MODE_ENABLED } from '../utils/map-info';
 
 export type SettingsKey = 'GameType' | 'Diplomacy' | 'Fog' | 'Promode' | 'Overtime';
 
@@ -126,5 +127,9 @@ export class SettingsContext {
 	 */
 	public isOvertimeOn(): boolean {
 		return this.settings.Overtime.option != 3;
+	}
+
+	public isW3CMode(): boolean {
+		return W3C_MODE_ENABLED;
 	}
 }

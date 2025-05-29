@@ -13,6 +13,7 @@ import { debugPrint } from 'src/app/utils/debug-print';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { Wait } from 'src/app/utils/wait';
 import { GlobalMessage } from 'src/app/utils/messages';
+import { W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER } from 'src/configs/game-settings';
 
 export class PromodeData implements StateData {}
 
@@ -57,7 +58,7 @@ export class W3CMode extends BaseMode<PromodeData> {
 	async checkAndHandleVictoryAsync(message: string): Promise<boolean> {
 		const humanPlayers = PlayerManager.getInstance().getCurrentActiveHumanPlayers();
 
-		const terminate = humanPlayers.length < 2;
+		const terminate = W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER && humanPlayers.length < 2;
 
 		if (terminate) {
 			await Wait.forSeconds(1);
