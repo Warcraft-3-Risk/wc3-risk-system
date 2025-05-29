@@ -4,6 +4,7 @@ import { GlobalMessage } from '../utils/messages';
 import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { Wait } from '../utils/wait';
+import { W3C_DRAW_DURATION } from 'src/configs/game-settings';
 
 /**
  * Singleton class responsible for managing draw.
@@ -50,8 +51,8 @@ export class W3CDrawManager {
 			TimerStart(this.drawTimer, 1, true, () => {
 				secondsElapsed++;
 
-				// If 5 seconds passed, reset
-				if (secondsElapsed >= 6) {
+				// If W3C_DRAW_DURATION seconds passed, reset
+				if (secondsElapsed >= W3C_DRAW_DURATION) {
 					GlobalMessage(`Draw vote expired after ${secondsElapsed} seconds`, null, 5);
 					this.resetDrawState();
 				}
