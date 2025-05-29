@@ -55,14 +55,14 @@ export class W3CMode extends BaseMode<PromodeData> {
 	}
 
 	async checkAndHandleVictoryAsync(message: string): Promise<boolean> {
-		const humanPlayers = PlayerManager.getInstance().getHumanPlayers();
+		const humanPlayers = PlayerManager.getInstance().getCurrentActiveHumanPlayers();
 
 		const terminate = humanPlayers.length < 2;
 
 		if (terminate) {
 			await Wait.forSeconds(1);
 			GlobalMessage(message, 'Sound\\Interface\\ItemReceived.flac', 10);
-			await Wait.forSeconds(3);
+			await Wait.forSeconds(1);
 			CustomVictoryBJ(humanPlayers[0].getPlayer(), true, true);
 		}
 
