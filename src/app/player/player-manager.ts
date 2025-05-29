@@ -75,6 +75,29 @@ export class PlayerManager {
 		return this._instance;
 	}
 
+	public getCurrentActiveHumanPlayers(): ActivePlayer[] {
+		let activePlayers: ActivePlayer[] = [];
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			const player = Player(i);
+
+			if (IsPlayerObserver(player)) {
+				this._observerFromHandle.set(player, new HumanPlayer(player));
+				continue;
+			}
+
+			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) == PLAYER_SLOT_STATE_LEFT) {
+				continue;
+			}
+
+			if (GetPlayerController(player) == MAP_CONTROL_USER) {
+				activePlayers.push(new HumanPlayer(player));
+			}
+		}
+
+		return activePlayers;
+	}
+
 	public activeToObs(player: player) {
 		this._observerFromHandle.set(player, this._playerFromHandle.get(player) as HumanPlayer);
 		this._playerFromHandle.delete(player);
