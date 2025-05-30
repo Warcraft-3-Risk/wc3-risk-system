@@ -42,7 +42,7 @@ export const ENABLE_EXPORT_END_GAME_SCORE: boolean = true;
 export const CAPITALS_SELECTION_PHASE: number = 30;
 
 // This represents whether the game should terminate if there is only one human player left
-export const W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER: boolean = false;
+export const W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER: boolean = true;
 
 // This represents the duration of the W3C draw vote in seconds. Default is 30 seconds.
-export const W3C_DRAW_DURATION: number = 30;
+export const W3C_DRAW_DURATION: number = 120;

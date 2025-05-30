@@ -2,6 +2,7 @@ import { debugPrint } from '../utils/debug-print';
 import { NameManager } from './names/name-manager';
 import { PlayerManager } from '../player/player-manager';
 import { getElapsedTime } from 'w3ts';
+import { W3C_DRAW_DURATION } from 'src/configs/game-settings';
 
 /**
  * Singleton class responsible for managing draw.
@@ -20,7 +21,7 @@ export class W3CDrawManager {
 	}
 
 	startDrawVote(triggeringPlayer: player): void {
-		if (getElapsedTime() > 120) {
+		if (getElapsedTime() > W3C_DRAW_DURATION) {
 			DisplayTextToPlayer(
 				triggeringPlayer,
 				0,
