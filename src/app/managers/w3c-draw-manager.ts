@@ -1,10 +1,7 @@
 import { debugPrint } from '../utils/debug-print';
 import { NameManager } from './names/name-manager';
-import { GlobalMessage } from '../utils/messages';
 import { PlayerManager } from '../player/player-manager';
-import { ActivePlayer } from '../player/types/active-player';
-import { Wait } from '../utils/wait';
-import { W3C_DRAW_DURATION } from 'src/configs/game-settings';
+import { getElapsedTime } from 'w3ts';
 
 /**
  * Singleton class responsible for managing draw.
@@ -12,8 +9,6 @@ import { W3C_DRAW_DURATION } from 'src/configs/game-settings';
 export class W3CDrawManager {
 	private static instance: W3CDrawManager;
 	private playersVoted: Set<player> = new Set();
-	private drawActive: boolean = false;
-	private drawTimer: timer | null = null;
 
 	private constructor() {}
 
@@ -25,68 +20,42 @@ export class W3CDrawManager {
 	}
 
 	startDrawVote(triggeringPlayer: player): void {
-		if (this.drawActive && this.playersVoted.has(triggeringPlayer)) {
+		if (getElapsedTime() > 120) {
+			DisplayTextToPlayer(
+				triggeringPlayer,
+				0,
+				0,
+				`|cff00ff00[W3C]:|r The|cffffff00 -draw|r command is disabled after two minutes of gameplay.`
+			);
+			return;
+		}
+
+		if (this.playersVoted.has(triggeringPlayer)) {
 			debugPrint('[DrawManager] Player already voted for draw.');
 			return;
 		}
 
+		// Player has voted
 		this.playersVoted.add(triggeringPlayer);
-		GlobalMessage(`${NameManager.getInstance().getDisplayName(triggeringPlayer)} has voted for a draw.`, null, 5);
 
-		const humanPlayers = PlayerManager.getInstance().getHumanPlayers();
+		const remainingPlayers = PlayerManager.getInstance().getCurrentActiveHumanPlayers();
+		let remainingPlayerVoteCount = remainingPlayers.length - this.playersVoted.size;
+
+		if (this.playersVoted.size == 1) {
+			print(
+				`|cff00ff00[W3C]:|r|cffFF4500 ${NameManager.getInstance().getDisplayName(triggeringPlayer)}|r is proposing to cancel this game. \nType|cffffff00 -draw|r to cancel the game. ${remainingPlayerVoteCount} player(s) remaining.`
+			);
+		} else {
+			print(
+				`|cff00ff00[W3C]:|r|cffFF4500 ${NameManager.getInstance().getDisplayName(triggeringPlayer)}|r votes to cancel this game. ${remainingPlayerVoteCount} player(s) remaining.`
+			);
+		}
 
 		// Check if all remaining players agreed
-		const allAgreed = humanPlayers.every((p) => this.playersVoted.has(p.getPlayer()));
-
-		if (allAgreed) {
-			this.executeDraw(humanPlayers);
-			return;
-		}
-
-		if (!this.drawActive) {
-			this.drawActive = true;
-			let secondsElapsed = 0;
-			this.drawTimer = CreateTimer();
-
-			TimerStart(this.drawTimer, 1, true, () => {
-				secondsElapsed++;
-
-				// If W3C_DRAW_DURATION seconds passed, reset
-				if (secondsElapsed >= W3C_DRAW_DURATION) {
-					GlobalMessage(`Draw vote expired after ${secondsElapsed} seconds`, null, 5);
-					this.resetDrawState();
-				}
-			});
-
-			debugPrint('[DrawManager] Draw vote started. Timer ticking every second...');
-		}
-	}
-
-	private async executeDraw(players: ActivePlayer[]) {
-		debugPrint('[DrawManager] All players agreed. Executing draw.');
-
-		if (this.drawTimer) {
-			PauseTimer(this.drawTimer);
-			DestroyTimer(this.drawTimer);
-			this.drawTimer = null;
-		}
-
-		for (const player of players) {
-			await Wait.forSeconds(1); // Optional delay per player
-			CustomVictoryBJ(player.getPlayer(), true, true);
-		}
-
-		this.resetDrawState();
-	}
-
-	private resetDrawState() {
-		debugPrint('[DrawManager] Draw vote expired or completed. Resetting state.');
-		this.playersVoted.clear();
-		this.drawActive = false;
-		if (this.drawTimer) {
-			PauseTimer(this.drawTimer);
-			DestroyTimer(this.drawTimer);
-			this.drawTimer = null;
+		if (remainingPlayerVoteCount === 0) {
+			for (const player of remainingPlayers) {
+				RemovePlayerPreserveUnitsBJ(player.getPlayer(), PLAYER_GAME_RESULT_NEUTRAL, false);
+			}
 		}
 	}
 }
