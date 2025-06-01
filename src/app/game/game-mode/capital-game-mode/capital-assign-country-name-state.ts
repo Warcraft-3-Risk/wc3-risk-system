@@ -11,11 +11,10 @@ export class CapitalAssignCountrytNameState extends BaseState<CapitalsData> {
 	}
 
 	run(): void {
-		GlobalGameData.matchPlayers.forEach((player) => {
-			const capital = this.stateData.capitals.get(player.getPlayer());
+		this.stateData.capitals.forEach((capital, player) => {
 			const countryName = CityToCountry.get(capital).getName();
-			NameManager.getInstance().setCountry(player.getPlayer(), countryName);
-			NameManager.getInstance().setName(player.getPlayer(), 'country');
+			NameManager.getInstance().setCountry(player, countryName);
+			NameManager.getInstance().setName(player, 'country');
 		});
 
 		ScoreboardManager.getInstance().updateFull();

@@ -67,18 +67,24 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 	}
 
 	resetCapitalsForEliminatedPlayers(): void {
-		GlobalGameData.matchPlayers.forEach((player) => {
-			if (player.status.isEliminated()) {
-				const city = this.stateData.playerCapitalSelections.get(player.getPlayer());
-				city?.reset();
+		const playersEliminated = GlobalGameData.matchPlayers.filter((player) => player.status.isEliminated());
+		if (playersEliminated.length === 0) {
+			debugPrint('No players are eliminated, skipping capital reset.');
+			return;
+		}
 
-				this.stateData.playerCapitalSelections.delete(player.getPlayer());
-			}
+		playersEliminated.forEach((player) => {
+			const city = this.stateData.playerCapitalSelections.get(player.getPlayer());
+			city?.reset();
+
+			this.stateData.playerCapitalSelections.delete(player.getPlayer());
+			debugPrint(`Player ${NameManager.getInstance().getDisplayName(player.getPlayer())} is eliminated.`);
 		});
 	}
 
 	// Remove player from the capital selection phase if they leave the game
 	onPlayerLeft(player: ActivePlayer): void {
+		debugPrint(`Player ${NameManager.getInstance().getDisplayName(player.getPlayer())} has left the game during capital selection.`);
 		const city = this.stateData.playerCapitalSelections.get(player.getPlayer());
 		city?.reset();
 		this.stateData.playerCapitalSelections.delete(player.getPlayer());
