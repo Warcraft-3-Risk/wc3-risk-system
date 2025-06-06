@@ -74,6 +74,9 @@ export class Spawner implements Resetable, Ownable {
 			let loc: location = GetUnitRallyPoint(this.unit);
 
 			UnitAddType(u, UNIT_TYPE.SPAWN);
+			if (GetLocalPlayer() == this.getOwner()) {
+				SetUnitVertexColor(u, 200, 200, 200, 150);
+			}
 			BlzSetUnitName(u, `${GetUnitName(u)} (${this.country})`);
 			this.spawnMap.get(this.getOwner()).push(u);
 			SPANWER_UNITS.set(u, this);
