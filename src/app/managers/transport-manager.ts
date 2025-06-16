@@ -11,6 +11,7 @@ type Transport = {
 	effect: effect | null;
 	duration: number;
 	autoloadStatus: boolean;
+	event: TimedEvent | null;
 };
 
 const AUTO_LOAD_DISTANCE: number = 350;
@@ -66,6 +67,7 @@ export class TransportManager {
 			effect: null,
 			duration: 0,
 			autoloadStatus: false,
+			event: null,
 		};
 
 		this.transports.set(unit, transport);
@@ -265,6 +267,10 @@ export class TransportManager {
 	 * @param transport - The transport unit with the Auto-Load ability activated.
 	 */
 	private handleAutoLoadOn(transport: Transport) {
+		if (transport.cargo.length >= 10) {
+			return;
+		}
+
 		transport.autoloadStatus = true;
 
 		transport.effect = AddSpecialEffectTarget(
@@ -302,6 +308,8 @@ export class TransportManager {
 				timedEventManager.removeTimedEvent(event);
 			}
 		});
+
+		transport.event = event;
 	}
 
 	/**
@@ -311,5 +319,10 @@ export class TransportManager {
 	private handleAutoLoadOff(transport: Transport) {
 		transport.autoloadStatus = false;
 		DestroyEffect(transport.effect);
+
+		if (transport.event != null) {
+			TimedEventManager.getInstance().removeTimedEvent(transport.event);
+			transport.event = null;
+		}
 	}
 }
