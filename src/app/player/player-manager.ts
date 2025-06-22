@@ -6,12 +6,8 @@ import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
 
-const banList: string[] = [
-	'nappa#11822', //Full screen spam
-	'keen13#2151', //Map saboteur
-	'arfan#11830', //Fake account to impersonate arfan
-	'serenity#13183', //Multi accounter - selinace
-];
+// const banList: string[] = [
+// ];
 
 export class PlayerManager {
 	public static readonly PLAYING: string = '|cFF00FFF0Playing|r';
@@ -30,12 +26,12 @@ export class PlayerManager {
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
 
-			banList.forEach((name) => {
-				if (NameManager.getInstance().getBtag(player).toLowerCase() == name) {
-					CustomVictoryBJ(player, false, false);
-					ClearTextMessages();
-				}
-			});
+			// banList.forEach((name) => {
+			// 	if (NameManager.getInstance().getBtag(player).toLowerCase() == name) {
+			// 		CustomVictoryBJ(player, false, false);
+			// 		ClearTextMessages();
+			// 	}
+			// });
 
 			if (IsPlayerObserver(player)) {
 				this._observerFromHandle.set(player, new HumanPlayer(player));
