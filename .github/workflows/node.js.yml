@@ -33,27 +33,29 @@ jobs:
         if: runner.os == 'Linux'
         shell: bash
         run: |
-          BASE_TAG_NAME=${GITHUB_REF#refs/tags/}
-          if [[ "$W3C_MODE_ENABLED" == "true" ]]; then
-            TAG_NAME="${BASE_TAG_NAME}_w3c"
-          else
-            TAG_NAME="${BASE_TAG_NAME}"
-          fi
+          TAG_NAME=${GITHUB_REF#refs/tags/}
           echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
-          echo "RELEASE_FILENAME=Risk_Europe_${TAG_NAME}.w3x" >> $GITHUB_ENV
+          if [[ "$W3C_MODE_ENABLED" == "true" ]]; then
+            SUFFIX="_w3c"
+          else
+            SUFFIX=""
+          fi
+          echo "W3C_SUFFIX=${SUFFIX}" >> $GITHUB_ENV
+          echo "RELEASE_FILENAME=Risk_Europe_${TAG_NAME}${SUFFIX}.w3x" >> $GITHUB_ENV
 
       - name: Generate version suffix (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $BaseTagName = $env:GITHUB_REF -replace 'refs/tags/', ''
-          if ($env:W3C_MODE_ENABLED -eq "true") {
-            $TAG_NAME = "${BaseTagName}_w3c"
-          } else {
-            $TAG_NAME = "${BaseTagName}"
-          }
+          $TAG_NAME = $env:GITHUB_REF -replace 'refs/tags/', ''
           echo "TAG_NAME=$TAG_NAME" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-          echo "RELEASE_FILENAME=Risk_Europe_${TAG_NAME}.w3x" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          if ($env:W3C_MODE_ENABLED -eq "true") {
+            $SUFFIX = "_w3c"
+          } else {
+            $SUFFIX = ""
+          }
+          echo "W3C_SUFFIX=$SUFFIX" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+          echo "RELEASE_FILENAME=Risk_Europe_${TAG_NAME}${SUFFIX}.w3x" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Install dependencies
         run: npm install
