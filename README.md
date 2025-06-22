@@ -107,18 +107,13 @@ TODO
 
 ## Publish builds
 
-This project uses Github Actions to publish its builds. Maps are named `Risk Europe [Major].[Minor].w3x`. Example, `Risk Europe 2.60.w3x`.
+This project uses Github Actions to publish its builds. To publish a new version simply create a new release with a unique version tag. Once published, wait until the github actions have completed building the artifacts and attached them to the release.
 
-The fastest way to publish a new build as a release based on the main branch is to push a tag.
+Builds include `Risk_Europe_X.YZ.w3x` and `Risk_Europe_X.YZ_w3c.w3x`.
 
-Run the following commands:
+The version with w3c suffix includes specific build instructions that ensures that the version automatically launches the 1v1 ladder matchup required by the W3Champions platform.
 
-```
-git tag 2.60
-git push origin 2.60
-```
-
-Replace the values as you see fit.
+The reason for a X.YZ version format is that the custom map list is sorted alphabetically. This creates issues when using semver, as the version would not be ordered alphabetically as such, making it difficult for the end user when browsing map versions.
 
 ## Contributing
 
