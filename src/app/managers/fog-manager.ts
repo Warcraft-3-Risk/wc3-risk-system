@@ -25,11 +25,10 @@ export class FogManager {
 	 * @param who - The player to manage.
 	 */
 	public add(who: player) {
-		if (this._fog.has(who)) {
-			return;
-		}
-
-		this._fog.set(who, CreateFogModifierRect(who, FOG_OF_WAR_VISIBLE, GetPlayableMapRect(), true, false));
+		// if (this._fog.has(who)) {
+		// 	return;
+		// }
+		// this._fog.set(who, CreateFogModifierRect(who, FOG_OF_WAR_VISIBLE, GetPlayableMapRect(), true, false));
 	}
 
 	/**
@@ -37,8 +36,8 @@ export class FogManager {
 	 * @param who - The player to remove from management.
 	 */
 	public remove(who: player) {
-		DestroyFogModifier(this._fog.get(who));
-		this._fog.delete(who);
+		// DestroyFogModifier(this._fog.get(who));
+		// this._fog.delete(who);
 	}
 
 	/**
@@ -48,16 +47,17 @@ export class FogManager {
 	 * @param who - Optional: specific player to activate fog for.
 	 */
 	public turnFogOn(who?: player) {
-		if (who && !IsPlayerObserver(who)) {
-			return FogModifierStop(this._fog.get(who));
-		}
+		FogEnable(true);
+		// if (who && !IsPlayerObserver(who)) {
+		// 	return FogModifierStop(this._fog.get(who));
+		// }
 
-		this._fog.forEach((fog, player) => {
-			if (IsPlayerObserver(player)) {
-				return;
-			}
-			FogModifierStop(fog);
-		});
+		// this._fog.forEach((fog, player) => {
+		// 	if (IsPlayerObserver(player)) {
+		// 		return;
+		// 	}
+		// 	FogModifierStop(fog);
+		// });
 	}
 
 	/**
@@ -66,12 +66,13 @@ export class FogManager {
 	 * @param who - Optional: specific player to deactivate fog for.
 	 */
 	public turnFogOff(who?: player) {
-		if (who) {
-			return FogModifierStart(this._fog.get(who));
-		}
+		FogEnable(false);
+		// if (who) {
+		// 	return FogModifierStart(this._fog.get(who));
+		// }
 
-		this._fog.forEach((fog) => {
-			FogModifierStart(fog);
-		});
+		// this._fog.forEach((fog) => {
+		// 	FogModifierStart(fog);
+		// });
 	}
 }
