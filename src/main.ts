@@ -1,5 +1,5 @@
 import { W3TS_HOOK, addScriptHook } from 'w3ts/hooks';
-import { MAP_NAME } from './app/utils/map-info';
+import { MAP_NAME, W3C_MODE_ENABLED } from './app/utils/map-info';
 import { ConcreteCityBuilder } from './app/city/concrete-city-builder';
 import { ConcreteCountryBuilder } from './app/country/concrete-country-builder';
 import { CountrySettings } from './app/country/countries';
@@ -33,6 +33,7 @@ import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
 import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST } from './configs/game-settings';
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
 import { FogManager } from './app/managers/fog-manager';
+import { LocalMessage } from './app/utils/messages';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -139,6 +140,15 @@ function tsMain() {
 			}
 
 			EventEmitter.getInstance().emit(EVENT_MODE_SELECTION);
+
+			if (W3C_MODE_ENABLED) {
+				LocalMessage(
+					GetLocalPlayer(),
+					'Welcome to Risk Europe!\n\nThis is a best of 5 matchup. First to win 3 rounds wins.\n\nBuild armies and capture countries to increase your income!\n\nPrevent your opponent from doing the same!\n\nGood luck and have fun!',
+					'Sound\\Interface\\ItemReceived.flac',
+					18
+				);
+			}
 		});
 	} catch (e) {
 		print(e);

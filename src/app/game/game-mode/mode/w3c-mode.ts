@@ -15,10 +15,11 @@ import { Wait } from 'src/app/utils/wait';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER } from 'src/configs/game-settings';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
+import { W3CGameLoopState } from '../w3c-mode/w3c-game-loop-state';
 
-export class PromodeData implements StateData {}
+export class W3CData implements StateData {}
 
-export class W3CMode extends BaseMode<PromodeData> {
+export class W3CMode extends BaseMode<W3CData> {
 	protected setupStates() {
 		const states = [
 			new SetupState(),
@@ -26,16 +27,16 @@ export class W3CMode extends BaseMode<PromodeData> {
 			new CityDistributeState(),
 			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),
-			new GameLoopState(),
+			new W3CGameLoopState(),
 			new W3CGameOverState(),
 			new ResetState(),
-		] as BaseState<PromodeData>[];
+		] as BaseState<W3CData>[];
 
 		return states.map((s) => this.wrapState(s));
 	}
 
-	protected setupData(): PromodeData {
-		return new PromodeData();
+	protected setupData(): W3CData {
+		return new W3CData();
 	}
 
 	wrapState<T extends StateData>(state: BaseState<T>): BaseState<T> {
