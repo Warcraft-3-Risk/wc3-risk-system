@@ -14,6 +14,7 @@ import { PlayerManager } from 'src/app/player/player-manager';
 import { Wait } from 'src/app/utils/wait';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER } from 'src/configs/game-settings';
+import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 
 export class PromodeData implements StateData {}
 
@@ -21,6 +22,7 @@ export class W3CMode extends BaseMode<PromodeData> {
 	protected setupStates() {
 		const states = [
 			new SetupState(),
+			new ApplyFogState(),
 			new CityDistributeState(),
 			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),

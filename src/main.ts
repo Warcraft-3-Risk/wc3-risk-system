@@ -32,6 +32,7 @@ import { CitySelectedEvent } from './app/triggers/city-selected-event';
 import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
 import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST } from './configs/game-settings';
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
+import { FogManager } from './app/managers/fog-manager';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -124,7 +125,7 @@ function tsMain() {
 
 			EnableSelect(false, false);
 			EnableDragSelect(false, false);
-			FogEnable(true);
+			FogManager.getInstance().turnFogOff();
 
 			EventEmitter.getInstance();
 			EventCoordinator.getInstance();
