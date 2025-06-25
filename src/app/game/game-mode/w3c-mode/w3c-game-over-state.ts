@@ -47,7 +47,7 @@ export class W3CGameOverState<T extends StateData> extends BaseState<T> {
 
 		await Wait.forSeconds(1);
 
-		const player: player = VictoryManager.getInstance().wonBestOf(3);
+		const player: player = VictoryManager.getInstance().wonBestOf(2);
 		if (player) {
 			CustomVictoryBJ(player, true, true);
 			ClearTextMessages();
