@@ -4,7 +4,7 @@ import { VictoryManager } from '../managers/victory-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { debugPrint } from '../utils/debug-print';
 import { HexColors } from '../utils/hex-colors';
-import { getCityCount, getDisplayName } from '../utils/participant-entity';
+import { ParticipantEntityManager } from '../utils/participant-entity';
 import { ObserverBoard } from './observer-board';
 import { Scoreboard } from './scoreboard';
 import { StandardBoard } from './standard-board';
@@ -86,13 +86,13 @@ export class ScoreboardManager {
 			} else {
 				debugPrint('Leader is an Team');
 			}
-			
+
 			const overtimeSuffix = OvertimeManager.isOvertimeActive()
 				? ` ${HexColors.RED}(Overtime)|r`
 				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
-			
+
 			this.setTitle(
-				`${getDisplayName(GlobalGameData.leader)} ${getCityCount(
+				`${ParticipantEntityManager.getDisplayName(GlobalGameData.leader)} ${ParticipantEntityManager.getCityCount(
 					GlobalGameData.leader
 				)}/${HexColors.RED}${VictoryManager.getCityCountWin()}|r${overtimeSuffix}`
 			);
