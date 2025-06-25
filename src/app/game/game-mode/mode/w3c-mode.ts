@@ -1,5 +1,4 @@
 import { CityDistributeState } from '../base-game-mode/city-distribute-state';
-import { GameLoopState } from '../base-game-mode/game-loop-state';
 import { ResetState } from '../base-game-mode/reset-state';
 import { SetPromodeTempVisionState } from '../promode-game-mode/set-promode-temp-vision-state';
 import { SetupState } from '../base-game-mode/setup-state';
