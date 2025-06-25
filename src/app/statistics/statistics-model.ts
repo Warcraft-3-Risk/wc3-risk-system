@@ -5,10 +5,10 @@ import { AddLeadingZero } from '../utils/utils';
 import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
 import { MAP_VERSION } from '../utils/map-info';
 import { GlobalGameData } from '../game/state/global-game-state';
-import { getCityCount, getHighestPriorityParticipant } from '../utils/participant-entity';
 import { SettingsContext } from '../settings/settings-context';
 import { TeamManager } from '../teams/team-manager';
 import { Team } from '../teams/team';
+import { ParticipantEntityManager } from '../utils/participant-entity';
 
 export class StatisticsModel {
 	private timePlayed: string;
@@ -26,7 +26,7 @@ export class StatisticsModel {
 
 	public setData() {
 		this.setGameTime();
-		this.winner = getHighestPriorityParticipant(GlobalGameData.leader);
+		this.winner = ParticipantEntityManager.getHighestPriorityParticipant(GlobalGameData.leader);
 
 		if (SettingsContext.getInstance().isFFA()) {
 			this.ranks = Array.from([...this.matchPlayers]);
@@ -124,10 +124,10 @@ export class StatisticsModel {
 				return teamBLongestLife - teamALongestLife;
 			}
 
-			return getCityCount(teamB) - getCityCount(teamA);
+			return ParticipantEntityManager.getCityCount(teamB) - ParticipantEntityManager.getCityCount(teamA);
 		});
 
-		const winningPlayer = getHighestPriorityParticipant(winner);
+		const winningPlayer = ParticipantEntityManager.getHighestPriorityParticipant(winner);
 		return sortedTeams.flatMap((team) => this.sortPlayersByRank(team.getMembers(), winningPlayer));
 	}
 }

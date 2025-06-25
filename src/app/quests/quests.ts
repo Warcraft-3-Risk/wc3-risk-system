@@ -7,9 +7,8 @@ import { FogOptionsColorFormatted } from '../settings/strategies/fog-strategy';
 import { GameTypeOptionsColorFormatted } from '../settings/strategies/game-type-strategy';
 import { OvertimeStringsColorFormatted } from '../settings/strategies/overtime-strategy';
 import { PromodeOptionsColorFormatted } from '../settings/strategies/promode-strategy';
-import { TeamManager } from '../teams/team-manager';
 import { HexColors } from '../utils/hex-colors';
-import { getParticipantColoredBTagPrefixedWithOptionalTeamNumber } from '../utils/participant-entity';
+import { ParticipantEntityManager } from '../utils/participant-entity';
 import { ShuffleArray } from '../utils/utils';
 
 /**
@@ -192,7 +191,7 @@ export class Quests {
 		description += `\n\n${HexColors.YELLOW}Eliminated Players|r`;
 		const eliminatedPlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isEliminated() : false));
 		eliminatedPlayers.forEach((player) => {
-			description += `\n${getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())} (${player.status ? player.status.status : 'Unknown'})`;
+			description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())} (${player.status ? player.status.status : 'Unknown'})`;
 		});
 
 		this.BuildQuest(

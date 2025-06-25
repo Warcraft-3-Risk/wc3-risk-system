@@ -5,7 +5,7 @@ import { ComputeRatio } from '../utils/utils';
 import { StatisticsModel } from './statistics-model';
 import { StatisticsView } from './statistics-view';
 import { GlobalGameData } from '../game/state/global-game-state';
-import { getWinnerParticipantName } from '../utils/participant-entity';
+import { ParticipantEntityManager } from '../utils/participant-entity';
 
 export class StatisticsController {
 	private static instance: StatisticsController;
@@ -56,7 +56,7 @@ export class StatisticsController {
 		}
 
 		const winner: player = this.model.getWinner().getPlayer();
-		const name: string = getWinnerParticipantName(winner);
+		const name: string = ParticipantEntityManager.getWinnerParticipantName(winner);
 
 		this.view.setGameWinnerText(name);
 	}

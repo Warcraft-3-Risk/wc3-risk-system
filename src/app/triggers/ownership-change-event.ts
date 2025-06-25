@@ -16,7 +16,7 @@ import { TeamManager } from '../teams/team-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_CITY_CAPTURE } from '../utils/events/event-constants';
-import { getParticipantByActivePlayer } from '../utils/participant-entity';
+import { ParticipantEntityManager } from '../utils/participant-entity';
 
 export function OwnershipChangeEvent() {
 	const t: trigger = CreateTrigger();
@@ -92,7 +92,7 @@ export function OwnershipChangeEvent() {
 				}
 
 				if (GlobalGameData.matchState == 'inProgress') {
-					VictoryManager.getInstance().setLeader(getParticipantByActivePlayer(owner));
+					VictoryManager.getInstance().setLeader(ParticipantEntityManager.getParticipantByActivePlayer(owner));
 				}
 
 				if (ownerData.countries.get(country) == country.getCities().length) {

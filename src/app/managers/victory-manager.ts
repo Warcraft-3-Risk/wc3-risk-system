@@ -8,8 +8,8 @@ import { PlayerManager } from '../player/player-manager';
 import { TeamManager } from '../teams/team-manager';
 import { OvertimeManager } from './overtime-manager';
 import { SettingsContext } from '../settings/settings-context';
-import { getCityCount, ParticipantEntity } from '../utils/participant-entity';
 import { Team } from '../teams/team';
+import { ParticipantEntity, ParticipantEntityManager } from '../utils/participant-entity';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -39,7 +39,7 @@ export class VictoryManager {
 	public setLeader(participant: ParticipantEntity) {
 		if (GlobalGameData.leader == undefined) {
 			GlobalGameData.leader = participant;
-		} else if (getCityCount(participant) > getCityCount(GlobalGameData.leader)) {
+		} else if (ParticipantEntityManager.getCityCount(participant) > ParticipantEntityManager.getCityCount(GlobalGameData.leader)) {
 			GlobalGameData.leader = participant;
 		}
 	}
@@ -50,7 +50,9 @@ export class VictoryManager {
 			? Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
 			: TeamManager.getInstance().getActiveTeams();
 
-		return participants.filter((participant) => getCityCount(participant) >= threshold).sort((a, b) => getCityCount(b) - getCityCount(a));
+		return participants
+			.filter((participant) => ParticipantEntityManager.getCityCount(participant) >= threshold)
+			.sort((a, b) => ParticipantEntityManager.getCityCount(b) - ParticipantEntityManager.getCityCount(a));
 	}
 
 	// This function is used to get the players who have won with the most cities (many players can have the same number of cities)
@@ -61,8 +63,10 @@ export class VictoryManager {
 			return [];
 		}
 
-		let max = getCityCount(potentialVictors.sort((a, b) => getCityCount(b) - getCityCount(a))[0]);
-		return potentialVictors.filter((x) => getCityCount(x) == max);
+		let max = ParticipantEntityManager.getCityCount(
+			potentialVictors.sort((a, b) => ParticipantEntityManager.getCityCount(b) - ParticipantEntityManager.getCityCount(a))[0]
+		);
+		return potentialVictors.filter((x) => ParticipantEntityManager.getCityCount(x) == max);
 	}
 
 	public updateAndGetGameState(): VictoryProgressState {

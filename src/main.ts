@@ -144,7 +144,7 @@ function tsMain() {
 			if (W3C_MODE_ENABLED) {
 				LocalMessage(
 					GetLocalPlayer(),
-					'Welcome to Risk Europe!\n\nThis is a best of 5 matchup. First to win 3 rounds wins.\n\nBuild armies and capture countries to increase your income!\n\nPrevent your opponent from doing the same!\n\nGood luck and have fun!',
+					'Welcome to Risk Europe!\n\nThis is a best of 3 matchup. First to win 2 matches is victorious!\n\nBuild armies and capture countries to increase your income!\n\nPrevent your opponent from doing the same!\n\nGood luck and have fun!',
 					'Sound\\Interface\\ItemReceived.flac',
 					18
 				);
