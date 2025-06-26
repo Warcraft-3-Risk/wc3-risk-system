@@ -7,7 +7,6 @@ import { CityRegionSize } from '../configs/city-settings';
 import { UNIT_ID } from '../configs/unit-id';
 
 export const EnterRegionTrigger: trigger = CreateTrigger();
-
 export function EnterRegionEvent() {
 	TriggerAddCondition(
 		EnterRegionTrigger,

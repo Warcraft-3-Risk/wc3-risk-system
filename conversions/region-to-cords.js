@@ -1,59 +1,49 @@
-function extractCoords(inputString) {
-    const matches = inputString.match(/\((\-?\d+(\.\d+)?), (\-?\d+(\.\d+)?), (\-?\d+(\.\d+)?), (\-?\d+(\.\d+)?)\)/);
-    if (!matches) {
-        return null;
-    }
+// region-to-cords.js
 
-    const x1 = parseFloat(matches[1]);
-    const y1 = parseFloat(matches[3]);
-    const x2 = parseFloat(matches[5]);
-    const y2 = parseFloat(matches[7]);
+function extractCenter(input) {
+	// Capture four numbers in order: left, right, bottom, top
+	const m = input.match(/Rect\(\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*\)/);
+	if (!m) return null;
 
-    const x = (x1 + x2) / 2;
-    const y = (y1 + y2) / 2;
+	const left = parseFloat(m[1]);
+	const right = parseFloat(m[2]);
+	const bottom = parseFloat(m[3]);
+	const top = parseFloat(m[4]);
 
-    return { x, y };
+	return {
+		x: (left + right) / 2,
+		y: (bottom + top) / 2,
+	};
 }
 
-function extractName(inputString) {
-    const matches = inputString.match(/^gg_[a-zA-Z]+_(\w+)/);
-    if (!matches) {
-        return null;
-    }
-    return matches[1].replace(/_/g, ' ');
+function processLines(templateStrings, ...values) {
+	// assemble the full text block from the tagged template
+	const text = templateStrings
+		.map((s, i) => s + (values[i] || ''))
+		.join('')
+		.trim();
+	for (let line of text.split('\n')) {
+		line = line.trim();
+		if (!line) continue;
+
+		const center = extractCenter(line);
+		if (!center) {
+			console.error('Invalid format:', line);
+		} else {
+			console.log(`{ x: ${center.x}, y: ${center.y} },`);
+		}
+	}
 }
 
-function processInput(inputString) {
-    const name = extractName(inputString);
-    const coords = extractCoords(inputString);
-
-    if (!name || !coords) {
-        console.error("Invalid input format");
-        return;
-    }
-
-    const output = `
-    name: '${name}',
-    spawnerData: {
-        unitData: { x: ${coords.x}, y: ${coords.y} },
-    },`;
-    
-    console.log(output);
-}
-
-function processInputs(strings, ...values) {
-    const combinedStrings = strings.reduce((result, string, i) => {
-        return result + string + (values[i] || "");
-    }, "");
-
-    const inputs = combinedStrings.trim().split("\n");
-    for (let input of inputs) {
-        processInput(input.trim());
-    }
-}
-
-//Example of how to do inputs
-processInputs`
-    gg_rct_Region_000 = Rect(-1984.0, -8640.0, -1728.0, -8384.0)
-`;
-
+// ─── Example usage: ────────────────────────────────────
+processLines`
+    Rect(-7456.0, -7392, 7136.0, 7200.0)
+    Rect(-32.0, 32.0, 7136.0, 7200.0)
+    Rect(7392.0, 7456.0, 7136.0, 7200.0)
+    Rect(-7456.0, -7392.0, 480.0, 544.0)
+    Rect(-32.0, 32.0, 480.0, 544.0)
+    Rect(7392.0, 7456.0, 480.0, 544.0)
+    Rect(-7456.0, -7392.0, -6176.0, -6112.0)
+    Rect(-32.0, 32.0, -6176.0, -6112.0)
+    Rect(7392.0, 7456.0, -6176.0, -6112.0)
+  `;

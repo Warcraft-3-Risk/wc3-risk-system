@@ -6,29 +6,31 @@ import { TimerEventType } from 'src/app/timer/timed-event-type';
 import { SettingsController } from 'src/app/settings/settings-controller';
 
 export class SettingSelectionState extends BaseGameState {
-	private ui: SettingsView;
+	private settingsView: SettingsView;
 
 	public enter(): void {
 		const timerEventID: TimerEventType = 'settingsSelection';
 		const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
 		const timerDuration: number = 30;
-		this.ui = new SettingsView(timerDuration);
+		this.settingsView = new SettingsView(timerDuration);
 
 		timedEventManager.addEvent(
 			new TimedEvent(timerEventID, timerDuration, false, true, (remainingTime) => {
-				if (remainingTime <= 0 || !this.ui.isVisible()) {
+				if (remainingTime <= 0 || !this.settingsView.isVisible()) {
 					timedEventManager.stopEvent(timerEventID);
-					this.ui.hide();
+					this.settingsView.hide();
 					this.exit();
+
 					return;
 				}
 
-				this.ui.update(remainingTime);
+				this.settingsView.update(remainingTime);
 			})
 		);
 	}
+
 	public exit(): void {
-		// SettingsController.getInstance().applySettings();
+		SettingsController.getInstance().applySettings();
 		this.gameStateManager.nextState();
 	}
 }

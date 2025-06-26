@@ -1,5 +1,5 @@
 import { PLAYER_COLOR_CODES_MAP, PLAYER_COLOR_MAP } from 'src/app/utils/player-colors';
-import { PlayerNames } from './player-names';
+import { PlayerName } from './player-name';
 import { isNonEmptySubstring } from 'src/app/utils/utils';
 import { PlayerList } from '../entity/player/player-list';
 
@@ -7,16 +7,15 @@ type Names = 'btag' | 'acct' | 'color';
 
 export class NameManager {
 	private static instance: NameManager;
-
-	private names: Map<player, PlayerNames>;
+	private names: Map<player, PlayerName>;
 
 	private constructor() {
-		this.names = new Map<player, PlayerNames>();
+		this.names = new Map<player, PlayerName>();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p: player = Player(i);
 
-			this.names.set(p, new PlayerNames(GetPlayerName(p)));
+			this.names.set(p, new PlayerName(GetPlayerName(p)));
 			SetPlayerName(p, 'Player');
 		}
 	}

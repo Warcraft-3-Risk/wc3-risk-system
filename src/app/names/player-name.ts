@@ -1,4 +1,4 @@
-export class PlayerNames {
+export class PlayerName {
 	private readonly btag: string;
 	private readonly acct: string;
 	private color: string;
