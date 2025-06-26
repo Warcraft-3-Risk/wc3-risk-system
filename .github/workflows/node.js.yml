@@ -34,12 +34,13 @@ jobs:
         shell: bash
         run: |
           TAG_NAME=${GITHUB_REF#refs/tags/}
-          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
           if [[ "$W3C_MODE_ENABLED" == "true" ]]; then
+            TAG_NAME="${TAG_NAME}_1v1"
             SUFFIX="_w3c"
           else
             SUFFIX=""
           fi
+          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
           echo "W3C_SUFFIX=${SUFFIX}" >> $GITHUB_ENV
           echo "RELEASE_FILENAME=Risk_Europe_${TAG_NAME}${SUFFIX}.w3x" >> $GITHUB_ENV
 
@@ -48,12 +49,13 @@ jobs:
         shell: pwsh
         run: |
           $TAG_NAME = $env:GITHUB_REF -replace 'refs/tags/', ''
-          echo "TAG_NAME=$TAG_NAME" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           if ($env:W3C_MODE_ENABLED -eq "true") {
+            $TAG_NAME = "${TAG_NAME}_1v1"
             $SUFFIX = "_w3c"
           } else {
             $SUFFIX = ""
           }
+          echo "TAG_NAME=$TAG_NAME" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "W3C_SUFFIX=$SUFFIX" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           echo "RELEASE_FILENAME=Risk_Europe_${TAG_NAME}${SUFFIX}.w3x" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
