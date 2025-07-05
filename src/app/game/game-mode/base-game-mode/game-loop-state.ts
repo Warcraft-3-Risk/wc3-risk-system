@@ -274,9 +274,8 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerLeft(player: ActivePlayer): void {
 		super.onPlayerLeft(player);
 
-		VictoryManager.getInstance().updateAndGetGameState();
-
-		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
+		if (VictoryManager.getInstance().haveAllOpponentsBeenEliminated()) {
+			VictoryManager.getInstance().updateAndGetGameState();
 			GlobalGameData.matchState = 'postMatch';
 		}
 	}
@@ -284,14 +283,18 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerForfeit(player: ActivePlayer): void {
 		super.onPlayerForfeit(player);
 
-		VictoryManager.getInstance().updateAndGetGameState();
-
-		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
+		if (VictoryManager.getInstance().haveAllOpponentsBeenEliminated()) {
+			VictoryManager.getInstance().updateAndGetGameState();
 			GlobalGameData.matchState = 'postMatch';
 		}
 	}
 
 	onPlayerDead(player: ActivePlayer): void {
 		super.onPlayerDead(player);
+
+		if (VictoryManager.getInstance().haveAllOpponentsBeenEliminated()) {
+			VictoryManager.getInstance().updateAndGetGameState();
+			GlobalGameData.matchState = 'postMatch';
+		}
 	}
 }

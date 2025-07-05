@@ -27,10 +27,6 @@ export function onPlayerDeadHandle(player: ActivePlayer): void {
 	player.trackedData.income.income = 1;
 
 	GlobalMessage(`${NameManager.getInstance().getDisplayName(player.getPlayer())} has been defeated!`, 'Sound\\Interface\\SecretFound.flac');
-
-	if (VictoryManager.getInstance().checkKnockOutVictory()) {
-		GlobalGameData.matchState = 'postMatch';
-	}
 	ScoreboardManager.getInstance().updatePartial();
 }
 
