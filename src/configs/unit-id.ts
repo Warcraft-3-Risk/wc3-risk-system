@@ -3,6 +3,7 @@ export const UNIT_ID = {
 	CITY: FourCC('h000'),
 	PORT: FourCC('h001'),
 	CONTROL_POINT: FourCC('h002'),
+	ATTACK_RANGE: FourCC('n000'),
 	SPAWNER: FourCC('h004'),
 	CAPITAL: FourCC('h005'),
 	CONQUERED_CAPITAL: FourCC('h006'),

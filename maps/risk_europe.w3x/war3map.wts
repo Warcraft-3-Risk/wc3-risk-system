@@ -1435,3 +1435,9 @@ STRING 7525
 Produces units for your armies.
 }
 
+STRING 7526
+// Units: n000 (Attack Range), Name (Name)
+{
+Attack Range
+}
+
