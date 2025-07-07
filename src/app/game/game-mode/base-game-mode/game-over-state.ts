@@ -9,6 +9,7 @@ import { StateData } from '../state/state-data';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { Quests } from 'src/app/quests/quests';
 import { FogManager } from 'src/app/managers/fog-manager';
+import { PlayerManager } from 'src/app/player/player-manager';
 
 export class GameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -16,7 +17,12 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 
 		Quests.getInstance().UpdateShuffledPlayerListQuest();
 
-		VictoryManager.getInstance().saveStats();
+		// Set end data for all remaining active players - defeated players have had their end data set already as they were defeated
+		PlayerManager.getInstance().playersAliveOrNomad.forEach((player) => {
+			if (player.trackedData.turnDied == -1) {
+				player.setEndData();
+			}
+		});
 
 		// Hide match scoreboard and show score screen
 		ScoreboardManager.getInstance().destroyBoards();
