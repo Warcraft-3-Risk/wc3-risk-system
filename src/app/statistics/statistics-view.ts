@@ -26,6 +26,10 @@ export class StatisticsView {
 		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
 		BlzFrameSetSize(this.backdrop, 1, 0.64);
 
+		if (IsPlayerObserver(GetLocalPlayer())) {
+			BlzFrameSetAlpha(this.backdrop, 254);
+		}
+
 		this.footerBackdrop = BlzCreateFrameByType('BACKDROP', 'FooterBackdrop', this.backdrop, '', 0);
 		this.header = BlzFrameGetChild(this.backdrop, 0);
 		this.minimizeButton = BlzFrameGetChild(this.header, 3);
