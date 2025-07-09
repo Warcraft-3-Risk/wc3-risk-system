@@ -19,6 +19,7 @@ import { Team } from 'src/app/teams/team';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { FogManager } from 'src/app/managers/fog-manager';
+import { AnnounceOnLocation } from '../../announcer/announce';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -246,13 +247,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
-				const text = CreateTextTag();
-				SetTextTagText(text, `${colorString}Denied`, 0.019);
-				SetTextTagPos(text, GetUnitX(dyingUnit) - 140, GetUnitY(dyingUnit) + 20, 16.0);
-				SetTextTagVisibility(text, true);
-				SetTextTagFadepoint(text, 2.0);
-				SetTextTagPermanent(text, false);
-				SetTextTagLifespan(text, 3.0);
+				AnnounceOnLocation(`${colorString}Denied`, GetUnitX(dyingUnit), GetUnitY(dyingUnit) + 20, 2.0, 3.0);
 			}
 		}
 		ScoreboardManager.getInstance().updatePartial();

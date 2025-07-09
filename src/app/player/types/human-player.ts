@@ -1,3 +1,4 @@
+import { AnnounceOnUnitObserverOnlyTintedByPlayer } from 'src/app/game/announcer/announce';
 import { ActivePlayer } from './active-player';
 
 export class HumanPlayer extends ActivePlayer {
@@ -26,7 +27,13 @@ export class HumanPlayer extends ActivePlayer {
 		kdData.get(victim).kills++;
 		kdData.get(`${GetUnitTypeId(unit)}`).kills++;
 
-		this.giveGold(this.trackedData.bounty.add(val));
+		const bounty = this.trackedData.bounty.add(val);
+
+		if (bounty > 0) {
+			AnnounceOnUnitObserverOnlyTintedByPlayer(`+${bounty}`, unit, 2.0, 3.0, killer, 170, 0);
+		}
+
+		this.giveGold(bounty);
 		this.giveGold(this.trackedData.bonus.add(val));
 	}
 
