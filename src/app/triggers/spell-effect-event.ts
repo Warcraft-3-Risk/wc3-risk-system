@@ -31,7 +31,7 @@ function onSpellEffect(trigger: trigger) {
 			switch (GetSpellAbilityId()) {
 				case ABILITY_ID.SWAP:
 					EventEmitter.getInstance().emit(EVENT_ON_SWAP_GUARD, GetSpellTargetUnit(), UnitToCity.get(GetTriggerUnit()), player);
-					AnnounceOnLocationObserverOnly('Swapped', x, y, 2.0, 3.0, GetTriggerPlayer());
+					AnnounceOnLocationObserverOnly('Swapped', x + 140, y + 20, 1.0, 2.0, GetTriggerPlayer());
 					// AnnounceOnUnitObserverOnly('Swaped', GetSpellTargetUnit(), 2.0, 3.0);
 					break;
 				// case ABILITY_ID.LOW_HEALTH_DEFENDER:
@@ -102,10 +102,10 @@ function onSpellCast(trigger: trigger) {
 		Condition(() => {
 			switch (GetSpellAbilityId()) {
 				case ABILITY_ID.ROAR:
-					AnnounceOnUnitObserverOnly('ROAR', GetSpellAbilityUnit(), 2.0, 3.0, true, 170, 0);
+					AnnounceOnUnitObserverOnly('ROAR', GetSpellAbilityUnit(), 2.0, 3.0, true, 0, 20);
 					break;
 				case ABILITY_ID.DISPEL_MAGIC:
-					AnnounceOnUnitObserverOnly('DISPELLING', GetSpellAbilityUnit(), 2.0, 3.0, true, 0, 0);
+					AnnounceOnUnitObserverOnly('DISPELLING', GetSpellAbilityUnit(), 2.0, 3.0, true, 0, 20);
 					break;
 				default:
 					break;

@@ -30,7 +30,7 @@ export class HumanPlayer extends ActivePlayer {
 		const bounty = this.trackedData.bounty.add(val);
 
 		if (bounty > 0) {
-			AnnounceOnUnitObserverOnlyTintedByPlayer(`+${bounty}`, unit, 2.0, 3.0, killer, 170, 0);
+			AnnounceOnUnitObserverOnlyTintedByPlayer(`+${bounty}`, unit, 2.0, 3.0, killer, 170, 20);
 		}
 
 		this.giveGold(bounty);

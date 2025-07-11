@@ -4,18 +4,18 @@ export function AnnounceOnLocation(
 	message: string,
 	x: number,
 	y: number,
-	fadepoint: number = 2,
-	lifespan: number = 3.0,
-	xOffset: number = 0,
-	yOffset: number = 0
+	fadepoint: number,
+	lifespan: number,
+	textSize: number = 0.019
 ): void {
 	const text = CreateTextTag();
-	SetTextTagText(text, message, 0.019);
-	SetTextTagPos(text, x - 140 + xOffset, y + 20 + yOffset, 16.0);
+	SetTextTagText(text, message, textSize);
+	SetTextTagPos(text, x, y, 16.0);
 	SetTextTagVisibility(text, true);
 	SetTextTagFadepoint(text, fadepoint);
 	SetTextTagPermanent(text, false);
 	SetTextTagLifespan(text, lifespan);
+	SetTextTagVelocity(text, 0.008, -0.01);
 }
 
 export function AnnounceOnLocationObserverOnly(
@@ -26,13 +26,14 @@ export function AnnounceOnLocationObserverOnly(
 	lifespan: number = 3.0,
 	tintByPlayer: player = undefined,
 	xOffset: number = 0,
-	yOffset: number = 0
+	yOffset: number = 0,
+	textSize: number = 0.019
 ): void {
 	if (IsPlayerObserver(GetLocalPlayer())) {
 		if (tintByPlayer) {
 			message = `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(tintByPlayer))}${message}`;
 		}
-		AnnounceOnLocation(message, x, y, fadepoint, lifespan, xOffset, yOffset);
+		AnnounceOnLocation(message, x - 140 + xOffset, y + 20 + yOffset, fadepoint, lifespan, textSize);
 	}
 }
 
@@ -43,7 +44,8 @@ export function AnnounceOnUnitObserverOnly(
 	lifespan: number = 3.0,
 	displayMessageWithUnitColor: boolean = true,
 	xOffset: number = 0,
-	yOffset: number = 0
+	yOffset: number = 0,
+	textSize: number = 0.019
 ): void {
 	if (IsPlayerObserver(GetLocalPlayer())) {
 		AnnounceOnLocation(
@@ -51,7 +53,8 @@ export function AnnounceOnUnitObserverOnly(
 			GetUnitX(unit) - 140 + xOffset,
 			GetUnitY(unit) + 20 + yOffset,
 			fadepoint,
-			lifespan
+			lifespan,
+			textSize
 		);
 	}
 }
@@ -63,7 +66,8 @@ export function AnnounceOnUnitObserverOnlyTintedByPlayer(
 	lifespan: number = 3.0,
 	tintByPlayer: player = undefined,
 	xOffset: number = 0,
-	yOffset: number = 0
+	yOffset: number = 0,
+	textSize: number = 0.019
 ): void {
 	if (IsPlayerObserver(GetLocalPlayer())) {
 		AnnounceOnLocation(
@@ -71,7 +75,8 @@ export function AnnounceOnUnitObserverOnlyTintedByPlayer(
 			GetUnitX(unit) - 140 + xOffset,
 			GetUnitY(unit) + 20 + yOffset,
 			fadepoint,
-			lifespan
+			lifespan,
+			textSize
 		);
 	}
 }
