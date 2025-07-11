@@ -34,6 +34,7 @@ import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST } from './configs/game-settings';
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
 import { FogManager } from './app/managers/fog-manager';
 import { LocalMessage } from './app/utils/messages';
+import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -99,6 +100,7 @@ function tsMain() {
 		OwnershipChangeEvent();
 		PlayerLeaveEvent();
 		SpellEffectEvent();
+		UnitIssueOrderEvent();
 		AntiSpam();
 		KeyEvents();
 		CitySelectedEvent();

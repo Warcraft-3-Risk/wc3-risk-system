@@ -5,16 +5,24 @@ import { ActivePlayer } from '../player/types/active-player';
 import { PLAYER_SLOTS } from '../utils/utils';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_SWAP_GUARD } from '../utils/events/event-constants';
+import { AnnounceOnLocationObserverOnly, AnnounceOnUnitObserverOnly } from '../game/announcer/announce';
 
 export function SpellEffectEvent() {
-	const t: trigger = CreateTrigger();
+	const tSpellEffect: trigger = CreateTrigger();
+	const tSpellCast: trigger = CreateTrigger();
 
 	for (let i = 0; i < PLAYER_SLOTS; i++) {
-		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
+		TriggerRegisterPlayerUnitEvent(tSpellEffect, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
+		TriggerRegisterPlayerUnitEvent(tSpellCast, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, null);
 	}
 
+	onSpellEffect(tSpellEffect);
+	onSpellCast(tSpellCast);
+}
+
+function onSpellEffect(trigger: trigger) {
 	TriggerAddCondition(
-		t,
+		trigger,
 		Condition(() => {
 			const player: ActivePlayer = PlayerManager.getInstance().players.get(GetTriggerPlayer());
 			const x: number = GetSpellTargetX();
@@ -23,6 +31,8 @@ export function SpellEffectEvent() {
 			switch (GetSpellAbilityId()) {
 				case ABILITY_ID.SWAP:
 					EventEmitter.getInstance().emit(EVENT_ON_SWAP_GUARD, GetSpellTargetUnit(), UnitToCity.get(GetTriggerUnit()), player);
+					AnnounceOnLocationObserverOnly('Swapped', x + 140, y + 20, 1.0, 2.0, GetTriggerPlayer());
+					// AnnounceOnUnitObserverOnly('Swaped', GetSpellTargetUnit(), 2.0, 3.0);
 					break;
 				// case ABILITY_ID.LOW_HEALTH_DEFENDER:
 				// 	player.options.health = false;
@@ -78,6 +88,24 @@ export function SpellEffectEvent() {
 							IssuePointOrder(spawner, 'setrally', GetUnitX(spawner), GetUnitY(spawner));
 						}
 					});
+					break;
+				default:
+					break;
+			}
+		})
+	);
+}
+
+function onSpellCast(trigger: trigger) {
+	TriggerAddCondition(
+		trigger,
+		Condition(() => {
+			switch (GetSpellAbilityId()) {
+				case ABILITY_ID.ROAR:
+					AnnounceOnUnitObserverOnly('ROAR', GetSpellAbilityUnit(), 2.0, 3.0, true, 0, 20);
+					break;
+				case ABILITY_ID.DISPEL_MAGIC:
+					AnnounceOnUnitObserverOnly('DISPELLING', GetSpellAbilityUnit(), 2.0, 3.0, true, 0, 20);
 					break;
 				default:
 					break;
