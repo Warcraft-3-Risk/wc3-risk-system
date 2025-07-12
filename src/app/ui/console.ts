@@ -105,9 +105,9 @@ export function SetConsoleUI() {
 
 	// Disable exit button for W3C mode
 	if (W3C_MODE_ENABLED) {
-		BlzFrameSetVisible(BlzGetFrameByName('EscMenuSaveLoadContainer', 0), false);
-		BlzFrameSetEnable(BlzGetFrameByName('SaveGameFileEditBox', 0), false);
 		if (!IsPlayerObserver(GetLocalPlayer())) {
+			BlzFrameSetVisible(BlzGetFrameByName('EscMenuSaveLoadContainer', 0), false);
+			BlzFrameSetEnable(BlzGetFrameByName('SaveGameFileEditBox', 0), false);
 			BlzFrameSetVisible(BlzGetFrameByName('ExitButton', 0), false);
 			BlzFrameSetEnable(BlzGetFrameByName('ConfirmQuitQuitButton', 0), false);
 			BlzFrameSetText(BlzGetFrameByName('ConfirmQuitMessageText', 0), 'Please use Quit Mission instead.');
