@@ -1,4 +1,4 @@
-import { MAP_VERSION } from '../utils/map-info';
+import { MAP_VERSION, W3C_MODE_ENABLED } from '../utils/map-info';
 import { PLAYER_SLOTS } from '../utils/utils';
 
 /**
@@ -102,6 +102,17 @@ export function SetConsoleUI() {
 	BlzFrameClick(BlzGetFrameByName('QuestAcceptButton', 0));
 	BlzFrameSetSize(BlzGetFrameByName('QuestItemListContainer', 0), 0.01, 0.01);
 	BlzFrameSetSize(BlzGetFrameByName('QuestItemListScrollBar', 0), 0.001, 0.001);
+
+	// Disable exit button for W3C mode
+	if (W3C_MODE_ENABLED) {
+		BlzFrameSetVisible(BlzGetFrameByName('EscMenuSaveLoadContainer', 0), false);
+		BlzFrameSetEnable(BlzGetFrameByName('SaveGameFileEditBox', 0), false);
+		if (!IsPlayerObserver(GetLocalPlayer())) {
+			BlzFrameSetVisible(BlzGetFrameByName('ExitButton', 0), false);
+			BlzFrameSetEnable(BlzGetFrameByName('ConfirmQuitQuitButton', 0), false);
+			BlzFrameSetText(BlzGetFrameByName('ConfirmQuitMessageText', 0), 'Please use Quit Mission instead.');
+		}
+	}
 }
 
 /**
