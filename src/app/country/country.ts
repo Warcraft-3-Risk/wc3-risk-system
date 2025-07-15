@@ -13,7 +13,6 @@ export class Country implements Resetable {
 	private readonly name: string;
 	private readonly cities: City[];
 	private readonly spawn: Spawner;
-	private readonly text: texttag;
 	private owner: player;
 
 	/**
@@ -26,24 +25,6 @@ export class Country implements Resetable {
 		this.name = name;
 		this.cities = cities;
 		this.spawn = spawn;
-
-		const offsetX: number = GetUnitX(this.spawn.unit) - 100;
-		const offsetY: number = GetUnitY(this.spawn.unit) - 300;
-		const lengthCheck: number = this.name.length * 5.5 < 200 ? this.name.length * 5.5 : 200;
-
-		// Create per player
-		for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
-			const player: player = Player(i);
-
-			if (GetLocalPlayer() == player) {
-				// Create text tag for each player
-				this.text = CreateTextTag();
-				SetTextTagText(this.text, `${HexColors.TANGERINE} ${this.name} +${this.getCities().length} `, 0.028);
-				SetTextTagPos(this.text, offsetX - lengthCheck, offsetY, 16.0);
-				SetTextTagVisibility(this.text, true);
-				SetTextTagPermanent(this.text, true);
-			}
-		}
 	}
 
 	/**
@@ -88,6 +69,18 @@ export class Country implements Resetable {
 		this.owner = player;
 		this.spawn.setOwner(player);
 		this.onOwnerChange();
+	}
+
+	public createText(): void {
+		const offsetX: number = GetUnitX(this.spawn.unit) - 100;
+		const offsetY: number = GetUnitY(this.spawn.unit) - 300;
+		const lengthCheck: number = this.name.length * 5.5 < 200 ? this.name.length * 5.5 : 200;
+
+		const countryName = CreateTextTag();
+		SetTextTagText(countryName, `${HexColors.TANGERINE} ${this.name} +${this.getCities().length} `, 0.028);
+		SetTextTagPos(countryName, offsetX - lengthCheck, offsetY, 16.0);
+		SetTextTagVisibility(countryName, true);
+		SetTextTagPermanent(countryName, true);
 	}
 
 	/**

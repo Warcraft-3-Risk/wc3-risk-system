@@ -8,6 +8,7 @@ import { CityToCountry, StringToCountry } from './country-map';
 import { Spawner } from '../spawner/spawner';
 import { SpawnerBuilder } from '../spawner/spawner-builder';
 import { SpawnerData } from '../spawner/spawner-data';
+import { PlayerManager } from '../player/player-manager';
 
 /**
  * ConcreteCountryBuilder is an implementation of the CountryBuilder interface.
@@ -101,6 +102,16 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 
 		this.reset();
 		return country;
+	}
+
+	public async createTexts(): Promise<void> {
+		// Create text tags for each player
+		const countrySet: Set<Country> = new Set(CityToCountry.values());
+		PlayerManager.getInstance().playersAndObservers.forEach((player) => {
+			if (GetLocalPlayer() == player.getPlayer()) {
+				countrySet.forEach((country) => country.createText());
+			}
+		});
 	}
 
 	/**
