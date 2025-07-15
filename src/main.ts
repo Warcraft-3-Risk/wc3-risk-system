@@ -141,6 +141,8 @@ function tsMain() {
 				ExportShuffledPlayerList.write();
 			}
 
+			countryBuilder.createTexts();
+
 			EventEmitter.getInstance().emit(EVENT_MODE_SELECTION);
 
 			if (W3C_MODE_ENABLED) {
