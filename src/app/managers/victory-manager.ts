@@ -33,7 +33,6 @@ export class VictoryManager {
 
 	public removePlayer(player: ActivePlayer, status: PLAYER_STATUS) {
 		PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), status);
-		this.checkKnockOutVictory();
 	}
 
 	public setLeader(participant: ParticipantEntity) {
@@ -71,15 +70,19 @@ export class VictoryManager {
 
 	public updateAndGetGameState(): VictoryProgressState {
 		// Quickly decide game is there is only one player or team alive
-		const participants: ParticipantEntity[] = SettingsContext.getInstance().isFFA()
-			? Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
-			: TeamManager.getInstance().getActiveTeams();
+		if (this.haveAllOpponentsBeenEliminated()) {
+			if (!SettingsContext.getInstance().isFFA()) {
+				const activeTeams = TeamManager.getInstance().getActiveTeams();
+				GlobalGameData.leader = activeTeams[0].getMemberWithHighestIncome();
+			} else {
+				GlobalGameData.leader = Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())[0];
+			}
 
-		if (participants.length == 1) {
 			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
 			return VictoryManager.GAME_VICTORY_STATE;
 		}
 
+		// Check if there is a city victory condition met
 		let playerWinCandidates = this.victors();
 
 		if (playerWinCandidates.length == 0) {
@@ -101,20 +104,15 @@ export class VictoryManager {
 		return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO);
 	}
 
-	public checkKnockOutVictory(): boolean {
-		// TeamManager needs to be aware if there is are teams in the game. This is to be used here.
+	public haveAllOpponentsBeenEliminated(): boolean {
 		if (!SettingsContext.getInstance().isFFA()) {
 			const activeTeams = TeamManager.getInstance().getActiveTeams();
 			if (activeTeams.length <= 1) {
-				GlobalGameData.leader = activeTeams[0].getMemberWithHighestIncome();
-				this.saveStats();
 				return true;
 			}
 		}
 
 		if (PlayerManager.getInstance().playersAliveOrNomad.size <= 1) {
-			GlobalGameData.leader = Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())[0];
-			this.saveStats();
 			return true;
 		}
 		return false;
@@ -141,14 +139,5 @@ export class VictoryManager {
 
 	public getLoser(): player | undefined {
 		return this.winTracker.getEntityWithLeastWins();
-	}
-
-	public saveStats() {
-		VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
-		PlayerManager.getInstance().playersAliveOrNomad.forEach((player) => {
-			if (player.trackedData.turnDied == -1) {
-				player.setEndData();
-			}
-		});
 	}
 }
