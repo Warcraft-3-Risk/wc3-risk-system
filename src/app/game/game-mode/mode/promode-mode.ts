@@ -8,6 +8,7 @@ import { BaseMode } from './base-mode';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { PromodeCountdownState } from '../promode-game-mode/promode-countdown-state';
+import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 
 export class PromodeData implements StateData {}
 
@@ -15,6 +16,7 @@ export class PromodeMode extends BaseMode<PromodeData> {
 	protected setupStates() {
 		return [
 			new SetupState(),
+			new ApplyFogState(),
 			new CityDistributeState(),
 			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),
