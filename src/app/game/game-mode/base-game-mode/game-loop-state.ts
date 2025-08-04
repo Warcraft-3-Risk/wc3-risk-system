@@ -19,6 +19,7 @@ import { Team } from 'src/app/teams/team';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { FogManager } from 'src/app/managers/fog-manager';
+import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -186,7 +187,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		}
 
 		function playerAnnounceCandidate(candidate: ActivePlayer, state: VictoryProgressState): string {
-			let line = `${NameManager.getInstance().getDisplayName(candidate.getPlayer())} owns ${HexColors.RED}${
+			let line = `${ParticipantEntityManager.getDisplayName(candidate)} owns ${HexColors.RED}${
 				candidate.trackedData.cities.cities.length
 			}|r cities and ${playerCityCountDescription(candidate, state)}`;
 
@@ -209,7 +210,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		}
 
 		function teamAnnounceCandidate(candidate: Team, state: VictoryProgressState): string {
-			let line = `${HexColors.WHITE}Team ${candidate.getNumber()}|r owns ${HexColors.RED}${candidate.getCities()}|r cities and ${teamCityCountDescription(candidate, state)}`;
+			let line = `${ParticipantEntityManager.getDisplayName(candidate)}|r owns ${HexColors.RED}${candidate.getCities()}|r cities and ${teamCityCountDescription(candidate, state)}`;
 
 			return line;
 		}
@@ -274,27 +275,27 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerLeft(player: ActivePlayer): void {
 		super.onPlayerLeft(player);
 
-		if (VictoryManager.getInstance().haveAllOpponentsBeenEliminated()) {
+		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
 			GlobalGameData.matchState = 'postMatch';
-		}
+		});
 	}
 
 	onPlayerForfeit(player: ActivePlayer): void {
 		super.onPlayerForfeit(player);
 
-		if (VictoryManager.getInstance().haveAllOpponentsBeenEliminated()) {
+		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
 			GlobalGameData.matchState = 'postMatch';
-		}
+		});
 	}
 
 	onPlayerDead(player: ActivePlayer): void {
 		super.onPlayerDead(player);
 
-		if (VictoryManager.getInstance().haveAllOpponentsBeenEliminated()) {
+		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
 			GlobalGameData.matchState = 'postMatch';
-		}
+		});
 	}
 }

@@ -39,7 +39,7 @@ export class W3CGameOverState<T extends StateData> extends BaseState<T> {
 			}
 		});
 		if (SettingsContext.getInstance().isPromode()) {
-			VictoryManager.getInstance().updateWinTracker();
+			VictoryManager.getInstance().addWinToLeader();
 		} else {
 			StatisticsController.getInstance().refreshView();
 			StatisticsController.getInstance().setViewVisibility(true);

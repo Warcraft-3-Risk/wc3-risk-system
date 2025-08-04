@@ -8,8 +8,8 @@ import { PlayerManager } from '../player/player-manager';
 import { TeamManager } from '../teams/team-manager';
 import { OvertimeManager } from './overtime-manager';
 import { SettingsContext } from '../settings/settings-context';
-import { Team } from '../teams/team';
 import { ParticipantEntity, ParticipantEntityManager } from '../utils/participant-entity';
+import { debugPrint } from '../utils/debug-print';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -45,9 +45,7 @@ export class VictoryManager {
 
 	// This function is used to get the players who have a certain number of cities or more
 	public getOwnershipByThresholdDescending(threshold: number): ParticipantEntity[] {
-		const participants: ParticipantEntity[] = SettingsContext.getInstance().isFFA()
-			? Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
-			: TeamManager.getInstance().getActiveTeams();
+		const participants: ParticipantEntity[] = ParticipantEntityManager.getParticipantEntities();
 
 		return participants
 			.filter((participant) => ParticipantEntityManager.getCityCount(participant) >= threshold)
@@ -70,15 +68,12 @@ export class VictoryManager {
 
 	public updateAndGetGameState(): VictoryProgressState {
 		// Quickly decide game is there is only one player or team alive
-		if (this.haveAllOpponentsBeenEliminated()) {
-			if (!SettingsContext.getInstance().isFFA()) {
-				const activeTeams = TeamManager.getInstance().getActiveTeams();
-				GlobalGameData.leader = activeTeams[0].getMemberWithHighestIncome();
-			} else {
-				GlobalGameData.leader = Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())[0];
-			}
-
+		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((participant) => {
+			GlobalGameData.leader = participant;
 			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
+		});
+
+		if (VictoryManager.GAME_VICTORY_STATE === 'DECIDED') {
 			return VictoryManager.GAME_VICTORY_STATE;
 		}
 
@@ -104,30 +99,36 @@ export class VictoryManager {
 		return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO);
 	}
 
-	public haveAllOpponentsBeenEliminated(): boolean {
+	public haveAllOpponentsBeenEliminated(fnAllEnemiesEleminated: (remainingParticipant: ParticipantEntity) => void): void {
 		if (!SettingsContext.getInstance().isFFA()) {
 			const activeTeams = TeamManager.getInstance().getActiveTeams();
 			if (activeTeams.length <= 1) {
-				return true;
+				fnAllEnemiesEleminated(activeTeams[0].getMemberWithHighestIncome());
+				return;
 			}
 		}
 
 		if (PlayerManager.getInstance().playersAliveOrNomad.size <= 1) {
-			return true;
+			const remainingPlayer = Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())[0];
+			return fnAllEnemiesEleminated(remainingPlayer);
 		}
-		return false;
+		return;
 	}
 
 	public reset() {
 		VictoryManager.GAME_VICTORY_STATE = 'UNDECIDED';
 	}
 
-	public updateWinTracker() {
-		if (GlobalGameData.leader instanceof ActivePlayer) {
-			this.winTracker.addWinForEntity(GlobalGameData.leader.getPlayer());
-		} else {
-			this.winTracker.addWinForEntity((GlobalGameData.leader as Team).getMemberWithHighestIncome().getPlayer());
-		}
+	public addWinToLeader() {
+		ParticipantEntityManager.executeByParticipantEntity(
+			GlobalGameData.leader,
+			(activePlayer) => this.winTracker.addWinForEntity(activePlayer.getPlayer()),
+			(team) => {
+				debugPrint(`Adding win for team ${team.getNumber()}`);
+				this.winTracker.addWinForEntity(team.getMemberWithHighestIncome().getPlayer());
+				debugPrint('Win added for team member with highest income');
+			}
+		);
 	}
 
 	public wonBestOf(matches: number): player | undefined {

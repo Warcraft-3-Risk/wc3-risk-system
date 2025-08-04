@@ -92,6 +92,10 @@ export class Team {
 	}
 
 	public getMemberWithHighestIncome(): ActivePlayer {
+		if (this.teamMembers.length === 1) {
+			return this.teamMembers[0];
+		}
+
 		return this.getMembersSortedByIncome()[0];
 	}
 

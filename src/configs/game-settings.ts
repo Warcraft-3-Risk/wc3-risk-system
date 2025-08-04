@@ -1,12 +1,12 @@
 //Used to control how many of total cities you need.
 //This is a percentage of the total cities .6 = 60%
-export const CITIES_TO_WIN_RATIO: number = 0.6;
+export const CITIES_TO_WIN_RATIO: number = 0.11;
 
 //This is the starting gold for each player. 4 gold by default.
 export const STARTING_INCOME: number = 4;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
-export const TURN_DURATION_IN_SECONDS: number = 60;
+export const TURN_DURATION_IN_SECONDS: number = 10;
 
 //This is the duration of a tick in seconds. 1 second by default.
 export const TICK_DURATION_IN_SECONDS: number = 1;
