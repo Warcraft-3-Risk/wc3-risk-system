@@ -12,6 +12,7 @@ import { Quests } from 'src/app/quests/quests';
 import { clearTickUI } from '../utillity/update-ui';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { TreeManager } from '../../services/tree-service';
+import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -41,6 +42,14 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			}
 		});
 
+		const participants = ParticipantEntityManager.getParticipantEntities();
+		ParticipantEntityManager.executeByParticipantEntities(
+			participants,
+			(_) => {},
+			(team) => {
+				team.reset();
+			}
+		);
 		TeamManager.getInstance()
 			.getTeams()
 			.forEach((team) => {
@@ -75,7 +84,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		const observerKeys = [...PlayerManager.getInstance().observers.keys()];
 		ScoreboardManager.getInstance().obsSetup(GlobalGameData.matchPlayers, observerKeys);
 
-		VictoryManager.getInstance().updateAndGetGameState();
+		VictoryManager.getInstance().reset();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		EnableSelect(false, false);
 		EnableDragSelect(false, false);

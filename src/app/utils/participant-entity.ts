@@ -89,6 +89,16 @@ export class ParticipantEntityManager {
 		}
 	}
 
+	public static executeByParticipantEntities(
+		participantEntities: ParticipantEntity[],
+		fnActivePlayer: (player: ActivePlayer) => void,
+		fnTeam: (team: Team) => void
+	): void {
+		participantEntities.forEach((participantEntity) => {
+			this.executeByParticipantEntity(participantEntity, fnActivePlayer, fnTeam);
+		});
+	}
+
 	public static getParticipantEntities(): ParticipantEntity[] {
 		return SettingsContext.getInstance().isFFA()
 			? Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())

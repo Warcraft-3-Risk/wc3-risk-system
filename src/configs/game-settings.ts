@@ -1,6 +1,6 @@
 //Used to control how many of total cities you need.
 //This is a percentage of the total cities .6 = 60%
-export const CITIES_TO_WIN_RATIO: number = 0.11;
+export const CITIES_TO_WIN_RATIO: number = 0.6;
 
 //This is the starting gold for each player. 4 gold by default.
 export const STARTING_INCOME: number = 4;
@@ -36,7 +36,7 @@ export const ENABLE_EXPORT_SHUFFLED_PLAYER_LIST: boolean = false;
 export const ENABLE_EXPORT_GAME_SETTINGS: boolean = false;
 
 //This represents whether end game score should be exported
-export const ENABLE_EXPORT_END_GAME_SCORE: boolean = true;
+export const ENABLE_EXPORT_END_GAME_SCORE: boolean = false;
 
 //This represents how long the capitals selection phase should last in seconds. Default is 30 seconds.
 export const CAPITALS_SELECTION_PHASE: number = 30;

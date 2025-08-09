@@ -68,6 +68,7 @@ export class VictoryManager {
 
 	public updateAndGetGameState(): VictoryProgressState {
 		// Quickly decide game is there is only one player or team alive
+		debugPrint('Checking if all opponents have been eliminated...');
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((participant) => {
 			GlobalGameData.leader = participant;
 			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
@@ -78,6 +79,7 @@ export class VictoryManager {
 		}
 
 		// Check if there is a city victory condition met
+		debugPrint('Checking for city count victory condition...');
 		let playerWinCandidates = this.victors();
 
 		if (playerWinCandidates.length == 0) {

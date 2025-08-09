@@ -125,5 +125,9 @@ export class Team {
 		this.cities = 0;
 		this.kills = 0;
 		this.deaths = 0;
+
+		// this.teamMembers.forEach((player) => {
+		// 	player.trackedData.reset();
+		// });
 	}
 }

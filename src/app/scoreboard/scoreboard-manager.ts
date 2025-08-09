@@ -81,12 +81,6 @@ export class ScoreboardManager {
 
 	public updateScoreboardTitle() {
 		if (GlobalGameData.leader) {
-			if (GlobalGameData.leader instanceof ActivePlayer) {
-				debugPrint('Leader is an ActivePlayer');
-			} else {
-				debugPrint('Leader is an Team');
-			}
-
 			const overtimeSuffix = OvertimeManager.isOvertimeActive()
 				? ` ${HexColors.RED}(Overtime)|r`
 				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
