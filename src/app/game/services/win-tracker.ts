@@ -97,6 +97,29 @@ export class WinTracker {
 		BlzFrameSetText(mapInfo, newMapInfoString);
 	}
 
+	public getInfo(): {
+		leader: player;
+		other: player;
+		leaderScore: number;
+		otherScore: number;
+	} {
+		const leader: EntityData = this.entityData.get(this.currentLeader);
+		let otherEntity: EntityData;
+
+		this.entityData.forEach((entityData, entity) => {
+			if (entity != this.currentLeader) {
+				otherEntity = this.entityData.get(entity);
+			}
+		});
+
+		return {
+			leader: leader.entity,
+			other: otherEntity.entity,
+			leaderScore: leader.wins,
+			otherScore: otherEntity.wins,
+		};
+	}
+
 	private updateCurrentLeader(entity: player) {
 		const leaderData = this.entityData.get(this.currentLeader);
 		const entityData = this.entityData.get(entity);

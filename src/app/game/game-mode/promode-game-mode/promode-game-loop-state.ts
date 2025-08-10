@@ -1,12 +1,11 @@
 import { GameLoopState } from '../base-game-mode/game-loop-state';
-import { W3CData } from '../mode/w3c-mode';
 import { ParticipantEntity, ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
-import { ActivePlayer } from 'src/app/player/types/active-player';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { CITIES_TO_WIN_WARNING_RATIO } from 'src/configs/game-settings';
+import { StateData } from '../state/state-data';
 
-export class W3CGameLoopState extends GameLoopState<W3CData> {
+export class ProModeGameLoopState extends GameLoopState<StateData> {
 	onEndTurn(turn: number): void {
 		super.onEndTurn(turn);
 

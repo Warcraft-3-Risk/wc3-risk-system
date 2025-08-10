@@ -1,5 +1,4 @@
 import { CityDistributeState } from '../base-game-mode/city-distribute-state';
-import { GameLoopState } from '../base-game-mode/game-loop-state';
 import { GameOverState } from '../base-game-mode/game-over-state';
 import { ResetState } from '../base-game-mode/reset-state';
 import { SetPromodeTempVisionState } from '../promode-game-mode/set-promode-temp-vision-state';
@@ -9,6 +8,7 @@ import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { PromodeCountdownState } from '../promode-game-mode/promode-countdown-state';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
+import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-state';
 
 export class PromodeData implements StateData {}
 
@@ -20,7 +20,7 @@ export class PromodeMode extends BaseMode<PromodeData> {
 			new CityDistributeState(),
 			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),
-			new GameLoopState(),
+			new ProModeGameLoopState(),
 			new GameOverState(),
 			new ResetState(),
 		] as BaseState<PromodeData>[];

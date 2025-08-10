@@ -1,6 +1,5 @@
 import { ActivePlayer } from './types/active-player';
 import { HumanPlayer } from './types/human-player';
-import { NameManager } from '../managers/names/name-manager';
 import { buildGuardHealthButton, buildGuardValueButton } from '../ui/player-preference-buttons';
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';

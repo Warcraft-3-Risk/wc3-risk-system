@@ -17,10 +17,10 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 			const startDelayTimer: timer = CreateTimer();
 			let duration: number = this.initialDuration;
 			BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
-			CountdownMessage(`The Game will start in:\n${duration}`);
+			this.countdownDisplay(duration);
 			TimerStart(startDelayTimer, 1, true, () => {
 				BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
-				CountdownMessage(`The Game will start in:\n${duration}`);
+				this.countdownDisplay(duration);
 				if (duration <= 0) {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);
@@ -36,5 +36,9 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 		} catch (error) {
 			print('Error in Metagame ' + error);
 		}
+	}
+
+	countdownDisplay(duration: number): void {
+		CountdownMessage(`The Game will start in:\n${duration}`);
 	}
 }

@@ -143,4 +143,13 @@ export class VictoryManager {
 	public getLoser(): player | undefined {
 		return this.winTracker.getEntityWithLeastWins();
 	}
+
+	public getPromodeInfo(): {
+		leader: player;
+		other: player;
+		leaderScore: number;
+		otherScore: number;
+	} {
+		return this.winTracker.getInfo();
+	}
 }

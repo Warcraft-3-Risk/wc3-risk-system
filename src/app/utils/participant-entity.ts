@@ -44,6 +44,14 @@ export class ParticipantEntityManager {
 		}
 	}
 
+	public static getParticipantByPlayer(player: player): ParticipantEntity {
+		if (SettingsContext.getInstance().isFFA()) {
+			return PlayerManager.getInstance().players.get(player);
+		} else {
+			return TeamManager.getInstance().getTeamFromPlayer(player);
+		}
+	}
+
 	public static getParticipantNamePrefixedWithOptionalTeamNumber(player: player): string {
 		if (SettingsContext.getInstance().isFFA()) {
 			return NameManager.getInstance().getDisplayName(player);
