@@ -1,4 +1,5 @@
 import { NameManager } from '../managers/names/name-manager';
+import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { SettingsContext } from '../settings/settings-context';
 import { Team } from '../teams/team';
@@ -17,7 +18,7 @@ export class ParticipantEntityManager {
 		}
 	}
 
-	public static getDisplayName(entity: ParticipantEntity, preferNameIfOneTeamMember: boolean = false): string {
+	public static getDisplayName(entity: ParticipantEntity, preferNameIfOneTeamMember: boolean = true): string {
 		if (entity instanceof Team) {
 			return preferNameIfOneTeamMember && entity.getMembers().length === 1
 				? NameManager.getInstance().getDisplayName(entity.getMembers()[0].getPlayer())
@@ -40,6 +41,14 @@ export class ParticipantEntityManager {
 			return activePlayer;
 		} else {
 			return TeamManager.getInstance().getTeamFromPlayer(activePlayer.getPlayer());
+		}
+	}
+
+	public static getParticipantByPlayer(player: player): ParticipantEntity {
+		if (SettingsContext.getInstance().isFFA()) {
+			return PlayerManager.getInstance().players.get(player);
+		} else {
+			return TeamManager.getInstance().getTeamFromPlayer(player);
 		}
 	}
 
@@ -73,5 +82,34 @@ export class ParticipantEntityManager {
 		} else {
 			participant.getMembers().forEach((member) => LocalMessage(member.getPlayer(), msg, soundPath, duration));
 		}
+	}
+
+	// The following method should accept two function parameters that runs those functions, depending on the type of ParticipantEntity.
+	public static executeByParticipantEntity(
+		participantEntity: ParticipantEntity,
+		fnActivePlayer: (player: ActivePlayer) => void,
+		fnTeam: (team: Team) => void
+	): void {
+		if (participantEntity instanceof ActivePlayer) {
+			fnActivePlayer(participantEntity as ActivePlayer);
+		} else {
+			fnTeam(participantEntity as Team);
+		}
+	}
+
+	public static executeByParticipantEntities(
+		participantEntities: ParticipantEntity[],
+		fnActivePlayer: (player: ActivePlayer) => void,
+		fnTeam: (team: Team) => void
+	): void {
+		participantEntities.forEach((participantEntity) => {
+			this.executeByParticipantEntity(participantEntity, fnActivePlayer, fnTeam);
+		});
+	}
+
+	public static getParticipantEntities(): ParticipantEntity[] {
+		return SettingsContext.getInstance().isFFA()
+			? Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
+			: TeamManager.getInstance().getActiveTeams();
 	}
 }

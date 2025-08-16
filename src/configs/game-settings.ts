@@ -36,7 +36,7 @@ export const ENABLE_EXPORT_SHUFFLED_PLAYER_LIST: boolean = false;
 export const ENABLE_EXPORT_GAME_SETTINGS: boolean = false;
 
 //This represents whether end game score should be exported
-export const ENABLE_EXPORT_END_GAME_SCORE: boolean = true;
+export const ENABLE_EXPORT_END_GAME_SCORE: boolean = false;
 
 //This represents how long the capitals selection phase should last in seconds. Default is 30 seconds.
 export const CAPITALS_SELECTION_PHASE: number = 30;

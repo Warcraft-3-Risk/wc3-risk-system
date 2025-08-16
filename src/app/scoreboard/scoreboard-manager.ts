@@ -2,7 +2,6 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { OvertimeManager } from '../managers/overtime-manager';
 import { VictoryManager } from '../managers/victory-manager';
 import { ActivePlayer } from '../player/types/active-player';
-import { debugPrint } from '../utils/debug-print';
 import { HexColors } from '../utils/hex-colors';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { ObserverBoard } from './observer-board';
@@ -81,12 +80,6 @@ export class ScoreboardManager {
 
 	public updateScoreboardTitle() {
 		if (GlobalGameData.leader) {
-			if (GlobalGameData.leader instanceof ActivePlayer) {
-				debugPrint('Leader is an ActivePlayer');
-			} else {
-				debugPrint('Leader is an Team');
-			}
-
 			const overtimeSuffix = OvertimeManager.isOvertimeActive()
 				? ` ${HexColors.RED}(Overtime)|r`
 				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;

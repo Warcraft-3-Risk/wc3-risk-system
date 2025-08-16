@@ -14,7 +14,7 @@ import { Wait } from 'src/app/utils/wait';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER } from 'src/configs/game-settings';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
-import { W3CGameLoopState } from '../w3c-mode/w3c-game-loop-state';
+import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-state';
 import { W3CTipsState } from '../w3c-mode/w3c-tips-state';
 
 export class W3CData implements StateData {}
@@ -28,7 +28,7 @@ export class W3CMode extends BaseMode<W3CData> {
 			new SetPromodeTempVisionState(),
 			new W3CTipsState(),
 			new PromodeCountdownState(),
-			new W3CGameLoopState(),
+			new ProModeGameLoopState(),
 			new W3CGameOverState(),
 			new ResetState(),
 		] as BaseState<W3CData>[];

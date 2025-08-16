@@ -9,6 +9,9 @@ import { StateData } from '../state/state-data';
 import { Quests } from 'src/app/quests/quests';
 import { FogManager } from 'src/app/managers/fog-manager';
 import { Wait } from 'src/app/utils/wait';
+import { PlayerManager } from 'src/app/player/player-manager';
+import { debugPrint } from 'src/app/utils/debug-print';
+import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 
 export class W3CGameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -20,7 +23,12 @@ export class W3CGameOverState<T extends StateData> extends BaseState<T> {
 
 		Quests.getInstance().UpdateShuffledPlayerListQuest();
 
-		VictoryManager.getInstance().saveStats();
+		// Set end data for all remaining active players - defeated players have had their end data set already as they were defeated
+		PlayerManager.getInstance().playersAliveOrNomad.forEach((player) => {
+			if (player.trackedData.turnDied == -1) {
+				player.setEndData();
+			}
+		});
 
 		// Hide match scoreboard and show score screen
 		ScoreboardManager.getInstance().destroyBoards();
@@ -33,7 +41,7 @@ export class W3CGameOverState<T extends StateData> extends BaseState<T> {
 			}
 		});
 		if (SettingsContext.getInstance().isPromode()) {
-			VictoryManager.getInstance().updateWinTracker();
+			VictoryManager.getInstance().addWinToLeader();
 		} else {
 			StatisticsController.getInstance().refreshView();
 			StatisticsController.getInstance().setViewVisibility(true);
@@ -49,6 +57,9 @@ export class W3CGameOverState<T extends StateData> extends BaseState<T> {
 
 		const player: player = VictoryManager.getInstance().wonBestOf(2);
 		if (player) {
+			debugPrint(
+				`${ParticipantEntityManager.getDisplayName(PlayerManager.getInstance().players.get(player))} has won the best of 2 series.`
+			);
 			CustomVictoryBJ(player, true, true);
 			ClearTextMessages();
 

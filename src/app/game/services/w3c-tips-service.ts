@@ -1,8 +1,8 @@
 export class W3CTipsService {
 	private static tips: string[] = [
-		'Alt-tabbing out of the game is not recommended!\n\nIt can cause issues with the game client and may lead to unexpected behavior such as crashes or desyncs.',
+		'Alt-tabbing out of the game is not recommended!\n\nIt can cause issues with the game client and may lead to unexpected behavior\nsuch as crashes or desyncs.',
 		'Practice makes perfect!\n\nPlay regularly to improve your skills.\n\nConsider joining the Risk Discord community for tips and tricks!',
-		'Watch replays of professional players to learn new strategies.\n\nWatch matches through FloTV to see how the pros do it!',
+		'Watch matches through FloTV to see how the pros do it!',
 		'Swap out your city defenders!\n\nUse the city "Swap" button to exchange defenders\nbetween cities for better defense!',
 		'Cities can be captured with a single rifleman\nif approached from outside of city range!\n\nUse this to your advantage to capture extra cities\nat your own risk!',
 		'Remember, 25 riflemen are always stronger\nthan a single tank!',

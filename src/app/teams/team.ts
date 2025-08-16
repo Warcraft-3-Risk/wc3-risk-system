@@ -92,6 +92,10 @@ export class Team {
 	}
 
 	public getMemberWithHighestIncome(): ActivePlayer {
+		if (this.teamMembers.length === 1) {
+			return this.teamMembers[0];
+		}
+
 		return this.getMembersSortedByIncome()[0];
 	}
 
@@ -121,5 +125,9 @@ export class Team {
 		this.cities = 0;
 		this.kills = 0;
 		this.deaths = 0;
+
+		// this.teamMembers.forEach((player) => {
+		// 	player.trackedData.reset();
+		// });
 	}
 }

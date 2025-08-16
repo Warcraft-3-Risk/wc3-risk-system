@@ -8,8 +8,8 @@ import { PlayerManager } from '../player/player-manager';
 import { TeamManager } from '../teams/team-manager';
 import { OvertimeManager } from './overtime-manager';
 import { SettingsContext } from '../settings/settings-context';
-import { Team } from '../teams/team';
 import { ParticipantEntity, ParticipantEntityManager } from '../utils/participant-entity';
+import { debugPrint } from '../utils/debug-print';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -33,7 +33,6 @@ export class VictoryManager {
 
 	public removePlayer(player: ActivePlayer, status: PLAYER_STATUS) {
 		PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), status);
-		this.checkKnockOutVictory();
 	}
 
 	public setLeader(participant: ParticipantEntity) {
@@ -46,9 +45,7 @@ export class VictoryManager {
 
 	// This function is used to get the players who have a certain number of cities or more
 	public getOwnershipByThresholdDescending(threshold: number): ParticipantEntity[] {
-		const participants: ParticipantEntity[] = SettingsContext.getInstance().isFFA()
-			? Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
-			: TeamManager.getInstance().getActiveTeams();
+		const participants: ParticipantEntity[] = ParticipantEntityManager.getParticipantEntities();
 
 		return participants
 			.filter((participant) => ParticipantEntityManager.getCityCount(participant) >= threshold)
@@ -71,15 +68,18 @@ export class VictoryManager {
 
 	public updateAndGetGameState(): VictoryProgressState {
 		// Quickly decide game is there is only one player or team alive
-		const participants: ParticipantEntity[] = SettingsContext.getInstance().isFFA()
-			? Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
-			: TeamManager.getInstance().getActiveTeams();
-
-		if (participants.length == 1) {
+		debugPrint('Checking if all opponents have been eliminated...');
+		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((participant) => {
+			GlobalGameData.leader = participant;
 			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
+		});
+
+		if (VictoryManager.GAME_VICTORY_STATE === 'DECIDED') {
 			return VictoryManager.GAME_VICTORY_STATE;
 		}
 
+		// Check if there is a city victory condition met
+		debugPrint('Checking for city count victory condition...');
 		let playerWinCandidates = this.victors();
 
 		if (playerWinCandidates.length == 0) {
@@ -101,35 +101,36 @@ export class VictoryManager {
 		return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO);
 	}
 
-	public checkKnockOutVictory(): boolean {
-		// TeamManager needs to be aware if there is are teams in the game. This is to be used here.
+	public haveAllOpponentsBeenEliminated(fnAllEnemiesEleminated: (remainingParticipant: ParticipantEntity) => void): void {
 		if (!SettingsContext.getInstance().isFFA()) {
 			const activeTeams = TeamManager.getInstance().getActiveTeams();
 			if (activeTeams.length <= 1) {
-				GlobalGameData.leader = activeTeams[0].getMemberWithHighestIncome();
-				this.saveStats();
-				return true;
+				fnAllEnemiesEleminated(activeTeams[0].getMemberWithHighestIncome());
+				return;
 			}
 		}
 
 		if (PlayerManager.getInstance().playersAliveOrNomad.size <= 1) {
-			GlobalGameData.leader = Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())[0];
-			this.saveStats();
-			return true;
+			const remainingPlayer = Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())[0];
+			return fnAllEnemiesEleminated(remainingPlayer);
 		}
-		return false;
+		return;
 	}
 
 	public reset() {
 		VictoryManager.GAME_VICTORY_STATE = 'UNDECIDED';
 	}
 
-	public updateWinTracker() {
-		if (GlobalGameData.leader instanceof ActivePlayer) {
-			this.winTracker.addWinForEntity(GlobalGameData.leader.getPlayer());
-		} else {
-			this.winTracker.addWinForEntity((GlobalGameData.leader as Team).getMemberWithHighestIncome().getPlayer());
-		}
+	public addWinToLeader() {
+		ParticipantEntityManager.executeByParticipantEntity(
+			GlobalGameData.leader,
+			(activePlayer) => this.winTracker.addWinForEntity(activePlayer.getPlayer()),
+			(team) => {
+				debugPrint(`Adding win for team ${team.getNumber()}`);
+				this.winTracker.addWinForEntity(team.getMemberWithHighestIncome().getPlayer());
+				debugPrint('Win added for team member with highest income');
+			}
+		);
 	}
 
 	public wonBestOf(matches: number): player | undefined {
@@ -143,12 +144,12 @@ export class VictoryManager {
 		return this.winTracker.getEntityWithLeastWins();
 	}
 
-	public saveStats() {
-		VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
-		PlayerManager.getInstance().playersAliveOrNomad.forEach((player) => {
-			if (player.trackedData.turnDied == -1) {
-				player.setEndData();
-			}
-		});
+	public getPromodeInfo(): {
+		leader: player;
+		other: player;
+		leaderScore: number;
+		otherScore: number;
+	} {
+		return this.winTracker.getInfo();
 	}
 }

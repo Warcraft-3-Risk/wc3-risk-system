@@ -24,15 +24,14 @@ export abstract class BaseMode<T extends StateData> {
 
 		// If there are no more states, restart the game mode, else enter the next state
 		if (!this.currentState) {
-			debugPrint('No more states, restarting game mode, state length:', this.states.length);
-			debugPrint('Game mode: ' + GlobalGameData.gameMode);
+			debugPrint(`Restarting ${GlobalGameData.gameMode}, state length: ${this.states.length}`);
 			EventEmitter.getInstance().emit(EVENT_SET_GAME_MODE, GlobalGameData.gameMode);
 			return;
 		}
 
 		this.currentState.stateData = stateData;
 
-		debugPrint('Entering next state, state length:', this.states.length);
+		debugPrint(`Entering ${this.currentState.constructor.name}`);
 		this.currentState.onEnterState();
 	}
 
