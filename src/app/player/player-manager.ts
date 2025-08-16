@@ -138,6 +138,12 @@ export class PlayerManager {
 		return this._observerFromHandle;
 	}
 
+	public get playersAndObservers(): Map<player, ActivePlayer> {
+		const combinedMap = new Map<player, ActivePlayer>();
+		this._playerFromHandle.forEach((value, key) => combinedMap.set(key, value));
+		this._observerFromHandle.forEach((value, key) => combinedMap.set(key, value));
+		return combinedMap;
+	}
 	public setPlayerStatus(v: player, status: PLAYER_STATUS) {
 		this.players.get(v).status.set(status);
 	}
