@@ -6,6 +6,7 @@ import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { FogManager } from 'src/app/managers/fog-manager';
+import { PlayerManager } from 'src/app/player/player-manager';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -13,21 +14,29 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 	}
 
 	async runAsync(): Promise<void> {
-		print('Resetting match...');
+		print('Preparing to reset match...');
+		await Wait.forSeconds(2);
 
 		StatisticsController.getInstance().setViewVisibility(false);
 
 		FogManager.getInstance().turnFogOff();
 
+		// Setup fog tracking for players
+		const players = [...PlayerManager.getInstance().players.values()];
+
+		players.forEach((player) => {
+			FogManager.getInstance().remove(player.getPlayer());
+		});
+
 		// Initialize fog for all players
 		SetTimeOfDayScale(0);
 		SetTimeOfDay(12.0);
 
-		print('Removing units...');
-		removeUnits();
-		await Wait.forSeconds(4);
 		print('Resetting countries...');
 		resetCountries();
+		await Wait.forSeconds(1);
+		print('Removing units...');
+		removeUnits();
 		await Wait.forSeconds(1);
 		print('Resetting trees...');
 		TreeManager.getInstance().reset();
