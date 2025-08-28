@@ -113,20 +113,26 @@ export class Quests {
 	}
 
 	private CameraDescription() {
-		let description: string =
-			'The camera system allows for full control of a players camera. The player can manipulate the distance, rotation, and angle of attack (AoA).';
-		description += '\n\nTo use the camera command you can use the keyword -cam or -zoom';
-		description +=
-			'\nAfter the keyword you can input parameters to control the camera, the command would look like this -cam <distance> <rotation> <AoA>';
-		description +=
-			'\nYou do not need to supply all three parameters, but if want to change the 2nd or third you must provide all prior parameters';
-		description += '\nIf you want to reset your camera back to default values you can simply type the command with no parameters provided';
-		description += '\nAn example would be -cam 5000 90 270 or -zoom 5000 90 270';
-		description += '\nThis command would give the player a top down camera with the default rotation and a distance of 5000';
-		description +=
-			'\nThis distance must be between 1000 and 8500, The rotation must be between 0 and 360, the AoA must be between 270 and 350';
+		const description = `
+			The camera system allows full control over a player's camera. You can adjust the distance, rotation, and angle of attack (AoA).
+			
+			To use the camera command, type -cam or -zoom.  
+			Format: -cam <distance> <rotation> <AoA>
+			
+			You don’t need to supply all three parameters. However, if you want to change the second or third, you must also provide all preceding parameters.  
+			To reset your camera to default values, type the command with no parameters.
+			
+			This example sets your camera to a top-down view with the default rotation and a distance of 5000:
+			-cam 5000 90 270  
+			-zoom 5000 90 270
+			
+			Parameter Ranges
+			- Distance: 1000 – 8500  
+			- Rotation: 0 – 360  
+			- AoA: 270 – 350
+		`;
 
-		this.BuildQuest('QUEST_CAMERA', 'Camera Explained', description, 'ReplaceableTextures\\WorldEditUI\\Doodad-Cinematic.blp', true);
+		this.BuildQuest('QUEST_CAMERA', 'Camera', description, 'ReplaceableTextures\\WorldEditUI\\Doodad-Cinematic.blp', true);
 	}
 
 	private BuildQuest(questType: QuestType, title: string, description: string, icon: string, required: boolean) {
@@ -169,13 +175,7 @@ export class Quests {
 		nameList.forEach((player) => {
 			description += `\n${nameManager.getBtag(player.getPlayer())}`;
 		});
-		this.BuildQuest(
-			'QUEST_SHUFFLED_PLAYER_LIST',
-			'Players',
-			description,
-			'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp',
-			false
-		);
+		this.BuildQuest('QUEST_SHUFFLED_PLAYER_LIST', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 
 	public UpdateShuffledPlayerListQuest(): void {
@@ -194,12 +194,6 @@ export class Quests {
 			description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())} (${player.status ? player.status.status : 'Unknown'})`;
 		});
 
-		this.BuildQuest(
-			'QUEST_SHUFFLED_PLAYER_LIST',
-			'Players',
-			description,
-			'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp',
-			false
-		);
+		this.BuildQuest('QUEST_SHUFFLED_PLAYER_LIST', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 }
