@@ -171,7 +171,7 @@ export class Quests {
 		});
 		this.BuildQuest(
 			'QUEST_SHUFFLED_PLAYER_LIST',
-			'Shuffled Player List',
+			'Players',
 			description,
 			'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp',
 			false
@@ -196,7 +196,7 @@ export class Quests {
 
 		this.BuildQuest(
 			'QUEST_SHUFFLED_PLAYER_LIST',
-			'Shuffled Player List',
+			'Players',
 			description,
 			'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp',
 			false
