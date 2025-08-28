@@ -10,6 +10,7 @@ import { PromodeOptionsColorFormatted } from '../settings/strategies/promode-str
 import { HexColors } from '../utils/hex-colors';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { ShuffleArray } from '../utils/utils';
+import { debugPrint } from '../utils/debug-print';
 
 /**
  * Responsible for creating in-game quests.
@@ -198,6 +199,19 @@ export class Quests {
 		const eliminatedPlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isEliminated() : false));
 		eliminatedPlayers.forEach((player) => {
 			description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())} (${player.status ? player.status.status : 'Unknown'})`;
+
+			if (player.killedBy) {
+				const killedByActivePlayer = PlayerManager.getInstance().players.get(player.killedBy);
+
+				// Dependent on whether the killer is still alive or not we have to be careful to not leak his player name
+				if(killedByActivePlayer.status.isActive()) {
+					description += ' killed by ' + NameManager.getInstance().getDisplayName(player.killedBy);
+				} else {
+					description += ' killed by ' + ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.killedBy);
+				}
+
+				description += ' (' + (killedByActivePlayer.status ? killedByActivePlayer.status.status : 'Unknown') + ')';
+			}
 		});
 
 		this.BuildQuest('QUEST_SHUFFLED_PLAYER_LIST', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);

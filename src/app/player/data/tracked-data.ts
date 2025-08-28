@@ -16,8 +16,9 @@ export class TrackedData {
 	private _cities: Cities;
 	private _countries: Map<Country, number>;
 	private _killsDeaths: Map<string | player, KillsDeaths>;
-	private _denies: number; 
+	private _denies: number;
 
+	private _lastUnitKilledBy: player;
 	private _units: Set<unit>;
 	private _turnDied: number;
 	private _trainedUnits: Map<number, number>;
@@ -47,6 +48,7 @@ export class TrackedData {
 		this._units = new Set<unit>();
 		this._trainedUnits = new Map<number, number>();
 		this._turnDied = -1;
+		this._lastUnitKilledBy = null;
 	}
 
 	public reset() {
@@ -68,6 +70,7 @@ export class TrackedData {
 		this.units.clear();
 		this._trainedUnits.clear();
 		this.turnDied = 0;
+		this._lastUnitKilledBy = null;
 	}
 
 	public setKDMaps() {
@@ -139,7 +142,7 @@ export class TrackedData {
 		return this._units;
 	}
 
-	public get denies(): number{
+	public get denies(): number {
 		return this._denies;
 	}
 
@@ -157,5 +160,13 @@ export class TrackedData {
 
 	public get trainedUnits(): Map<number, number> {
 		return this._trainedUnits;
+	}
+
+	public get lastUnitKilledBy(): player {
+		return this._lastUnitKilledBy;
+	}
+
+	public set lastUnitKilledBy(value: player) {
+		this._lastUnitKilledBy = value;
 	}
 }

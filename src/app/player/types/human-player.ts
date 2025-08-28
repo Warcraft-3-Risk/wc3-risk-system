@@ -1,5 +1,6 @@
 import { AnnounceOnUnitObserverOnlyTintedByPlayer } from 'src/app/game/announcer/announce';
 import { ActivePlayer } from './active-player';
+import { debugPrint } from '../../utils/debug-print';
 
 export class HumanPlayer extends ActivePlayer {
 	constructor(player: player) {
@@ -39,22 +40,23 @@ export class HumanPlayer extends ActivePlayer {
 
 	onDeath(killer: player, unit: unit): void {
 		this.trackedData.units.delete(unit);
+		this.trackedData.lastUnitKilledBy = killer;
 
 		if (!this.status.isAlive() && !this.status.isNomad()) return;
 
-		const victom: player = this.getPlayer();
-		if (victom == killer) return;
-		if (IsPlayerAlly(victom, killer)) return;
+		const victim: player = this.getPlayer();
+		if (victim == killer) return;
+		if (IsPlayerAlly(victim, killer)) return;
 
 		const val: number = GetUnitPointValue(unit);
 		const kdData = this.trackedData.killsDeaths;
 
 		kdData.get(killer).deathValue += val;
-		kdData.get(victom).deathValue += val;
+		kdData.get(victim).deathValue += val;
 		kdData.get(`${GetUnitTypeId(unit)}`).deathValue += val;
 
 		kdData.get(killer).deaths++;
-		kdData.get(victom).deaths++;
+		kdData.get(victim).deaths++;
 		kdData.get(`${GetUnitTypeId(unit)}`).deaths++;
 	}
 }
