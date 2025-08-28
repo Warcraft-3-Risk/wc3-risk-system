@@ -155,12 +155,14 @@ export class Quests {
 	}
 
 	public AddSettingsQuest(settings: SettingsContext): void {
-		let description: string = 'Game Settings:';
-		description += `\nDiplomacy: ${DiplomacyStringsColorFormatted[settings.getSettings().Diplomacy.option]}`;
-		description += `\nFog: ${FogOptionsColorFormatted[settings.getSettings().Fog]}`;
-		description += `\nGame Type: ${GameTypeOptionsColorFormatted[settings.getSettings().GameType]}`;
-		description += `\nOvertime: ${OvertimeStringsColorFormatted[settings.getSettings().Overtime.option]}`;
-		description += `\nPromode: ${PromodeOptionsColorFormatted[settings.getSettings().Promode]}`;
+		let description: string = `
+			Game Settings:
+			Diplomacy: ${DiplomacyStringsColorFormatted[settings.getSettings().Diplomacy.option]}
+			Fog: ${FogOptionsColorFormatted[settings.getSettings().Fog]}
+			Game Type: ${GameTypeOptionsColorFormatted[settings.getSettings().GameType]}
+			Overtime: ${OvertimeStringsColorFormatted[settings.getSettings().Overtime.option]}
+			Promode: ${PromodeOptionsColorFormatted[settings.getSettings().Promode]}
+		`;
 
 		this.BuildQuest('QUEST_SETTINGS', 'Settings', description, 'ReplaceableTextures\\CommandButtons\\BTNEngineeringUpgrade.blp', false);
 	}
