@@ -4,6 +4,7 @@ import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
 import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
+import { VictoryManager } from '../managers/victory-manager';
 
 export class ObserverBoard extends Scoreboard {
 	private players: ActivePlayer[];
@@ -110,8 +111,10 @@ export class ObserverBoard extends Scoreboard {
 	}
 
 	private setColumns(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
+		// Name
 		this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
+		// Income
 		if (player.status.isAlive() || player.status.isNomad()) {
 			this.setItemValue(
 				`${textColor}${player.trackedData.income.income - player.trackedData.income.delta}(${this.getIncomeDelta(
@@ -124,13 +127,24 @@ export class ObserverBoard extends Scoreboard {
 			this.setItemValue(`${textColor}-`, row, this.INCOME_COL);
 		}
 
+		// Gold
 		const playerGold = GetPlayerState(player.getPlayer(), PLAYER_STATE_RESOURCE_GOLD);
 		this.setItemValue(`${textColor}${playerGold}`, row, this.GOLD_COL);
 
-		this.setItemValue(`${textColor}${data.cities.cities.length}`, row, this.CITIES_COL);
+		// Cities
+		const requiredCities = VictoryManager.getCityCountWin();
+		const cities = data.cities.cities.length;
+		const isCityCountHighlighted = cities >= requiredCities;
+		const cityTextColor = isCityCountHighlighted ? HexColors.RED : textColor;
+		this.setItemValue(`${cityTextColor}${cities}`, row, this.CITIES_COL);
+
+		// Kills
 		this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).killValue}`, row, this.KILLS_COL);
+
+		// Deaths
 		this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
 
+		// Status
 		if (player.status.isNomad() || player.status.isSTFU()) {
 			this.setItemValue(`${player.status.status} ${player.status.statusDuration}`, row, this.STATUS_COL);
 		} else {

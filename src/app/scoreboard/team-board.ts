@@ -6,6 +6,7 @@ import { TeamManager } from '../teams/team-manager';
 import { HexColors } from '../utils/hex-colors';
 import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
+import { VictoryManager } from '../managers/victory-manager';
 
 export class TeamBoard extends Scoreboard {
 	private teams: Team[];
@@ -173,11 +174,23 @@ export class TeamBoard extends Scoreboard {
 			teamPrefix = `${HexColors.TANGERINE}[${TeamManager.getInstance().getTeamNumberFromPlayer(playerHandle)}]|r`;
 		}
 
+		// Name
 		this.setItemValue(`${teamPrefix}${NameManager.getInstance().getDisplayName(playerHandle)}`, row, this.PLAYER_COL);
-		this.setItemValue(`${textColor}${data.cities.cities.length}`, row, this.CITIES_COL);
+
+		// Cities
+		const requiredCities = VictoryManager.getCityCountWin();
+		const cities = data.cities.cities.length;
+		const isCityCountHighlighted = cities >= requiredCities;
+		const cityTextColor = isCityCountHighlighted ? HexColors.RED : textColor;
+		this.setItemValue(`${cityTextColor}${cities}`, row, this.CITIES_COL);
+
+		// Kills
 		this.setItemValue(`${textColor}${data.killsDeaths.get(playerHandle).killValue}`, row, this.KILLS_COL);
+
+		// Deaths
 		this.setItemValue(`${textColor}${data.killsDeaths.get(playerHandle).deathValue}`, row, this.DEATHS_COL);
 
+		// Status
 		if (player.status.isNomad() || player.status.isSTFU()) {
 			this.setItemValue(`${player.status.status} ${player.status.statusDuration}`, row, this.STATUS_COL);
 		} else {
