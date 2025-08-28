@@ -9,6 +9,10 @@ import { SettingsContext } from '../settings/settings-context';
 import { TeamManager } from '../teams/team-manager';
 import { Team } from '../teams/team';
 import { ParticipantEntityManager } from '../utils/participant-entity';
+import { DiplomacyStringsColorFormatted } from '../settings/strategies/diplomacy-strategy';
+import { FogColors, FogOptionsColorFormatted } from '../settings/strategies/fog-strategy';
+import { GameTypeOptionsColorFormatted } from '../settings/strategies/game-type-strategy';
+import { OvertimeColors, OvertimeStringsColorFormatted } from '../settings/strategies/overtime-strategy';
 
 export class StatisticsModel {
 	private timePlayed: string;
@@ -80,6 +84,7 @@ export class StatisticsModel {
 	}
 
 	private setGameTime() {
+		const settingsManager = SettingsContext.getInstance();
 		const turnTime: number = TURN_DURATION_IN_SECONDS;
 		const minutes: number = parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
 		const seconds: number = turnTime - parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarUpkeepText', 0)));
@@ -88,7 +93,25 @@ export class StatisticsModel {
 		const formattedTime: string = `${AddLeadingZero(hours)}:${AddLeadingZero(remainingMinutes)}:${AddLeadingZero(seconds)}`;
 		const totalTurns: number = minutes + seconds / turnTime;
 
-		this.timePlayed = `${HexColors.TANGERINE}Game Time:|r ${formattedTime}\n${HexColors.TANGERINE}Total Turns:|r ${totalTurns.toFixed(2)}\n${HexColors.TANGERINE}Version:|r v${MAP_VERSION}`;
+		let settings = '';
+		settings += GameTypeOptionsColorFormatted[settingsManager.getSettings().GameType] + ', ';
+		settings += DiplomacyStringsColorFormatted[settingsManager.getSettings().Diplomacy.option] + ', ';
+		// We want to keep it as short as possible so instead of possibly writing "Overtime: Turbo (Turn 30)" because we
+		// use OvertimeStrings exclusively, we check for value 3 which means overtime is disabled. "Off" wouldn't be
+		// explanatory enough so we check for it and use "No Overtime" instead
+		settings +=
+			OvertimeColors[settingsManager.getSettings().Overtime.option] +
+			(settingsManager.getSettings().Overtime.option === 3
+				? 'No Overtime'
+				: OvertimeStringsColorFormatted[settingsManager.getSettings().Overtime.option]) +
+			'|r, ';
+		settings +=
+			FogColors[settingsManager.getSettings().Fog] + 'Fog|r ' + FogOptionsColorFormatted[settingsManager.getSettings().Fog];
+
+		this.timePlayed = `${HexColors.TANGERINE}Game Time:|r ${formattedTime}
+		${HexColors.TANGERINE}Total Turns:|r ${totalTurns.toFixed(2)}
+		${HexColors.TANGERINE}Version:|r v${MAP_VERSION}
+		${HexColors.TANGERINE}Settings:|r ${settings}`;
 	}
 
 	private sortPlayersByRank(players: ActivePlayer[], winner?: ActivePlayer): ActivePlayer[] {
