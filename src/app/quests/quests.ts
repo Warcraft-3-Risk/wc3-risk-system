@@ -70,18 +70,24 @@ export class Quests {
 	}
 
 	private ArmyComposition() {
-		let description: string = 'Risk is not your typical, "buy the more expensive unit" game. Army composition is very important.';
-		description += ' The main bulk of your army will be Riflemen. They should be supported by Priests and Mortors.';
-		description += ' Those three unit types will do most of your fighting on land.';
-		description += ' It is also important to build a couple of Roarers to cast Roar and Dispel.';
-		description += ' Units such as Knights and Generals are mostly used to overhwelm your enemy in specific situations.';
-		description += ' These situations are not often, it is mostly when your enemy loses their Riflemen line.';
-		description += ' Artillery are a long range splash damage units. Be careful with them as they are defensively weak.';
-		description += ' Tanks are strong units that are best used in mass. Be sure to micro weak tanks back so they can heal.';
-		description += ' SS are king of the seas, they are the go to ship in FFA games.';
-		description += ' Warship B is best used to chase down other weak ships including SS.';
-		description += ' Warship A is an early game unit.';
-		description += ' It should only really be used the first couple of turns in fights on specific coastlines.';
+		const description = `
+			Risk is not your typical "buy the most expensive unit" game - army composition matters greatly.
+			
+			The backbone of your army will be Riflemen, supported by Priests and Mortars. These three units will do most of the fighting on land.  
+			It is also important to include a few Roarers to cast Roar and Dispel.  
+			
+			Other units serve more specialized purposes:  
+			- Knights and Generals** are situational, best used to overwhelm your enemy once their riflemen line has collapsed.  
+			- Artillery provide long-range splash damage, but are fragile and require protection.  
+			- Tanks are powerful when massed. Be sure to pull back weakened tanks so they can recover.  
+			
+			At sea:  
+			- SS dominate the waters and are the primary ship of choice in FFA games.  
+			- Warship B excels at chasing down weakened ships, including SS.  
+			- Warship A is an early-game vessel, useful mainly in the opening turns along vulnerable coastlines.  
+			
+			Choose your forces wisely - the right mix will decide the battle.
+		`;
 
 		this.BuildQuest(
 			'QUEST_ARMY_COMPOSITION',
