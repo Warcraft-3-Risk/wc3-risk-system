@@ -80,15 +80,20 @@ export class ScoreboardManager {
 
 	public updateScoreboardTitle() {
 		if (GlobalGameData.leader) {
+			const requiredCities = VictoryManager.getCityCountWin();
+			const leaderDisplayName = ParticipantEntityManager.getDisplayName(GlobalGameData.leader);
+			const leaderCityCount = ParticipantEntityManager.getCityCount(GlobalGameData.leader);
+			const isLeaderCityCountHighlighted = leaderCityCount >= requiredCities;
+
 			const overtimeSuffix = OvertimeManager.isOvertimeActive()
 				? ` ${HexColors.RED}(Overtime)|r`
 				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
 
-			this.setTitle(
-				`${ParticipantEntityManager.getDisplayName(GlobalGameData.leader)} ${ParticipantEntityManager.getCityCount(
-					GlobalGameData.leader
-				)}/${HexColors.RED}${VictoryManager.getCityCountWin()}|r${overtimeSuffix}`
-			);
+			if(isLeaderCityCountHighlighted) {
+				this.setTitle(`${leaderDisplayName} ${HexColors.RED}${leaderCityCount}|r/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`)
+			} else {
+				this.setTitle(`${leaderDisplayName} ${leaderCityCount}/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`)
+			}
 		} else {
 			const overtimeSuffix = OvertimeManager.isOvertimeActive()
 				? ` ${HexColors.RED}(Overtime)|r`
