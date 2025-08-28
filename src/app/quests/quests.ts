@@ -47,12 +47,14 @@ export class Quests {
 	}
 
 	private Credits() {
-		let description = `Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930
-			Terrain: Nerla#1510
-			Units: Saran, ForLolz#11696
-			Icons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish
-			SS Ship Model: ??, please let ForLolz know if you know the author
-			Special Thanks: The Risk Community, Priwin, PsycoMarauder, RodOfNod, goble-r1sk, Saran, and all the devs before me!
+		let description = `Join our community on Discord: https://discord.gg/wc3risk
+		 
+		Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930
+		Terrain: Nerla#1510
+		Units: Saran, ForLolz#11696
+		Icons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish
+		SS Ship Model: ??, please let ForLolz know if you know the author
+		Special Thanks: The Risk Community, Priwin, PsycoMarauder, RodOfNod, goble-r1sk, Saran, and all the devs before me!
 	`;
 
 		this.BuildQuest('QUEST_CREDITS', 'Credits', description, 'ReplaceableTextures\\CommandButtons\\BTNTome.blp', false);
@@ -127,7 +129,7 @@ export class Quests {
 			-cam 5000 90 270  
 			-zoom 5000 90 270
 			
-			Parameter Ranges
+			Parameter Ranges:
 			- Distance: 1000 – 8500  
 			- Rotation: 0 – 360  
 			- AoA: 270 – 350
