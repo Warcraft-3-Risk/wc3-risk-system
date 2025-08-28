@@ -47,8 +47,7 @@ export class Quests {
 	}
 
 	private Credits() {
-		let description: string = `
-			Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930
+		let description = `Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930
 			Terrain: Nerla#1510
 			Units: Saran, ForLolz#11696
 			Icons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish
@@ -60,8 +59,7 @@ export class Quests {
 	}
 
 	private HowToPlay() {
-		const description = `
-			The goal of the game is to conquer a set number of cities and hold them until the end of the turn.  
+		const description = `The goal of the game is to conquer a set number of cities and hold them until the end of the turn.  
 			
 			To earn income, you must control an entire country when the turn ends. It’s often best to begin with smaller countries to secure income quickly. Expand carefully and keep your territories connected for stronger defense.  
 			
@@ -74,14 +72,13 @@ export class Quests {
 	}
 
 	private ArmyComposition() {
-		const description = `
-			Risk is not your typical "buy the most expensive unit" game - army composition matters greatly.
+		const description = `Risk is not your typical "buy the most expensive unit" game - army composition matters greatly.
 			
 			The backbone of your army will be Riflemen, supported by Priests and Mortars. These three units will do most of the fighting on land.  
 			It is also important to include a few Roarers to cast Roar and Dispel.  
 			
 			Other units serve more specialized purposes:  
-			- Knights and Generals** are situational, best used to overwhelm your enemy once their riflemen line has collapsed.  
+			- Knights and Generals are situational, best used to overwhelm your enemy once their riflemen line has collapsed.  
 			- Artillery provide long-range splash damage, but are fragile and require protection.  
 			- Tanks are powerful when massed. Be sure to pull back weakened tanks so they can recover.  
 			
@@ -103,8 +100,7 @@ export class Quests {
 	}
 
 	private Overtime() {
-		const description = `
-			Overtime is a feature designed to help conclude games more efficiently by gradually reducing the number of cities required for victory. Once activated, each turn decreases the victory threshold by one city until a player wins.
+		const description = `Overtime is a feature designed to help conclude games more efficiently by gradually reducing the number of cities required for victory. Once activated, each turn decreases the victory threshold by one city until a player wins.
 			
 			There are four Overtime settings:
 			1. Turbo Mode: Overtime begins at turn 30, accelerating the game pace early on. This is the default setting.
@@ -119,8 +115,7 @@ export class Quests {
 	}
 
 	private Camera() {
-		const description = `
-			The camera system allows full control over a player's camera. You can adjust the distance, rotation, and angle of attack (AoA).
+		const description = `The camera system allows full control over a player's camera. You can adjust the distance, rotation, and angle of attack (AoA).
 			
 			To use the camera command, type -cam or -zoom.  
 			Format: -cam <distance> <rotation> <AoA>
@@ -155,8 +150,7 @@ export class Quests {
 	}
 
 	public AddSettingsQuest(settings: SettingsContext): void {
-		let description: string = `
-			Game Settings:
+		let description = `Game Settings:
 			Diplomacy: ${DiplomacyStringsColorFormatted[settings.getSettings().Diplomacy.option]}
 			Fog: ${FogOptionsColorFormatted[settings.getSettings().Fog]}
 			Game Type: ${GameTypeOptionsColorFormatted[settings.getSettings().GameType]}
