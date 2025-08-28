@@ -42,8 +42,8 @@ export class Quests {
 		this.Credits();
 		this.Tutorial();
 		this.ArmyComposition();
-		this.OvertimeDescription();
-		this.CameraDescription();
+		this.Overtime();
+		this.Camera();
 	}
 
 	private Credits() {
@@ -98,7 +98,7 @@ export class Quests {
 		);
 	}
 
-	private OvertimeDescription() {
+	private Overtime() {
 		const description = `
 			Overtime is a feature designed to help conclude games more efficiently by gradually reducing the number of cities required for victory. Once activated, each turn decreases the victory threshold by one city until a player wins.
 			
@@ -120,7 +120,7 @@ export class Quests {
 		);
 	}
 
-	private CameraDescription() {
+	private Camera() {
 		const description = `
 			The camera system allows full control over a player's camera. You can adjust the distance, rotation, and angle of attack (AoA).
 			
