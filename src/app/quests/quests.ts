@@ -181,7 +181,13 @@ export class Quests {
 		nameList.forEach((player) => {
 			description += `\n${nameManager.getBtag(player.getPlayer())}`;
 		});
-		this.BuildQuest('QUEST_SHUFFLED_PLAYER_LIST', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
+		this.BuildQuest(
+			'QUEST_SHUFFLED_PLAYER_LIST',
+			'Players',
+			description,
+			'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp',
+			false
+		);
 	}
 
 	public UpdateShuffledPlayerListQuest(): void {
@@ -200,6 +206,12 @@ export class Quests {
 			description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())} (${player.status ? player.status.status : 'Unknown'})`;
 		});
 
-		this.BuildQuest('QUEST_SHUFFLED_PLAYER_LIST', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
+		this.BuildQuest(
+			'QUEST_SHUFFLED_PLAYER_LIST',
+			'Players',
+			description,
+			'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp',
+			false
+		);
 	}
 }
