@@ -47,12 +47,14 @@ export class Quests {
 	}
 
 	private Credits() {
-		let description: string = 'Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930';
-		description += '\nTerrain: Nerla#1510';
-		description += '\nUnits: Saran, ForLolz#11696';
-		description += '\nIcons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish';
-		description += '\nSS Ship Model: ??, please let ForLolz know if you know the author';
-		description += '\nSpecial Thanks: The Risk Community, Priwin, PsycoMarauder, RodOfNod, goble-r1sk, Saran, and all the devs before me!';
+		let description: string = `
+			Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930
+			Terrain: Nerla#1510
+			Units: Saran, ForLolz#11696
+			Icons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish
+			SS Ship Model: ??, please let ForLolz know if you know the author
+			Special Thanks: The Risk Community, Priwin, PsycoMarauder, RodOfNod, goble-r1sk, Saran, and all the devs before me!
+	`;
 
 		this.BuildQuest('QUEST_CREDITS', 'Credits', description, 'ReplaceableTextures\\CommandButtons\\BTNTome.blp', false);
 	}
