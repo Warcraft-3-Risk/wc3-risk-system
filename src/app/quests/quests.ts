@@ -110,6 +110,8 @@ export class Quests {
 			3. Extended Mode: Overtime starts at turn 120, allowing for extended gameplay before the mechanic activates.
 			4. Off: Overtime is disabled.
 			
+			If two or more players exceed the city requirement to win while having the exact same number of cities, the game will be extended by additional turns until one player breaks the tie and leads in city count.
+
 			This system ensures flexibility and adaptability based on player preferences.
 		`;
 
