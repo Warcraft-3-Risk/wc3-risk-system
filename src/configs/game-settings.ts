@@ -5,6 +5,9 @@ export const CITIES_TO_WIN_RATIO: number = 0.6;
 //This is the starting gold for each player. 4 gold by default.
 export const STARTING_INCOME: number = 4;
 
+//This is the starting countdown for the game. 10 by default
+export const STARTING_COUNTDOWN: number = 10;
+
 //This is the duration of a turn in seconds. 60 seconds by default.
 export const TURN_DURATION_IN_SECONDS: number = 60;
 
@@ -20,7 +23,7 @@ export const OVERTIME_MODIFIER: number = 1;
 //This represents the ratio of total cities to conquer to win.
 export const CITIES_TO_WIN_WARNING_RATIO: number = 0.7;
 
-//This represents the number of cities to conquer to win. Default is 22.
+//This represents the upper bound of cities a player starts with. Default is 22.
 export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 
 //This represents the duration a player can be muted for in seconds. Default is 300 seconds.

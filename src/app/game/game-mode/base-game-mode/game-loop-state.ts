@@ -6,7 +6,6 @@ import { GlobalGameData } from '../../state/global-game-state';
 import { updateTickUI } from '../utillity/update-ui';
 import { BaseState } from '../state/base-state';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
-import { NameManager } from 'src/app/managers/names/name-manager';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
@@ -243,14 +242,15 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
-		const player = GetOwningPlayer(killingUnit);
-		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(player));
+		const killingUnitOwner = GetOwningPlayer(killingUnit);
+		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(killingUnitOwner));
 
 		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
 				AnnounceOnLocation(`${colorString}Denied`, GetUnitX(dyingUnit), GetUnitY(dyingUnit) + 20, 2.0, 3.0);
 			}
 		}
+
 		ScoreboardManager.getInstance().updatePartial();
 	}
 
