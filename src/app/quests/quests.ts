@@ -40,7 +40,7 @@ export class Quests {
 
 	public Create() {
 		this.Credits();
-		this.Tutorial();
+		this.HowToPlay();
 		this.ArmyComposition();
 		this.Overtime();
 		this.Camera();
@@ -57,16 +57,18 @@ export class Quests {
 		this.BuildQuest('QUEST_CREDITS', 'Credits', description, 'ReplaceableTextures\\CommandButtons\\BTNTome.blp', false);
 	}
 
-	private Tutorial() {
-		let description: string = 'The goal of the game is to conquer a specific amount of cities and hold them until the end of the turn.';
-		description += ' To gain income you need to control a whole country when the turn ends.';
-		description += ' It is best to start with smaller countries to gain income quickly.';
-		description += ' Try to expand in a way that will keep your countries connected.';
-		description += ' Make sure to use your spawns, they are free units you get each turn form countries you own.';
-		description += ' Chat is essential in Risk, make sure to use it and read it. Diplomacy is key.';
-		description += ' Make sure to peace other players, but also be ready to be backstabbed when your are vulnerable.';
+	private HowToPlay() {
+		const description = `
+			The goal of the game is to conquer a set number of cities and hold them until the end of the turn.  
+			
+			To earn income, you must control an entire country when the turn ends. It’s often best to begin with smaller countries to secure income quickly. Expand carefully and keep your territories connected for stronger defense.  
+			
+			Use your spawns wisely - they are free units granted each turn from the countries you control.  
+			
+			Communication is essential in risk - make sure to pay attention to the chat. Diplomacy is key. Make peace with other players when it benefits you, but always be ready for betrayal when you are vulnerable.
+		`;
 
-		this.BuildQuest('QUEST_HOW_TO_PLAY', 'How to play', description, 'ReplaceableTextures\\WorldEditUI\\Editor-Random-Unit.blp', true);
+		this.BuildQuest('QUEST_HOW_TO_PLAY', 'How to Play', description, 'ReplaceableTextures\\WorldEditUI\\Editor-Random-Unit.blp', true);
 	}
 
 	private ArmyComposition() {
@@ -111,13 +113,7 @@ export class Quests {
 			This system ensures flexibility and adaptability based on player preferences.
 		`;
 
-		this.BuildQuest(
-			'QUEST_OVERTIME',
-			'Overtime',
-			description,
-			'ReplaceableTextures\\CommandButtons\\BTNSorceressMaster.blp',
-			true
-		);
+		this.BuildQuest('QUEST_OVERTIME', 'Overtime', description, 'ReplaceableTextures\\CommandButtons\\BTNSorceressMaster.blp', true);
 	}
 
 	private Camera() {
