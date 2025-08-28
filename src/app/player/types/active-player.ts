@@ -6,6 +6,7 @@ import { GamePlayer } from './game-player';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PLAYER_STATUS } from '../status/status-enum';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
+import { debugPrint } from '../../utils/debug-print';
 
 //Use lowercase for simplicity here
 const adminList: string[] = ['forlolz#11696', 'poomonky#1939', 'theredbeard#11245', 'easterbunny#2707'];
@@ -16,6 +17,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 	private _status: Status;
 	private _options: Options;
 	private _admin: boolean;
+	private _killedBy: player;
 
 	constructor(player: player) {
 		this._player = player;
@@ -27,6 +29,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 		};
+		this._killedBy = null;
 		this._admin = false;
 
 		adminList.forEach((name) => {
@@ -36,7 +39,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		});
 	}
 
-	abstract onKill(victom: player, unit: unit): void;
+	abstract onKill(victim: player, unit: unit): void;
 	abstract onDeath(killer: player, unit: unit): void;
 
 	public getPlayer(): player {
@@ -45,6 +48,9 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 
 	public reset(): void {
 		this.trackedData.reset();
+
+		this._killedBy = null;
+
 		this.status.set(PLAYER_STATUS.ALIVE);
 
 		this._options = {
@@ -98,6 +104,14 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 
 	public get options(): Options {
 		return this._options;
+	}
+
+	public set killedBy(value: player) {
+		this._killedBy = value;
+	}
+
+	public get killedBy(): player {
+		return this._killedBy;
 	}
 
 	public isAdmin(): boolean {

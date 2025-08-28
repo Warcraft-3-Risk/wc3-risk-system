@@ -3,9 +3,11 @@ import { CountdownState } from '../base-game-mode/countdown-state';
 import { CountdownMessage } from 'src/app/utils/messages';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { VictoryManager } from 'src/app/managers/victory-manager';
+import { STARTING_COUNTDOWN } from '../../../../configs/game-settings';
+
 export class PromodeCountdownState extends CountdownState<StateData> {
 	public constructor() {
-		super(10);
+		super(STARTING_COUNTDOWN);
 	}
 
 	override countdownDisplay(duration: number): void {
