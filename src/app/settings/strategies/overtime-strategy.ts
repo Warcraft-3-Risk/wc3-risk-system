@@ -15,11 +15,18 @@ export const OvertimeStrings: Record<number, string> = {
 	3: `Off`,
 };
 
+export const OvertimeColors: Record<number, string> = {
+	0: `${HexColors.GREEN}`,
+	1: `${HexColors.RED}`,
+	2: `${HexColors.RED}`,
+	3: `${HexColors.RED}`,
+};
+
 export const OvertimeStringsColorFormatted: Record<number, string> = {
-	0: `${HexColors.GREEN}${OvertimeStrings[0]}|r`,
-	1: `${HexColors.RED}${OvertimeStrings[1]}|r`,
-	2: `${HexColors.RED}${OvertimeStrings[2]}|r`,
-	3: `${HexColors.RED}${OvertimeStrings[3]}|r`,
+	0: `${OvertimeColors[0]}${OvertimeStrings[0]}|r`,
+	1: `${OvertimeColors[1]}${OvertimeStrings[1]}|r`,
+	2: `${OvertimeColors[2]}${OvertimeStrings[2]}|r`,
+	3: `${OvertimeColors[3]}${OvertimeStrings[3]}|r`,
 };
 
 export class OvertimeStrategy implements SettingsStrategy {
