@@ -40,48 +40,57 @@ export class Quests {
 
 	public Create() {
 		this.Credits();
-		this.Tutorial();
+		this.HowToPlay();
 		this.ArmyComposition();
-		this.OvertimeDescription();
-		this.CameraDescription();
+		this.Overtime();
+		this.Camera();
 	}
 
 	private Credits() {
-		let description: string = 'Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930';
-		description += '\nTerrain: Nerla#1510';
-		description += '\nUnits: Saran, ForLolz#11696';
-		description += '\nIcons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish';
-		description += '\nSS Ship Model: ??, please let ForLolz know if you know the author';
-		description += '\nSpecial Thanks: The Risk Community, Priwin, PsycoMarauder, RodOfNod, goble-r1sk, Saran, and all the devs before me!';
+		let description = `Join our community on Discord: https://discord.gg/wc3risk
+		 
+		Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930
+		Terrain: Nerla#1510
+		Units: Saran, ForLolz#11696
+		Icons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish
+		SS Ship Model: ??, please let ForLolz know if you know the author
+		Special Thanks: The Risk Community, Priwin, PsycoMarauder, RodOfNod, goble-r1sk, Saran, and all the devs before me!
+	`;
 
 		this.BuildQuest('QUEST_CREDITS', 'Credits', description, 'ReplaceableTextures\\CommandButtons\\BTNTome.blp', false);
 	}
 
-	private Tutorial() {
-		let description: string = 'The goal of the game is to conquer a specific amount of cities and hold them until the end of the turn.';
-		description += ' To gain income you need to control a whole country when the turn ends.';
-		description += ' It is best to start with smaller countries to gain income quickly.';
-		description += ' Try to expand in a way that will keep your countries connected.';
-		description += ' Make sure to use your spawns, they are free units you get each turn form countries you own.';
-		description += ' Chat is essential in Risk, make sure to use it and read it. Diplomacy is key.';
-		description += ' Make sure to peace other players, but also be ready to be backstabbed when your are vulnerable.';
+	private HowToPlay() {
+		const description = `The goal of the game is to conquer a set number of cities and hold them until the end of the turn.  
+			
+			To earn income, you must control an entire country when the turn ends. It’s often best to begin with smaller countries to secure income quickly. Expand carefully and keep your territories connected for stronger defense.  
+			
+			Use your spawns wisely - they are free units granted each turn from the countries you control.  
+			
+			Communication is essential in risk - make sure to pay attention to the chat. Diplomacy is key. Make peace with other players when it benefits you, but always be ready for betrayal when you are vulnerable.
+		`;
 
-		this.BuildQuest('QUEST_HOW_TO_PLAY', 'How to play', description, 'ReplaceableTextures\\WorldEditUI\\Editor-Random-Unit.blp', true);
+		this.BuildQuest('QUEST_HOW_TO_PLAY', 'How to Play', description, 'ReplaceableTextures\\WorldEditUI\\Editor-Random-Unit.blp', true);
 	}
 
 	private ArmyComposition() {
-		let description: string = 'Risk is not your typical, "buy the more expensive unit" game. Army composition is very important.';
-		description += ' The main bulk of your army will be Riflemen. They should be supported by Priests and Mortors.';
-		description += ' Those three unit types will do most of your fighting on land.';
-		description += ' It is also important to build a couple of Roarers to cast Roar and Dispel.';
-		description += ' Units such as Knights and Generals are mostly used to overhwelm your enemy in specific situations.';
-		description += ' These situations are not often, it is mostly when your enemy loses their Riflemen line.';
-		description += ' Artillery are a long range splash damage units. Be careful with them as they are defensively weak.';
-		description += ' Tanks are strong units that are best used in mass. Be sure to micro weak tanks back so they can heal.';
-		description += ' SS are king of the seas, they are the go to ship in FFA games.';
-		description += ' Warship B is best used to chase down other weak ships including SS.';
-		description += ' Warship A is an early game unit.';
-		description += ' It should only really be used the first couple of turns in fights on specific coastlines.';
+		const description = `Risk is not your typical "buy the most expensive unit" game - army composition matters greatly.
+			
+			The backbone of your army will be Riflemen, supported by Priests and Mortars. These three units will do most of the fighting on land.  
+			It is also important to include a few Roarers to cast Roar and Dispel.  
+			
+			Other units serve more specialized purposes:  
+			- Knights and Generals are situational, best used to overwhelm your enemy once their riflemen line has collapsed.  
+			- Artillery provide long-range splash damage, but are fragile and require protection.  
+			- Tanks are powerful when massed. Be sure to pull back weakened tanks so they can recover.  
+			
+			At sea:  
+			- SS dominate the waters and are the primary ship of choice in FFA games.  
+			- Warship B excels at chasing down weakened ships, including SS.  
+			- Warship A is an early-game vessel, useful mainly in the opening turns along vulnerable coastlines.  
+			
+			Choose your forces wisely - the right mix will decide the battle.
+		`;
 
 		this.BuildQuest(
 			'QUEST_ARMY_COMPOSITION',
@@ -92,41 +101,43 @@ export class Quests {
 		);
 	}
 
-	private OvertimeDescription() {
-		let description: string =
-			'Overtime is a feature designed to help conclude games more efficiently by gradually reducing the number of cities required for victory. Once activated, each turn decreases the victory threshold by one city until a player wins.';
-		description += '\n\nThere are four Overtime settings:';
-		description += '\n1. Turbo Mode: Overtime begins at turn 30, accelerating the game pace early on. This is the default setting.';
-		description += '\n2. Medium Mode: Overtime starts at turn 60, allowing for a long gameplay before the mechanic activates.';
-		description += '\n3. Extended Mode: Overtime starts at turn 120, allowing for extended gameplay before the mechanic activates.';
-		description += '\n4. Off: Overtime is disabled.';
+	private Overtime() {
+		const description = `Overtime is a feature designed to help conclude games more efficiently by gradually reducing the number of cities required for victory. Once activated, each turn decreases the victory threshold by one city until a player wins.
+			
+			There are four Overtime settings:
+			1. Turbo Mode: Overtime begins at turn 30, accelerating the game pace early on. This is the default setting.
+			2. Medium Mode: Overtime starts at turn 60, allowing for a long gameplay before the mechanic activates.
+			3. Extended Mode: Overtime starts at turn 120, allowing for extended gameplay before the mechanic activates.
+			4. Off: Overtime is disabled.
+			
+			If two or more players exceed the city requirement to win while having the exact same number of cities, the game will be extended by additional turns until one player breaks the tie and leads in city count.
 
-		description += '\n\nThis system ensures flexibility and adaptability based on player preferences.';
+			This system ensures flexibility and adaptability based on player preferences.
+		`;
 
-		this.BuildQuest(
-			'QUEST_OVERTIME',
-			'Overtime Explained',
-			description,
-			'ReplaceableTextures\\CommandButtons\\BTNSorceressMaster.blp',
-			true
-		);
+		this.BuildQuest('QUEST_OVERTIME', 'Overtime', description, 'ReplaceableTextures\\CommandButtons\\BTNSorceressMaster.blp', true);
 	}
 
-	private CameraDescription() {
-		let description: string =
-			'The camera system allows for full control of a players camera. The player can manipulate the distance, rotation, and angle of attack (AoA).';
-		description += '\n\nTo use the camera command you can use the keyword -cam or -zoom';
-		description +=
-			'\nAfter the keyword you can input parameters to control the camera, the command would look like this -cam <distance> <rotation> <AoA>';
-		description +=
-			'\nYou do not need to supply all three parameters, but if want to change the 2nd or third you must provide all prior parameters';
-		description += '\nIf you want to reset your camera back to default values you can simply type the command with no parameters provided';
-		description += '\nAn example would be -cam 5000 90 270 or -zoom 5000 90 270';
-		description += '\nThis command would give the player a top down camera with the default rotation and a distance of 5000';
-		description +=
-			'\nThis distance must be between 1000 and 8500, The rotation must be between 0 and 360, the AoA must be between 270 and 350';
+	private Camera() {
+		const description = `The camera system allows full control over a player's camera. You can adjust the distance, rotation, and angle of attack (AoA).
+			
+			To use the camera command, type -cam or -zoom.  
+			Format: -cam <distance> <rotation> <AoA>
+			
+			You don’t need to supply all three parameters. However, if you want to change the second or third, you must also provide all preceding parameters.  
+			To reset your camera to default values, type the command with no parameters.
+			
+			This example sets your camera to a top-down view with the default rotation and a distance of 5000:
+			-cam 5000 90 270  
+			-zoom 5000 90 270
+			
+			Parameter Ranges:
+			- Distance: 1000 – 8500  
+			- Rotation: 0 – 360  
+			- AoA: 270 – 350
+		`;
 
-		this.BuildQuest('QUEST_CAMERA', 'Camera Explained', description, 'ReplaceableTextures\\WorldEditUI\\Doodad-Cinematic.blp', true);
+		this.BuildQuest('QUEST_CAMERA', 'Camera', description, 'ReplaceableTextures\\WorldEditUI\\Doodad-Cinematic.blp', true);
 	}
 
 	private BuildQuest(questType: QuestType, title: string, description: string, icon: string, required: boolean) {
@@ -143,12 +154,13 @@ export class Quests {
 	}
 
 	public AddSettingsQuest(settings: SettingsContext): void {
-		let description: string = 'Game Settings:';
-		description += `\nDiplomacy: ${DiplomacyStringsColorFormatted[settings.getSettings().Diplomacy.option]}`;
-		description += `\nFog: ${FogOptionsColorFormatted[settings.getSettings().Fog]}`;
-		description += `\nGame Type: ${GameTypeOptionsColorFormatted[settings.getSettings().GameType]}`;
-		description += `\nOvertime: ${OvertimeStringsColorFormatted[settings.getSettings().Overtime.option]}`;
-		description += `\nPromode: ${PromodeOptionsColorFormatted[settings.getSettings().Promode]}`;
+		let description = `Game Settings:
+			Diplomacy: ${DiplomacyStringsColorFormatted[settings.getSettings().Diplomacy.option]}
+			Fog: ${FogOptionsColorFormatted[settings.getSettings().Fog]}
+			Game Type: ${GameTypeOptionsColorFormatted[settings.getSettings().GameType]}
+			Overtime: ${OvertimeStringsColorFormatted[settings.getSettings().Overtime.option]}
+			Promode: ${PromodeOptionsColorFormatted[settings.getSettings().Promode]}
+		`;
 
 		this.BuildQuest('QUEST_SETTINGS', 'Settings', description, 'ReplaceableTextures\\CommandButtons\\BTNEngineeringUpgrade.blp', false);
 	}
@@ -169,13 +181,7 @@ export class Quests {
 		nameList.forEach((player) => {
 			description += `\n${nameManager.getBtag(player.getPlayer())}`;
 		});
-		this.BuildQuest(
-			'QUEST_SHUFFLED_PLAYER_LIST',
-			'Shuffled Player List',
-			description,
-			'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp',
-			false
-		);
+		this.BuildQuest('QUEST_SHUFFLED_PLAYER_LIST', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 
 	public UpdateShuffledPlayerListQuest(): void {
@@ -194,12 +200,6 @@ export class Quests {
 			description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())} (${player.status ? player.status.status : 'Unknown'})`;
 		});
 
-		this.BuildQuest(
-			'QUEST_SHUFFLED_PLAYER_LIST',
-			'Shuffled Player List',
-			description,
-			'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp',
-			false
-		);
+		this.BuildQuest('QUEST_SHUFFLED_PLAYER_LIST', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 }
