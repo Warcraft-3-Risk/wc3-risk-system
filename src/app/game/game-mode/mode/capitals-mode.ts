@@ -13,6 +13,7 @@ import { CapitalsGameLoopState } from '../capital-game-mode/capitals-game-loop-s
 import { CapitalsDistributeCapitalsState } from '../capital-game-mode/capitals-distribute-capitals-state';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { CapitalAssignCountrytNameState } from '../capital-game-mode/capital-assign-country-name-state';
+import { DisablePausesState } from '../base-game-mode/disable-pauses-state';
 
 export class CapitalsData implements StateData {
 	public playerCapitalSelections: Map<player, City>;
@@ -22,6 +23,7 @@ export class CapitalsData implements StateData {
 export class CapitalsMode extends BaseMode<CapitalsData> {
 	protected setupStates() {
 		return [
+			new DisablePausesState(),
 			new SetupState(),
 			new ApplyFogState(),
 			new CapitalsSelectionState(),

@@ -9,12 +9,14 @@ import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { VisionState } from '../base-game-mode/vision-state';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
+import { DisablePausesState } from '../base-game-mode/disable-pauses-state';
 
 export class StandardData implements StateData {}
 
 export class StandardMode extends BaseMode<StandardData> {
 	protected setupStates() {
 		return [
+			new DisablePausesState(),
 			new SetupState(),
 			new ApplyFogState(),
 			new CityDistributeState(),
