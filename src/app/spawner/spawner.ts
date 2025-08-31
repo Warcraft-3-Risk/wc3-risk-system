@@ -73,6 +73,10 @@ export class Spawner implements Resetable, Ownable {
 			let u: unit = CreateUnit(this.getOwner(), this.spawnType, GetUnitX(this.unit), GetUnitY(this.unit), 270);
 			let loc: location = GetUnitRallyPoint(this.unit);
 
+			if (!IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
+				GlobalGameData.matchPlayers.find((x) => x.getPlayer() == this.getOwner()).trackedData.units.add(u);
+			}
+
 			UnitAddType(u, UNIT_TYPE.SPAWN);
 			if (GetLocalPlayer() == this.getOwner()) {
 				SetUnitVertexColor(u, 200, 200, 200, 150);
