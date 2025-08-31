@@ -95,8 +95,8 @@ export class StatisticsView {
 
 	public showStats(player: player): void {
 		if (GetLocalPlayer() == player) {
-			BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
 			BlzFrameSetSize(this.backdrop, 1, 0.64);
+			BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
 			BlzFrameSetText(this.minimizeButton, 'Hide Stats');
 
 			this.updateColumnVisibility();
@@ -106,8 +106,8 @@ export class StatisticsView {
 
 	public hideStats(player: player): void {
 		if (GetLocalPlayer() == player) {
-			BlzFrameSetSize(this.backdrop, 1, 0.05);
-			BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.555);
+			BlzFrameSetSize(this.backdrop, 1, 0.08);
+			BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26 + (0.64 - 0.08) / 2);
 			BlzFrameSetText(this.minimizeButton, 'Show Stats');
 			this.columns.forEach((col) => {
 				BlzFrameSetVisible(col, false);
@@ -143,7 +143,7 @@ export class StatisticsView {
 			BlzFrameSetVisible(column, visible);
 
 			if (!this.page.isPinnedColumn(index) && visible) {
-				BlzFrameSetPoint(column, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, headerX, -0.05);
+				BlzFrameSetPoint(column, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, headerX, -0.06);
 				headerX += BlzFrameGetWidth(column);
 			}
 		});
@@ -193,9 +193,9 @@ export class StatisticsView {
 	}
 
 	private buildColumns() {
-		const headerY: number = -0.05;
+		const headerY: number = -0.06;
 		const rowHeight: number = StatisticsView.ROW_HEIGHT;
-		let headerX: number = 0.008;
+		let headerX: number = 0.01;
 
 		this.model.getColumnData().forEach((entry, columnIndex) => {
 			const { size, header } = entry;
