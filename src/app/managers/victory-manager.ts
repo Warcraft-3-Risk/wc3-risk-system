@@ -60,31 +60,32 @@ export class VictoryManager {
 			return [];
 		}
 
-		let max = ParticipantEntityManager.getCityCount(
-			potentialVictors.sort((a, b) => ParticipantEntityManager.getCityCount(b) - ParticipantEntityManager.getCityCount(a))[0]
-		);
+		// potentialVictors is already sorted in descending order, so the first element has the max city count
+		let max = ParticipantEntityManager.getCityCount(potentialVictors[0]);
 		return potentialVictors.filter((x) => ParticipantEntityManager.getCityCount(x) == max);
 	}
 
 	public updateAndGetGameState(): VictoryProgressState {
-		// Quickly decide game is there is only one player or team alive
-		debugPrint('Checking if all opponents have been eliminated...');
+		// Check if there is only one player or team alive (this takes priority)
+		let eliminationVictory = false;
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((participant) => {
 			GlobalGameData.leader = participant;
-			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
+			eliminationVictory = true;
 		});
 
-		if (VictoryManager.GAME_VICTORY_STATE === 'DECIDED') {
+		if (eliminationVictory) {
+			debugPrint('No opponents remain!');
+			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
 			return VictoryManager.GAME_VICTORY_STATE;
 		}
 
 		// Check if there is a city victory condition met
-		debugPrint('Checking for city count victory condition...');
 		let playerWinCandidates = this.victors();
 
 		if (playerWinCandidates.length == 0) {
 			VictoryManager.GAME_VICTORY_STATE = 'UNDECIDED';
 		} else if (playerWinCandidates.length == 1) {
+			debugPrint(ParticipantEntityManager.getDisplayName(playerWinCandidates[0]) + ' has met the city count victory condition!');
 			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
 		} else {
 			VictoryManager.GAME_VICTORY_STATE = 'TIE';
