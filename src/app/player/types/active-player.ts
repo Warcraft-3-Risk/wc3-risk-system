@@ -84,7 +84,6 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		this.trackedData.cities.end = this.trackedData.cities.cities.length;
 		this.trackedData.turnDied = S2I(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
 		this.trackedData.gold.end = GetPlayerState(handle, PLAYER_STATE_RESOURCE_GOLD);
-		SetPlayerState(handle, PLAYER_STATE_RESOURCE_GOLD, 0);
 
 		if (handle == GetLocalPlayer()) {
 			EnableSelect(false, false);

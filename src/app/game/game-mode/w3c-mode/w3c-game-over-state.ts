@@ -25,7 +25,7 @@ export class W3CGameOverState<T extends StateData> extends BaseState<T> {
 
 		// Set end data for all remaining active players - defeated players have had their end data set already as they were defeated
 		PlayerManager.getInstance().playersAliveOrNomad.forEach((player) => {
-			if (player.trackedData.turnDied == -1) {
+			if (player.status.isActive()) {
 				player.setEndData();
 			}
 		});
