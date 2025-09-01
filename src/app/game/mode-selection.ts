@@ -9,6 +9,7 @@ import { ENABLE_EXPORT_GAME_SETTINGS } from 'src/configs/game-settings';
 import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import { GlobalGameData } from './state/global-game-state';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
+import { PlayerManager } from '../player/player-manager';
 import { LocalMessage } from '../utils/messages';
 
 export class ModeSelection {
@@ -47,6 +48,7 @@ export class ModeSelection {
 			settingsContext.getSettings().Fog = 1;
 			settingsContext.getSettings().Diplomacy.option = 1;
 			settingsContext.getSettings().Overtime.option = 3;
+			settingsContext.getSettings().Configurator = PlayerManager.getInstance().getConfigurator();
 			this.end();
 			return;
 		}
@@ -82,13 +84,17 @@ export class ModeSelection {
 
 	public end(): void {
 		const settings: SettingsContext = SettingsContext.getInstance();
+
+		settings.getSettings().Host = PlayerManager.getInstance().getHost();
+		settings.getSettings().Configurator = PlayerManager.getInstance().getConfigurator();
+
 		settings.initStrategies();
 		settings.applyStrategy('GameType');
 		settings.applyStrategy('Diplomacy');
 		settings.applyStrategy('Promode');
 		settings.applyStrategy('Overtime');
 
-		this.setupSettingsQuest();
+		Quests.getInstance().AddSettingsQuest(settings);
 
 		if (ENABLE_EXPORT_GAME_SETTINGS) {
 			ExportGameSettings.write(settings);
@@ -97,10 +103,5 @@ export class ModeSelection {
 		const gameType: GameType = settings.isCapitals() ? 'Capitals' : 'Standard';
 		GlobalGameData.gameMode = gameType;
 		this.eventEmitter.emit(EVENT_SET_GAME_MODE, gameType);
-	}
-
-	private setupSettingsQuest(): void {
-		const settings: SettingsContext = SettingsContext.getInstance();
-		Quests.getInstance().AddSettingsQuest(settings);
 	}
 }
