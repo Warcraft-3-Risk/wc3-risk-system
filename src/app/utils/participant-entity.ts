@@ -109,7 +109,7 @@ export class ParticipantEntityManager {
 
 	public static getParticipantEntities(): ParticipantEntity[] {
 		return SettingsContext.getInstance().isFFA()
-			? Array.from(PlayerManager.getInstance().playersAliveOrNomad.values())
+			? Array.from(PlayerManager.getInstance().activePlayers.values())
 			: TeamManager.getInstance().getActiveTeams();
 	}
 }
