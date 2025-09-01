@@ -10,6 +10,8 @@ import { OvertimeManager } from './overtime-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { ParticipantEntity, ParticipantEntityManager } from '../utils/participant-entity';
 import { debugPrint } from '../utils/debug-print';
+import { GlobalMessage } from '../utils/messages';
+import { NameManager } from './names/name-manager';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -131,6 +133,15 @@ export class VictoryManager {
 				this.winTracker.addWinForEntity(team.getMemberWithHighestIncome().getPlayer());
 				debugPrint('Win added for team member with highest income');
 			}
+		);
+
+		const info = VictoryManager.getInstance().getPromodeInfo();
+		const participantNames = `${ParticipantEntityManager.getDisplayName(ParticipantEntityManager.getParticipantByPlayer(info.leader))} ${info.leaderScore} - ${info.otherScore} ${ParticipantEntityManager.getDisplayName(ParticipantEntityManager.getParticipantByPlayer(info.other))}`;
+
+		GlobalMessage(
+			`${participantNames}`,
+			'Sound\\Interface\\SecretFound.flac',
+			5
 		);
 	}
 
