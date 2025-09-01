@@ -15,7 +15,7 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
 		GlobalGameData.matchState = 'postMatch';
 
-		Quests.getInstance().UpdateShuffledPlayerListQuest();
+		Quests.getInstance().updatePlayersQuest();
 
 		// Set end data for all remaining active players - defeated players have had their end data set already as they were defeated
 		PlayerManager.getInstance().playersAliveOrNomad.forEach((player) => {

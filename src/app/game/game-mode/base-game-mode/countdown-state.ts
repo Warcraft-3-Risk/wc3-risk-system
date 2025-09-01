@@ -2,11 +2,12 @@ import { CountdownMessage } from 'src/app/utils/messages';
 import { PlayGlobalSound } from 'src/app/utils/utils';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
+import { STARTING_COUNTDOWN } from '../../../../configs/game-settings';
 
 export class CountdownState<T extends StateData> extends BaseState<T> {
 	private initialDuration: number;
 
-	public constructor(duration: number = 10) {
+	public constructor(duration: number = STARTING_COUNTDOWN) {
 		super();
 		this.initialDuration = duration;
 	}

@@ -134,7 +134,7 @@ function tsMain() {
 			EventCoordinator.getInstance();
 			ModeSelection.getInstance();
 
-			Quests.getInstance().AddShuffledPlayerListQuest();
+			Quests.getInstance().addPlayersQuest();
 
 			//Export statistics
 			if (ENABLE_EXPORT_SHUFFLED_PLAYER_LIST) {

@@ -1,15 +1,13 @@
-import { GlobalGameData } from 'src/app/game/state/global-game-state';
 import { TimedEvent } from 'src/app/libs/timer/timed-event';
 import { TimedEventManager } from 'src/app/libs/timer/timed-event-manager';
 import { NameManager } from 'src/app/managers/names/name-manager';
-import { VictoryManager } from 'src/app/managers/victory-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
-import { debugPrint } from '../../../utils/debug-print';
+import { Quests } from '../../../quests/quests';
 
 export function onPlayerAliveHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.ALIVE;
@@ -23,10 +21,24 @@ export function onPlayerAliveHandle(player: ActivePlayer): void {
 
 export function onPlayerDeadHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.DEAD;
+
+	player.killedBy = player.trackedData.lastUnitKilledBy;
 	player.setEndData();
 	player.trackedData.income.income = 1;
 
-	GlobalMessage(`${NameManager.getInstance().getDisplayName(player.getPlayer())} has been defeated!`, 'Sound\\Interface\\SecretFound.flac');
+	if (player.killedBy) {
+		GlobalMessage(
+			`${NameManager.getInstance().getDisplayName(player.getPlayer())} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`,
+			'Sound\\Interface\\SecretFound.flac'
+		);
+	} else {
+		GlobalMessage(
+			`${NameManager.getInstance().getDisplayName(player.getPlayer())} has been defeated!`,
+			'Sound\\Interface\\SecretFound.flac'
+		);
+	}
+
+	Quests.getInstance().updatePlayersQuest();
 	ScoreboardManager.getInstance().updatePartial();
 }
 
