@@ -38,7 +38,7 @@ export function onPlayerDeadHandle(player: ActivePlayer): void {
 		);
 	}
 
-	Quests.getInstance().UpdateShuffledPlayerListQuest();
+	Quests.getInstance().updatePlayersQuest();
 	ScoreboardManager.getInstance().updatePartial();
 }
 

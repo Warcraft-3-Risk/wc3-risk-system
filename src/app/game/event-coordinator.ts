@@ -83,7 +83,7 @@ export class EventCoordinator {
 
 		EventEmitter.getInstance().on(EVENT_SET_GAME_MODE, (gameType: GameType) => this.applyGameMode(gameType));
 
-		EventEmitter.getInstance().on(EVENT_QUEST_UPDATE_PLAYER_STATUS, () => Quests.getInstance().UpdateShuffledPlayerListQuest());
+		EventEmitter.getInstance().on(EVENT_QUEST_UPDATE_PLAYER_STATUS, () => Quests.getInstance().updatePlayersQuest());
 
 		EventEmitter.getInstance().on(EVENT_NEXT_STATE, (data: StateData) => this._currentMode?.nextState(data));
 	}

@@ -23,7 +23,7 @@ type QuestType =
 	| 'QUEST_OVERTIME'
 	| 'QUEST_CAMERA'
 	| 'QUEST_SETTINGS'
-	| 'QUEST_SHUFFLED_PLAYER_LIST';
+	| 'QUEST_PLAYERS';
 
 export class Quests {
 	private static instance: Quests = null;
@@ -50,7 +50,7 @@ export class Quests {
 	private Credits() {
 		let description = `Join our community on Discord: https://discord.gg/wc3risk
 		 
-		Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930
+		Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930, xate#21335
 		Terrain: Nerla#1510
 		Units: Saran, ForLolz#11696
 		Icons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish
@@ -166,7 +166,7 @@ export class Quests {
 		this.BuildQuest('QUEST_SETTINGS', 'Settings', description, 'ReplaceableTextures\\CommandButtons\\BTNEngineeringUpgrade.blp', false);
 	}
 
-	public AddShuffledPlayerListQuest(): void {
+	public addPlayersQuest(): void {
 		let description: string = `${HexColors.YELLOW}Initial Players|r`;
 		let nameList: ActivePlayer[] = [];
 		const playerManager = PlayerManager.getInstance();
@@ -182,11 +182,11 @@ export class Quests {
 		nameList.forEach((player) => {
 			description += `\n${nameManager.getBtag(player.getPlayer())}`;
 		});
-		this.BuildQuest('QUEST_SHUFFLED_PLAYER_LIST', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
+		this.BuildQuest('QUEST_PLAYERS', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 
-	public UpdateShuffledPlayerListQuest(): void {
-		if (!this.quests.has('QUEST_SHUFFLED_PLAYER_LIST')) this.AddShuffledPlayerListQuest();
+	public updatePlayersQuest(): void {
+		if (!this.quests.has('QUEST_PLAYERS')) this.addPlayersQuest();
 
 		let description: string = `${HexColors.YELLOW}Active Players|r`;
 
@@ -214,6 +214,6 @@ export class Quests {
 			}
 		});
 
-		this.BuildQuest('QUEST_SHUFFLED_PLAYER_LIST', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
+		this.BuildQuest('QUEST_PLAYERS', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 }

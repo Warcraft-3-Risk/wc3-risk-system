@@ -90,7 +90,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		EnableDragSelect(false, false);
 
 		StatisticsController.getInstance().useCurrentActivePlayers();
-		Quests.getInstance().UpdateShuffledPlayerListQuest();
+		Quests.getInstance().updatePlayersQuest();
 
 		// To reset and reduce tree hp on first turn
 		if (GlobalGameData.turnCount === 0) {
