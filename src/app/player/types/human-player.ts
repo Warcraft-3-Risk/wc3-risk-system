@@ -1,6 +1,5 @@
 import { AnnounceOnUnitObserverOnlyTintedByPlayer } from 'src/app/game/announcer/announce';
 import { ActivePlayer } from './active-player';
-import { debugPrint } from '../../utils/debug-print';
 
 export class HumanPlayer extends ActivePlayer {
 	constructor(player: player) {
