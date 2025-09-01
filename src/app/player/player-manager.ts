@@ -127,11 +127,8 @@ export class PlayerManager {
 		this._observerFromHandle.set(player, new HumanPlayer(player));
 	}
 
-	public get playersAliveOrNomad(): Map<player, ActivePlayer> {
-		const filteredMap = new Map(
-			Array.from(this._playerFromHandle).filter(([key, value]) => value.status.isAlive() || value.status.isNomad())
-		);
-		return filteredMap;
+	public get activePlayers(): Map<player, ActivePlayer> {
+		return new Map(Array.from(this._playerFromHandle).filter(([key, value]) => value.status.isActive()));
 	}
 
 	public get observers(): Map<player, HumanPlayer> {
