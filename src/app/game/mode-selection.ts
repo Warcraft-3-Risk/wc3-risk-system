@@ -9,6 +9,7 @@ import { ENABLE_EXPORT_GAME_SETTINGS } from 'src/configs/game-settings';
 import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import { GlobalGameData } from './state/global-game-state';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
+import { LocalMessage } from '../utils/messages';
 
 export class ModeSelection {
 	private ui: SettingsView;
@@ -33,6 +34,13 @@ export class ModeSelection {
 
 	public run(): void {
 		if (W3C_MODE_ENABLED) {
+			LocalMessage(
+				GetLocalPlayer(),
+				'Welcome to Risk Europe!\n\nThis is a best of 3 matchup. First to win 2 matches is victorious!\n\nBuild armies and capture countries to increase your income!\n\nPrevent your opponent from doing the same!\n\nGood luck and have fun!',
+				'Sound\\Interface\\ItemReceived.flac',
+				18
+			);
+
 			const settingsContext: SettingsContext = SettingsContext.getInstance();
 			settingsContext.getSettings().Promode = 1;
 			settingsContext.getSettings().GameType = 0;
