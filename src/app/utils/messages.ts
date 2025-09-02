@@ -81,7 +81,10 @@ export function LocalMessage(player: player, msg: string, soundPath: string, dur
 	}
 
 	BlzFrameSetText(BlzGetFrameByName('LocalMessageFrame', GetPlayerId(player)), msg);
-	PlayLocalSound(soundPath, player);
+
+	if(soundPath) {
+		PlayLocalSound(soundPath, player);
+	}
 
 	const localTimer: timer = CreateTimer();
 	localMsgMap.set(player, localTimer);

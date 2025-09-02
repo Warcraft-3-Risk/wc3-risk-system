@@ -11,7 +11,7 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { Wait } from 'src/app/utils/wait';
-import { GlobalMessage } from 'src/app/utils/messages';
+import { GlobalMessage, LocalMessage } from 'src/app/utils/messages';
 import { W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER } from 'src/configs/game-settings';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-state';
@@ -66,6 +66,9 @@ export class W3CMode extends BaseMode<W3CData> {
 
 		if (terminate) {
 			await Wait.forSeconds(1);
+
+			LocalMessage(GetLocalPlayer(), '', null);
+
 			GlobalMessage(message, 'Sound\\Interface\\ItemReceived.flac', 10);
 			await Wait.forSeconds(1);
 			CustomVictoryBJ(humanPlayers[0].getPlayer(), true, true);
