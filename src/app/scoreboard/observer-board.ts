@@ -58,7 +58,6 @@ export class ObserverBoard extends Scoreboard {
 		MultiboardMinimize(this.board, true);
 		MultiboardMinimize(this.board, false);
 		this.setVisibility(false);
-
 	}
 
 	public updateFull(): void {
@@ -138,11 +137,18 @@ export class ObserverBoard extends Scoreboard {
 		const cityTextColor = isCityCountHighlighted ? HexColors.RED : textColor;
 		this.setItemValue(`${cityTextColor}${cities}`, row, this.CITIES_COL);
 
-		// Kills
-		this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).killValue}`, row, this.KILLS_COL);
+		if (player.trackedData.lastCombat !== 0) {
+			this.setItemValue(`${HexColors.LIGHT_BLUE}${data.killsDeaths.get(player.getPlayer()).killValue}`, row, this.KILLS_COL);
+		} else {
+			this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).killValue}`, row, this.KILLS_COL);
+		}
 
 		// Deaths
-		this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
+		if (player.trackedData.lastCombat !== 0) {
+			this.setItemValue(`${HexColors.LIGHT_BLUE}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
+		} else {
+			this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
+		}
 
 		// Status
 		if (player.status.isNomad() || player.status.isSTFU()) {

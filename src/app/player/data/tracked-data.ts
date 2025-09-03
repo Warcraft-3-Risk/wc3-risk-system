@@ -17,6 +17,7 @@ export class TrackedData {
 	private _countries: Map<Country, number>;
 	private _killsDeaths: Map<string | player, KillsDeaths>;
 	private _denies: number;
+	private _lastCombat: number;
 
 	private _lastUnitKilledBy: player;
 	private _units: Set<unit>;
@@ -37,6 +38,7 @@ export class TrackedData {
 		};
 		this._bounty = new Bounty();
 		this._bonus = new FightBonus(player);
+		this._lastCombat = 0;
 		this._cities = {
 			cities: [],
 			max: 0,
@@ -168,5 +170,13 @@ export class TrackedData {
 
 	public set lastUnitKilledBy(value: player) {
 		this._lastUnitKilledBy = value;
+	}
+
+	public get lastCombat(): number {
+		return this._lastCombat;
+	}
+
+	public set lastCombat(lastCombat: number) {
+		this._lastCombat = lastCombat;
 	}
 }

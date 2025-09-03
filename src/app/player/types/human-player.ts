@@ -1,5 +1,7 @@
 import { AnnounceOnUnitObserverOnlyTintedByPlayer } from 'src/app/game/announcer/announce';
 import { ActivePlayer } from './active-player';
+import { debugPrint } from '../../utils/debug-print';
+import { TURN_DURATION_IN_SECONDS } from '../../../configs/game-settings';
 
 export class HumanPlayer extends ActivePlayer {
 	constructor(player: player) {
@@ -35,6 +37,13 @@ export class HumanPlayer extends ActivePlayer {
 
 		this.giveGold(bounty);
 		this.giveGold(this.trackedData.bonus.add(val));
+
+		if (GetPlayerController(victim) === MAP_CONTROL_USER && GetPlayerController(killer) === MAP_CONTROL_USER) {
+			const minutes: number = parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
+			const seconds: number = TURN_DURATION_IN_SECONDS - parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarUpkeepText', 0)));
+
+			this.trackedData.lastCombat = minutes * 60 + seconds;
+		}
 	}
 
 	onDeath(killer: player, unit: unit): void {
@@ -57,5 +66,13 @@ export class HumanPlayer extends ActivePlayer {
 		kdData.get(killer).deaths++;
 		kdData.get(victim).deaths++;
 		kdData.get(`${GetUnitTypeId(unit)}`).deaths++;
+
+		if (GetPlayerController(victim) === MAP_CONTROL_USER && GetPlayerController(killer) === MAP_CONTROL_USER) {
+			debugPrint('on death');
+			const minutes: number = parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
+			const seconds: number = TURN_DURATION_IN_SECONDS - parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarUpkeepText', 0)));
+
+			this.trackedData.lastCombat = minutes * 60 + seconds;
+		}
 	}
 }
