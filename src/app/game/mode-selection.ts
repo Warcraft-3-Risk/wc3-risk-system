@@ -82,13 +82,14 @@ export class ModeSelection {
 
 	public end(): void {
 		const settings: SettingsContext = SettingsContext.getInstance();
+
 		settings.initStrategies();
 		settings.applyStrategy('GameType');
 		settings.applyStrategy('Diplomacy');
 		settings.applyStrategy('Promode');
 		settings.applyStrategy('Overtime');
 
-		this.setupSettingsQuest();
+		Quests.getInstance().AddSettingsQuest(settings);
 
 		if (ENABLE_EXPORT_GAME_SETTINGS) {
 			ExportGameSettings.write(settings);
@@ -97,10 +98,5 @@ export class ModeSelection {
 		const gameType: GameType = settings.isCapitals() ? 'Capitals' : 'Standard';
 		GlobalGameData.gameMode = gameType;
 		this.eventEmitter.emit(EVENT_SET_GAME_MODE, gameType);
-	}
-
-	private setupSettingsQuest(): void {
-		const settings: SettingsContext = SettingsContext.getInstance();
-		Quests.getInstance().AddSettingsQuest(settings);
 	}
 }

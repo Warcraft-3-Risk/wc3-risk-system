@@ -141,11 +141,22 @@ export class PlayerManager {
 		this._observerFromHandle.forEach((value, key) => combinedMap.set(key, value));
 		return combinedMap;
 	}
+
 	public setPlayerStatus(v: player, status: PLAYER_STATUS) {
 		this.players.get(v).status.set(status);
 	}
 
 	public getPlayerStatus(v: player): Status {
 		return this.players.get(v).status;
+	}
+
+	public getHost(): ActivePlayer | undefined {
+		for (const [, value] of this._playerFromHandle) {
+			if (value.getPlayer() === Player(0)) {
+				return value;
+			}
+		}
+
+		return undefined;
 	}
 }

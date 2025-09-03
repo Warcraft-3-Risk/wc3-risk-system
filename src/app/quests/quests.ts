@@ -155,6 +155,7 @@ export class Quests {
 
 	public AddSettingsQuest(settings: SettingsContext): void {
 		let description = `Game Settings:
+			Host: ${NameManager.getInstance().getBtag(PlayerManager.getInstance().getHost().getPlayer())}
 			Diplomacy: ${DiplomacyStringsColorFormatted[settings.getSettings().Diplomacy.option]}
 			Fog: ${FogOptionsColorFormatted[settings.getSettings().Fog]}
 			Game Type: ${GameTypeOptionsColorFormatted[settings.getSettings().GameType]}
