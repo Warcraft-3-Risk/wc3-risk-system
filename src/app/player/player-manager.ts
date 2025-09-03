@@ -4,6 +4,7 @@ import { buildGuardHealthButton, buildGuardValueButton } from '../ui/player-pref
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
+import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
 
 // const banList: string[] = [
 // ];
@@ -158,5 +159,18 @@ export class PlayerManager {
 		}
 
 		return undefined;
+	}
+
+	public updateInCombat() {
+		const minutes: number = parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
+		const seconds: number = TURN_DURATION_IN_SECONDS - parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarUpkeepText', 0)));
+		const gameTimeInSeconds = minutes * 60 + seconds;
+
+		this._playerFromHandle.forEach((activePlayer, player) => {
+			// Player was in combat and 20 seconds have elapsed
+			if (activePlayer.trackedData.lastCombat !== 0 && gameTimeInSeconds - activePlayer.trackedData.lastCombat > 20) {
+				activePlayer.trackedData.lastCombat = 0;
+			}
+		});
 	}
 }
