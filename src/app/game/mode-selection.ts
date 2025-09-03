@@ -9,7 +9,6 @@ import { ENABLE_EXPORT_GAME_SETTINGS } from 'src/configs/game-settings';
 import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import { GlobalGameData } from './state/global-game-state';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
-import { PlayerManager } from '../player/player-manager';
 import { LocalMessage } from '../utils/messages';
 
 export class ModeSelection {
