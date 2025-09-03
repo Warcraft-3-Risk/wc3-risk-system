@@ -152,16 +152,6 @@ export class PlayerManager {
 
 	public getHost(): ActivePlayer | undefined {
 		for (const [, value] of this._playerFromHandle) {
-			if (GetPlayerId(value.getPlayer()) === 0) {
-				return value;
-			}
-		}
-
-		return undefined;
-	}
-
-	public getConfigurator(): ActivePlayer | undefined {
-		for (const [, value] of this._playerFromHandle) {
 			if (value.getPlayer() === Player(0)) {
 				return value;
 			}

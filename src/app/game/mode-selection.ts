@@ -48,7 +48,6 @@ export class ModeSelection {
 			settingsContext.getSettings().Fog = 1;
 			settingsContext.getSettings().Diplomacy.option = 1;
 			settingsContext.getSettings().Overtime.option = 3;
-			settingsContext.getSettings().Configurator = PlayerManager.getInstance().getConfigurator();
 			this.end();
 			return;
 		}
@@ -84,9 +83,6 @@ export class ModeSelection {
 
 	public end(): void {
 		const settings: SettingsContext = SettingsContext.getInstance();
-
-		settings.getSettings().Host = PlayerManager.getInstance().getHost();
-		settings.getSettings().Configurator = PlayerManager.getInstance().getConfigurator();
 
 		settings.initStrategies();
 		settings.applyStrategy('GameType');

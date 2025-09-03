@@ -154,17 +154,13 @@ export class Quests {
 	}
 
 	public AddSettingsQuest(settings: SettingsContext): void {
-		const hostPlayer = settings.getSettings().Host.getPlayer();
-		const configuratorPlayer = settings.getSettings().Configurator.getPlayer();
-
 		let description = `Game Settings:
+			Host: ${NameManager.getInstance().getBtag(PlayerManager.getInstance().getHost().getPlayer())}
 			Diplomacy: ${DiplomacyStringsColorFormatted[settings.getSettings().Diplomacy.option]}
 			Fog: ${FogOptionsColorFormatted[settings.getSettings().Fog]}
 			Game Type: ${GameTypeOptionsColorFormatted[settings.getSettings().GameType]}
 			Overtime: ${OvertimeStringsColorFormatted[settings.getSettings().Overtime.option]}
 			Promode: ${PromodeOptionsColorFormatted[settings.getSettings().Promode]}
-			${configuratorPlayer ? 'Host: ' + NameManager.getInstance().getBtag(hostPlayer) : ''}
-			${configuratorPlayer ? 'Configurator: ' + NameManager.getInstance().getBtag(configuratorPlayer) : ''}
 		`;
 
 		this.BuildQuest('QUEST_SETTINGS', 'Settings', description, 'ReplaceableTextures\\CommandButtons\\BTNEngineeringUpgrade.blp', false);
