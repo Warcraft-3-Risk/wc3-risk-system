@@ -106,8 +106,8 @@ export class Quests {
 			
 			There are four Overtime settings:
 			1. Turbo Mode: Overtime begins at turn 30, accelerating the game pace early on. This is the default setting.
-			2. Medium Mode: Overtime starts at turn 60, allowing for a long gameplay before the mechanic activates.
-			3. Extended Mode: Overtime starts at turn 120, allowing for extended gameplay before the mechanic activates.
+			2. Medium Mode: Overtime starts at turn 45, allowing a longer game before the mechanic activates.
+			3. Long Mode: Overtime starts at turn 60, allowing for extended gameplay before the mechanic activates.
 			4. Off: Overtime is disabled.
 			
 			If two or more players exceed the city requirement to win while having the exact same number of cities, the game will be extended by additional turns until one player breaks the tie and leads in city count.
