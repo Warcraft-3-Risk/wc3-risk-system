@@ -5,6 +5,7 @@ import { HexColors } from '../utils/hex-colors';
 import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
+import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
 
 export class ObserverBoard extends Scoreboard {
 	private players: ActivePlayer[];
@@ -110,6 +111,10 @@ export class ObserverBoard extends Scoreboard {
 	}
 
 	private setColumns(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
+		const minutes: number = parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
+		const seconds: number = TURN_DURATION_IN_SECONDS - parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarUpkeepText', 0)));
+		const gameTimeInSeconds = minutes * 60 + seconds;
+
 		// Name
 		this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
@@ -137,18 +142,24 @@ export class ObserverBoard extends Scoreboard {
 		const cityTextColor = isCityCountHighlighted ? HexColors.RED : textColor;
 		this.setItemValue(`${cityTextColor}${cities}`, row, this.CITIES_COL);
 
+		// Kills
+		let kdColor = textColor; // default
+
 		if (player.trackedData.lastCombat !== 0) {
-			this.setItemValue(`${HexColors.LIGHT_BLUE}${data.killsDeaths.get(player.getPlayer()).killValue}`, row, this.KILLS_COL);
-		} else {
-			this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).killValue}`, row, this.KILLS_COL);
+			const timeSinceCombat = gameTimeInSeconds - player.trackedData.lastCombat;
+			const progress = Math.min(Math.max(timeSinceCombat / 20, 0), 1); // 0 → just entered, 1 → fully faded
+			const red: [number, number, number] = [255, 0, 0]; // red
+			const white: [number, number, number] = [255, 255, 255]; // white
+			kdColor = this.lerpColor(red, white, progress);
 		}
+		const kd = data.killsDeaths.get(player.getPlayer()).killValue;
+		const deaths = data.killsDeaths.get(player.getPlayer()).deathValue;
+
+		// Kills
+		this.setItemValue(`${kdColor}${kd}`, row, this.KILLS_COL);
 
 		// Deaths
-		if (player.trackedData.lastCombat !== 0) {
-			this.setItemValue(`${HexColors.LIGHT_BLUE}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
-		} else {
-			this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
-		}
+		this.setItemValue(`${kdColor}${deaths}`, row, this.DEATHS_COL);
 
 		// Status
 		if (player.status.isNomad() || player.status.isSTFU()) {
@@ -156,6 +167,13 @@ export class ObserverBoard extends Scoreboard {
 		} else {
 			this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
 		}
+	}
+
+	private lerpColor(start: [number, number, number], end: [number, number, number], t: number): string {
+		const r = Math.round(start[0] + (end[0] - start[0]) * t);
+		const g = Math.round(start[1] + (end[1] - start[1]) * t);
+		const b = Math.round(start[2] + (end[2] - start[2]) * t);
+		return `|cff${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
 	}
 
 	private getIncomeDelta(delta: number): string {
