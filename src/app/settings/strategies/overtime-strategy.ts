@@ -2,7 +2,7 @@ import { SettingsStrategy } from './settings-strategy';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { OvertimeManager } from 'src/app/managers/overtime-manager';
 
-export type OvertimeSetting = 30 | 60 | 120 | undefined;
+export type OvertimeSetting = 30 | 45 | 60 | undefined;
 
 export interface OvertimeOptions {
 	option: number;
@@ -10,15 +10,15 @@ export interface OvertimeOptions {
 
 export const OvertimeStrings: Record<number, string> = {
 	0: `Turbo (Turn 30)`,
-	1: `Medium (Turn 60)`,
-	2: `Extended (Turn 120)`,
+	1: `Medium (Turn 45)`,
+	2: `Long (Turn 60)`,
 	3: `Off`,
 };
 
 export const OvertimeColors: Record<number, string> = {
 	0: `${HexColors.GREEN}`,
-	1: `${HexColors.RED}`,
-	2: `${HexColors.RED}`,
+	1: `${HexColors.LIGHT_BLUE}`,
+	2: `${HexColors.BLUE}`,
 	3: `${HexColors.RED}`,
 };
 
@@ -34,7 +34,7 @@ export class OvertimeStrategy implements SettingsStrategy {
 	private readonly strategyMap: Map<number, () => void> = new Map([
 		[0, this.handleTurboOption],
 		[1, this.handleMediumOption],
-		[2, this.handleExtendedOption],
+		[2, this.handleLongOption],
 		[3, this.handleOff],
 	]);
 
@@ -54,11 +54,11 @@ export class OvertimeStrategy implements SettingsStrategy {
 	}
 
 	private handleMediumOption(): void {
-		OvertimeManager.getInstance().setOvertimeSetting(60);
+		OvertimeManager.getInstance().setOvertimeSetting(45);
 	}
 
-	private handleExtendedOption(): void {
-		OvertimeManager.getInstance().setOvertimeSetting(120);
+	private handleLongOption(): void {
+		OvertimeManager.getInstance().setOvertimeSetting(60);
 	}
 
 	private handleOff(): void {
