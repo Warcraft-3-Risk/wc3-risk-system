@@ -57,7 +57,7 @@ export class ModeSelection {
 			settingsContext.getSettings().Promode = 0;
 			settingsContext.getSettings().Fog = 0;
 			settingsContext.getSettings().Diplomacy.option = 0;
-			settingsContext.getSettings().Overtime.option = 0;
+			settingsContext.getSettings().Overtime.option = 1;
 			this.ui.hide();
 			this.end();
 		} else {
