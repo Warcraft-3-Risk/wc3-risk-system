@@ -224,9 +224,9 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		SetPoint TOP,"PopupMenus",TOP,0.0,-0.12,
     	PopupMenuFrame "OvertimePopupMenu",
 			Frame "MENU" "OvertimePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
-				MenuItem "Turbo (Turn 30)",     -2,
-				MenuItem "Medium (Turn 45)",     -2,
-				MenuItem "Long (Turn 60)",     -2,
+				MenuItem "Turbo (Turn 0)",     -2,
+				MenuItem "Medium (Turn 30)",     -2,
+				MenuItem "Extended (Turn 60)",     -2,
 				MenuItem "Off",     -2,
 			}
 		}

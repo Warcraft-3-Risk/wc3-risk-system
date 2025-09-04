@@ -141,6 +141,11 @@ export class SettingsView {
 	}
 
 	private overtimePopup() {
+		// Initial setup
+		let popup = BlzGetFrameByName("OvertimePopup", 0)
+		BlzFrameSetValue(popup, 1)
+
+		// Create edit triggers
 		const t: trigger = CreateTrigger();
 
 		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('OvertimePopup', 0), FRAMEEVENT_POPUPMENU_ITEM_CHANGED);
