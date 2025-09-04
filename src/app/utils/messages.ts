@@ -8,36 +8,56 @@ export function CountdownMessage(msg: string) {
 	const frame: framehandle = BlzGetFrameByName('CountdownFrame', 0);
 	BlzFrameSetText(frame, msg);
 }
+let activeGlobalMessage: timer | undefined = undefined;
+let globalMessageQueue: { msg: string; soundPath?: string; duration: number }[] = [];
 
 /**
- * Display a global message on the screen for a specified duration.
- * Optionally plays a sound.
- * @param msg - The message to display.
- * @param soundPath - The path of the sound file to play.
- * @param duration - The duration to display the message (default is 3 seconds).
+ * Internal function that processes the next message in the queue.
  */
-export function GlobalMessage(msg: string, soundPath: string, duration: number = 3) {
-	const frame: framehandle = BlzGetFrameByName('GlobalMessageFrame', 0);
-	let str: string = '';
-
-	if (BlzFrameGetText(frame) != '') {
-		str = BlzFrameGetText(frame);
-		str = `${str}\n${msg}`;
+function processNextGlobalMessage() {
+	if (globalMessageQueue.length === 0) {
+		activeGlobalMessage = undefined;
+		return;
 	}
 
+	const { msg, soundPath, duration } = globalMessageQueue.shift()!;
+
+	const frame: framehandle = BlzGetFrameByName('GlobalMessageFrame', 0);
 	BlzFrameSetText(frame, msg);
 
 	if (soundPath) PlayGlobalSound(soundPath);
 
 	const playerMsgTimer: timer = CreateTimer();
+	activeGlobalMessage = playerMsgTimer;
 
 	TimerStart(playerMsgTimer, duration, false, () => {
 		BlzFrameSetText(frame, '');
 
 		PauseTimer(playerMsgTimer);
 		DestroyTimer(playerMsgTimer);
+		activeGlobalMessage = undefined;
+
+		// Process the next message in the queue
+		processNextGlobalMessage();
 	});
 }
+
+/**
+ * Queue a global message to display on the screen for a specified duration.
+ * Optionally plays a sound.
+ * @param msg - The message to display.
+ * @param soundPath - The path of the sound file to play.
+ * @param duration - The duration to display the message (default is 3 seconds).
+ */
+export function GlobalMessage(msg: string, soundPath?: string, duration: number = 3) {
+	globalMessageQueue.push({ msg, soundPath, duration });
+
+	// If nothing is active, start processing
+	if (activeGlobalMessage === undefined) {
+		processNextGlobalMessage();
+	}
+}
+
 
 /** Map to keep track of timers for error messages per player. */
 const errorMap: Map<player, timer> = new Map<player, timer>();
@@ -72,6 +92,7 @@ export function ErrorMsg(player: player, msg: string, duration: number = 3) {
 }
 
 const localMsgMap: Map<player, timer> = new Map<player, timer>();
+
 //TODO add support for multi message display, each message should have its own duration
 export function LocalMessage(player: player, msg: string, soundPath: string, duration: number = 3) {
 	if (localMsgMap.has(player)) {

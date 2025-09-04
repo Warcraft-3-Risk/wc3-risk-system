@@ -10,6 +10,7 @@ import { OvertimeManager } from './overtime-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { ParticipantEntity, ParticipantEntityManager } from '../utils/participant-entity';
 import { debugPrint } from '../utils/debug-print';
+import { GlobalMessage } from '../utils/messages';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -132,6 +133,13 @@ export class VictoryManager {
 				debugPrint('Win added for team member with highest income');
 			}
 		);
+	}
+
+	public showScore() {
+		const info = VictoryManager.getInstance().getPromodeInfo();
+		const participantNames = `${ParticipantEntityManager.getDisplayName(ParticipantEntityManager.getParticipantByPlayer(info.leader))} ${info.leaderScore} - ${info.otherScore} ${ParticipantEntityManager.getDisplayName(ParticipantEntityManager.getParticipantByPlayer(info.other))}`;
+
+		GlobalMessage(`${participantNames}`, null);
 	}
 
 	public wonBestOf(matches: number): player | undefined {
