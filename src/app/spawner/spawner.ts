@@ -1,4 +1,5 @@
 import { UNIT_ID } from '../../configs/unit-id';
+import { PlayerClientManager } from '../game/services/player-client-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
@@ -70,7 +71,13 @@ export class Spawner implements Resetable, Ownable {
 		const amount: number = Math.min(this.spawnsPerStepWithMultiplier, this.maxSpawnsPerPlayerWithMultiplier - spawnCount);
 
 		for (let i = 0; i < amount; i++) {
-			let u: unit = CreateUnit(this.getOwner(), this.spawnType, GetUnitX(this.unit), GetUnitY(this.unit), 270);
+			let u: unit = CreateUnit(
+				PlayerClientManager.getInstance().getOwner(this.getOwner()),
+				this.spawnType,
+				GetUnitX(this.unit),
+				GetUnitY(this.unit),
+				270
+			);
 			let loc: location = GetUnitRallyPoint(this.unit);
 
 			if (!IsUnitType(u, UNIT_TYPE.TRANSPORT)) {

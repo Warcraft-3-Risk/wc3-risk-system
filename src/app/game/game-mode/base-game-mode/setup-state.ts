@@ -13,6 +13,7 @@ import { clearTickUI } from '../utillity/update-ui';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { TreeManager } from '../../services/tree-service';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
+import { PlayerClientManager } from '../../services/player-client-manager';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -96,6 +97,9 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		if (GlobalGameData.turnCount === 0) {
 			TreeManager.getInstance().reset();
 		}
+
+		// Allocate client slots
+		PlayerClientManager.getInstance().allocateClientSlot();
 
 		this.nextState(this.stateData);
 	}
