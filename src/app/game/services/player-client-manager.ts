@@ -3,6 +3,7 @@
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { UNIT_ID } from 'src/configs/unit-id';
 
 // Players may experience unit lag when too many orders are issued simultaneously.
 // Warcraft III appears to enforce a hard cap on the number of order issues a single player can queue.
@@ -64,19 +65,11 @@ export class PlayerClientManager {
 		const clientSlots = this.getAvailableClientSlots();
 
 		debugPrint(`There are ${clientSlots.length} available client slots`);
-		for (let index = 0; index < activePlayers.length; index++) {
-			debugPrint(
-				`Allocating client slot ${NameManager.getInstance().getDisplayName(clientSlots[index])} to player ${NameManager.getInstance().getDisplayName(activePlayers[index].getPlayer())}`
-			);
-			this.clientSlots.set(activePlayers[index].getPlayer(), clientSlots[index]);
-			this.players.set(clientSlots[index], activePlayers[index].getPlayer());
-			try {
-				this.givePlayerFullControlOfClient(activePlayers[index].getPlayer(), clientSlots[index]);
-			} catch (error) {
-				debugPrint(
-					`Error giving player ${NameManager.getInstance().getDisplayName(activePlayers[index].getPlayer())} full control of client ${NameManager.getInstance().getDisplayName(clientSlots[index])}: ${error}`
-				);
-			}
+		for (let playerIndex = 0; playerIndex < activePlayers.length; playerIndex++) {
+			this.clientSlots.set(activePlayers[playerIndex].getPlayer(), clientSlots[playerIndex]);
+			this.players.set(clientSlots[playerIndex], activePlayers[playerIndex].getPlayer());
+			this.givePlayerFullControlOfClient(activePlayers[playerIndex].getPlayer(), clientSlots[playerIndex]);
+			CreateUnit;
 		}
 
 		debugPrint('Finished allocating client slots to players');
@@ -112,6 +105,11 @@ export class PlayerClientManager {
 
 	public getOwner(player: player): player | null {
 		return this.clientSlots.get(player) || null;
+	}
+
+	public showOnMinimap(player: player, unit: unit) {
+		const minimapIndicator = CreateUnit(player, UNIT_ID.DUMMY_MINIMAP_INDICATOR, GetUnitX(unit), GetUnitY(unit), 270);
+		IssueTargetOrderById(minimapIndicator, 851986, unit);
 	}
 
 	// public static breakPlayerFullControlOfClient(player: player, client: clientSlot) {

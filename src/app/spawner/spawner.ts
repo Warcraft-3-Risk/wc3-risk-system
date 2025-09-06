@@ -78,6 +78,7 @@ export class Spawner implements Resetable, Ownable {
 				GetUnitY(this.unit),
 				270
 			);
+			PlayerClientManager.getInstance().showOnMinimap(this.getOwner(), u);
 			let loc: location = GetUnitRallyPoint(this.unit);
 
 			if (!IsUnitType(u, UNIT_TYPE.TRANSPORT)) {

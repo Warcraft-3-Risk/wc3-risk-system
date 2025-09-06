@@ -69,6 +69,9 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			player.trackedData.bonus.repositon();
 		});
 
+		// Allocate client slots
+		PlayerClientManager.getInstance().allocateClientSlot();
+
 		// Setting up the scoreboard
 		if (SettingsContext.getInstance().isFFA() || GlobalGameData.matchPlayers.length <= 2) {
 			ScoreboardManager.getInstance().ffaSetup(GlobalGameData.matchPlayers);
@@ -97,9 +100,6 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		if (GlobalGameData.turnCount === 0) {
 			TreeManager.getInstance().reset();
 		}
-
-		// Allocate client slots
-		PlayerClientManager.getInstance().allocateClientSlot();
 
 		this.nextState(this.stateData);
 	}
