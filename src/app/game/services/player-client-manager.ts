@@ -104,7 +104,7 @@ export class PlayerClientManager {
 		SetPlayerAlliance(client, player, ALLIANCE_SHARED_SPELLS, true);
 		SetPlayerAlliance(client, player, ALLIANCE_SHARED_VISION, true);
 		SetPlayerAlliance(client, player, ALLIANCE_SHARED_CONTROL, true);
-		// SetPlayerAlliance(client, player, ALLIANCE_SHARED_ADVANCED_CONTROL, true);
+		SetPlayerAlliance(client, player, ALLIANCE_SHARED_ADVANCED_CONTROL, true);
 		debugPrint(
 			`Gave client ${NameManager.getInstance().getDisplayName(client)} full control of player ${NameManager.getInstance().getDisplayName(player)}`
 		);
