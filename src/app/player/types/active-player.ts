@@ -39,8 +39,8 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		});
 	}
 
-	abstract onKill(victim: player, unit: unit): void;
-	abstract onDeath(killer: player, unit: unit): void;
+	abstract onKill(victim: player, unit: unit, isPlayerCombat: boolean): void;
+	abstract onDeath(killer: player, unit: unit, isPlayerCombat: boolean): void;
 
 	public getPlayer(): player {
 		return this._player;

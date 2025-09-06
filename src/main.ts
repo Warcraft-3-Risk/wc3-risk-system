@@ -1,5 +1,5 @@
-import { W3TS_HOOK, addScriptHook } from 'w3ts/hooks';
-import { MAP_NAME, W3C_MODE_ENABLED } from './app/utils/map-info';
+import { addScriptHook, W3TS_HOOK } from 'w3ts/hooks';
+import { MAP_NAME } from './app/utils/map-info';
 import { ConcreteCityBuilder } from './app/city/concrete-city-builder';
 import { ConcreteCountryBuilder } from './app/country/concrete-country-builder';
 import { CountrySettings } from './app/country/countries';
@@ -33,7 +33,6 @@ import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
 import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST } from './configs/game-settings';
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
 import { FogManager } from './app/managers/fog-manager';
-import { LocalMessage } from './app/utils/messages';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());

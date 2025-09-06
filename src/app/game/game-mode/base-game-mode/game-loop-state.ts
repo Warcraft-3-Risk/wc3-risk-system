@@ -162,7 +162,6 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onTick(tick: number): void {
 		VictoryManager.getInstance().updateAndGetGameState();
 		ScoreboardManager.getInstance().updatePartial();
-		PlayerManager.getInstance().updateInCombat();
 	}
 
 	private messageGameState() {

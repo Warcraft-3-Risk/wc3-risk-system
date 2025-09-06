@@ -29,8 +29,20 @@ export function UnitDeathEvent() {
 			const dyingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(dyingUnitOwnerHandle);
 			const killingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(killingUnitOwnerHandle);
 
-			if (killingUnitOwner) killingUnitOwner.onKill(dyingUnitOwnerHandle, dyingUnit);
-			if (dyingUnitOwner) dyingUnitOwner.onDeath(killingUnitOwnerHandle, dyingUnit);
+			if (killingUnitOwner)
+				killingUnitOwner.onKill(
+					dyingUnitOwnerHandle,
+					dyingUnit,
+					PlayerManager.getInstance().playerControllers.get(killingUnitOwnerHandle) === MAP_CONTROL_USER &&
+						PlayerManager.getInstance().playerControllers.get(dyingUnitOwnerHandle) === MAP_CONTROL_USER
+				);
+			if (dyingUnitOwner)
+				dyingUnitOwner.onDeath(
+					killingUnitOwnerHandle,
+					dyingUnit,
+					PlayerManager.getInstance().playerControllers.get(killingUnitOwnerHandle) === MAP_CONTROL_USER &&
+						PlayerManager.getInstance().playerControllers.get(dyingUnitOwnerHandle) === MAP_CONTROL_USER
+				);
 
 			if (!SettingsContext.getInstance().isFFA() && !IsPlayerAlly(killingUnitOwnerHandle, dyingUnitOwnerHandle)) {
 				const teamManager: TeamManager = TeamManager.getInstance();
