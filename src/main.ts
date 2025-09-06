@@ -101,6 +101,7 @@ function tsMain() {
 		SpellEffectEvent();
 		UnitIssueOrderEvent();
 		AntiSpam();
+		KeyEvents();
 		CitySelectedEvent();
 
 		//Create Quests
