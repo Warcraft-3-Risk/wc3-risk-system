@@ -16,7 +16,6 @@ import { SpellEffectEvent } from './app/triggers/spell-effect-event';
 import { PlayerLeaveEvent } from './app/triggers/player-leave-event';
 import { UnitDeathEvent } from './app/triggers/unit_death/unit-death-event';
 import { UnitTrainedEvent } from './app/triggers/unit-trained-event';
-import { KeyEvents } from './app/triggers/key-events';
 import { Quests } from './app/quests/quests';
 import CameraManager from './app/managers/camera-manager';
 import { TimedEventManager } from './app/libs/timer/timed-event-manager';
@@ -102,7 +101,6 @@ function tsMain() {
 		SpellEffectEvent();
 		UnitIssueOrderEvent();
 		AntiSpam();
-		KeyEvents();
 		CitySelectedEvent();
 
 		//Create Quests
