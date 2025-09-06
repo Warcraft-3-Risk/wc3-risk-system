@@ -141,7 +141,8 @@ export class ObserverBoard extends Scoreboard {
 
 		// Kills
 		const gameTimeInSeconds = GlobalGameData.turnCount * TURN_DURATION_IN_SECONDS + (TURN_DURATION_IN_SECONDS - GlobalGameData.tickCounter);
-		const playerInCombat = gameTimeInSeconds - player.trackedData.lastCombat <= 20
+		const playerInCombat = gameTimeInSeconds > 15 && gameTimeInSeconds - player.trackedData.lastCombat <= 15;
+
 		if (playerInCombat) {
 			this.setItemValue(`${HexColors.LIGHT_BLUE}${data.killsDeaths.get(player.getPlayer()).killValue}`, row, this.KILLS_COL);
 		} else {

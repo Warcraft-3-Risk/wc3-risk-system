@@ -115,7 +115,7 @@ export default class CameraManager {
 	private camReset() {
 		const camTimer: timer = CreateTimer();
 
-		TimerStart(camTimer, 0.5, true, () => {
+		TimerStart(camTimer, 1, true, () => {
 			for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 				if (this.camData.has(Player(i))) this.setCameraFields(Player(i), this.camData.get(Player(i)));
 			}

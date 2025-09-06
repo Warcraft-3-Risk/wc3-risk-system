@@ -1,5 +1,4 @@
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
-import { PlayerManager } from '../../player/player-manager';
 
 export function AnnounceOnLocation(
 	message: string,
@@ -70,7 +69,7 @@ export function AnnounceOnUnitObserverOnlyTintedByPlayer(
 	yOffset: number = 0,
 	textSize: number = 0.019
 ): void {
-	if (PlayerManager.getInstance().isObserver(GetLocalPlayer())) {
+	if (IsPlayerObserver(GetLocalPlayer())) {
 		AnnounceOnLocation(
 			tintByPlayer ? `${getColorOfPlayer(tintByPlayer)}${message}` : message,
 			GetUnitX(unit) - 140 + xOffset,

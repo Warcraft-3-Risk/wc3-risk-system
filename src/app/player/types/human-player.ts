@@ -1,7 +1,6 @@
 import { AnnounceOnUnitObserverOnlyTintedByPlayer } from 'src/app/game/announcer/announce';
 import { ActivePlayer } from './active-player';
 import { TURN_DURATION_IN_SECONDS } from '../../../configs/game-settings';
-import { PlayerManager } from '../player-manager';
 import { GlobalGameData } from '../../game/state/global-game-state';
 
 export class HumanPlayer extends ActivePlayer {
@@ -9,7 +8,7 @@ export class HumanPlayer extends ActivePlayer {
 		super(player);
 	}
 
-	onKill(victim: player, unit: unit): void {
+	onKill(victim: player, unit: unit, isPlayerCombat: boolean): void {
 		const killer: player = this.getPlayer();
 
 		if (!this.status.isAlive() && !this.status.isNomad()) return;
@@ -39,16 +38,13 @@ export class HumanPlayer extends ActivePlayer {
 		this.giveGold(bounty);
 		this.giveGold(this.trackedData.bonus.add(val));
 
-		if (
-			PlayerManager.getInstance().playerControllers.get(victim) === MAP_CONTROL_USER &&
-			PlayerManager.getInstance().playerControllers.get(killer) === MAP_CONTROL_USER
-		) {
+		if (isPlayerCombat) {
 			this.trackedData.lastCombat =
 				GlobalGameData.turnCount * TURN_DURATION_IN_SECONDS + (TURN_DURATION_IN_SECONDS - GlobalGameData.tickCounter);
 		}
 	}
 
-	onDeath(killer: player, unit: unit): void {
+	onDeath(killer: player, unit: unit, isPlayerCombat: boolean): void {
 		this.trackedData.units.delete(unit);
 		this.trackedData.lastUnitKilledBy = killer;
 
@@ -69,10 +65,7 @@ export class HumanPlayer extends ActivePlayer {
 		kdData.get(victim).deaths++;
 		kdData.get(`${GetUnitTypeId(unit)}`).deaths++;
 
-		if (
-			PlayerManager.getInstance().playerControllers.get(victim) === MAP_CONTROL_USER &&
-			PlayerManager.getInstance().playerControllers.get(killer) === MAP_CONTROL_USER
-		) {
+		if (isPlayerCombat) {
 			this.trackedData.lastCombat =
 				GlobalGameData.turnCount * TURN_DURATION_IN_SECONDS + (TURN_DURATION_IN_SECONDS - GlobalGameData.tickCounter);
 		}
