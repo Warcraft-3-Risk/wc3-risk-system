@@ -3,8 +3,6 @@
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
-import { UNIT_ID } from 'src/configs/unit-id';
 
 // Players may experience unit lag when too many orders are issued simultaneously.
 // Warcraft III appears to enforce a hard cap on the number of order issues a single player can queue.
@@ -105,12 +103,12 @@ export class ClientManager {
 	}
 
 	// This method returns the owner of the provided client. If the owner is provided it returns the owner.
-	public getActualOwner(player: player): player | null {
+	public getActualClientOwner(player: player): player | null {
 		return this.clientOwner.get(player) || null;
 	}
 
 	// This method returns the unit owner of the provided client. If the owner is provided it returns the owner.
-	public getActualOwnerOfUnit(unit: unit): player | null {
+	public getActualClientOwnerOfUnit(unit: unit): player | null {
 		return this.clientOwner.get(GetOwningPlayer(unit)) || null;
 	}
 

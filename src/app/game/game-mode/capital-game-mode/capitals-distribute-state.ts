@@ -5,6 +5,7 @@ import { BaseState } from '../state/base-state';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { CapitalDistributionService } from '../../services/distribution-service/capital-distribution-service';
 import { CapitalsData } from '../mode/capitals-mode';
+import { ClientManager } from '../../services/client-manager';
 
 export class CapitalsDistributeState extends BaseState<CapitalsData> {
 	onEnterState() {
@@ -17,8 +18,10 @@ export class CapitalsDistributeState extends BaseState<CapitalsData> {
 				//Prevent guards from moving and update unit counts
 				IssueImmediateOrder(city.guard.unit, 'stop');
 
-				if (GetOwningPlayer(city.guard.unit) != NEUTRAL_HOSTILE) {
-					GlobalGameData.matchPlayers.find((x) => x.getPlayer() == GetOwningPlayer(city.guard.unit)).trackedData.units.add(city.guard.unit);
+				if (ClientManager.getInstance().getActualClientOwnerOfUnit(city.guard.unit) != NEUTRAL_HOSTILE) {
+					GlobalGameData.matchPlayers
+						.find((x) => x.getPlayer() == ClientManager.getInstance().getActualClientOwnerOfUnit(city.guard.unit))
+						.trackedData.units.add(city.guard.unit);
 				}
 
 				SetUnitInvulnerable(city.guard.unit, false);

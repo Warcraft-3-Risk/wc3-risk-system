@@ -1,4 +1,5 @@
 import { ABILITY_ID } from '../../configs/ability-id';
+import { ClientManager } from '../game/services/client-manager';
 import { TimedEvent } from '../libs/timer/timed-event';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { ErrorMsg } from '../utils/messages';
@@ -158,7 +159,7 @@ export class TransportManager {
 						BlzPauseUnitEx(transport.unit, true);
 						BlzPauseUnitEx(transport.unit, false);
 						IssueImmediateOrder(transport.unit, 'stop');
-						ErrorMsg(GetOwningPlayer(transport.unit), 'You may only unload on pebble terrain!');
+						ErrorMsg(ClientManager.getInstance().getActualClientOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 					} else {
 						const index: number = transport.cargo.indexOf(GetOrderTargetUnit());
 
@@ -218,10 +219,10 @@ export class TransportManager {
 					IssueImmediateOrder(transport.unit, 'stop');
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
-					ErrorMsg(GetOwningPlayer(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(ClientManager.getInstance().getActualClientOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 				} else if (GetSpellAbilityId() == ABILITY_ID.UNLOAD) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(GetOwningPlayer(transport.unit), 'You may only unload on pebble terrain!');
+					ErrorMsg(ClientManager.getInstance().getActualClientOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 				}
 
 				return false;

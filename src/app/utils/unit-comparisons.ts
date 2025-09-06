@@ -1,3 +1,4 @@
+import { ClientManager } from '../game/services/client-manager';
 import { Options } from '../player/options';
 import { PlayerManager } from '../player/player-manager';
 
@@ -15,7 +16,9 @@ export function CompareUnitByValue(compareUnit: unit, initialUnit: unit): unit {
 
 	const initialUnitValue: number = GetUnitPointValue(initialUnit);
 	const compareUnitValue: number = GetUnitPointValue(compareUnit);
-	const playerSettings: Options = PlayerManager.getInstance().players.get(GetOwningPlayer(compareUnit)).options;
+	const playerSettings: Options = PlayerManager.getInstance().players.get(
+		ClientManager.getInstance().getActualClientOwnerOfUnit(compareUnit)
+	).options;
 
 	if (!playerSettings.value && compareUnitValue < initialUnitValue) {
 		return compareUnit;

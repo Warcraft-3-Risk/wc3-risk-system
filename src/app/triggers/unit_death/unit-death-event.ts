@@ -30,8 +30,8 @@ export function UnitDeathEvent() {
 
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
-			const dyingUnitOwnerHandle: player = ClientManager.getInstance().getActualOwnerOfUnit(dyingUnit);
-			const killingUnitOwnerHandle: player = ClientManager.getInstance().getActualOwnerOfUnit(killingUnit);
+			const dyingUnitOwnerHandle: player = ClientManager.getInstance().getActualClientOwnerOfUnit(dyingUnit);
+			const killingUnitOwnerHandle: player = ClientManager.getInstance().getActualClientOwnerOfUnit(killingUnit);
 			const dyingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(dyingUnitOwnerHandle);
 			const killingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(killingUnitOwnerHandle);
 

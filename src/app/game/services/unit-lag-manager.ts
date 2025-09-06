@@ -37,12 +37,13 @@ export class UnitLagManager {
 		// Create a dummy minimap indicator unit that follows the tracked unit
 
 		const minimapIndicator = CreateUnit(
-			ClientManager.getInstance().getActualOwner(GetOwningPlayer(unit)), // Use the actual owner of the unit
+			ClientManager.getInstance().getActualClientOwner(ClientManager.getInstance().getActualClientOwnerOfUnit(unit)), // Use the actual owner of the unit
 			UNIT_ID.DUMMY_MINIMAP_INDICATOR,
 			GetUnitX(unit),
 			GetUnitY(unit),
 			270
 		);
+		SetUnitPathing(minimapIndicator, false);
 		IssueTargetOrderById(minimapIndicator, 851986, unit);
 		this.trackedUnits.set(unit, minimapIndicator);
 	}

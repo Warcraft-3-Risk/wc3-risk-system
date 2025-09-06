@@ -20,6 +20,7 @@ import { debugPrint } from 'src/app/utils/debug-print';
 import { FogManager } from 'src/app/managers/fog-manager';
 import { AnnounceOnLocation } from '../../announcer/announce';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
+import { ClientManager } from '../../services/client-manager';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -243,10 +244,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
-		const killingUnitOwner = GetOwningPlayer(killingUnit);
+		const killingUnitOwner = ClientManager.getInstance().getActualClientOwnerOfUnit(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(killingUnitOwner));
 
-		if (GetOwningPlayer(killingUnit) == GetOwningPlayer(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
+		if (
+			ClientManager.getInstance().getActualClientOwnerOfUnit(killingUnit) == GetOwningPlayer(dyingUnit) &&
+			!IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)
+		) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
 				AnnounceOnLocation(`${colorString}Denied`, GetUnitX(dyingUnit), GetUnitY(dyingUnit) + 20, 2.0, 3.0);
 			}
