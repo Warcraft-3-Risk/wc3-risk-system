@@ -1,7 +1,8 @@
 import { AnnounceOnUnitObserverOnlyTintedByPlayer } from 'src/app/game/announcer/announce';
 import { ActivePlayer } from './active-player';
-import { debugPrint } from '../../utils/debug-print';
 import { TURN_DURATION_IN_SECONDS } from '../../../configs/game-settings';
+import { PlayerManager } from '../player-manager';
+import { GlobalGameData } from '../../game/state/global-game-state';
 
 export class HumanPlayer extends ActivePlayer {
 	constructor(player: player) {
@@ -38,11 +39,12 @@ export class HumanPlayer extends ActivePlayer {
 		this.giveGold(bounty);
 		this.giveGold(this.trackedData.bonus.add(val));
 
-		if (GetPlayerController(victim) === MAP_CONTROL_USER && GetPlayerController(killer) === MAP_CONTROL_USER) {
-			const minutes: number = parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
-			const seconds: number = TURN_DURATION_IN_SECONDS - parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarUpkeepText', 0)));
-
-			this.trackedData.lastCombat = minutes * 60 + seconds;
+		if (
+			PlayerManager.getInstance().playerControllers.get(victim) === MAP_CONTROL_USER &&
+			PlayerManager.getInstance().playerControllers.get(killer) === MAP_CONTROL_USER
+		) {
+			this.trackedData.lastCombat =
+				GlobalGameData.turnCount * TURN_DURATION_IN_SECONDS + (TURN_DURATION_IN_SECONDS - GlobalGameData.tickCounter);
 		}
 	}
 
@@ -67,12 +69,12 @@ export class HumanPlayer extends ActivePlayer {
 		kdData.get(victim).deaths++;
 		kdData.get(`${GetUnitTypeId(unit)}`).deaths++;
 
-		if (GetPlayerController(victim) === MAP_CONTROL_USER && GetPlayerController(killer) === MAP_CONTROL_USER) {
-			debugPrint('on death');
-			const minutes: number = parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
-			const seconds: number = TURN_DURATION_IN_SECONDS - parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarUpkeepText', 0)));
-
-			this.trackedData.lastCombat = minutes * 60 + seconds;
+		if (
+			PlayerManager.getInstance().playerControllers.get(victim) === MAP_CONTROL_USER &&
+			PlayerManager.getInstance().playerControllers.get(killer) === MAP_CONTROL_USER
+		) {
+			this.trackedData.lastCombat =
+				GlobalGameData.turnCount * TURN_DURATION_IN_SECONDS + (TURN_DURATION_IN_SECONDS - GlobalGameData.tickCounter);
 		}
 	}
 }
