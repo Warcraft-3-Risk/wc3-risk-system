@@ -9,12 +9,18 @@ import { TeamManager } from 'src/app/teams/team-manager';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
 import { EVENT_ON_UNIT_KILLED } from 'src/app/utils/events/event-constants';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
+import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
+import { debugPrint } from 'src/app/utils/debug-print';
+import { NameManager } from 'src/app/managers/names/name-manager';
+import { ClientManager } from 'src/app/game/services/client-manager';
 
 export function UnitDeathEvent() {
 	const t: trigger = CreateTrigger();
 
 	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
+		// debugPrint(`Registering Unit Death Event for Player ${i} ${NameManager.getInstance().getDisplayName(Player(i))}`);
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_DEATH, null);
+		debugPrint(`Registered Unit Death Event for Player ${i}`);
 	}
 
 	TriggerAddCondition(
@@ -24,10 +30,14 @@ export function UnitDeathEvent() {
 
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
-			const dyingUnitOwnerHandle: player = GetOwningPlayer(dyingUnit);
-			const killingUnitOwnerHandle: player = GetOwningPlayer(killingUnit);
+			const dyingUnitOwnerHandle: player = ClientManager.getInstance().getActualOwnerOfUnit(dyingUnit);
+			const killingUnitOwnerHandle: player = ClientManager.getInstance().getActualOwnerOfUnit(killingUnit);
 			const dyingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(dyingUnitOwnerHandle);
 			const killingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(killingUnitOwnerHandle);
+
+			debugPrint(`Unit Death Event Triggered for unit: ${GetUnitName(dyingUnit)}`);
+			UnitLagManager.getInstance().untrackUnit(dyingUnit);
+			debugPrint(`Untracked unit from lag manager: ${GetUnitName(dyingUnit)}`);
 
 			if (killingUnitOwner) killingUnitOwner.onKill(dyingUnitOwnerHandle, dyingUnit);
 			if (dyingUnitOwner) dyingUnitOwner.onDeath(killingUnitOwnerHandle, dyingUnit);
