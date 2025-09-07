@@ -7,6 +7,8 @@ import { UnitToCity } from './city-map';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { ABILITY_ID } from 'src/configs/ability-id';
+import { PLAYER_COLOR_CODES_RGB_MAP } from '../utils/player-colors';
+import { debugPrint } from '../utils/debug-print';
 
 /**
  * Abstract class for a City.
@@ -17,6 +19,7 @@ export abstract class City implements Resetable, Ownable {
 	private _barrack: Barracks;
 	private _guard: Guard;
 	private _cop: unit;
+	private _icon: minimapicon;
 
 	/**
 	 * @param rax The barracks for the city
@@ -31,9 +34,13 @@ export abstract class City implements Resetable, Ownable {
 	}
 
 	public abstract isValidGuard(unit: unit): boolean;
+
 	public abstract onUnitTrain(unit: unit): void;
+
 	public abstract onCast(targetedUnit: unit, triggerPlayer: player): void;
+
 	public abstract isPort(): boolean;
+
 	public abstract isCapital(): boolean;
 
 	/** Resets the city, returning it to its default state */
@@ -50,9 +57,40 @@ export abstract class City implements Resetable, Ownable {
 	 * @param player The player to set as the city's owner
 	 */
 	public setOwner(player: player): void {
+		const playerColor = GetPlayerColor(player);
+		if (playerColor) {
+			const ownerColor = PLAYER_COLOR_CODES_RGB_MAP.get(playerColor);
+			if (player === GetLocalPlayer()) {
+				this.setIcon(255, 255, 255);
+			} else if (ownerColor) {
+				this.setIcon(ownerColor[0], ownerColor[1], ownerColor[2]);
+			} else {
+				this.setIcon(0, 0, 0);
+			}
+		} else {
+			this.setIcon(0, 0, 0);
+		}
+
 		this.owner = player;
 		this._barrack.setOwner(player);
 		SetUnitOwner(this._cop, player, true);
+	}
+
+	public setIcon(r: number, g: number, b: number) {
+		if (this._icon) {
+			DestroyMinimapIcon(this._icon);
+		}
+/*
+		this._icon = CreateMinimapIcon(
+			GetUnitX(this.barrack.unit),
+			GetUnitY(this.barrack.unit),
+			r,
+			g,
+			b,
+			'UI\Minimap\minimap-neutralbuilding.dds',
+			FOG_OF_WAR_FOGGED
+		);*/
+		this._icon = CreateMinimapIconOnUnit(this.barrack.unit, r, g, b, 'UI\Minimap\minimap-neutralbuilding.dds', FOG_OF_WAR_FOGGED);
 	}
 
 	/**

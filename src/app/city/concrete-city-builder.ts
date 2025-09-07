@@ -1,10 +1,10 @@
-import { CityGuardXOffSet, CityGuardYOffSet, DefaultCityType, CityRegionSize } from 'src/configs/city-settings';
+import { CityGuardXOffSet, CityGuardYOffSet, CityRegionSize, DefaultCityType } from 'src/configs/city-settings';
 import { DefaultBarrackType, DefaultGuardType } from 'src/configs/country-settings';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 import { City } from './city';
 import { CityBuilder } from './city-builder';
-import { UnitToCity, RegionToCity } from './city-map';
+import { RegionToCity, UnitToCity } from './city-map';
 import { CityType, CityTypes } from './city-type';
 import { Barracks } from './components/barracks';
 import { Guard } from './components/guard';
@@ -41,10 +41,11 @@ export class ConcreteCityBuilder implements CityBuilder, Resetable {
 				rax.typeId = DefaultBarrackType;
 			}
 
-			this._barracks = new Barracks(CreateUnit(NEUTRAL_HOSTILE, rax.typeId, rax.x, rax.y, 270));
-		} else {
-			this._barracks = new Barracks(building);
+			building = CreateUnit(NEUTRAL_HOSTILE, rax.typeId, rax.x, rax.y, 270);
 		}
+
+		BlzSetUnitBooleanFieldBJ(building, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+		this._barracks = new Barracks(building);
 
 		return this;
 	}
@@ -90,6 +91,7 @@ export class ConcreteCityBuilder implements CityBuilder, Resetable {
 			const y: number = GetRaxYOffSet(this._barracks.unit);
 
 			this._cop = CreateUnit(NEUTRAL_HOSTILE, UNIT_ID.CONTROL_POINT, x, y, 270);
+			BlzSetUnitBooleanFieldBJ(this._cop, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 		}
 
 		return this;

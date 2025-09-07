@@ -1,5 +1,6 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
+import { debugPrint } from '../../utils/debug-print';
 
 /**
  * Represents a Barracks entity in the game, implementing the `Resetable` interface.

@@ -108,5 +108,6 @@ export class Guard implements Resetable {
 		const unit = CreateUnit(NEUTRAL_HOSTILE, this.unitType, this._defaultX, this._defaultY, 270);
 		this.set(unit);
 		SetUnitInvulnerable(unit, true);
+		BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 	}
 }

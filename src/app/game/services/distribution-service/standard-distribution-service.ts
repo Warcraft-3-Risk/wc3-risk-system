@@ -6,6 +6,8 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 import { GetRandomElementFromArray } from 'src/app/utils/utils';
 import { DoublyLinkedList } from 'src/app/utils/doubly-linked-list';
 import { CITIES_PER_PLAYER_UPPER_BOUND } from 'src/configs/game-settings';
+import { PLAYER_COLOR_CODES_MAP, PLAYER_COLOR_CODES_RGB_MAP } from '../../../utils/player-colors';
+import { debugPrint } from '../../../utils/debug-print';
 
 /**
  * Handles the distribution of cities among active players.
@@ -47,6 +49,7 @@ export class StandardDistributionService {
 			const neutralCities: City[] = [];
 			const numOfCities: number = this.cities.length;
 
+			debugPrint("distribute");
 			for (let i = 0; i < numOfCities; i++) {
 				const city: City = GetRandomElementFromArray(this.cities);
 				const player: ActivePlayer = this.getValidPlayerForCity(city);

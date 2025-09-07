@@ -93,6 +93,37 @@ export const PLAYER_COLOR_CODES_MAP: Map<playercolor, string> = new Map<playerco
 	[PLAYER_COLOR_SNOW, '|cffecf0ff'],
 ]);
 
+export const PLAYER_COLOR_CODES_RGB_MAP: Map<playercolor, [number, number, number]> = new Map<
+	playercolor,
+	[number, number, number]
+>([
+	[PLAYER_COLOR_RED, [255, 3, 3]],
+	[PLAYER_COLOR_BLUE, [0, 66, 255]],
+	[PLAYER_COLOR_CYAN, [27, 231, 186]],
+	[PLAYER_COLOR_PURPLE, [85, 0, 129]],
+	[PLAYER_COLOR_YELLOW, [254, 252, 0]],
+	[PLAYER_COLOR_ORANGE, [254, 137, 13]],
+	[PLAYER_COLOR_GREEN, [33, 191, 0]],
+	[PLAYER_COLOR_PINK, [228, 92, 175]],
+	[PLAYER_COLOR_LIGHT_GRAY, [147, 149, 150]],
+	[PLAYER_COLOR_LIGHT_BLUE, [119, 187, 255]],
+	[PLAYER_COLOR_AQUA, [16, 98, 71]],
+	[PLAYER_COLOR_BROWN, [79, 43, 5]],
+	[PLAYER_COLOR_MAROON, [156, 0, 0]],
+	[PLAYER_COLOR_VIOLET, [189, 0, 255]],
+	[PLAYER_COLOR_WHEAT, [236, 206, 135]],
+	[PLAYER_COLOR_PEACH, [247, 165, 139]],
+	[PLAYER_COLOR_LAVENDER, [219, 184, 235]],
+	[PLAYER_COLOR_PEANUT, [165, 111, 52]],
+	[PLAYER_COLOR_COAL, [79, 80, 85]],
+	[PLAYER_COLOR_EMERALD, [0, 120, 30]],
+	[PLAYER_COLOR_NAVY, [0, 0, 195]],
+	[PLAYER_COLOR_MINT, [204, 255, 153]],
+	[PLAYER_COLOR_TURQUOISE, [0, 235, 255]],
+	[PLAYER_COLOR_SNOW, [236, 240, 255]],
+]);
+
+
 /**
  * Percentage value representing the red component in the ping color for each player.
  * The percentage is used to blend the color component of the ping signal.
