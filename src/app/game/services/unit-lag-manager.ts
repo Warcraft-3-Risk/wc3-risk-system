@@ -32,7 +32,11 @@ export class UnitLagManager {
 		}
 
 		// Hide tracked unit on minimap
-		BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+		if (ClientManager.getInstance().getActualClientOwnerOfUnit(unit) == GetLocalPlayer()) {
+			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+		} else {
+			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+		}
 
 		// Create a dummy minimap indicator unit that follows the tracked unit
 
@@ -51,7 +55,7 @@ export class UnitLagManager {
 	public untrackUnit(unit: unit): void {
 		// Unit has a dummy and we want to remove it
 		if (this.trackedUnits.get(unit)) {
-			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
 			RemoveUnit(this.trackedUnits.get(unit));
 			this.trackedUnits.delete(unit);
 		}

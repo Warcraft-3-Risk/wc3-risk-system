@@ -1,5 +1,5 @@
 import { W3TS_HOOK, addScriptHook } from 'w3ts/hooks';
-import { MAP_NAME, W3C_MODE_ENABLED } from './app/utils/map-info';
+import { MAP_NAME } from './app/utils/map-info';
 import { ConcreteCityBuilder } from './app/city/concrete-city-builder';
 import { ConcreteCountryBuilder } from './app/country/concrete-country-builder';
 import { CountrySettings } from './app/country/countries';

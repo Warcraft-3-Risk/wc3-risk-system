@@ -13,7 +13,6 @@ import { clearTickUI } from '../utillity/update-ui';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { TreeManager } from '../../services/tree-service';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
-import { UnitLagManager } from '../../services/unit-lag-manager';
 import { ClientManager } from '../../services/client-manager';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
