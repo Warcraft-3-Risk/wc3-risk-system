@@ -101,6 +101,32 @@ npm run test
 npm run build
 ```
 
+This instruction may fail if you have saved through the World Editor. The error message looks like this
+
+```
+Error: ByteStream: readInt32Array: premature end - want 18399232 bytes but have 1063
+    at BinaryStream.readInt32Array (C:\Users\micro\workdir\wc3-risk-system\node_modules\mdx-m3-viewer-th\src\common\binarystream.ts:346:13)
+    at RandomUnitTable.load (C:\Users\micro\workdir\wc3-risk-system\node_modules\mdx-m3-viewer-th\src\parsers\w3x\w3i\randomunittable.ts:19:31)
+    at War3MapW3i.load (C:\Users\micro\workdir\wc3-risk-system\node_modules\mdx-m3-viewer-th\src\parsers\w3x\w3i\file.ts:149:23)
+    at updateStrings (C:\Users\micro\workdir\wc3-risk-system\scripts\build.ts:99:6)
+    at createMapFromDir (C:\Users\micro\workdir\wc3-risk-system\scripts\build.ts:55:2)
+    at main (C:\Users\micro\workdir\wc3-risk-system\scripts\build.ts:43:2)
+    at Object.<anonymous> (C:\Users\micro\workdir\wc3-risk-system\scripts\build.ts:123:1)
+    at Module._compile (node:internal/modules/cjs/loader:1565:14)
+    at Module.m._compile (C:\Users\micro\workdir\wc3-risk-system\node_modules\ts-node\src\index.ts:858:23)
+    at node:internal/modules/cjs/loader:1708:10
+```
+
+The solution is to restore the war3map.w3i file.
+
+Run the following command to restore it to the version on main. The purpose here is to restore the file back to a version before the World Editor save.
+
+```
+git restore --source main -- maps\risk_europe.w3x\war3map.w3i
+```
+
+You can now build the map again.
+
 ## Documentation
 
 TODO
