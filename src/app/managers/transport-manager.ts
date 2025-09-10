@@ -7,6 +7,7 @@ import { debugPrint } from '../utils/debug-print';
 import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { PLAYER_SLOTS } from '../utils/utils';
+import { Wait } from '../utils/wait';
 
 type Transport = {
 	unit: unit;
@@ -32,6 +33,10 @@ const AUTO_LOAD_DURATION: number = 600;
  * - IsUnitLoaded: Check if given unit is loaded into any transport.
  */
 export class TransportManager {
+	// Static queue and timer for delayed tracking
+	private static delayedTrackQueue: unit[] = [];
+	private static delayedTrackTimer: timer = CreateTimer();
+	private static delayedTrackTimerRunning: boolean = false;
 	private static instance: TransportManager;
 	private transports: Map<unit, Transport>;
 
@@ -171,9 +176,22 @@ export class TransportManager {
 						if (index > -1) {
 							const unloadedUnits = transport.cargo.splice(index, 1);
 							unloadedUnits.forEach((unit) => {
-								debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
-								UnitLagManager.getInstance().trackUnit(unit);
+								TransportManager.delayedTrackQueue.push(unit);
 							});
+
+							// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
+							// Consider moving the timer into the UnitLagManager.
+							if (!TransportManager.delayedTrackTimerRunning) {
+								TransportManager.delayedTrackTimerRunning = true;
+								TimerStart(TransportManager.delayedTrackTimer, 0.1, false, () => {
+									TransportManager.delayedTrackQueue.forEach((unit) => {
+										debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
+										UnitLagManager.getInstance().trackUnit(unit);
+									});
+									TransportManager.delayedTrackQueue = [];
+									TransportManager.delayedTrackTimerRunning = false;
+								});
+							}
 						}
 					}
 				}

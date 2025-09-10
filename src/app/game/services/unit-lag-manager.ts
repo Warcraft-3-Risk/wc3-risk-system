@@ -2,6 +2,8 @@
 
 import { UNIT_ID } from 'src/configs/unit-id';
 import { ClientManager } from './client-manager';
+import { DummyPoolManager } from './dummy-pool-manager';
+import { debugPrint } from 'src/app/utils/debug-print';
 
 // Players may experience unit lag when too many orders are issued simultaneously.
 // Warcraft III appears to enforce a hard cap on the number of order issues a single player can queue.
@@ -12,6 +14,8 @@ import { ClientManager } from './client-manager';
 export class UnitLagManager {
 	// This class will manage the player clients and their interactions.
 	private static instance: UnitLagManager;
+	private dummyPool: DummyPoolManager;
+	private trackedUnits: Map<unit, unit> = new Map<unit, unit>();
 
 	public static getInstance(): UnitLagManager {
 		if (!UnitLagManager.instance) {
@@ -20,10 +24,8 @@ export class UnitLagManager {
 		return UnitLagManager.instance;
 	}
 
-	private trackedUnits: Map<unit, unit> = new Map<unit, unit>();
-
 	private constructor() {
-		// Initialize player client manager
+		this.dummyPool = new DummyPoolManager();
 	}
 
 	public trackUnit(unit: unit): void {
@@ -39,25 +41,26 @@ export class UnitLagManager {
 		}
 
 		// Create a dummy minimap indicator unit that follows the tracked unit
-
-		const minimapIndicator = CreateUnit(
-			ClientManager.getInstance().getActualClientOwner(ClientManager.getInstance().getActualClientOwnerOfUnit(unit)), // Use the actual owner of the unit
-			UNIT_ID.DUMMY_MINIMAP_INDICATOR,
+		const dummy = this.dummyPool.pop(
+			ClientManager.getInstance().getActualClientOwner(ClientManager.getInstance().getActualClientOwnerOfUnit(unit)),
 			GetUnitX(unit),
-			GetUnitY(unit),
-			270
+			GetUnitY(unit)
 		);
-		SetUnitPathing(minimapIndicator, false);
-		IssueTargetOrderById(minimapIndicator, 851986, unit);
-		this.trackedUnits.set(unit, minimapIndicator);
+		SetUnitPathing(dummy, false);
+		IssueTargetOrderById(dummy, 851986, unit);
+		BlzSetUnitBooleanFieldBJ(dummy, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+		this.trackedUnits.set(unit, dummy);
+		debugPrint(`UnitLagManager: ${GetUnitName(dummy)} is now tracking ${GetUnitName(unit)}.`);
 	}
 
 	public untrackUnit(unit: unit): void {
 		// Unit has a dummy and we want to remove it
-		if (this.trackedUnits.get(unit)) {
-			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
-			RemoveUnit(this.trackedUnits.get(unit));
+		const dummy = this.trackedUnits.get(unit);
+		if (dummy) {
 			this.trackedUnits.delete(unit);
+			this.dummyPool.push(dummy);
+			BlzSetUnitBooleanFieldBJ(dummy, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+			debugPrint(`UnitLagManager: ${GetUnitName(dummy)} is stopping tracking of ${GetUnitName(unit)}.`);
 		}
 	}
 
