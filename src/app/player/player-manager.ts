@@ -5,6 +5,7 @@ import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
 import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
+import { GlobalGameData } from '../game/state/global-game-state';
 
 // const banList: string[] = [
 // ];
@@ -16,11 +17,13 @@ export class PlayerManager {
 	private static _instance: PlayerManager;
 
 	private _playerFromHandle: Map<player, ActivePlayer>;
+	private _playerControllerHandle: Map<player, mapcontrol>;
 	//TODO observers can just be "player" type. HOWEVER, this may come in handy later if i ever decide to implement obs that are actual players
 	private _observerFromHandle: Map<player, HumanPlayer>;
 
 	private constructor() {
 		this._playerFromHandle = new Map<player, ActivePlayer>();
+		this._playerControllerHandle = new Map<player, mapcontrol>();
 		this._observerFromHandle = new Map<player, HumanPlayer>();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
@@ -44,6 +47,7 @@ export class PlayerManager {
 
 			if (GetPlayerController(player) == MAP_CONTROL_USER || GetPlayerController(player) == MAP_CONTROL_COMPUTER) {
 				this._playerFromHandle.set(player, new HumanPlayer(player));
+				this._playerControllerHandle.set(player, MAP_CONTROL_USER);
 
 				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
 				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
@@ -124,6 +128,10 @@ export class PlayerManager {
 		return this._playerFromHandle;
 	}
 
+	public get playerControllers(): Map<player, mapcontrol> {
+		return this._playerControllerHandle;
+	}
+
 	public setObserver(player: player) {
 		this._observerFromHandle.set(player, new HumanPlayer(player));
 	}
@@ -159,18 +167,5 @@ export class PlayerManager {
 		}
 
 		return undefined;
-	}
-
-	public updateInCombat() {
-		const minutes: number = parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
-		const seconds: number = TURN_DURATION_IN_SECONDS - parseInt(BlzFrameGetText(BlzGetFrameByName('ResourceBarUpkeepText', 0)));
-		const gameTimeInSeconds = minutes * 60 + seconds;
-
-		this._playerFromHandle.forEach((activePlayer, player) => {
-			// Player was in combat and 20 seconds have elapsed
-			if (activePlayer.trackedData.lastCombat !== 0 && gameTimeInSeconds - activePlayer.trackedData.lastCombat > 20) {
-				activePlayer.trackedData.lastCombat = 0;
-			}
-		});
 	}
 }

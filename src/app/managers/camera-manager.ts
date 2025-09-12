@@ -80,9 +80,9 @@ export default class CameraManager {
 					angle: !sAngle ? CamSettings.DEFAULT_ANGLE : sAngle,
 				});
 			}
-		}
 
-		this.camReset();
+			this.setCameraReset(player);
+		}
 	}
 
 	/**
@@ -112,14 +112,16 @@ export default class CameraManager {
 	/**
 	 * Resets camera settings at a regular interval.
 	 */
-	private camReset() {
-		const camTimer: timer = CreateTimer();
+	private setCameraReset(p: player) {
+		if (p == GetLocalPlayer()) {
+			const camTimer: timer = CreateTimer();
 
-		TimerStart(camTimer, 0.5, true, () => {
-			for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-				if (this.camData.has(Player(i))) this.setCameraFields(Player(i), this.camData.get(Player(i)));
-			}
-		});
+			TimerStart(camTimer, 1, true, () => {
+				if (this.camData.has(p)) {
+					this.setCameraFields(p, this.camData.get(p));
+				}
+			});
+		}
 	}
 
 	/**
