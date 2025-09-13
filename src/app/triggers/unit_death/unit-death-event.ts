@@ -12,7 +12,6 @@ import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { ClientManager } from 'src/app/game/services/client-manager';
-import { NameManager } from 'src/app/managers/names/name-manager';
 
 export function UnitDeathEvent() {
 	const t: trigger = CreateTrigger();
@@ -38,9 +37,20 @@ export function UnitDeathEvent() {
 			UnitLagManager.getInstance().untrackUnit(dyingUnit);
 
 			if (killingUnitOwner) {
-				killingUnitOwner.onKill(dyingUnitOwnerHandle, dyingUnit);
+				killingUnitOwner.onKill(
+					dyingUnitOwnerHandle,
+					dyingUnit,
+					PlayerManager.getInstance().playerControllers.get(killingUnitOwnerHandle) === MAP_CONTROL_USER &&
+						PlayerManager.getInstance().playerControllers.get(dyingUnitOwnerHandle) === MAP_CONTROL_USER
+				);
 			}
-			if (dyingUnitOwner) dyingUnitOwner.onDeath(killingUnitOwnerHandle, dyingUnit);
+			if (dyingUnitOwner)
+				dyingUnitOwner.onDeath(
+					killingUnitOwnerHandle,
+					dyingUnit,
+					PlayerManager.getInstance().playerControllers.get(killingUnitOwnerHandle) === MAP_CONTROL_USER &&
+						PlayerManager.getInstance().playerControllers.get(dyingUnitOwnerHandle) === MAP_CONTROL_USER
+				);
 
 			if (!SettingsContext.getInstance().isFFA() && !IsPlayerAlly(killingUnitOwnerHandle, dyingUnitOwnerHandle)) {
 				const teamManager: TeamManager = TeamManager.getInstance();
