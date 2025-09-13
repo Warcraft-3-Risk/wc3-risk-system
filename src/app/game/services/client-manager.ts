@@ -3,6 +3,7 @@
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 
 // Players may experience unit lag when too many orders are issued simultaneously.
 // Warcraft III appears to enforce a hard cap on the number of order issues a single player can queue.
@@ -62,6 +63,8 @@ export class ClientManager {
 		}
 
 		const clientSlots = this.getAvailableClientSlots();
+		this.clientOwner.set(NEUTRAL_HOSTILE, NEUTRAL_HOSTILE); // Just in case
+		this.clientSlots.set(NEUTRAL_HOSTILE, NEUTRAL_HOSTILE); // Just in case
 
 		debugPrint(`There are ${clientSlots.length} available client slots`);
 		for (let playerIndex = 0; playerIndex < activePlayers.length; playerIndex++) {

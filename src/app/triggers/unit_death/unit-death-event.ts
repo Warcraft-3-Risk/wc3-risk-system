@@ -11,8 +11,8 @@ import { EVENT_ON_UNIT_KILLED } from 'src/app/utils/events/event-constants';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { NameManager } from 'src/app/managers/names/name-manager';
 import { ClientManager } from 'src/app/game/services/client-manager';
+import { NameManager } from 'src/app/managers/names/name-manager';
 
 export function UnitDeathEvent() {
 	const t: trigger = CreateTrigger();
@@ -20,7 +20,6 @@ export function UnitDeathEvent() {
 	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
 		// debugPrint(`Registering Unit Death Event for Player ${i} ${NameManager.getInstance().getDisplayName(Player(i))}`);
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_DEATH, null);
-		debugPrint(`Registered Unit Death Event for Player ${i}`);
 	}
 
 	TriggerAddCondition(
@@ -30,17 +29,34 @@ export function UnitDeathEvent() {
 
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
+			debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
 			const dyingUnitOwnerHandle: player = ClientManager.getInstance().getActualClientOwnerOfUnit(dyingUnit);
 			const killingUnitOwnerHandle: player = ClientManager.getInstance().getActualClientOwnerOfUnit(killingUnit);
 			const dyingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(dyingUnitOwnerHandle);
 			const killingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(killingUnitOwnerHandle);
 
-			debugPrint(`Unit Death Event Triggered for unit: ${GetUnitName(dyingUnit)}`);
 			UnitLagManager.getInstance().untrackUnit(dyingUnit);
-			debugPrint(`Untracked unit from lag manager: ${GetUnitName(dyingUnit)}`);
 
-			if (killingUnitOwner) killingUnitOwner.onKill(dyingUnitOwnerHandle, dyingUnit);
+			debugPrint(`dyingUnitOwner: ${dyingUnitOwner}`);
+			debugPrint(`killingUnitOwner: ${killingUnitOwner}`);
+
+			debugPrint(`1. Guard ${GetUnitName(dyingUnit)} was killed by ${GetUnitName(killingUnit)}`);
+
+			if (killingUnitOwner) {
+				debugPrint(`Value: ${killingUnitOwner}`);
+				debugPrint(
+					`1. a) $ Unit Death Event: ${NameManager.getInstance().getDisplayName(killingUnitOwner.getPlayer())} killed ${GetUnitName(dyingUnit)}`
+				);
+				killingUnitOwner.onKill(dyingUnitOwnerHandle, dyingUnit);
+				debugPrint(
+					`1. b) $ Unit Death Event: ${NameManager.getInstance().getDisplayName(killingUnitOwner.getPlayer())} killed ${GetUnitName(dyingUnit)}`
+				);
+			}
+			debugPrint(`2. a) Unit Death Event: ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
 			if (dyingUnitOwner) dyingUnitOwner.onDeath(killingUnitOwnerHandle, dyingUnit);
+			debugPrint(`2. b) Unit Death Event: ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
+
+			debugPrint(`3. Unit Death Event: ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
 
 			if (!SettingsContext.getInstance().isFFA() && !IsPlayerAlly(killingUnitOwnerHandle, dyingUnitOwnerHandle)) {
 				const teamManager: TeamManager = TeamManager.getInstance();

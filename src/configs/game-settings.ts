@@ -3,7 +3,7 @@
 export const CITIES_TO_WIN_RATIO: number = 0.6;
 
 //This is the starting gold for each player. 4 gold by default.
-export const STARTING_INCOME: number = 4;
+export const STARTING_INCOME: number = 1000;
 
 //This is the starting countdown for the game. 10 by default
 export const STARTING_COUNTDOWN: number = 3;
