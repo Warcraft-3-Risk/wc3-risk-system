@@ -47,7 +47,7 @@ export class Barracks implements Resetable {
 	 * @param player - The player object that will become the new owner.
 	 */
 	public setOwner(player: player): void {
-		SetUnitOwner(this._unit, player, true);
+		SetUnitOwner(this._unit, ClientManager.getInstance().getActualClientOwner(player), true);
 	}
 
 	/** @returns The coordinate location of the barracks on the map. */

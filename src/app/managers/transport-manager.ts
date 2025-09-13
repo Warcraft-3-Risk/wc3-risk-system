@@ -157,7 +157,7 @@ export class TransportManager {
 
 		TriggerAddCondition(
 			t,
-			Condition(async () => {
+			Condition(() => {
 				if (GetIssuedOrderId() == 852047) {
 					const transport: Transport = this.transports.get(GetTriggerUnit());
 

@@ -63,8 +63,6 @@ export class ClientManager {
 		}
 
 		const clientSlots = this.getAvailableClientSlots();
-		this.clientOwner.set(NEUTRAL_HOSTILE, NEUTRAL_HOSTILE); // Just in case
-		this.clientSlots.set(NEUTRAL_HOSTILE, NEUTRAL_HOSTILE); // Just in case
 
 		debugPrint(`There are ${clientSlots.length} available client slots`);
 		for (let playerIndex = 0; playerIndex < activePlayers.length; playerIndex++) {
@@ -106,17 +104,23 @@ export class ClientManager {
 	}
 
 	// This method returns the owner of the provided client. If the owner is provided it returns the owner.
-	public getActualClientOwner(player: player): player | null {
-		return this.clientOwner.get(player) || null;
+	public getActualClientOwner(player: player): player | undefined {
+		if (this.clientOwner.get(player)) {
+			return this.clientOwner.get(player);
+		}
+		return player;
 	}
 
 	// This method returns the unit owner of the provided client. If the owner is provided it returns the owner.
-	public getActualClientOwnerOfUnit(unit: unit): player | null {
-		return this.clientOwner.get(GetOwningPlayer(unit)) || null;
+	public getActualClientOwnerOfUnit(unit: unit): player | undefined {
+		if (this.clientOwner.get(GetOwningPlayer(unit))) {
+			return this.clientOwner.get(GetOwningPlayer(unit));
+		}
+		return GetOwningPlayer(unit);
 	}
 
-	public getClientOfPlayer(player: player): player | null {
-		return this.clientSlots.get(player) || null;
+	public getClientOfPlayer(player: player): player | undefined {
+		return this.clientSlots.get(player) || undefined;
 	}
 
 	// public static breakPlayerFullControlOfClient(player: player, client: clientSlot) {

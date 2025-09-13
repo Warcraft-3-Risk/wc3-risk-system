@@ -35,6 +35,7 @@ import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
 import { FogManager } from './app/managers/fog-manager';
 import { LocalMessage } from './app/utils/messages';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
+import { ClientManager } from './app/game/services/client-manager';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -60,6 +61,7 @@ function tsMain() {
 
 		//Handle names to prevent namebug
 		NameManager.getInstance();
+		ClientManager.getInstance();
 
 		//Set up countries
 		SetCountries();
