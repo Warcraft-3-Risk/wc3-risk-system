@@ -37,26 +37,10 @@ export function UnitDeathEvent() {
 
 			UnitLagManager.getInstance().untrackUnit(dyingUnit);
 
-			debugPrint(`dyingUnitOwner: ${dyingUnitOwner}`);
-			debugPrint(`killingUnitOwner: ${killingUnitOwner}`);
-
-			debugPrint(`1. Guard ${GetUnitName(dyingUnit)} was killed by ${GetUnitName(killingUnit)}`);
-
 			if (killingUnitOwner) {
-				debugPrint(`Value: ${killingUnitOwner}`);
-				debugPrint(
-					`1. a) $ Unit Death Event: ${NameManager.getInstance().getDisplayName(killingUnitOwner.getPlayer())} killed ${GetUnitName(dyingUnit)}`
-				);
 				killingUnitOwner.onKill(dyingUnitOwnerHandle, dyingUnit);
-				debugPrint(
-					`1. b) $ Unit Death Event: ${NameManager.getInstance().getDisplayName(killingUnitOwner.getPlayer())} killed ${GetUnitName(dyingUnit)}`
-				);
 			}
-			debugPrint(`2. a) Unit Death Event: ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
 			if (dyingUnitOwner) dyingUnitOwner.onDeath(killingUnitOwnerHandle, dyingUnit);
-			debugPrint(`2. b) Unit Death Event: ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
-
-			debugPrint(`3. Unit Death Event: ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
 
 			if (!SettingsContext.getInstance().isFFA() && !IsPlayerAlly(killingUnitOwnerHandle, dyingUnitOwnerHandle)) {
 				const teamManager: TeamManager = TeamManager.getInstance();
