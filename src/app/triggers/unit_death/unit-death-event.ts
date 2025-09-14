@@ -2,7 +2,7 @@ import { SettingsContext } from 'src/app/settings/settings-context';
 import { TransportManager } from '../../managers/transport-manager';
 import { PlayerManager } from '../../player/player-manager';
 import { GamePlayer } from '../../player/types/game-player';
-import { SPANWER_UNITS } from '../../spawner/spawner';
+import { SPAWNER_UNITS } from '../../spawner/spawner';
 import { UNIT_TYPE } from '../../utils/unit-types';
 import { HandleGuardDeath } from './handle-guard-death';
 import { TeamManager } from 'src/app/teams/team-manager';
@@ -62,7 +62,7 @@ export function UnitDeathEvent() {
 
 			TransportManager.getInstance().onDeath(killingUnit, dyingUnit);
 
-			if (SPANWER_UNITS.has(dyingUnit)) SPANWER_UNITS.get(dyingUnit).onDeath(dyingUnitOwnerHandle, dyingUnit);
+			if (SPAWNER_UNITS.has(dyingUnit)) SPAWNER_UNITS.get(dyingUnit).onDeath(dyingUnitOwnerHandle, dyingUnit);
 
 			EventEmitter.getInstance().emit(EVENT_ON_UNIT_KILLED, killingUnit, dyingUnit);
 
