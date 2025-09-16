@@ -16,9 +16,7 @@ export function CompareUnitByValue(compareUnit: unit, initialUnit: unit): unit {
 
 	const initialUnitValue: number = GetUnitPointValue(initialUnit);
 	const compareUnitValue: number = GetUnitPointValue(compareUnit);
-	const playerSettings: Options = PlayerManager.getInstance().players.get(
-		ClientManager.getInstance().getActualClientOwnerOfUnit(compareUnit)
-	).options;
+	const playerSettings: Options = PlayerManager.getInstance().players.get(ClientManager.getInstance().getOwnerOfUnit(compareUnit)).options;
 
 	if (!playerSettings.value && compareUnitValue < initialUnitValue) {
 		return compareUnit;

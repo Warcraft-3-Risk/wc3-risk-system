@@ -20,7 +20,7 @@ export function AlliedKillHandler(city: City, dyingUnit: unit, killingUnit: unit
 	//Found valid guard units, set unit as guard
 	if (BlzGroupGetSize(searchGroup) >= 1) {
 		ReplaceGuard(city, searchGroup);
-		city.setOwner(ClientManager.getInstance().getActualClientOwnerOfUnit(killingUnit));
+		city.setOwner(ClientManager.getInstance().getOwnerOfUnit(killingUnit));
 		DestroyGroup(searchGroup);
 		return true;
 	}

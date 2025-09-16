@@ -76,7 +76,7 @@ export class LandCity extends City {
 		}
 
 		// If owner then swap
-		if (ClientManager.getInstance().getActualClientOwnerOfUnit(targetedUnit) === this.getOwner()) {
+		if (ClientManager.getInstance().getOwnerOfUnit(targetedUnit) === this.getOwner()) {
 			debugPrint('If same owner then swap');
 			this.castHandler(targetedUnit);
 			return;
@@ -84,7 +84,7 @@ export class LandCity extends City {
 
 		// If enemy team then don't swap
 		const shareTeam = TeamManager.getInstance()
-			.getTeamFromPlayer(ClientManager.getInstance().getActualClientOwnerOfUnit(targetedUnit))
+			.getTeamFromPlayer(ClientManager.getInstance().getOwnerOfUnit(targetedUnit))
 			.playerIsInTeam(this.getOwner());
 		if (!shareTeam) {
 			debugPrint("If enemy team then don't swap");

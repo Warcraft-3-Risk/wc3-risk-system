@@ -14,9 +14,7 @@ export function UnitTrainedEvent() {
 
 			UnitToCity.get(GetTriggerUnit()).onUnitTrain(trainedUnit);
 
-			const player: ActivePlayer = PlayerManager.getInstance().players.get(
-				ClientManager.getInstance().getActualClientOwnerOfUnit(trainedUnit)
-			);
+			const player: ActivePlayer = PlayerManager.getInstance().players.get(ClientManager.getInstance().getOwnerOfUnit(trainedUnit));
 
 			if (!IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
 				player.trackedData.units.add(trainedUnit);

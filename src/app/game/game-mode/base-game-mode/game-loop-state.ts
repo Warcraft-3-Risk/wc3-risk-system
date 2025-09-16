@@ -136,6 +136,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onStartTurn(turn: number): void {
 		this.updateFogSettings(turn);
+		// ClientManager.getInstance().allocateClientSlot();
 
 		ScoreboardManager.getInstance().updateFull();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
@@ -243,11 +244,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
-		const killingUnitOwner = ClientManager.getInstance().getActualClientOwnerOfUnit(killingUnit);
+		const killingUnitOwner = ClientManager.getInstance().getOwnerOfUnit(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(killingUnitOwner));
 
 		if (
-			ClientManager.getInstance().getActualClientOwnerOfUnit(killingUnit) == GetOwningPlayer(dyingUnit) &&
+			ClientManager.getInstance().getOwnerOfUnit(killingUnit) == GetOwningPlayer(dyingUnit) &&
 			!IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)
 		) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {

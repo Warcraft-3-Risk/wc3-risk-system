@@ -14,9 +14,9 @@ export class CityDistributeState<T extends StateData> extends BaseState<T> {
 				//Prevent guards from moving and update unit counts
 				IssueImmediateOrder(city.guard.unit, 'stop');
 
-				if (ClientManager.getInstance().getActualClientOwnerOfUnit(city.guard.unit) != NEUTRAL_HOSTILE) {
+				if (ClientManager.getInstance().getOwnerOfUnit(city.guard.unit) != NEUTRAL_HOSTILE) {
 					GlobalGameData.matchPlayers
-						.find((x) => x.getPlayer() == ClientManager.getInstance().getActualClientOwnerOfUnit(city.guard.unit))
+						.find((x) => x.getPlayer() == ClientManager.getInstance().getOwnerOfUnit(city.guard.unit))
 						.trackedData.units.add(city.guard.unit);
 				}
 

@@ -7,6 +7,7 @@ import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { FogManager } from 'src/app/managers/fog-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
+import { ClientManager } from '../../services/client-manager';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -34,6 +35,8 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 		print('Resetting trees...');
 		TreeManager.getInstance().reset();
 		await Wait.forSeconds(1);
+
+		ClientManager.getInstance().reset();
 
 		this.nextState(this.stateData);
 	}

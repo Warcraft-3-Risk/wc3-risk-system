@@ -69,7 +69,6 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			player.trackedData.bonus.repositon();
 		});
 
-		// Allocate client slots
 		ClientManager.getInstance().allocateClientSlot();
 
 		// Setting up the scoreboard

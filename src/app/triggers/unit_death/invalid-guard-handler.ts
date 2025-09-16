@@ -10,7 +10,7 @@ export function InvalidGuardHandler(city: LandCity | PortCity, killingUnit: unit
 
 	if ((IsUnitType(killingUnit, UNIT_TYPE.SHIP) && !city.isPort()) || IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
 		newGuard = CreateUnit(
-			ClientManager.getInstance().getActualClientOwner(city.getOwner()),
+			ClientManager.getInstance().getOwner(city.getOwner()),
 			UNIT_ID.DUMMY_GUARD,
 			city.guard.defaultX,
 			city.guard.defaultY,
@@ -18,7 +18,7 @@ export function InvalidGuardHandler(city: LandCity | PortCity, killingUnit: unit
 		);
 	} else {
 		newGuard = CreateUnit(
-			ClientManager.getInstance().getActualClientOwnerOfUnit(killingUnit),
+			ClientManager.getInstance().getOwnerOfUnit(killingUnit),
 			UNIT_ID.DUMMY_GUARD,
 			city.guard.defaultX,
 			city.guard.defaultY,
@@ -27,7 +27,7 @@ export function InvalidGuardHandler(city: LandCity | PortCity, killingUnit: unit
 	}
 
 	if (IsUnitEnemy(newGuard, city.getOwner())) {
-		city.changeOwner(ClientManager.getInstance().getActualClientOwnerOfUnit(newGuard));
+		city.changeOwner(ClientManager.getInstance().getOwnerOfUnit(newGuard));
 	}
 
 	UnitToCity.delete(city.guard.unit);

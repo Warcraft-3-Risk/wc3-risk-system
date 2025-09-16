@@ -14,7 +14,7 @@ export function ReplaceGuard(city: City, searchGroup: group) {
 	DestroyGroup(searchGroup);
 
 	if (IsUnitEnemy(guardChoice, city.getOwner())) {
-		city.changeOwner(ClientManager.getInstance().getActualClientOwnerOfUnit(guardChoice));
+		city.changeOwner(ClientManager.getInstance().getOwnerOfUnit(guardChoice));
 	}
 
 	UnitToCity.delete(city.guard.unit);

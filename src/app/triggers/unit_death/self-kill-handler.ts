@@ -7,7 +7,7 @@ import { AlliedKillHandler } from './allied-kill-handler';
 import { ClientManager } from 'src/app/game/services/client-manager';
 
 export function SelfKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (city.getOwner() != ClientManager.getInstance().getActualClientOwnerOfUnit(killingUnit)) return null;
+	if (city.getOwner() != ClientManager.getInstance().getOwnerOfUnit(killingUnit)) return null;
 
 	const searchGroup: group = CreateGroup();
 

@@ -37,7 +37,7 @@ export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogStat
 				country.getCities().forEach((countryCity) => {
 					const unit: unit = countryCity.cop;
 
-					if (ClientManager.getInstance().getActualClientOwnerOfUnit(unit) !== NEUTRAL_HOSTILE) {
+					if (ClientManager.getInstance().getOwnerOfUnit(unit) !== NEUTRAL_HOSTILE) {
 						UnitShareVision(unit, playerHandle, true);
 
 						const playersWithVision = visionMap.get(unit) || [];

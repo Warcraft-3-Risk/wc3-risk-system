@@ -39,7 +39,7 @@ export function EnterRegionEvent() {
 
 			if (!guardChoice) {
 				guardChoice = CreateUnit(
-					ClientManager.getInstance().getActualClientOwnerOfUnit(trigUnit),
+					ClientManager.getInstance().getOwnerOfUnit(trigUnit),
 					UNIT_ID.DUMMY_GUARD,
 					city.guard.defaultX,
 					city.guard.defaultY,
@@ -49,7 +49,7 @@ export function EnterRegionEvent() {
 
 			//Change owner if guardChoice is an enemy of the city.
 			if (IsUnitEnemy(guardChoice, city.getOwner())) {
-				city.setOwner(ClientManager.getInstance().getActualClientOwnerOfUnit(guardChoice));
+				city.setOwner(ClientManager.getInstance().getOwnerOfUnit(guardChoice));
 			}
 
 			UnitToCity.delete(city.guard.unit);

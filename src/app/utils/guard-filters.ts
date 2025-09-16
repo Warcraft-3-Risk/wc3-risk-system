@@ -46,9 +46,7 @@ export function GetUnitsInRangeOfUnitByAllegiance(
 		y,
 		radius,
 		Filter(
-			() =>
-				city.isValidGuard(GetFilterUnit()) &&
-				allegianceCheck(GetFilterUnit(), ClientManager.getInstance().getActualClientOwnerOfUnit(killingUnit))
+			() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), ClientManager.getInstance().getOwnerOfUnit(killingUnit))
 		)
 	);
 }

@@ -4,6 +4,7 @@ import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
+import { debugPrint } from '../utils/debug-print';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 
@@ -72,7 +73,13 @@ export class Spawner implements Resetable, Ownable {
 		const amount: number = Math.min(this.spawnsPerStepWithMultiplier, this.maxSpawnsPerPlayerWithMultiplier - spawnCount);
 
 		for (let i = 0; i < amount; i++) {
-			let u: unit = CreateUnit(this.getOwner(), this.spawnType, GetUnitX(this.unit), GetUnitY(this.unit), 270);
+			let u: unit = CreateUnit(
+				ClientManager.getInstance().getClientOrPlayer(this.getOwner()),
+				this.spawnType,
+				GetUnitX(this.unit),
+				GetUnitY(this.unit),
+				270
+			);
 			UnitLagManager.getInstance().trackUnit(u);
 			let loc: location = GetUnitRallyPoint(this.unit);
 
@@ -119,7 +126,7 @@ export class Spawner implements Resetable, Ownable {
 	public setOwner(player: player): void {
 		if (player == null) player = NEUTRAL_HOSTILE;
 
-		SetUnitOwner(this._unit, ClientManager.getInstance().getActualClientOwner(player), true);
+		SetUnitOwner(this._unit, ClientManager.getInstance().getOwner(player), true);
 
 		if (!this.spawnMap.has(this.getOwner())) {
 			this.spawnMap.set(this.getOwner(), []);
@@ -131,7 +138,7 @@ export class Spawner implements Resetable, Ownable {
 
 	/** @returns The player that owns the spawner. */
 	public getOwner(): player {
-		return ClientManager.getInstance().getActualClientOwnerOfUnit(this._unit);
+		return ClientManager.getInstance().getOwnerOfUnit(this._unit);
 	}
 
 	/**
@@ -140,9 +147,9 @@ export class Spawner implements Resetable, Ownable {
 	 * @param {unit} unit - The deceased unit.
 	 */
 	public onDeath(player: player, unit: unit): void {
-		const index = this.spawnMap.get(ClientManager.getInstance().getActualClientOwner(player)).indexOf(unit);
+		const index = this.spawnMap.get(ClientManager.getInstance().getOwner(player)).indexOf(unit);
 
-		this.spawnMap.get(ClientManager.getInstance().getActualClientOwner(player)).splice(index, 1);
+		this.spawnMap.get(ClientManager.getInstance().getOwner(player)).splice(index, 1);
 
 		SPAWNER_UNITS.delete(unit);
 

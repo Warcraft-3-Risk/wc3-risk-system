@@ -34,7 +34,7 @@ export class UnitLagManager {
 		}
 
 		// Hide tracked unit on minimap
-		if (ClientManager.getInstance().getActualClientOwnerOfUnit(unit) == GetLocalPlayer()) {
+		if (ClientManager.getInstance().getOwnerOfUnit(unit) == GetLocalPlayer()) {
 			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 		} else {
 			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
@@ -42,7 +42,7 @@ export class UnitLagManager {
 
 		// Create a dummy minimap indicator unit that follows the tracked unit
 		const dummy = this.dummyPool.pop(
-			ClientManager.getInstance().getActualClientOwner(ClientManager.getInstance().getActualClientOwnerOfUnit(unit)),
+			ClientManager.getInstance().getOwner(ClientManager.getInstance().getOwnerOfUnit(unit)),
 			GetUnitX(unit),
 			GetUnitY(unit)
 		);
