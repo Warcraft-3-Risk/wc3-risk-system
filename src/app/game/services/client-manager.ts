@@ -1,6 +1,7 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
+import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 
 interface client extends player {}
@@ -82,6 +83,14 @@ export class ClientManager implements Resetable {
 		SetPlayerName(client, `${GetPlayerName(player)}'s Spawns|r`);
 		this.enableAdvancedControl(player, client, true);
 		this.enableAdvancedControl(client, player, true);
+
+		TeamManager.getInstance()
+			.getTeamFromPlayer(player)
+			.getMembers()
+			.forEach((member) => {
+				this.enableAdvancedControl(member.getPlayer(), client, true);
+				this.enableAdvancedControl(client, member.getPlayer(), true);
+			});
 	}
 
 	private enableAdvancedControl(playerA: player, playerB: player, value: boolean): void {
@@ -119,10 +128,19 @@ export class ClientManager implements Resetable {
 			activePlayers.forEach((activePlayer) => {
 				this.enableAdvancedControl(activePlayer.getPlayer(), client, false);
 				this.enableAdvancedControl(client, activePlayer.getPlayer(), false);
+
+				TeamManager.getInstance()
+					.getTeamFromPlayer(activePlayer.getPlayer())
+					.getMembers()
+					.forEach((member) => {
+						this.enableAdvancedControl(member.getPlayer(), client, false);
+						this.enableAdvancedControl(client, member.getPlayer(), false);
+					});
 			});
 		});
 
 		this.playerToClient.clear();
 		this.clientToPlayer.clear();
+		this.availableClients = [];
 	}
 }

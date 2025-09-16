@@ -1,6 +1,5 @@
 // PlayerClientManager is responsible for managing the players' clients in the game. The reason for this is to reduce the unit lag.
 
-import { UNIT_ID } from 'src/configs/unit-id';
 import { ClientManager } from './client-manager';
 import { DummyPoolManager } from './dummy-pool-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
@@ -63,12 +62,4 @@ export class UnitLagManager {
 			debugPrint(`UnitLagManager: ${GetUnitName(dummy)} is stopping tracking of ${GetUnitName(unit)}.`);
 		}
 	}
-
-	// public allocateToClient(): void {
-
-	// }
-
-	// public grantBountyToOwnerOfclient(unit: unit, amount: number): void {
-
-	// }
 }
