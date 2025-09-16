@@ -136,8 +136,9 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onStartTurn(turn: number): void {
 		this.updateFogSettings(turn);
-		// ClientManager.getInstance().allocateClientSlot();
-
+		ClientManager.getInstance().allocateClientSlot();
+		ScoreboardManager.getInstance().toggleVisibility(false); // Required to prevent shared control clients from overriding the scoreboard
+		ScoreboardManager.getInstance().toggleVisibility(true); // ^
 		ScoreboardManager.getInstance().updateFull();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		GlobalGameData.matchPlayers

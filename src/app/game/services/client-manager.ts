@@ -16,6 +16,8 @@ export class ClientManager implements Resetable {
 		return ClientManager.instance;
 	}
 
+	private availableClients: client[];
+
 	// Keeps track of each player's client
 	private playerToClient: Map<player, client>;
 
@@ -24,6 +26,7 @@ export class ClientManager implements Resetable {
 
 	private constructor() {
 		// Initialize player client manager
+		this.availableClients = [];
 		this.playerToClient = new Map<player, client>();
 		this.clientToPlayer = new Map<client, player>();
 	}
@@ -52,16 +55,23 @@ export class ClientManager implements Resetable {
 			return;
 		}
 
+		if (this.clientToPlayer.size >= 11) {
+			debugPrint('All client slots have already been allocated');
+			return;
+		}
+
 		const clients = this.getAvailableClientSlots();
+		this.availableClients = clients.filter((x) => !this.clientToPlayer.has(x));
 
 		debugPrint(`There are ${clients.length} available client slots`);
 		for (let playerIndex = 0; playerIndex < activePlayers.length; playerIndex++) {
 			// Only do this if the player does not already have a client slot
-			// if (!this.playerToClient.has(activePlayers[playerIndex].getPlayer())) {
-			this.playerToClient.set(activePlayers[playerIndex].getPlayer(), clients[playerIndex]);
-			this.clientToPlayer.set(clients[playerIndex], activePlayers[playerIndex].getPlayer());
-			this.givePlayerFullControlOfClient(activePlayers[playerIndex].getPlayer(), clients[playerIndex]);
-			// }
+			if (!this.playerToClient.has(activePlayers[playerIndex].getPlayer())) {
+				let client = this.availableClients.pop();
+				this.playerToClient.set(activePlayers[playerIndex].getPlayer(), client);
+				this.clientToPlayer.set(client, activePlayers[playerIndex].getPlayer());
+				this.givePlayerFullControlOfClient(activePlayers[playerIndex].getPlayer(), client);
+			}
 		}
 
 		debugPrint('Finished allocating client slots to players');
@@ -69,7 +79,7 @@ export class ClientManager implements Resetable {
 
 	public givePlayerFullControlOfClient(player: player, client: client): void {
 		SetPlayerColor(client, GetPlayerColor(player));
-		SetPlayerName(client, GetPlayerName(player) + NameManager.getInstance().getColorCode(player) + "'s Spawns|r");
+		SetPlayerName(client, `${GetPlayerName(player)}'s Spawns|r`);
 		this.enableAdvancedControl(player, client, true);
 		this.enableAdvancedControl(client, player, true);
 	}
