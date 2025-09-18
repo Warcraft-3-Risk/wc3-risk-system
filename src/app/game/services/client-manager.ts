@@ -1,8 +1,8 @@
 import { Resetable } from 'src/app/interfaces/resetable';
-import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { PLAYER_SLOTS } from 'src/app/utils/utils';
 
 interface client extends player {}
 
@@ -38,11 +38,10 @@ export class ClientManager implements Resetable {
 
 	// This method checks if there are less than 11 players and then allocates one client to each player
 	private getAvailableClientSlots(): client[] {
-		const slots = PlayerManager.getInstance()
-			.getAllPlayerSlotsExceptObservers()
-			.filter((x) => !PlayerManager.getInstance().isActive(x));
-
-		return slots;
+		let clients: client[] = [];
+		clients.push(...PlayerManager.getInstance().getEmptyPlayerSlots());
+		clients.push(...PlayerManager.getInstance().getEliminatedPlayers());
+		return clients;
 	}
 
 	public allocateClientSlot(): void {
