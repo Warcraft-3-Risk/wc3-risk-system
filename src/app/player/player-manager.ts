@@ -4,8 +4,7 @@ import { buildGuardHealthButton, buildGuardValueButton } from '../ui/player-pref
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
-import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
-import { GlobalGameData } from '../game/state/global-game-state';
+import { PLAYER_SLOTS } from '../utils/utils';
 
 // const banList: string[] = [
 // ];
@@ -73,6 +72,39 @@ export class PlayerManager {
 		return this._instance;
 	}
 
+	public getEmptyPlayerSlots(): player[] {
+		let players: player[] = [];
+		for (let i = 0; i <= PLAYER_SLOTS; i++) {
+			const player = Player(i);
+			const activePlayer = PlayerManager.getInstance().players.get(player);
+
+			// Find all slots that are not players
+			if (!activePlayer) {
+				players.push(player);
+			}
+		}
+		return players;
+	}
+
+	public getEliminatedPlayers(): player[] {
+		let players: player[] = [];
+		// Find all slots that are eliminated players with no units
+		for (let i = 0; i <= PLAYER_SLOTS; i++) {
+			const player = Player(i);
+			const activePlayer = PlayerManager.getInstance().players.get(player);
+
+			if (
+				activePlayer &&
+				activePlayer.status.isEliminated() &&
+				activePlayer.trackedData.units.size === 0 &&
+				activePlayer.trackedData.cities.cities.length === 0
+			) {
+				players.push(player);
+			}
+		}
+		return players;
+	}
+
 	public getCurrentActiveHumanPlayers(): ActivePlayer[] {
 		let activePlayers: ActivePlayer[] = [];
 
@@ -94,6 +126,23 @@ export class PlayerManager {
 		}
 
 		return activePlayers;
+	}
+
+	public getAllPlayerSlotsExceptObservers(): player[] {
+		let players: player[] = [];
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			const player = Player(i);
+
+			if (IsPlayerObserver(player)) {
+				this._observerFromHandle.set(player, new HumanPlayer(player));
+				continue;
+			}
+
+			players.push(player);
+		}
+
+		return players;
 	}
 
 	public activeToObs(player: player) {

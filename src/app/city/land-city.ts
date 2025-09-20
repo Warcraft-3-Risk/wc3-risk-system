@@ -10,6 +10,7 @@ import { CityToCountry } from '../country/country-map';
 import { TeamManager } from '../teams/team-manager';
 import { debugPrint } from '../utils/debug-print';
 import { LocalMessage } from '../utils/messages';
+import { ClientManager } from '../game/services/client-manager';
 
 /**
  * LandCity is a variant of City for land based terrain.
@@ -75,14 +76,16 @@ export class LandCity extends City {
 		}
 
 		// If owner then swap
-		if (GetOwningPlayer(targetedUnit) === this.getOwner()) {
+		if (ClientManager.getInstance().getOwnerOfUnit(targetedUnit) === this.getOwner()) {
 			debugPrint('If same owner then swap');
 			this.castHandler(targetedUnit);
 			return;
 		}
 
 		// If enemy team then don't swap
-		const shareTeam = TeamManager.getInstance().getTeamFromPlayer(GetOwningPlayer(targetedUnit)).playerIsInTeam(this.getOwner());
+		const shareTeam = TeamManager.getInstance()
+			.getTeamFromPlayer(ClientManager.getInstance().getOwnerOfUnit(targetedUnit))
+			.playerIsInTeam(this.getOwner());
 		if (!shareTeam) {
 			debugPrint("If enemy team then don't swap");
 			LocalMessage(triggerPlayer, `You can only switch guards with an ally unit!`, 'Sound\\Interface\\Error.flac');

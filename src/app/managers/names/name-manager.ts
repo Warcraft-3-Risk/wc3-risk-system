@@ -18,7 +18,7 @@ export class NameManager {
 	private constructor() {
 		this.names = new Map<player, PlayerNames>();
 
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
 			const p: player = Player(i);
 
 			this.names.set(p, new PlayerNames(GetPlayerName(p)));

@@ -49,6 +49,10 @@ export class ScoreboardManager {
 		}
 	}
 
+	public toggleVisibility(bool: boolean) {
+		this.iterateBoards((board) => board.setVisibility(bool));
+	}
+
 	public updateFull() {
 		this.iterateBoards((board) => board.updateFull());
 	}
@@ -89,10 +93,10 @@ export class ScoreboardManager {
 				? ` ${HexColors.RED}(Overtime)|r`
 				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
 
-			if(isLeaderCityCountHighlighted) {
-				this.setTitle(`${leaderDisplayName} ${HexColors.RED}${leaderCityCount}|r/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`)
+			if (isLeaderCityCountHighlighted) {
+				this.setTitle(`${leaderDisplayName} ${HexColors.RED}${leaderCityCount}|r/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`);
 			} else {
-				this.setTitle(`${leaderDisplayName} ${leaderCityCount}/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`)
+				this.setTitle(`${leaderDisplayName} ${leaderCityCount}/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`);
 			}
 		} else {
 			const overtimeSuffix = OvertimeManager.isOvertimeActive()
