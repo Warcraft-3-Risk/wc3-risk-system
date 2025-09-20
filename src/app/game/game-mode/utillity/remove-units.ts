@@ -1,10 +1,9 @@
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
-import { PLAYER_SLOTS } from 'src/app/utils/utils';
 import { UnitLagManager } from '../../services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 
 export function removeUnits(): void {
-	for (let i = 0; i <= PLAYER_SLOTS; i++) {
+	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 		const player = Player(i);
 		debugPrint(`Removing units for player ${GetPlayerName(player)} index ${i}`);
 

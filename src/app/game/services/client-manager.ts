@@ -1,8 +1,9 @@
 import { Resetable } from 'src/app/interfaces/resetable';
+import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { PLAYER_SLOTS } from 'src/app/utils/utils';
+import { PLAYER_COLORS } from 'src/app/utils/player-colors';
 
 interface client extends player {}
 
@@ -122,21 +123,23 @@ export class ClientManager implements Resetable {
 	}
 
 	reset(): void {
-		const activePlayers = Array.from(PlayerManager.getInstance().players.entries()).map(([, activePlayer]) => activePlayer);
-		Array.from(this.playerToClient.values()).forEach((client) => {
-			activePlayers.forEach((activePlayer) => {
-				this.enableAdvancedControl(activePlayer.getPlayer(), client, false);
-				this.enableAdvancedControl(client, activePlayer.getPlayer(), false);
-
-				TeamManager.getInstance()
-					.getTeamFromPlayer(activePlayer.getPlayer())
-					.getMembers()
-					.forEach((member) => {
-						this.enableAdvancedControl(member.getPlayer(), client, false);
-						this.enableAdvancedControl(client, member.getPlayer(), false);
-					});
+		for (let ci = 0; ci < bj_MAX_PLAYERS; ci++) {
+			PlayerManager.getInstance().players.forEach((_, p) => {
+				NameManager.getInstance().setColor(p, PLAYER_COLORS[GetPlayerId(p)]);
 			});
-		});
+			PlayerManager.getInstance()
+				.getEmptyPlayerSlots()
+				.forEach((p) => {
+					SetPlayerColor(p, PLAYER_COLORS[GetPlayerId(p)]);
+					NameManager.getInstance().setColor(p, PLAYER_COLORS[GetPlayerId(p)]);
+					NameManager.getInstance().setName(p, 'btag');
+				});
+
+			for (let pi = 0; pi < bj_MAX_PLAYERS; pi++) {
+				this.enableAdvancedControl(Player(ci), Player(pi), false);
+				this.enableAdvancedControl(Player(pi), Player(ci), false);
+			}
+		}
 
 		this.playerToClient.clear();
 		this.clientToPlayer.clear();

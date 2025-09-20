@@ -6,7 +6,6 @@ import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { FogManager } from 'src/app/managers/fog-manager';
-import { PlayerManager } from 'src/app/player/player-manager';
 import { ClientManager } from '../../services/client-manager';
 
 export class ResetState<T extends StateData> extends BaseState<T> {

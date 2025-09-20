@@ -4,8 +4,6 @@ import { buildGuardHealthButton, buildGuardValueButton } from '../ui/player-pref
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
-import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
-import { GlobalGameData } from '../game/state/global-game-state';
 import { PLAYER_SLOTS } from '../utils/utils';
 
 // const banList: string[] = [
