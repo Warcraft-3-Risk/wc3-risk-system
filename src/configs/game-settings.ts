@@ -9,7 +9,7 @@ export const STARTING_INCOME: number = 4;
 export const STARTING_COUNTDOWN: number = 10;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
-export const TURN_DURATION_IN_SECONDS: number = 30;
+export const TURN_DURATION_IN_SECONDS: number = 60;
 
 //This is the duration of a tick in seconds. 1 second by default.
 export const TICK_DURATION_IN_SECONDS: number = 1;
@@ -30,7 +30,7 @@ export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 export const STFU_DURATION: number = 300;
 
 //This represents whether debug messages should be printed. Default is false.
-export const SHOW_DEBUG_PRINTS = true;
+export const SHOW_DEBUG_PRINTS = false;
 
 //This represents whether player names should be exported
 export const ENABLE_EXPORT_SHUFFLED_PLAYER_LIST: boolean = false;
