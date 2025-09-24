@@ -10,6 +10,8 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 import { Quests } from 'src/app/quests/quests';
 import { FogManager } from 'src/app/managers/fog-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
+import { LocalMessage } from 'src/app/utils/messages';
+import { HexColors } from 'src/app/utils/hex-colors';
 
 export class GameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -48,6 +50,14 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 
 	onPlayerRestart(player: ActivePlayer) {
 		const playerIsParticipant = GlobalGameData.matchPlayers.find((x) => x.getPlayer() == player.getPlayer());
+
+		if (SettingsContext.getInstance().isFFA()) {
+			if (GetLocalPlayer() == player.getPlayer()) {
+				LocalMessage(GetLocalPlayer(), `${HexColors.RED}You can not restart in FFA mode!|r`, 'Sound\\Interface\\Error.flac');
+			}
+			return;
+		}
+
 		if (playerIsParticipant) {
 			this.nextState(this.stateData);
 		}
