@@ -30,7 +30,7 @@ export class ReplayManager {
     'ss_deaths'   : 'a',
     'ss_kd'       : 'S',
     'tank_kills'  : 't',
-    'tank_deaths' : 'b',
+    'tank_deaths' : 'A',
     'tank_kd'     : 'T'
   };
 
