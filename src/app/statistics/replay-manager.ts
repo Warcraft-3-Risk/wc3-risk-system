@@ -57,9 +57,7 @@ export class ReplayManager {
 
     const settings: Settings = SettingsContext.getInstance().getSettings();
 
-    let fields;
-    
-    fields = [];
+    let fields: string[] = [];
 
     for (let [ key, value ] of Object.entries(this.keys)) {
       fields.push(`${value}=${key}`);
