@@ -22,7 +22,7 @@ export class ReplayManager {
     'gold_earned' : 'G',
     'bounty'      : 'b',
     'bonus'       : 'B',
-    'denies'      : 'd',
+    'denies'      : 'n',
     'kills'       : 'k',
     'deaths'      : 'd',
     'kd'          : 'K',
