@@ -216,5 +216,5 @@ export class ReplayManager {
 
       record(`player ${playerId} ${fields.join (' ')}`);
     });
-  } 
+  }
 }
