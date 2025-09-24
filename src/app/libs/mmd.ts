@@ -5,7 +5,7 @@ const ESCAPED = `${ESCAPE}"`;
 
 let cache: gamecache;
 let ready: boolean = false;
-let queue: string [] = [];
+let queue: string[] = [];
 let messageId: number = 1;
 
 addScriptHook(W3TS_HOOK.MAIN_AFTER, (): void => {
