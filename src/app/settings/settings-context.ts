@@ -30,7 +30,7 @@ export class SettingsContext {
 				Fog: 0,
 				Promode: 0,
 				Overtime: {
-					option: 1,
+					option: 0,
 				},
 			});
 		}
