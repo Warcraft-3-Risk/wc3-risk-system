@@ -20,11 +20,15 @@ import { debugPrint } from 'src/app/utils/debug-print';
 import { FogManager } from 'src/app/managers/fog-manager';
 import { AnnounceOnLocation } from '../../announcer/announce';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
+import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { ClientManager } from '../../services/client-manager';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
 		GlobalGameData.matchState = 'inProgress';
+
+		ReplayManager.getInstance().onRoundStart();
+
 		this.onStartTurn(GlobalGameData.turnCount);
 
 		const _matchLoopTimer: timer = CreateTimer();
@@ -152,6 +156,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		});
 
 		this.messageGameState();
+		ReplayManager.getInstance().onTurnStart();
 	}
 
 	onEndTurn(turn: number): void {

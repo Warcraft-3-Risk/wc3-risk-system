@@ -49,3 +49,6 @@ export const W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER: boolean = true;
 
 // This represents the duration of the W3C draw vote in seconds. Default is 30 seconds.
 export const W3C_DRAW_DURATION: number = 120;
+
+// Enable/disable emitting player statistics to W3MMD (MMD) during the match and on game end.
+export const MMD_ENABLED: boolean = true;
