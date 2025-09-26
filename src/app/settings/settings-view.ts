@@ -143,7 +143,7 @@ export class SettingsView {
 	private overtimePopup() {
 		// Initial setup
 		let popup = BlzGetFrameByName("OvertimePopup", 0)
-		BlzFrameSetValue(popup, 1)
+		BlzFrameSetValue(popup, 0)
 
 		// Create edit triggers
 		const t: trigger = CreateTrigger();
