@@ -4,6 +4,7 @@ import { SettingsContext } from 'src/app/settings/settings-context';
 import { GlobalGameData } from '../../state/global-game-state';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
+import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { ActivePlayer } from 'src/app/player/types/active-player';
@@ -44,6 +45,8 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 
 		SetTimeOfDayScale(0);
 		SetTimeOfDay(12.0);
+
+		ReplayManager.getInstance().onRoundEnd();
 	}
 
 	onPlayerRestart(player: ActivePlayer) {

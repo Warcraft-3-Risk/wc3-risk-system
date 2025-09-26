@@ -13,6 +13,7 @@ import { clearTickUI } from '../utillity/update-ui';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { TreeManager } from '../../services/tree-service';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
+import { ReplayManager } from 'src/app/statistics/replay-manager';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -98,5 +99,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		}
 
 		this.nextState(this.stateData);
+
+		ReplayManager.getInstance().initialize();
 	}
 }
