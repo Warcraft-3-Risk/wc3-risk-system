@@ -7,8 +7,6 @@ import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { GlobalGameData } from '../game/state/global-game-state';
-import { ClientManager } from '../game/services/client-manager';
-import { PLAYER_COLOR_CODES_MAP } from '../utils/player-colors';
 
 export class StandardBoard extends Scoreboard {
 	private players: ActivePlayer[];
@@ -129,10 +127,7 @@ export class StandardBoard extends Scoreboard {
 	 */
 	private updatePlayerData(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
 		// Name
-		const displayName = !ClientManager.getInstance().getClientByPlayer(player.getPlayer())
-			? `${NameManager.getInstance().getDisplayName(player.getPlayer())}`
-			: `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(player.getPlayer()))}${NameManager.getInstance().getBtag(player.getPlayer())}|r`;
-		this.setItemValue(displayName, row, this.PLAYER_COL);
+		this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
 		// Cities
 		const requiredCities = VictoryManager.getCityCountWin();
