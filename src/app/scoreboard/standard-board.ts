@@ -118,7 +118,7 @@ export class StandardBoard extends Scoreboard {
 		this.board = null;
 	}
 
-	/**
+	/** *
 	 * Sets the columns of the scoreboard for a specific player's row.
 	 * @param {ActivePlayer} player - The player object.
 	 * @param {number} row - The row index.
@@ -126,27 +126,46 @@ export class StandardBoard extends Scoreboard {
 	 * @param {TrackedData} data - The tracked data for the player.
 	 */
 	private updatePlayerData(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
-		// Name
-		this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
+		const grey = HexColors.LIGHT_GRAY;
 
-		// Cities
-		const requiredCities = VictoryManager.getCityCountWin();
-		const cities = data.cities.cities.length;
-		const isCityCountHighlighted = cities >= requiredCities;
-		const cityTextColor = isCityCountHighlighted ? HexColors.RED : textColor;
-		this.setItemValue(`${cityTextColor}${cities}`, row, this.CITIES_COL);
+		if (player.status.isEliminated()) {
+			// --- Eliminated Player Formatting ---
+			this.setItemValue(`${grey}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
-		// Kills
-		this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).killValue}`, row, this.KILLS_COL);
+			// Cities
+			this.setItemValue(`${grey}${data.cities.cities.length}`, row, this.CITIES_COL);
 
-		// Deaths
-		this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
+			// Kills & Deaths
+			const kd = data.killsDeaths.get(player.getPlayer());
+			this.setItemValue(`${grey}${kd.killValue}`, row, this.KILLS_COL);
+			this.setItemValue(`${grey}${kd.deathValue}`, row, this.DEATHS_COL);
 
-		// Status
-		if (player.status.isNomad() || player.status.isSTFU()) {
-			this.setItemValue(`${player.status.status} ${player.status.statusDuration}`, row, this.STATUS_COL);
-		} else {
+			// Status
 			this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
+
+		} else {
+			// --- Alive / Active Player Formatting ---
+
+			// Name
+			this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
+
+			// Cities
+			const requiredCities = VictoryManager.getCityCountWin();
+			const cities = data.cities.cities.length;
+			const isCityCountHighlighted = cities >= requiredCities;
+			const cityTextColor = isCityCountHighlighted ? HexColors.RED : textColor;
+			this.setItemValue(`${cityTextColor}${cities}`, row, this.CITIES_COL);
+
+			// Kills / Deaths (no combat highlight logic here, but you could add it if needed)
+			this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).killValue}`, row, this.KILLS_COL);
+			this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
+
+			// Status
+			if (player.status.isNomad() || player.status.isSTFU()) {
+				this.setItemValue(`${player.status.status} ${player.status.statusDuration}`, row, this.STATUS_COL);
+			} else {
+				this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
+			}
 		}
 	}
 }
