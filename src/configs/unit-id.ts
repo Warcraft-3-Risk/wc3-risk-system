@@ -26,6 +26,7 @@ export const UNIT_ID = {
 	BATTLESHIP_SS: FourCC('s004'),
 	//Dummy Unit
 	DUMMY_GUARD: FourCC('u050'),
+	DUMMY_MINIMAP_INDICATOR: FourCC('u00A'),
 	//Special Units
 	CAMERA_LOCK_UNIT: FourCC('u051'),
 	DUMMY_CASTER: FourCC('u052'),

@@ -85,8 +85,6 @@ export class ModeSelection {
 
 		settings.initStrategies();
 		settings.applyStrategy('GameType');
-		settings.applyStrategy('Diplomacy');
-		settings.applyStrategy('Promode');
 		settings.applyStrategy('Overtime');
 
 		Quests.getInstance().AddSettingsQuest(settings);

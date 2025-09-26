@@ -1,9 +1,13 @@
 import { ABILITY_ID } from '../../configs/ability-id';
+import { ClientManager } from '../game/services/client-manager';
+import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { TimedEvent } from '../libs/timer/timed-event';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
+import { debugPrint } from '../utils/debug-print';
 import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { PLAYER_SLOTS } from '../utils/utils';
+import { Wait } from '../utils/wait';
 
 type Transport = {
 	unit: unit;
@@ -29,6 +33,10 @@ const AUTO_LOAD_DURATION: number = 600;
  * - IsUnitLoaded: Check if given unit is loaded into any transport.
  */
 export class TransportManager {
+	// Static queue and timer for delayed tracking
+	private static delayedTrackQueue: unit[] = [];
+	private static delayedTrackTimer: timer = CreateTimer();
+	private static delayedTrackTimerRunning: boolean = false;
 	private static instance: TransportManager;
 	private transports: Map<unit, Transport>;
 
@@ -124,6 +132,9 @@ export class TransportManager {
 
 				let loadedUnit: unit = GetLoadedUnit();
 
+				// Untrack the unit since it's now loaded and managed by the transport
+				UnitLagManager.getInstance().untrackUnit(loadedUnit);
+
 				this.transports.get(transport).cargo.push(loadedUnit);
 
 				transport = null;
@@ -158,12 +169,29 @@ export class TransportManager {
 						BlzPauseUnitEx(transport.unit, true);
 						BlzPauseUnitEx(transport.unit, false);
 						IssueImmediateOrder(transport.unit, 'stop');
-						ErrorMsg(GetOwningPlayer(transport.unit), 'You may only unload on pebble terrain!');
+						ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 					} else {
 						const index: number = transport.cargo.indexOf(GetOrderTargetUnit());
 
 						if (index > -1) {
-							transport.cargo.splice(index, 1);
+							const unloadedUnits = transport.cargo.splice(index, 1);
+							unloadedUnits.forEach((unit) => {
+								TransportManager.delayedTrackQueue.push(unit);
+							});
+
+							// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
+							// Consider moving the timer into the UnitLagManager.
+							if (!TransportManager.delayedTrackTimerRunning) {
+								TransportManager.delayedTrackTimerRunning = true;
+								TimerStart(TransportManager.delayedTrackTimer, 0.1, false, () => {
+									TransportManager.delayedTrackQueue.forEach((unit) => {
+										debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
+										UnitLagManager.getInstance().trackUnit(unit);
+									});
+									TransportManager.delayedTrackQueue = [];
+									TransportManager.delayedTrackTimerRunning = false;
+								});
+							}
 						}
 					}
 				}
@@ -218,10 +246,10 @@ export class TransportManager {
 					IssueImmediateOrder(transport.unit, 'stop');
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
-					ErrorMsg(GetOwningPlayer(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 				} else if (GetSpellAbilityId() == ABILITY_ID.UNLOAD) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(GetOwningPlayer(transport.unit), 'You may only unload on pebble terrain!');
+					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 				}
 
 				return false;
@@ -245,7 +273,13 @@ export class TransportManager {
 				const transport: Transport = this.transports.get(GetTriggerUnit());
 
 				if (GetSpellAbilityId() == ABILITY_ID.UNLOAD) {
+					debugPrint(`Unload Spell End Cast Event Triggered for unit: ${GetUnitName(transport.unit)}`);
+					const unloadedUnits = transport.cargo.filter((unit) => !IsUnitInTransport(unit, transport.unit));
 					transport.cargo = transport.cargo.filter((unit) => IsUnitInTransport(unit, transport.unit));
+					unloadedUnits.forEach((unit) => {
+						debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
+						UnitLagManager.getInstance().trackUnit(unit);
+					});
 				}
 
 				return false;

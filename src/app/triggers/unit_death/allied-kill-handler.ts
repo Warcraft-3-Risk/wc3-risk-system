@@ -2,6 +2,7 @@ import { GetUnitsInRangeByAllegiance, GetUnitsInRangeOfUnitByAllegiance } from '
 import { SmallSearchRadius } from './search-radii';
 import { City } from 'src/app/city/city';
 import { ReplaceGuard } from './replace-guard';
+import { ClientManager } from 'src/app/game/services/client-manager';
 
 export function AlliedKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
 	if (!IsUnitAlly(killingUnit, city.getOwner())) return null;
@@ -19,7 +20,7 @@ export function AlliedKillHandler(city: City, dyingUnit: unit, killingUnit: unit
 	//Found valid guard units, set unit as guard
 	if (BlzGroupGetSize(searchGroup) >= 1) {
 		ReplaceGuard(city, searchGroup);
-		city.setOwner(GetOwningPlayer(killingUnit));
+		city.setOwner(ClientManager.getInstance().getOwnerOfUnit(killingUnit));
 		DestroyGroup(searchGroup);
 		return true;
 	}

@@ -1,4 +1,3 @@
-import { NameManager } from 'src/app/managers/names/name-manager';
 import { VictoryManager } from 'src/app/managers/victory-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
@@ -24,12 +23,8 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		clearTickUI();
 		StatisticsController.getInstance().setViewVisibility(false);
 
-		// Assign player names as colors for non-promode games
-		if (!SettingsContext.getInstance().isPromode()) {
-			GlobalGameData.matchPlayers.forEach((val) => {
-				NameManager.getInstance().setName(val.getPlayer(), 'color');
-			});
-		}
+		SettingsContext.getInstance().applyStrategy('Promode');
+		SettingsContext.getInstance().applyStrategy('Diplomacy');
 
 		// Remove irrelevant players from the game
 		GlobalGameData.matchPlayers.forEach((val) => {

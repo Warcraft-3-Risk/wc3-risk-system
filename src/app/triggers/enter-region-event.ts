@@ -5,6 +5,7 @@ import { UNIT_TYPE } from '../utils/unit-types';
 import { GetUnitsInRangeByAllegiance } from '../utils/guard-filters';
 import { CompareUnitByValue } from '../utils/unit-comparisons';
 import { UNIT_ID } from 'src/configs/unit-id';
+import { ClientManager } from '../game/services/client-manager';
 
 export const EnterRegionTrigger: trigger = CreateTrigger();
 
@@ -37,12 +38,18 @@ export function EnterRegionEvent() {
 			let guardChoice: unit = IsUnitType(trigUnit, UNIT_TYPE.TRANSPORT) ? null : getGuardChoice(g, trigUnit, city);
 
 			if (!guardChoice) {
-				guardChoice = CreateUnit(GetOwningPlayer(trigUnit), UNIT_ID.DUMMY_GUARD, city.guard.defaultX, city.guard.defaultY, 270);
+				guardChoice = CreateUnit(
+					ClientManager.getInstance().getOwnerOfUnit(trigUnit),
+					UNIT_ID.DUMMY_GUARD,
+					city.guard.defaultX,
+					city.guard.defaultY,
+					270
+				);
 			}
 
 			//Change owner if guardChoice is an enemy of the city.
 			if (IsUnitEnemy(guardChoice, city.getOwner())) {
-				city.setOwner(GetOwningPlayer(guardChoice));
+				city.setOwner(ClientManager.getInstance().getOwnerOfUnit(guardChoice));
 			}
 
 			UnitToCity.delete(city.guard.unit);

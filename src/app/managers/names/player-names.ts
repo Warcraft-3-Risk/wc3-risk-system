@@ -2,16 +2,18 @@
  * Responsible for storing and managing a player's names.
  */
 export class PlayerNames {
+	private _displayName: string;
 	private readonly _btag: string;
 	private readonly _acct: string;
 	private _color: string;
 	private _country?: string;
+	private _displayColorCode?: string;
 
 	/**
 	 * Initializes the BattleTag and account name based on the provided name.
 	 * @param name - The name to be processed.
 	 */
-	constructor(name: string) {
+	constructor(name: string, colorCode: string) {
 		const splitName = name.split(' ')[0];
 
 		if (splitName === 'Computer' || splitName === 'Local') {
@@ -23,6 +25,8 @@ export class PlayerNames {
 		}
 
 		this._acct = this._btag.split('#')[0];
+		this._displayName = name;
+		this._displayColorCode = colorCode;
 	}
 
 	/**
@@ -67,5 +71,34 @@ export class PlayerNames {
 	 */
 	public get country() {
 		return this._country;
+	}
+
+	/**
+	 * Sets the display name for the player.
+	 * @param displayName - The new display name.
+	 */
+	public set displayName(displayName: string) {
+		this._displayName = displayName;
+	}
+
+	/**
+	 * @returns The display name of the player.
+	 */
+	public get displayName() {
+		return this._displayName;
+	}
+
+	/**
+	 * Sets the display color code for the player.
+	 * @param displayColorCode - The new display color code.
+	 */
+	public set displayColorCode(displayColorCode: string) {
+		this._displayColorCode = displayColorCode;
+	}
+	/**
+	 * @returns The display color code of the player.
+	 */
+	public get displayColorCode() {
+		return this._displayColorCode;
 	}
 }
