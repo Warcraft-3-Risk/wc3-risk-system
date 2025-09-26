@@ -10,6 +10,7 @@ interface client extends player {}
 export class ClientManager implements Resetable {
 	// This class will manage the player clients and their interactions.
 	private static instance: ClientManager;
+	private static MAX_PLAYERS_FOR_CLIENT_ALLOCATION = 11;
 
 	public static getInstance(): ClientManager {
 		if (!ClientManager.instance) {
@@ -37,7 +38,7 @@ export class ClientManager implements Resetable {
 		return this.playerToClient.get(player) as player;
 	}
 
-	// This method checks if there are less than 11 players and then allocates one client to each player
+	// This method checks if there are less than MAX_PLAYERS_FOR_CLIENT_ALLOCATION players and then allocates one client to each player
 	private getAvailableClientSlots(): client[] {
 		let clients: client[] = [];
 		clients.push(...PlayerManager.getInstance().getEmptyPlayerSlots());
@@ -50,13 +51,13 @@ export class ClientManager implements Resetable {
 			.map(([, activePlayer]) => activePlayer)
 			.filter((x) => x.status.isActive());
 
-		// Only allocate a client slot if there are less than 11 players
-		if (activePlayers.length > 11) {
+		// Only allocate a client slot if there are less than MAX_PLAYERS_FOR_CLIENT_ALLOCATION players
+		if (activePlayers.length > ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
 			debugPrint('Too many active players to allocate client slots');
 			return;
 		}
 
-		if (this.clientToPlayer.size >= 11) {
+		if (this.clientToPlayer.size >= ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
 			debugPrint('All client slots have already been allocated');
 			return;
 		}

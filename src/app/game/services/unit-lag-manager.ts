@@ -32,8 +32,11 @@ export class UnitLagManager {
 			return;
 		}
 
-		// Hide tracked unit on minimap
-		if (ClientManager.getInstance().getOwnerOfUnit(unit) == GetLocalPlayer()) {
+		// Hide tracked unit on minimap - also hides the unit for the client themselves if they own the unit
+		if (
+			ClientManager.getInstance().getOwnerOfUnit(unit) == GetLocalPlayer() ||
+			ClientManager.getInstance().getPlayerByClient(ClientManager.getInstance().getOwnerOfUnit(unit))
+		) {
 			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 		} else {
 			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);

@@ -1,6 +1,7 @@
 import { PLAYER_COLOR_CODES_MAP, PLAYER_COLOR_MAP } from 'src/app/utils/player-colors';
 import { PlayerNames } from './player-names';
 import { isNonEmptySubstring } from 'src/app/utils/utils';
+import { ClientManager } from 'src/app/game/services/client-manager';
 
 type Names = 'btag' | 'acct' | 'color' | 'country';
 
