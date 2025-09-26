@@ -16,8 +16,8 @@ export const OvertimeStrings: Record<number, string> = {
 };
 
 export const OvertimeColors: Record<number, string> = {
-	0: `${HexColors.RED}`,
-	1: `${HexColors.GREEN}`,
+	0: `${HexColors.GREEN}`,
+	1: `${HexColors.RED}`,
 	2: `${HexColors.RED}`,
 	3: `${HexColors.RED}`,
 };
