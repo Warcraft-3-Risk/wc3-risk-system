@@ -81,8 +81,9 @@ export class StandardBoard extends Scoreboard {
 			if (player.status.isAlive() || player.status.isNomad()) {
 				this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
 			} else {
-				this.setItemValue(`${textColor}-`, row, 2);
+				this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, 2);
 			}
+
 			this.updatePlayerData(player, row, textColor, data);
 			row++;
 		});
@@ -128,8 +129,8 @@ export class StandardBoard extends Scoreboard {
 	private updatePlayerData(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
 		const grey = HexColors.LIGHT_GRAY;
 
+		// --- Eliminated Player Formatting ---
 		if (player.status.isEliminated()) {
-			// --- Eliminated Player Formatting ---
 			this.setItemValue(`${grey}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
 			// Cities
@@ -143,9 +144,8 @@ export class StandardBoard extends Scoreboard {
 			// Status
 			this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
 
-		} else {
 			// --- Alive / Active Player Formatting ---
-
+		} else {
 			// Name
 			this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
