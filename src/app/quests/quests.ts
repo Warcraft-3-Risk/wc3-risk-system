@@ -105,8 +105,8 @@ export class Quests {
 		const description = `Overtime is a feature designed to help conclude games more efficiently by gradually reducing the number of cities required for victory. Once activated, each turn decreases the victory threshold by one city until a player wins.
 			
 			There are four Overtime settings:
-			1. Turbo Mode: Overtime starts immediately, accelerating the game pace early on.
-			2. Medium Mode: Overtime starts at turn 30, allowing a longer game before the mechanic activates. This is the default setting.
+			1. Turbo Mode: Overtime starts immediately, accelerating the game pace early on. This is the default setting.
+			2. Medium Mode: Overtime starts at turn 30, allowing a longer game before the mechanic activates. 
 			3. Extended Mode: Overtime starts at turn 60, allowing for extended gameplay before the mechanic activates.
 			4. Off: Overtime is disabled.
 			
