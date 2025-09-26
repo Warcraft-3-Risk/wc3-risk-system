@@ -112,6 +112,38 @@ export class ObserverBoard extends Scoreboard {
 	}
 
 	private setColumns(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
+		if (player.status.isEliminated()) {
+			this.setEliminatedColumns(player, row, data);
+		} else {
+			this.setNormalColumns(player, row, textColor, data);
+		}
+	}
+
+	private setEliminatedColumns(player: ActivePlayer, row: number, data: TrackedData) {
+		const grey = HexColors.LIGHT_GRAY;
+
+		// Name
+		this.setItemValue(`${grey}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
+
+		// Income
+		this.setItemValue(`${grey}-`, row, this.INCOME_COL);
+
+		// Gold
+		this.setItemValue(`${grey}-`, row, this.GOLD_COL);
+
+		// Cities
+		this.setItemValue(`${grey}${data.cities.cities.length}`, row, this.CITIES_COL);
+
+		// Kills & Deaths
+		const kd = data.killsDeaths.get(player.getPlayer());
+		this.setItemValue(`${grey}${kd.killValue}`, row, this.KILLS_COL);
+		this.setItemValue(`${grey}${kd.deathValue}`, row, this.DEATHS_COL);
+
+		// Status
+		this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
+	}
+
+	private setNormalColumns(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
 		// Name
 		this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
@@ -130,7 +162,9 @@ export class ObserverBoard extends Scoreboard {
 
 		// Gold
 		const playerGold = GetPlayerState(player.getPlayer(), PLAYER_STATE_RESOURCE_GOLD);
-		this.setItemValue(`${textColor}${playerGold}`, row, this.GOLD_COL);
+		const isPlayerGoldHighlighted = playerGold === 0;
+		const playerGoldTextColor = isPlayerGoldHighlighted ? HexColors.RED : textColor;
+		this.setItemValue(`${playerGoldTextColor}${playerGold}`, row, this.GOLD_COL);
 
 		// Cities
 		const requiredCities = VictoryManager.getCityCountWin();
