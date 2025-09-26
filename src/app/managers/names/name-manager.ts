@@ -22,7 +22,7 @@ export class NameManager {
 		for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
 			const p: player = Player(i);
 
-			this.names.set(p, new PlayerNames(GetPlayerName(p)));
+			this.names.set(p, new PlayerNames(GetPlayerName(p), PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))));
 			SetPlayerName(p, 'Player');
 		}
 	}
@@ -85,31 +85,30 @@ export class NameManager {
 	}
 
 	/**
-	 * Sets the name of a player based on a specified type ('btag', 'acct', or 'color').
+	 * Sets the name of a player based on a specified type ('btag', 'acct', 'color', 'country').
 	 * @param p - The player object.
 	 * @param name - The type of name to set.
 	 */
 	public setName(p: player, name: Names) {
 		switch (name) {
 			case 'btag':
-				SetPlayerName(p, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).btag}|r`);
+				this.names.get(p).displayName = `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).btag}|r`;
 				break;
-
 			case 'acct':
-				SetPlayerName(p, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).acct}|r`);
+				this.names.get(p).displayName = `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).acct}|r`;
 				break;
-
 			case 'color':
-				SetPlayerName(p, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).color}|r`);
+				this.names.get(p).displayName = `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).color}|r`;
 				break;
-
 			case 'country':
-				SetPlayerName(p, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).country}|r`);
+				this.names.get(p).displayName = `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${this.names.get(p).country}|r`;
 				break;
-
 			default:
 				break;
 		}
+
+		this.names.get(p).displayColorCode = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p));
+		SetPlayerName(p, this.names.get(p).displayName);
 	}
 
 	/**
@@ -117,7 +116,7 @@ export class NameManager {
 	 * @returns The display name of the player, including color codes.
 	 */
 	public getDisplayName(p: player): string {
-		return `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))}${GetPlayerName(p)}|r`;
+		return this.names.get(p).displayName;
 	}
 
 	/**
@@ -163,6 +162,12 @@ export class NameManager {
 		SetPlayerColor(p, color);
 
 		this.names.get(p).color = colorName;
+	}
+	/**
+	 * @returns The display color code of the player.
+	 */
+	public getDisplayColorCode(p: player): string {
+		return this.names.get(p).displayColorCode;
 	}
 
 	/**

@@ -1,6 +1,7 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
+import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { PLAYER_COLORS } from 'src/app/utils/player-colors';
@@ -80,8 +81,14 @@ export class ClientManager implements Resetable {
 	}
 
 	public givePlayerFullControlOfClient(player: player, client: client): void {
+		if (SettingsContext.getInstance().isPromode()) {
+			NameManager.getInstance().setName(client, 'acct');
+		} else {
+			NameManager.getInstance().setName(client, 'btag');
+		}
+
 		SetPlayerColor(client, GetPlayerColor(player));
-		SetPlayerName(client, `${GetPlayerName(player)}'s Spawns|r`);
+		SetPlayerName(client, `${GetPlayerName(player)}'s Spawns|r [${NameManager.getInstance().getDisplayName(client)}]`);
 		this.enableAdvancedControl(player, client, true);
 		this.enableAdvancedControl(client, player, true);
 
