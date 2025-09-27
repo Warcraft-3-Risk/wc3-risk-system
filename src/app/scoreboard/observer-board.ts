@@ -115,7 +115,7 @@ export class ObserverBoard extends Scoreboard {
 		if (player.status.isEliminated()) {
 			this.setEliminatedColumns(player, row, data);
 		} else {
-			this.setNormalColumns(player, row, textColor, data);
+			this.setActiveColumns(player, row, textColor, data);
 		}
 	}
 
@@ -147,7 +147,7 @@ export class ObserverBoard extends Scoreboard {
 		}
 	}
 
-	private setNormalColumns(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
+	private setActiveColumns(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
 		// Name
 		this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
