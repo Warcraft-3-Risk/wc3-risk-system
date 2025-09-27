@@ -90,16 +90,11 @@ function updateStrings(wtsDir: string | undefined, w3iDir: string | undefined, c
 	let wtsBuffer = fs.readFileSync(wtsDir, 'utf8');
 
 	const wts = new War3MapWts();
-	// This is the hardcoded string of the map name.
-	// We have to observe if this changes at any point, then this logic might break.
-	const mapNameStringId = 7531;
 
 	wts.load(wtsBuffer);
-
-	wts.setString(mapNameStringId, `|cffffcc00${configs.mapName} ${configs.mapVersion}|r`);
+	wts.setString(configs.mapNameStringId, `|cffffcc00${configs.mapName} ${configs.mapVersion}|r`);
 
 	wtsBuffer = wts.save();
-
 	fs.writeFileSync(wtsDir, wtsBuffer);
 }
 

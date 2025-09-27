@@ -1,6 +1,7 @@
 {
 	"mapFolder": "risk_europe.w3x",
 	"mapName": "Risk Europe",
+	"mapNameStringId": 7531,
 	"mapVersion": "${TAG_NAME}",
 	"w3cModeEnabled": "${W3C_MODE_ENABLED}",
 	"minifyScript": false,
