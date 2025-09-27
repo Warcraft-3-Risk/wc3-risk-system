@@ -1,5 +1,6 @@
 // PlayerClientManager is responsible for managing the players' clients in the game. The reason for this is to reduce the unit lag.
 
+import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { ClientManager } from './client-manager';
 import { DummyPoolManager } from './dummy-pool-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
@@ -61,5 +62,13 @@ export class UnitLagManager {
 			BlzSetUnitBooleanFieldBJ(dummy, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 			debugPrint(`UnitLagManager: ${GetUnitName(dummy)} is stopping tracking of ${GetUnitName(unit)}.`);
 		}
+	}
+
+	public static IsUnitAlly(unit: unit, player: player): boolean {
+		return IsUnitAlly(unit, player) && !IsUnitType(unit, UNIT_TYPE.MINIMAP_INDICATOR);
+	}
+
+	public static IsUnitEnemy(unit: unit, player: player): boolean {
+		return IsUnitEnemy(unit, player) && !IsUnitType(unit, UNIT_TYPE.MINIMAP_INDICATOR);
 	}
 }

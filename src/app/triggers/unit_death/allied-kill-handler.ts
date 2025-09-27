@@ -3,18 +3,32 @@ import { SmallSearchRadius } from './search-radii';
 import { City } from 'src/app/city/city';
 import { ReplaceGuard } from './replace-guard';
 import { ClientManager } from 'src/app/game/services/client-manager';
+import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 
 export function AlliedKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (!IsUnitAlly(killingUnit, city.getOwner())) return null;
+	if (!UnitLagManager.IsUnitAlly(killingUnit, city.getOwner())) return null;
 
 	const searchGroup: group = CreateGroup();
 
 	//Search for allied units of dying unit in small radius
-	GetUnitsInRangeOfUnitByAllegiance(searchGroup, city, SmallSearchRadius, IsUnitAlly, dyingUnit, killingUnit);
+	GetUnitsInRangeOfUnitByAllegiance(
+		searchGroup,
+		city,
+		SmallSearchRadius,
+		(unit, player) => UnitLagManager.IsUnitAlly(unit, player),
+		dyingUnit,
+		killingUnit
+	);
 
 	//Could not find valid units within large radius of guard, so we search in small radius by killer
 	if (BlzGroupGetSize(searchGroup) <= 0) {
-		GetUnitsInRangeByAllegiance(searchGroup, city, SmallSearchRadius, IsUnitAlly, killingUnit);
+		GetUnitsInRangeByAllegiance(
+			searchGroup,
+			city,
+			SmallSearchRadius,
+			(unit, player) => UnitLagManager.IsUnitAlly(unit, player),
+			killingUnit
+		);
 	}
 
 	//Found valid guard units, set unit as guard
