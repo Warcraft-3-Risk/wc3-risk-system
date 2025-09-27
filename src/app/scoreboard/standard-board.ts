@@ -78,10 +78,10 @@ export class StandardBoard extends Scoreboard {
 
 			let textColor: string = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 
-			if (player.status.isAlive() || player.status.isNomad()) {
-				this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
-			} else {
+			if(player.status.isEliminated()) {
 				this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, 2);
+			} else {
+				this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
 			}
 
 			this.updatePlayerData(player, row, textColor, data);
@@ -142,8 +142,11 @@ export class StandardBoard extends Scoreboard {
 			this.setItemValue(`${grey}${kd.deathValue}`, row, this.DEATHS_COL);
 
 			// Status
-			this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
-
+			if (player.status.isSTFU()) {
+				this.setItemValue(`${grey}${player.status.statusDuration}`, row, this.STATUS_COL);
+			} else {
+				this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
+			}
 			// --- Alive / Active Player Formatting ---
 		} else {
 			// Name
@@ -161,8 +164,8 @@ export class StandardBoard extends Scoreboard {
 			this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
 
 			// Status
-			if (player.status.isNomad() || player.status.isSTFU()) {
-				this.setItemValue(`${player.status.status} ${player.status.statusDuration}`, row, this.STATUS_COL);
+			if(player.status.isNomad()) {
+				this.setItemValue(`${HexColors.ORANGE}${player.status.statusDuration}`, row, this.STATUS_COL);
 			} else {
 				this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
 			}
