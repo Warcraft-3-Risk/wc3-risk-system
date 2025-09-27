@@ -713,7 +713,7 @@ InitGlobals()
 end
 
 function config()
-SetMapName("")
+SetMapName("TRIGSTR_7531")
 SetMapDescription("TRIGSTR_7297")
 SetPlayers(23)
 SetTeams(23)
