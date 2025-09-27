@@ -3,7 +3,6 @@ import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
-import { debugPrint } from 'src/app/utils/debug-print';
 import { PLAYER_COLORS } from 'src/app/utils/player-colors';
 
 interface client extends player {}
@@ -54,19 +53,16 @@ export class ClientManager implements Resetable {
 
 		// Only allocate a client slot if there are less than MAX_PLAYERS_FOR_CLIENT_ALLOCATION players
 		if (activePlayers.length > ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
-			debugPrint('Too many active players to allocate client slots');
 			return;
 		}
 
 		if (this.clientToPlayer.size >= ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
-			debugPrint('All client slots have already been allocated');
 			return;
 		}
 
 		const clients = this.getAvailableClientSlots();
 		this.availableClients = clients.filter((x) => !this.clientToPlayer.has(x));
 
-		debugPrint(`There are ${clients.length} available client slots`);
 		for (let playerIndex = 0; playerIndex < activePlayers.length; playerIndex++) {
 			// Only do this if the player does not already have a client slot
 			if (!this.playerToClient.has(activePlayers[playerIndex].getPlayer())) {
@@ -76,8 +72,6 @@ export class ClientManager implements Resetable {
 				this.givePlayerFullControlOfClient(activePlayers[playerIndex].getPlayer(), client);
 			}
 		}
-
-		debugPrint('Finished allocating client slots to players');
 	}
 
 	public givePlayerFullControlOfClient(player: player, client: client): void {
@@ -120,6 +114,22 @@ export class ClientManager implements Resetable {
 	// This method returns the unit owner of the provided client. If no client is found then it returns the owner of the unit.
 	public getOwnerOfUnit(unit: unit): client | player {
 		return this.getOwner(GetOwningPlayer(unit));
+	}
+
+	// This method checks if the provided unit is owned by the player or their client
+	public isPlayerOrClientOwnerOfUnit(unit: unit, player: player | client): boolean {
+		return this.clientToPlayer.get(player) == GetOwningPlayer(unit) || this.playerToClient.get(player) == GetOwningPlayer(unit);
+	}
+
+	// This method checks if the provided unit is owned by the provided client
+	public isClientOwnerOfUnit(unit: unit, client: client): boolean {
+		// Check if the specific client owns the unit
+		return GetOwningPlayer(unit) === client && this.clientToPlayer.has(client);
+	}
+
+	// This method checks if the provided unit is owned by a client
+	public isAnyClientOwnerOfUnit(unit: unit): boolean {
+		return this.clientToPlayer.has(GetOwningPlayer(unit));
 	}
 
 	public getPlayerByClient(player: client): player | undefined {

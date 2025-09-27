@@ -28,16 +28,31 @@ export class UnitLagManager {
 		this.dummyPool = new DummyPoolManager();
 	}
 
+	// Track a unit by creating a dummy minimap indicator that follows it around.
+	// The tracked unit will be hidden from the minimap for its owner, but visible to all other players.
+	// The dummy unit which is only visible to the owner will superseed the tracked unit on the minimap, masking the tracked unit as white (yours).
 	public trackUnit(unit: unit): void {
+		// Do not retrack a unit
 		if (this.trackedUnits.get(unit)) {
 			return;
 		}
 
+		// Only clients can have their units tracked
+		if (!ClientManager.getInstance().isAnyClientOwnerOfUnit(unit)) {
+			debugPrint(`UnitLagManager: Not tracking ${GetUnitName(unit)} as its owner is not a client.`);
+			return;
+		}
+
 		// Hide tracked unit on minimap - also hides the unit for the client themselves if they own the unit
-		if (ClientManager.getInstance().getOwnerOfUnit(unit) == GetLocalPlayer() || GetOwningPlayer(unit) == GetLocalPlayer()) {
+		if (ClientManager.getInstance().isPlayerOrClientOwnerOfUnit(unit, GetLocalPlayer())) {
+			// Hide the tracked unit on the minimap
+			// Owner and clients should only see the dummy unit on the minimap
 			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+			debugPrint(`UnitLagManager: Hiding ${GetUnitName(unit)} from minimap for its owner.`);
 		} else {
+			// Non-owners should see the tracked unit on the minimap
 			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+			debugPrint(`UnitLagManager: Showing ${GetUnitName(unit)} on minimap for non-owners.`);
 		}
 
 		// Create a dummy minimap indicator unit that follows the tracked unit
