@@ -52,6 +52,7 @@ export class Quests {
 		Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930, xate#21335
 		Terrain: Nerla#1510
 		Units: Saran, ForLolz#11696
+		Overhead buff pack: HerrDave
 		Icons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish
 		SS Ship Model: ??, please let ForLolz know if you know the author
 		Special Thanks: The Risk Community, Priwin, PsycoMarauder, RodOfNod, goble-r1sk, Saran, and all the devs before me!
