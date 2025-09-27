@@ -14,6 +14,7 @@ SupplyIcon=war3mapImported\sandclock2.tga
 
 [Errors]
 Cantland=TRIGSTR_3042
+Controlgranted=TRIGSTR_7527
 Immunetomagic=TRIGSTR_3041
 Notancient=TRIGSTR_7292
 Notsapper=TRIGSTR_7291
