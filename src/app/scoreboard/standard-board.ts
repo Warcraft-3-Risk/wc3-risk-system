@@ -119,7 +119,7 @@ export class StandardBoard extends Scoreboard {
 		this.board = null;
 	}
 
-	/** *
+	/**
 	 * Sets the columns of the scoreboard for a specific player's row.
 	 * @param {ActivePlayer} player - The player object.
 	 * @param {number} row - The row index.
