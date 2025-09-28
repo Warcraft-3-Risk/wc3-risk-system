@@ -87,22 +87,15 @@ function updateStrings(wtsDir: string | undefined, w3iDir: string | undefined, c
 	if (!wtsDir) throw Error('wts not found');
 	if (!w3iDir) throw Error('w3i not found');
 
-	const buffer = fs.readFileSync(w3iDir);
-	if (!buffer) throw Error('w3i buffer not found');
-
-	let w3iBuffer = toArrayBuffer(buffer);
 	let wtsBuffer = fs.readFileSync(wtsDir, 'utf8');
 
-	const w3i = new War3MapW3i();
 	const wts = new War3MapWts();
 
-	w3i.load(w3iBuffer);
 	wts.load(wtsBuffer);
+	wts.setString(configs.mapNameStringId, `|cffffcc00${configs.mapName} ${configs.mapVersion}|r`);
 
-	w3i.name = `|cffffcc00${configs.mapName} ${configs.mapVersion}|r`;
-
-	w3iBuffer = w3i.save();
-	fs.writeFileSync(w3iDir, toBuffer(w3iBuffer));
+	wtsBuffer = wts.save();
+	fs.writeFileSync(wtsDir, wtsBuffer);
 }
 
 function updateTsFileWithConfig() {

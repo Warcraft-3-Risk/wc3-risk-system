@@ -15,6 +15,7 @@ export interface IProjectConfig {
 	launchArgs: string[];
 	mapName: string;
 	mapVersion: string;
+	mapNameStringId: number;
 	w3cModeEnabled: boolean;
 	winePath?: string;
 	winePrefix?: string;

@@ -24,7 +24,7 @@
     "fs-extra": "8.1.0",
     "lua-types": "^2.13.1",
     "luamin": "^1.0.4",
-    "mdx-m3-viewer-th": "^5.13.0",
+    "mdx-m3-viewer-th": "^5.13.1",
     "npm-watch": "0.6.0",
     "prettier": "^3.0.0",
     "ts-node": "8.10.2",

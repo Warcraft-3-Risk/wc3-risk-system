@@ -613,31 +613,31 @@ Grants 25% damage bonus to all nearby friendly units.|nLasts 45 seconds.
 }
 
 STRING 7226
-// Abilities: a003 (Frenzy), Hotkey (Hotkey - Normal)
+// Abilities: a010 (Load), Hotkey (Hotkey - Normal)
 {
 Q
 }
 
 STRING 7227
-// Abilities: a003 (Frenzy), Unhotkey (Hotkey - Turn Off)
+// Abilities: a003 (Frenzy), Hotkey (Hotkey - Normal)
 {
 Q
 }
 
 STRING 7232
-// Abilities: a051 (Lowest Health Defender), Hotkey (Hotkey - Normal)
+// Abilities: a011 (Unload), Hotkey (Hotkey - Normal)
 {
 W
 }
 
 STRING 7236
-// Abilities: a004 (Adrenaline), Hotkey (Hotkey - Normal)
+// Abilities: a003 (Frenzy), Unhotkey (Hotkey - Turn Off)
 {
 Q
 }
 
 STRING 7238
-// Abilities: a052 (Highest Health Defender), Hotkey (Hotkey - Normal)
+// Abilities: a051 (Lowest Health Defender), Hotkey (Hotkey - Normal)
 {
 W
 }
@@ -690,7 +690,7 @@ Artillery
 }
 
 STRING 7263
-// Abilities: a005 (Berserk), Hotkey (Hotkey - Normal)
+// Abilities: a004 (Adrenaline), Hotkey (Hotkey - Normal)
 {
 Q
 }
@@ -915,7 +915,7 @@ Adrenaline
 }
 
 STRING 7373
-// Abilities: a031 (Set Spawner Rally Point - Radius 3000), Hotkey (Hotkey - Normal)
+// Abilities: a005 (Berserk), Hotkey (Hotkey - Normal)
 {
 Q
 }
@@ -1071,7 +1071,7 @@ This will allow you to set the rally point of all owned spawners in a radius of 
 }
 
 STRING 7442
-// Abilities: a032 (Set Spawner Rally Point - Radius 6000), Hotkey (Hotkey - Normal)
+// Abilities: a052 (Highest Health Defender), Hotkey (Hotkey - Normal)
 {
 W
 }
@@ -1441,8 +1441,25 @@ STRING 7526
 |cffff8000MinimapIndicator|r
 }
 
-STRING 7527
+STRING 7528
 {
+ 
+}
 
+STRING 7529
+// Abilities: a032 (Set Spawner Rally Point - Radius 6000), Hotkey (Hotkey - Normal)
+{
+W
+}
+
+STRING 7530
+// Abilities: a031 (Set Spawner Rally Point - Radius 3000), Hotkey (Hotkey - Normal)
+{
+Q
+}
+
+STRING 7531
+{
+Risk Europe
 }
 
