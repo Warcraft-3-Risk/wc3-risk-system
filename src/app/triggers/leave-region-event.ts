@@ -5,6 +5,7 @@ import { UNIT_TYPE } from '../utils/unit-types';
 import { CityRegionSize } from 'src/configs/city-settings';
 import { CompareUnitByValue } from '../utils/unit-comparisons';
 import { GetUnitsInRangeByAllegiance } from '../utils/guard-filters';
+import { UnitLagManager } from '../game/services/unit-lag-manager';
 
 export const LeaveRegionTrigger: trigger = CreateTrigger();
 
@@ -23,7 +24,7 @@ export function LeaveRegionEvent() {
 
 			//No valid owned guards found, check for allies (not applicable for capitals)
 			if (BlzGroupGetSize(g) == 0 && (!city.isCapital() || city.isCapturedCapital)) {
-				GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitAlly);
+				GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => UnitLagManager.IsUnitAlly(unit, player));
 			}
 
 			//No valid owned or allied guards found, create a dummy for city owner.
