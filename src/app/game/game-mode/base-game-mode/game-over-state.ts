@@ -52,17 +52,10 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 		ReplayManager.getInstance().onRoundEnd();
 	}
 
-	onPlayerRestart(player: ActivePlayer) {
-		const playerIsParticipant = GlobalGameData.matchPlayers.find((x) => x.getPlayer() == player.getPlayer());
-
+	override onPlayerRestart(player: ActivePlayer) {
 		if (SettingsContext.getInstance().isFFA()) {
-			if (GetLocalPlayer() == player.getPlayer()) {
-				LocalMessage(GetLocalPlayer(), `${HexColors.RED}You can not restart in FFA mode!|r`, 'Sound\\Interface\\Error.flac');
-			}
-			return;
-		}
-
-		if (playerIsParticipant) {
+			LocalMessage(GetLocalPlayer(), `${HexColors.RED}You can not restart in FFA mode!|r`, 'Sound\\Interface\\Error.flac');
+		} else {
 			this.nextState(this.stateData);
 		}
 	}
