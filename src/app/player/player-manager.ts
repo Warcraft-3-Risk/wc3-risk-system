@@ -86,7 +86,7 @@ export class PlayerManager {
 		return players;
 	}
 
-	public getEliminatedPlayers(): player[] {
+	public getPlayersThatLeft(): player[] {
 		let players: player[] = [];
 		// Find all slots that are eliminated players with no units
 		for (let i = 0; i <= PLAYER_SLOTS; i++) {
@@ -95,7 +95,7 @@ export class PlayerManager {
 
 			if (
 				activePlayer &&
-				activePlayer.status.isEliminated() &&
+				activePlayer.status.isLeft() &&
 				activePlayer.trackedData.units.size === 0 &&
 				activePlayer.trackedData.cities.cities.length === 0
 			) {

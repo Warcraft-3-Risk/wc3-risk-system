@@ -42,7 +42,7 @@ export class ClientManager implements Resetable {
 	private getAvailableClientSlots(): client[] {
 		let clients: client[] = [];
 		clients.push(...PlayerManager.getInstance().getEmptyPlayerSlots());
-		clients.push(...PlayerManager.getInstance().getEliminatedPlayers());
+		clients.push(...PlayerManager.getInstance().getPlayersThatLeft());
 		return clients;
 	}
 
