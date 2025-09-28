@@ -76,6 +76,8 @@ export class UnitLagManager {
 			this.dummyPool.push(dummy);
 			BlzSetUnitBooleanFieldBJ(dummy, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 			debugPrint(`UnitLagManager: ${GetUnitName(dummy)} is stopping tracking of ${GetUnitName(unit)}.`);
+		} else {
+			debugPrint(`UnitLagManager: No dummy found for ${GetUnitName(unit)}.`);
 		}
 	}
 

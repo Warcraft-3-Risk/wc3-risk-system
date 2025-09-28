@@ -6,8 +6,6 @@ import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { debugPrint } from '../utils/debug-print';
 import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
-import { PLAYER_SLOTS } from '../utils/utils';
-import { Wait } from '../utils/wait';
 
 type Transport = {
 	unit: unit;
@@ -102,6 +100,11 @@ export class TransportManager {
 
 		const transportData: Transport = this.transports.get(unit);
 
+		// Track all cargo units (clients) again since the transport is dead
+		transportData.cargo.forEach((unit) => {
+			UnitLagManager.getInstance().trackUnit(unit);
+		});
+
 		transportData.cargo = null;
 
 		if (transportData.effect != null) {
@@ -119,18 +122,22 @@ export class TransportManager {
 	private onLoad() {
 		const t: trigger = CreateTrigger();
 
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			debugPrint(`Registering transport load event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_LOADED, null);
 		}
 
 		TriggerAddCondition(
 			t,
 			Condition(() => {
+				debugPrint(`Transport Load Event Triggered for unit: ${GetUnitName(GetTriggerUnit())}`);
 				let transport: unit = GetTransportUnit();
 
 				if (!transport) return false;
 
 				let loadedUnit: unit = GetLoadedUnit();
+
+				debugPrint(`Unit Loaded Event Triggered for unit: ${GetUnitName(loadedUnit)} into transport: ${GetUnitName(transport)}`);
 
 				// Untrack the unit since it's now loaded and managed by the transport
 				UnitLagManager.getInstance().untrackUnit(loadedUnit);
@@ -151,7 +158,7 @@ export class TransportManager {
 	private orderUnloadHandler() {
 		const t = CreateTrigger();
 
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
 		}
 
@@ -204,7 +211,7 @@ export class TransportManager {
 	private spellCastHandler() {
 		const t = CreateTrigger();
 
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, null);
 		}
 
@@ -230,7 +237,7 @@ export class TransportManager {
 	private spellEffectHandler() {
 		const t = CreateTrigger();
 
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
 		}
 
@@ -263,7 +270,7 @@ export class TransportManager {
 	private spellEndCastHandler() {
 		const t = CreateTrigger();
 
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_ENDCAST, null);
 		}
 
