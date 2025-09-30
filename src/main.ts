@@ -35,6 +35,7 @@ import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
 import { FogManager } from './app/managers/fog-manager';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
 import { ClientManager } from './app/game/services/client-manager';
+import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -95,6 +96,7 @@ function tsMain() {
 		//Set up triggers
 		EnterRegionEvent();
 		LeaveRegionEvent();
+		UnitDamagedEvent();
 		UnitDeathEvent();
 		UnitTrainedEvent();
 		UnitUpgradeEvent();

@@ -5,7 +5,6 @@ import { SelfKillHandler as SelfKillHandler } from './self-kill-handler';
 import { InvalidGuardHandler } from './invalid-guard-handler';
 import { AlliedKillHandler } from './allied-kill-handler';
 import { EnemyKillHandler } from './enemy-kill-handler';
-import { debugPrint } from 'src/app/utils/debug-print';
 
 export function HandleGuardDeath(dyingUnit: unit, killingUnit: unit) {
 	const city: LandCity | PortCity = UnitToCity.get(dyingUnit);

@@ -31,7 +31,7 @@ export abstract class BaseMode<T extends StateData> {
 
 		this.currentState.stateData = stateData;
 
-		debugPrint(`Entering ${this.currentState.constructor.name}`);
+		debugPrint(`${this.currentState.constructor.name}`);
 		this.currentState.onEnterState();
 	}
 
