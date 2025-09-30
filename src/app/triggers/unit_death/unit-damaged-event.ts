@@ -21,12 +21,10 @@ export function UnitDamagedEvent() {
 				return;
 			}
 
-			if (!IsUnitAlly(damagedUnit, GetOwningPlayer(damagingUnit)) && GetOwningPlayer(damagedUnit) !== GetOwningPlayer(damagingUnit)) {
-				return;
+			if (IsUnitAlly(damagedUnit, GetOwningPlayer(damagingUnit)) || GetOwningPlayer(damagedUnit) === GetOwningPlayer(damagingUnit)) {
+				BlzSetEventDamage(0);
 			}
 
-			BlzSetEventDamage(0);
-			debugPrint(`Damage prevented on guard unit: ${GetUnitName(damagedUnit)}`);
 			return false;
 		})
 	);
