@@ -74,9 +74,9 @@ OUTPUT_FOLDER=/Users/{USERNAME}/Library/Application Support/Blizzard/Warcraft II
 TAG_NAME=dev
 ```
 
-Running the build command will automatically generate the path and required directories. This includes injecting the map version number. The above settings would generate a file in the output folder named Risk Europe 2.7.4-preview.w3x.
+Running the build command will automatically generate the path and required directories. This includes injecting the map version number. The above settings would generate a file in the output folder named `Risk Europe 2.7.4-preview.w3x`.
 
-Check out the base wc3-ts-template for more details on installation and usage
+Check out the base [wc3-ts-template](https://cipherxof.github.io/w3ts/docs/getting-started) for more detials on installation and usage
 
 ## Usage
 ### Testing the project locally
@@ -120,8 +120,7 @@ You can now build the map again.
 ### Publish builds
 This project uses Github Actions to publish its builds. To publish a new version simply create a new release with a unique version tag. Once published, wait until the github actions have completed building the artifacts and attached them to the release.
 
-Builds include Risk_Europe_X.YZ.w3x and Risk_Europe_X.YZ_w3c.w3x.
-
+Builds include `Risk_Europe_X.YZ.w3x` and `Risk_Europe_X.YZ_w3c.w3x`.
 The version with w3c suffix includes specific build instructions that ensures that the version automatically launches the 1v1 ladder matchup required by the W3Champions platform.
 
 The reason for a X.YZ version format is that the custom map list is sorted alphabetically. This creates issues when using semver, as the version would not be ordered alphabetically as such, making it difficult for the end user when browsing map versions.
