@@ -123,7 +123,6 @@ export class TransportManager {
 		const t: trigger = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`Registering transport load event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_LOADED, null);
 		}
 
