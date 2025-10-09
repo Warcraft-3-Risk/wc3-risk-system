@@ -6,10 +6,9 @@ import { GamePlayer } from './game-player';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PLAYER_STATUS } from '../status/status-enum';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
-import { debugPrint } from '../../utils/debug-print';
 
 //Use lowercase for simplicity here
-const adminList: string[] = ['forlolz#11696', 'poomonky#1939', 'theredbeard#11245', 'easterbunny#2707'];
+const adminList: string[] = [];
 
 export abstract class ActivePlayer implements GamePlayer, Resetable {
 	private _player: player;
