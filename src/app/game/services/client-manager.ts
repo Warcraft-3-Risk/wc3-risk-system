@@ -82,7 +82,7 @@ export class ClientManager implements Resetable {
 		}
 
 		SetPlayerColor(client, GetPlayerColor(player));
-		SetPlayerName(client, `${GetPlayerName(player)}'s Spawns|r`);
+		SetPlayerName(client, GetPlayerName(player));
 		this.enableAdvancedControl(player, client, true);
 		this.enableAdvancedControl(client, player, true);
 
