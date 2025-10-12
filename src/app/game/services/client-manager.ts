@@ -4,6 +4,7 @@ import { PlayerManager } from 'src/app/player/player-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { PLAYER_COLORS } from 'src/app/utils/player-colors';
+import { debugPrint } from 'src/app/utils/debug-print';
 
 interface client extends player {}
 
@@ -27,6 +28,9 @@ export class ClientManager implements Resetable {
 	// Keeps track of client's player
 	private clientToPlayer: Map<client, player>;
 
+	// Flag to ensure allocation only happens once
+	private hasAllocated: boolean = false;
+
 	private constructor() {
 		// Initialize player client manager
 		this.availableClients = [];
@@ -41,40 +45,110 @@ export class ClientManager implements Resetable {
 	// This method checks if there are less than MAX_PLAYERS_FOR_CLIENT_ALLOCATION players and then allocates one client to each player
 	private getAvailableClientSlots(): client[] {
 		let clients: client[] = [];
-		clients.push(...PlayerManager.getInstance().getEmptyPlayerSlots());
-		clients.push(...PlayerManager.getInstance().getPlayersThatLeft());
+		const emptySlots = PlayerManager.getInstance().getEmptyPlayerSlots();
+		const leftPlayers = PlayerManager.getInstance().getPlayersThatLeft();
+
+		if (emptySlots && emptySlots.length > 0) {
+			clients.push(...emptySlots.filter((p) => p !== null && p !== undefined));
+		}
+
+		if (leftPlayers && leftPlayers.length > 0) {
+			clients.push(...leftPlayers.filter((p) => p !== null && p !== undefined));
+		}
+
 		return clients;
 	}
 
 	public allocateClientSlot(): void {
+		// Check if allocation has already been done
+		if (this.hasAllocated) {
+			debugPrint('ClientManager: Client allocation already completed, skipping');
+			return;
+		}
+
 		const activePlayers = Array.from(PlayerManager.getInstance().players.entries())
 			.map(([, activePlayer]) => activePlayer)
 			.filter((x) => x.status.isActive());
 
 		// Only allocate a client slot if there are less than MAX_PLAYERS_FOR_CLIENT_ALLOCATION players
 		if (activePlayers.length > ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
+			debugPrint(`ClientManager: Too many active players (${activePlayers.length}), skipping allocation`);
 			return;
 		}
 
 		if (this.clientToPlayer.size >= ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
+			debugPrint('ClientManager: Maximum client allocations already reached');
 			return;
 		}
 
 		const clients = this.getAvailableClientSlots();
-		this.availableClients = clients.filter((x) => !this.clientToPlayer.has(x));
+		debugPrint(`ClientManager: Found ${clients.length} available client slots`);
+
+		if (!clients || clients.length === 0) {
+			debugPrint('ClientManager: No available client slots found');
+			return;
+		}
+
+		this.availableClients = clients.filter((x) => x && !this.clientToPlayer.has(x));
+		debugPrint(`ClientManager: ${this.availableClients.length} client slots available after filtering`);
+
+		if (this.availableClients.length === 0) {
+			debugPrint('ClientManager: All available client slots are already in use');
+			return;
+		}
+
+		debugPrint(`ClientManager: Attempting to allocate clients for ${activePlayers.length} active players`);
 
 		for (let playerIndex = 0; playerIndex < activePlayers.length; playerIndex++) {
+			const activePlayer = activePlayers[playerIndex];
+			if (!activePlayer) {
+				debugPrint(`ClientManager: Active player at index ${playerIndex} is null/undefined`);
+				continue;
+			}
+
+			const playerHandle = activePlayer.getPlayer();
+			if (!playerHandle) {
+				debugPrint(`ClientManager: Player handle for active player at index ${playerIndex} is null/undefined`);
+				continue;
+			}
+
 			// Only do this if the player does not already have a client slot
-			if (!this.playerToClient.has(activePlayers[playerIndex].getPlayer())) {
-				let client = this.availableClients.pop();
-				this.playerToClient.set(activePlayers[playerIndex].getPlayer(), client);
-				this.clientToPlayer.set(client, activePlayers[playerIndex].getPlayer());
-				this.givePlayerFullControlOfClient(activePlayers[playerIndex].getPlayer(), client);
+			if (!this.playerToClient.has(playerHandle)) {
+				// Check if we have available clients before popping
+				if (this.availableClients.length === 0) {
+					debugPrint(`ClientManager: No more available clients for player ${GetPlayerName(playerHandle)}`);
+					break;
+				}
+
+				const client = this.availableClients.pop();
+				if (!client) {
+					debugPrint(`ClientManager: Failed to allocate client for player ${GetPlayerName(playerHandle)} - pop returned null/undefined`);
+					continue;
+				}
+
+				debugPrint(`ClientManager: Allocating client slot ${GetPlayerId(client)} to player ${GetPlayerName(playerHandle)}`);
+				this.playerToClient.set(playerHandle, client);
+				this.clientToPlayer.set(client, playerHandle);
+				this.givePlayerFullControlOfClient(playerHandle, client);
+				debugPrint(`ClientManager: Successfully allocated client to player ${GetPlayerName(playerHandle)}`);
+			} else {
+				debugPrint(`ClientManager: Player ${GetPlayerName(playerHandle)} already has a client slot`);
 			}
 		}
+
+		// Mark allocation as complete
+		this.hasAllocated = true;
+		debugPrint('ClientManager: Client allocation complete');
 	}
 
 	public givePlayerFullControlOfClient(player: player, client: client): void {
+		if (!player || !client) {
+			debugPrint('ClientManager: Invalid player or client in givePlayerFullControlOfClient');
+			return;
+		}
+
+		debugPrint(`ClientManager: Giving player ${GetPlayerName(player)} full control of client ${GetPlayerId(client)}`);
+
 		if (SettingsContext.getInstance().isPromode()) {
 			NameManager.getInstance().setName(client, 'acct');
 		} else {
@@ -86,13 +160,21 @@ export class ClientManager implements Resetable {
 		this.enableAdvancedControl(player, client, true);
 		this.enableAdvancedControl(client, player, true);
 
-		TeamManager.getInstance()
-			.getTeamFromPlayer(player)
-			.getMembers()
-			.forEach((member) => {
-				this.enableAdvancedControl(member.getPlayer(), client, true);
-				this.enableAdvancedControl(client, member.getPlayer(), true);
-			});
+		const team = TeamManager.getInstance().getTeamFromPlayer(player);
+		if (team) {
+			const members = team.getMembers();
+			if (members && members.length > 0) {
+				members.forEach((member) => {
+					if (member) {
+						const memberPlayer = member.getPlayer();
+						if (memberPlayer) {
+							this.enableAdvancedControl(memberPlayer, client, true);
+							this.enableAdvancedControl(client, memberPlayer, true);
+						}
+					}
+				});
+			}
+		}
 	}
 
 	private enableAdvancedControl(playerA: player, playerB: player, value: boolean): void {
@@ -162,5 +244,7 @@ export class ClientManager implements Resetable {
 		this.playerToClient.clear();
 		this.clientToPlayer.clear();
 		this.availableClients = [];
+		this.hasAllocated = false;
+		debugPrint('ClientManager: Reset complete, allocation flag cleared');
 	}
 }
