@@ -1,3 +1,6 @@
+// This file contains various game settings and configurations for the game.
+// Add new constants to src\app\utils\debug-print.ts:DebugLogger.addHeader method if you want them to be logged in the debug log header.
+
 //Used to control how many of total cities you need.
 //This is a percentage of the total cities .6 = 60%
 export const CITIES_TO_WIN_RATIO: number = 0.6;
