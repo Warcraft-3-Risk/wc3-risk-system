@@ -4,11 +4,14 @@ import { EVENT_ON_CITY_SELECTED } from '../utils/events/event-constants';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { PLAYER_SLOTS } from '../utils/utils';
+import { debugPrint } from '../utils/debug-print';
 
 export function CitySelectedEvent() {
 	const t: trigger = CreateTrigger();
 	for (let i = 0; i < PLAYER_SLOTS; i++) {
+		debugPrint(`Registering city selected event for player ${i}`);
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SELECTED);
+		debugPrint(`Registered city selected event for player ${i}`);
 	}
 
 	TriggerAddCondition(

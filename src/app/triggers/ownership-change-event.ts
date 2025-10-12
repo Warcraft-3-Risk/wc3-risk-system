@@ -17,12 +17,15 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_CITY_CAPTURE } from '../utils/events/event-constants';
 import { ParticipantEntityManager } from '../utils/participant-entity';
+import { debugPrint } from '../utils/debug-print';
 
 export function OwnershipChangeEvent() {
 	const t: trigger = CreateTrigger();
 
 	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
+		debugPrint(`Registering ownership change event for player ${i}`);
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_CHANGE_OWNER, null);
+		debugPrint(`Registered ownership change event for player ${i}`);
 	}
 
 	TriggerAddCondition(

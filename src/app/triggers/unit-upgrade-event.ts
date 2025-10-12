@@ -1,10 +1,13 @@
 import { UNIT_ID } from 'src/configs/unit-id';
+import { debugPrint } from 'src/app/utils/debug-print';
 
 export function UnitUpgradeEvent() {
 	const t: trigger = CreateTrigger();
 
 	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
+		debugPrint(`Registering unit upgrade event for player ${i}`);
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_UPGRADE_FINISH, null);
+		debugPrint(`Registered unit upgrade event for player ${i}`);
 	}
 
 	TriggerAddCondition(

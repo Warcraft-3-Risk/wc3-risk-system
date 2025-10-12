@@ -123,7 +123,9 @@ export class TransportManager {
 		const t: trigger = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			debugPrint(`Registering unit loaded event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_LOADED, null);
+			debugPrint(`Registered unit loaded event for player ${i}`);
 		}
 
 		TriggerAddCondition(
@@ -158,7 +160,9 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			debugPrint(`Registering unit issued target order event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
+			debugPrint(`Registered unit issued target order event for player ${i}`);
 		}
 
 		TriggerAddCondition(
@@ -211,7 +215,9 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			debugPrint(`Registering transport spell cast event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, null);
+			debugPrint(`Registered transport spell cast event for player ${i}`);
 		}
 
 		TriggerAddCondition(
@@ -237,7 +243,9 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			debugPrint(`Registering transport spell effect event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
+			debugPrint(`Registered transport spell effect event for player ${i}`);
 		}
 
 		TriggerAddCondition(
@@ -270,7 +278,9 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			debugPrint(`Registering transport spell end cast event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_ENDCAST, null);
+			debugPrint(`Registered transport spell end cast event for player ${i}`);
 		}
 
 		TriggerAddCondition(

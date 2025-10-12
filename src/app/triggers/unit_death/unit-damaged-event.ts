@@ -6,7 +6,9 @@ export function UnitDamagedEvent() {
 	const t: trigger = CreateTrigger();
 
 	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
+		debugPrint(`Registering unit damaged event for player ${i}`);
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_DAMAGED, null);
+		debugPrint(`Registered unit damaged event for player ${i}`);
 	}
 
 	TriggerAddCondition(
