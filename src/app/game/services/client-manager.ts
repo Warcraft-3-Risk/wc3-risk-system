@@ -61,34 +61,49 @@ export class ClientManager implements Resetable {
 
 	public allocateClientSlot(): void {
 		// Check if allocation has already been done
+		debugPrint('ClientManager: Starting client allocation process');
 		if (this.hasAllocated) {
 			debugPrint('ClientManager: Client allocation already completed, skipping');
 			return;
+		} else {
+			debugPrint('ClientManager: Client allocation not yet done, proceeding');
 		}
 
+		debugPrint('ClientManager: Checking number of active players');
 		const activePlayers = Array.from(PlayerManager.getInstance().players.entries())
 			.map(([, activePlayer]) => activePlayer)
 			.filter((x) => x.status.isActive());
+
+		debugPrint(`ClientManager: Found ${activePlayers.length} active players`);
 
 		// Only allocate a client slot if there are less than MAX_PLAYERS_FOR_CLIENT_ALLOCATION players
 		if (activePlayers.length > ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
 			debugPrint(`ClientManager: Too many active players (${activePlayers.length}), skipping allocation`);
 			return;
+		} else {
+			debugPrint(`ClientManager: Active players within limit (${activePlayers.length}), proceeding with allocation`);
 		}
 
+		debugPrint('ClientManager: Checking current client allocations');
 		if (this.clientToPlayer.size >= ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
 			debugPrint('ClientManager: Maximum client allocations already reached');
 			return;
+		} else {
+			debugPrint(`ClientManager: Current client allocations: ${this.clientToPlayer.size}`);
 		}
 
+		debugPrint('ClientManager: Retrieving available client slots');
 		const clients = this.getAvailableClientSlots();
 		debugPrint(`ClientManager: Found ${clients.length} available client slots`);
 
 		if (!clients || clients.length === 0) {
 			debugPrint('ClientManager: No available client slots found');
 			return;
+		} else {
+			debugPrint(`ClientManager: Available client slots: ${clients.map((c) => GetPlayerId(c)).join(', ')}`);
 		}
 
+		// Filter out clients that are already assigned
 		this.availableClients = clients.filter((x) => x && !this.clientToPlayer.has(x));
 		debugPrint(`ClientManager: ${this.availableClients.length} client slots available after filtering`);
 
@@ -223,21 +238,23 @@ export class ClientManager implements Resetable {
 	}
 
 	reset(): void {
-		for (let ci = 0; ci < bj_MAX_PLAYERS; ci++) {
-			PlayerManager.getInstance().players.forEach((_, p) => {
-				NameManager.getInstance().setColor(p, PLAYER_COLORS[GetPlayerId(p)]);
-			});
-			PlayerManager.getInstance()
-				.getEmptyPlayerSlots()
-				.forEach((p) => {
-					SetPlayerColor(p, PLAYER_COLORS[GetPlayerId(p)]);
-					NameManager.getInstance().setColor(p, PLAYER_COLORS[GetPlayerId(p)]);
-					NameManager.getInstance().setName(p, 'btag');
-				});
+		// Reset all player colors and names to default
+		debugPrint('ClientManager: Resetting all player colors and names to default');
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			const p = Player(i);
 
-			for (let pi = 0; pi < bj_MAX_PLAYERS; pi++) {
-				this.enableAdvancedControl(Player(ci), Player(pi), false);
-				this.enableAdvancedControl(Player(pi), Player(ci), false);
+			if (IsPlayerObserver(p)) {
+				continue;
+			}
+
+			SetPlayerColor(p, PLAYER_COLORS[GetPlayerId(p)]);
+			NameManager.getInstance().setColor(p, PLAYER_COLORS[GetPlayerId(p)]);
+			NameManager.getInstance().setName(p, 'color');
+
+			for (let targetIndex = 0; targetIndex < bj_MAX_PLAYERS; targetIndex++) {
+				if (!IsPlayerObserver(Player(targetIndex))) {
+					this.enableAdvancedControl(p, Player(targetIndex), false);
+				}
 			}
 		}
 

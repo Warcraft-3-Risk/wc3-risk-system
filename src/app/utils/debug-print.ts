@@ -1,4 +1,22 @@
-import { SHOW_DEBUG_PRINTS, CITIES_TO_WIN_RATIO, STARTING_INCOME, STARTING_COUNTDOWN, TURN_DURATION_IN_SECONDS, TICK_DURATION_IN_SECONDS, NOMAD_DURATION, OVERTIME_MODIFIER, CITIES_TO_WIN_WARNING_RATIO, CITIES_PER_PLAYER_UPPER_BOUND, STFU_DURATION, ENABLE_EXPORT_SHUFFLED_PLAYER_LIST, ENABLE_EXPORT_GAME_SETTINGS, ENABLE_EXPORT_END_GAME_SCORE, CAPITALS_SELECTION_PHASE, W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER } from 'src/configs/game-settings';
+import {
+	SHOW_DEBUG_PRINTS,
+	CITIES_TO_WIN_RATIO,
+	STARTING_INCOME,
+	STARTING_COUNTDOWN,
+	TURN_DURATION_IN_SECONDS,
+	TICK_DURATION_IN_SECONDS,
+	NOMAD_DURATION,
+	OVERTIME_MODIFIER,
+	CITIES_TO_WIN_WARNING_RATIO,
+	CITIES_PER_PLAYER_UPPER_BOUND,
+	STFU_DURATION,
+	ENABLE_EXPORT_SHUFFLED_PLAYER_LIST,
+	ENABLE_EXPORT_GAME_SETTINGS,
+	ENABLE_EXPORT_END_GAME_SCORE,
+	CAPITALS_SELECTION_PHASE,
+	W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER,
+	SAVE_DEBUG_LOGS_TO_FILE,
+} from 'src/configs/game-settings';
 import { HexColors } from './hex-colors';
 import { File } from 'w3ts/system/file';
 import { MAP_NAME, MAP_VERSION, W3C_MODE_ENABLED } from './map-info';
@@ -24,7 +42,7 @@ class DebugLogger {
 	private addHeader(): void {
 		// Use os.date from Lua instead of JavaScript Date
 		const dateStr = os.date('%Y-%m-%d %H:%M:%S');
-		
+
 		this.logs.push('='.repeat(80));
 		this.logs.push(`Debug Log Session`);
 		this.logs.push(`Map: ${MAP_NAME} v${MAP_VERSION}`);
@@ -110,7 +128,10 @@ export function debugPrint(message: string, ...args: any[]): void {
 	if (SHOW_DEBUG_PRINTS) {
 		const fullMessage = args.length > 0 ? `${message} ${args.join(' ')}` : message;
 		print(`${HexColors.RED}DEBUG:|r ${fullMessage}`);
-		DebugLogger.getInstance().addLog(fullMessage);
+
+		if (SAVE_DEBUG_LOGS_TO_FILE) {
+			DebugLogger.getInstance().addLog(fullMessage);
+		}
 	}
 }
 

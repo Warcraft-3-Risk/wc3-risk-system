@@ -74,12 +74,15 @@ export class PlayerManager {
 
 	public getEmptyPlayerSlots(): player[] {
 		let players: player[] = [];
-		for (let i = 0; i <= PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
-			const activePlayer = PlayerManager.getInstance().players.get(player);
 
-			// Find all slots that are not players
-			if (!activePlayer) {
+			if (IsPlayerObserver(player)) {
+				this._observerFromHandle.set(player, new HumanPlayer(player));
+				continue;
+			}
+
+			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY) {
 				players.push(player);
 			}
 		}
@@ -89,16 +92,27 @@ export class PlayerManager {
 	public getPlayersThatLeft(): player[] {
 		let players: player[] = [];
 		// Find all slots that are eliminated players with no units
-		for (let i = 0; i <= PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
-			const activePlayer = PlayerManager.getInstance().players.get(player);
 
-			if (
-				activePlayer &&
-				activePlayer.status.isLeft() &&
-				activePlayer.trackedData.units.size === 0 &&
-				activePlayer.trackedData.cities.cities.length === 0
-			) {
+			// Ignore observers
+			if (IsPlayerObserver(player)) {
+				this._observerFromHandle.set(player, new HumanPlayer(player));
+				continue;
+			}
+
+			// Only consider players that have left
+			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_LEFT) {
+				continue;
+			}
+
+			// Ensure the player is tracked and has no units or cities
+			const activePlayer = PlayerManager.getInstance().players.get(player);
+			if (!activePlayer) {
+				continue;
+			}
+
+			if (activePlayer.trackedData.units.size === 0 && activePlayer.trackedData.cities.cities.length === 0) {
 				players.push(player);
 			}
 		}
