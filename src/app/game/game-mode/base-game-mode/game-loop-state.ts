@@ -140,9 +140,17 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onStartTurn(turn: number): void {
 		this.updateFogSettings(turn);
-		ClientManager.getInstance().allocateClientSlot();
-		ScoreboardManager.getInstance().toggleVisibility(false); // Required to prevent shared control clients from overriding the scoreboard
-		ScoreboardManager.getInstance().toggleVisibility(true); // ^
+		const allocated = ClientManager.getInstance().allocateClientSlot();
+		debugPrint(`GameLoopState: Client allocation on turn start: ${allocated ? 'successful' : 'not needed or failed'}`);
+		// If a client was allocated, we need to update the scoreboard visibility and do a full update
+		// This is to ensure that the scoreboard is correctly displayed for the newly allocated client
+		if (allocated) {
+			debugPrint('GameLoopState: Client allocated, updating scoreboard visibility and full update');
+			ScoreboardManager.getInstance().toggleVisibility(false); // Required to prevent shared control clients from overriding the scoreboard
+			ScoreboardManager.getInstance().toggleVisibility(true); // ^
+			ScoreboardManager.getInstance().updateFull();
+			debugPrint('GameLoopState: Scoreboard updated after client allocation');
+		}
 		ScoreboardManager.getInstance().updateFull();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		GlobalGameData.matchPlayers
