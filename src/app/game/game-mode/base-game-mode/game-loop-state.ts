@@ -165,6 +165,19 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		this.messageGameState();
 		ReplayManager.getInstance().onTurnStart();
+
+		//Debug list of current players that have left
+		const players = PlayerManager.getInstance()
+			.getHumanPlayers()
+			.filter((p) => p.status.isLeft());
+		debugPrint('PlayerManager: Players that have left: ' + players.map((p) => GetPlayerName(p.getPlayer())).join(', '));
+		debugPrint(
+			'GlobalMatchData: Players that have left: ' +
+				GlobalGameData.matchPlayers
+					.filter((x) => x.status.isLeft())
+					.map((p) => GetPlayerName(p.getPlayer()))
+					.join(', ')
+		);
 	}
 
 	onEndTurn(turn: number): void {

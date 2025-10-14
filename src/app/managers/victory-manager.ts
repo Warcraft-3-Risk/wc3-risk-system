@@ -112,8 +112,8 @@ export class VictoryManager {
 			}
 		}
 
-		if (PlayerManager.getInstance().activePlayers.size <= 1) {
-			const remainingPlayer = Array.from(PlayerManager.getInstance().activePlayers.values())[0];
+		if (PlayerManager.getInstance().activePlayersThatAreAlive.size <= 1) {
+			const remainingPlayer = Array.from(PlayerManager.getInstance().activePlayersThatAreAlive.values())[0];
 			return fnAllEnemiesEleminated(remainingPlayer);
 		}
 		return;

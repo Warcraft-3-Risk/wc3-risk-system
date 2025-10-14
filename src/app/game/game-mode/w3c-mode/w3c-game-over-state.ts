@@ -25,7 +25,7 @@ export class W3CGameOverState<T extends StateData> extends BaseState<T> {
 		Quests.getInstance().updatePlayersQuest();
 
 		// Set end data for all remaining active players - defeated players have had their end data set already as they were defeated
-		PlayerManager.getInstance().activePlayers.forEach((player) => {
+		PlayerManager.getInstance().activePlayersThatAreAlive.forEach((player) => {
 			player.setEndData();
 		});
 

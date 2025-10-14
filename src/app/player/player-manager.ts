@@ -4,7 +4,7 @@ import { buildGuardHealthButton, buildGuardValueButton } from '../ui/player-pref
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
-import { PLAYER_SLOTS } from '../utils/utils';
+import { debugPrint } from '../utils/debug-print';
 
 // const banList: string[] = [
 // ];
@@ -89,7 +89,7 @@ export class PlayerManager {
 		return players;
 	}
 
-	public getPlayersThatLeft(): player[] {
+	public getPlayersThatLeftWithNoUnitsOrCities(): player[] {
 		let players: player[] = [];
 		// Find all slots that are eliminated players with no units
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
@@ -112,8 +112,16 @@ export class PlayerManager {
 				continue;
 			}
 
+			// If the player has no units and no cities, consider them for client allocation
+			debugPrint(
+				`Player ${GetPlayerId(player)} has left. Units: ${activePlayer.trackedData.units.size}, Cities: ${activePlayer.trackedData.cities.cities.length}`
+			);
+
 			if (activePlayer.trackedData.units.size === 0 && activePlayer.trackedData.cities.cities.length === 0) {
+				debugPrint(`Player ${GetPlayerId(player)} added to left players list for potential client allocation.`);
 				players.push(player);
+			} else {
+				debugPrint(`Player ${GetPlayerId(player)} not added to left players list (has units or cities).`);
 			}
 		}
 		return players;
@@ -200,7 +208,15 @@ export class PlayerManager {
 	}
 
 	public get activePlayers(): Map<player, ActivePlayer> {
+		return new Map(Array.from(this._playerFromHandle));
+	}
+
+	public get activePlayersThatAreAlive(): Map<player, ActivePlayer> {
 		return new Map(Array.from(this._playerFromHandle).filter(([key, value]) => value.status.isActive()));
+	}
+
+	public get activePlayersThatHaveNotLeft(): Map<player, ActivePlayer> {
+		return new Map(Array.from(this._playerFromHandle).filter(([key, value]) => !value.status.isLeft()));
 	}
 
 	public get observers(): Map<player, HumanPlayer> {

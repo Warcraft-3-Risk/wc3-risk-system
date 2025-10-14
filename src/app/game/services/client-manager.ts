@@ -46,7 +46,9 @@ export class ClientManager implements Resetable {
 	private getAvailableClientSlots(): client[] {
 		let clients: client[] = [];
 		const emptySlots = PlayerManager.getInstance().getEmptyPlayerSlots();
-		const leftPlayers = PlayerManager.getInstance().getPlayersThatLeft();
+		debugPrint(`ClientManager: Found ${emptySlots.length} empty player slots`);
+		const leftPlayers = PlayerManager.getInstance().getPlayersThatLeftWithNoUnitsOrCities();
+		debugPrint(`ClientManager: Found ${leftPlayers.length} players that have left with no units or cities`);
 
 		if (emptySlots && emptySlots.length > 0) {
 			clients.push(...emptySlots.filter((p) => p !== null && p !== undefined));
@@ -73,20 +75,21 @@ export class ClientManager implements Resetable {
 
 		debugPrint('ClientManager: Client allocation not yet done, proceeding');
 
-		debugPrint('ClientManager: Checking number of active players');
-		const players = Array.from(PlayerManager.getInstance().players.entries())
-			.map(([, activePlayer]) => activePlayer)
-			.filter((x) => x.status.isActive())
-			.map((x) => x.getPlayer());
+		debugPrint('ClientManager: Checking number of active, dead or stfu players');
+		let playersThatHaveNotLeft = Array.from(PlayerManager.getInstance().activePlayersThatHaveNotLeft)
+			.map(([player, _]) => player)
+			.sort((a, b) => GetPlayerId(a) - GetPlayerId(b));
 
-		debugPrint(`ClientManager: Found ${players.length} active players slots: ${players.map((c) => GetPlayerId(c)).join(', ')}`);
+		debugPrint(
+			`ClientManager: Found ${playersThatHaveNotLeft.length} active players slots: ${playersThatHaveNotLeft.map((c) => GetPlayerId(c)).join(', ')}`
+		);
 
 		// Only allocate a client slot if there are less than MAX_PLAYERS_FOR_CLIENT_ALLOCATION players
-		if (players.length > ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
-			debugPrint(`ClientManager: Too many active players (${players.length}), skipping allocation`);
+		if (playersThatHaveNotLeft.length > ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
+			debugPrint(`ClientManager: Too many active players (${playersThatHaveNotLeft.length}), skipping allocation`);
 			return false;
 		} else {
-			debugPrint(`ClientManager: Active players within limit (${players.length}), proceeding with allocation`);
+			debugPrint(`ClientManager: Active players within limit (${playersThatHaveNotLeft.length}), proceeding with allocation`);
 		}
 
 		debugPrint('ClientManager: Checking current client allocations');
@@ -98,33 +101,36 @@ export class ClientManager implements Resetable {
 		}
 
 		debugPrint('ClientManager: Retrieving available client slots');
-		let availableClientSlots = this.getAvailableClientSlots().filter(
-			(client) => !players.find((player) => GetPlayerId(player) === GetPlayerId(client))
-		);
+		let availableClientSlots = this.getAvailableClientSlots();
+
 		debugPrint(`ClientManager: Found ${availableClientSlots.length} available client slots`);
 
 		debugPrint(`ClientManager: Available client slots: ${availableClientSlots.map((c) => GetPlayerId(c)).join(', ')}`);
 
-		if (availableClientSlots.length < players.length) {
+		if (availableClientSlots.length < playersThatHaveNotLeft.length) {
 			debugPrint('ClientManager: Insufficient client slots available for allocation');
 			return false;
 		}
 
-		debugPrint(`ClientManager: Attempting to allocate clients for ${players.length} active players`);
-		players.forEach((activePlayer) => {
-			const playerHandle = activePlayer;
-			const client = availableClientSlots.pop();
+		debugPrint(`ClientManager: Attempting to allocate clients for ${playersThatHaveNotLeft.length} active players`);
+		availableClientSlots.forEach((client) => {
+			const player = playersThatHaveNotLeft.pop();
 
-			if (!client) {
-				debugPrint(`ClientManager: No available client slots for player ${GetPlayerName(playerHandle)}`);
+			if (!player) {
+				debugPrint(`ClientManager: No player found for client ${GetPlayerId(client)}, skipping`);
 				return;
 			}
 
-			debugPrint(`ClientManager: Allocating client slot ${GetPlayerId(client)} to player ${GetPlayerName(playerHandle)}`);
-			this.playerToClient.set(playerHandle, client);
-			this.clientToPlayer.set(client, playerHandle);
-			this.givePlayerFullControlOfClient(playerHandle, client);
-			debugPrint(`ClientManager: Successfully allocated client to player ${GetPlayerName(playerHandle)}`);
+			if (GetPlayerId(player) === GetPlayerId(client)) {
+				debugPrint(`ClientManager: Client ${GetPlayerId(client)} and Player ${GetPlayerId(player)} are identical, skipping`);
+				return;
+			}
+
+			debugPrint(`ClientManager: Allocating client slot ${GetPlayerId(client)} to player ${GetPlayerId(player)}`);
+			this.playerToClient.set(player, client);
+			this.clientToPlayer.set(client, player);
+			this.givePlayerFullControlOfClient(player, client);
+			debugPrint(`ClientManager: Successfully allocated client to player ${GetPlayerId(player)}`);
 		});
 
 		// Mark allocation as complete
