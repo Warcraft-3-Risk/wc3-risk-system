@@ -3,7 +3,7 @@ import { record, pack } from 'src/app/libs/mmd';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { NameManager } from '../managers/names/name-manager';
 import { UNIT_ID } from 'src/configs/unit-id';
-import { MAP_NAME } from '../utils/map-info';
+import { MAP_NAME, MAP_VERSION } from '../utils/map-info';
 import { ComputeRatio } from '../utils/utils';
 import { SettingsContext } from '../settings/settings-context';
 import { GameTypeOptions } from '../settings/strategies/game-type-strategy';
@@ -68,6 +68,7 @@ export class ReplayManager {
     fields = [];
 
     fields.push(`map=${pack(MAP_NAME)}`);
+    fields.push(`map_version=${pack(MAP_VERSION)}`);
     fields.push(`mode=${pack(GameTypeOptions[settings.GameType])}`);
     fields.push(`diplomacy=${pack(DiplomacyStrings[settings.Diplomacy.option])}`);
     fields.push(`fog=${pack(FogStrings[settings.Fog])}`);
