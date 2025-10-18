@@ -1,5 +1,6 @@
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
+import { CountdownMessage } from '../../../utils/messages';
 
 export class DisablePausesState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -19,6 +20,8 @@ export class DisablePausesState<T extends StateData> extends BaseState<T> {
 		}
 
 		ClearTextMessages();
+
+		print(`Pauses have been consumed to maintain continuous gameplay.`);
 
 		this.nextState(this.stateData);
 	}
