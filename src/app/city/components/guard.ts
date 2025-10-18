@@ -50,6 +50,7 @@ export class Guard implements Resetable {
 		}
 
 		this._unit = guard;
+		UnitAddAbility(guard, FourCC("A006"));
 		UnitAddType(this._unit, UNIT_TYPE.GUARD);
 	}
 
@@ -60,6 +61,7 @@ export class Guard implements Resetable {
 		if (this._unit == null) return;
 
 		UnitRemoveType(this._unit, UNIT_TYPE.GUARD);
+		UnitRemoveAbility(this._unit, FourCC("A006"));
 		this._unit = null;
 	}
 

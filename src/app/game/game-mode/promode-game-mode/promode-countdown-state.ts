@@ -9,6 +9,6 @@ export class PromodeCountdownState extends CountdownState<StateData> {
 	}
 
 	override countdownDisplay(duration: number): void {
-		CountdownMessage(`The Game will start in:\n${duration}`);
+		CountdownMessage(`The Game will start in\n${duration}`);
 	}
 }

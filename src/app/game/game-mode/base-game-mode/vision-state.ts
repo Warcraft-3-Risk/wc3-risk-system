@@ -10,8 +10,6 @@ export class VisionState<T extends StateData> extends BaseState<T> {
 	run(): void {
 		SettingsContext.getInstance().applyStrategy('Fog');
 
-		ClearTextMessages();
-
 		this.nextState(this.stateData);
 	}
 }

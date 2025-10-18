@@ -40,6 +40,6 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 	}
 
 	countdownDisplay(duration: number): void {
-		CountdownMessage(`The Game will start in:\n${duration}`);
+		CountdownMessage(`The Game will start in\n${duration}`);
 	}
 }
