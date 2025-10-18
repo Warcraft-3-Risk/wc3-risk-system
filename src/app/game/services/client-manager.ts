@@ -5,6 +5,8 @@ import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { PLAYER_COLORS } from 'src/app/utils/player-colors';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { CLIENT_ALLOCATION_ENABLED } from 'src/configs/game-settings';
+import { GlobalGameData } from '../state/global-game-state';
 
 interface client extends player {}
 
@@ -65,7 +67,24 @@ export class ClientManager implements Resetable {
 	// This method can only be called once per game
 	// Returns true if allocation was successfully applied, false otherwise
 	public allocateClientSlot(): boolean {
+		if (!CLIENT_ALLOCATION_ENABLED) {
+			debugPrint('ClientManager: Client allocation is disabled, skipping');
+			return false;
+		}
 		debugPrint('ClientManager: Starting client allocation process');
+
+		//Debug list of current players that have left
+		const players = PlayerManager.getInstance()
+			.getHumanPlayers()
+			.filter((p) => p.status.isLeft());
+		debugPrint('PlayerManager: Players that have left: ' + players.map((p) => GetPlayerName(p.getPlayer())).join(', '));
+		debugPrint(
+			'GlobalMatchData: Players that have left: ' +
+				GlobalGameData.matchPlayers
+					.filter((x) => x.status.isLeft())
+					.map((p) => GetPlayerName(p.getPlayer()))
+					.join(', ')
+		);
 
 		// Check if allocation has already been done
 		if (this.hasAllocated) {
