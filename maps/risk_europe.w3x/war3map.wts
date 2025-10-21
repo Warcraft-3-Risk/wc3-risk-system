@@ -1046,12 +1046,6 @@ STRING 7437
 Set Spawner Rally Point - All
 }
 
-STRING 7438
-// Abilities: a033 (Set Spawner Rally Point - All), Ubertip (Tooltip - Normal - Extended)
-{
-This will allow you to set the rally point of all owned spawners  from the origin of the casting spawner.
-}
-
 STRING 7439
 // Abilities: a031 (Set Spawner Rally Point - Radius 3000), Name (Name)
 {
@@ -1461,5 +1455,29 @@ Q
 STRING 7531
 {
 Risk Europe
+}
+
+STRING 7532
+// Abilities: A006 (Guard), Name (Name)
+{
+Guard
+}
+
+STRING 7533
+// Abilities: A006 (Guard), Tip (Tooltip - Normal)
+{
+Guard
+}
+
+STRING 7535
+// Abilities: A006 (Guard), Ubertip (Tooltip - Normal - Extended)
+{
+This unit is a guard.
+}
+
+STRING 7537
+// Abilities: a033 (Set Spawner Rally Point - All), Ubertip (Tooltip - Normal - Extended)
+{
+This will allow you to set the rally point of all owned spawners from the origin of the casting spawner.
 }
 
