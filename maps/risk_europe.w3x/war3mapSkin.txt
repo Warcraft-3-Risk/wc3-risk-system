@@ -1,6 +1,6 @@
 [Categories]
 GiantClass=TRIGSTR_3080
-TaurenClass=TRIGSTR_7259
+TaurenClass=TRIGSTR_7540
 UndeadClass=TRIGSTR_3081
 
 [CustomSkin]

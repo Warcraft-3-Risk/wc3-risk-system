@@ -116,7 +116,7 @@ export default class CameraManager {
 		if (p == GetLocalPlayer()) {
 			const camTimer: timer = CreateTimer();
 
-			TimerStart(camTimer, 1, true, () => {
+			TimerStart(camTimer, 0.5, true, () => {
 				if (this.camData.has(p)) {
 					this.setCameraFields(p, this.camData.get(p));
 				}

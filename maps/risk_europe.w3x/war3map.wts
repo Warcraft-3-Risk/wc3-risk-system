@@ -685,6 +685,7 @@ Produces every round spawns.
 }
 
 STRING 7259
+// Abilities: A007 (Artillery), Name (Name)
 {
 Artillery
 }
@@ -1479,5 +1480,22 @@ STRING 7537
 // Abilities: a033 (Set Spawner Rally Point - All), Ubertip (Tooltip - Normal - Extended)
 {
 This will allow you to set the rally point of all owned spawners from the origin of the casting spawner.
+}
+
+STRING 7538
+// Abilities: A007 (Artillery), Tip (Tooltip - Normal)
+{
+Artillery
+}
+
+STRING 7539
+// Abilities: A007 (Artillery), Ubertip (Tooltip - Normal - Extended)
+{
+This unit has 10% increased damage and 10% increased range against ships.
+}
+
+STRING 7540
+{
+Artillery
 }
 
