@@ -14,10 +14,14 @@ type Transport = {
 	duration: number;
 	autoloadStatus: boolean;
 	event: TimedEvent | null;
+	floatingText: texttag | null;
 };
 
 const AUTO_LOAD_DISTANCE: number = 350;
 const AUTO_LOAD_DURATION: number = 600;
+const MAX_CARGO_CAPACITY: number = 10;
+const FLOATING_TEXT_OFFSET_X: number = -100;
+const FLOATING_TEXT_HEIGHT_OFFSET: number = 120;
 
 /**
  * Manages transport units and their cargo.
@@ -60,6 +64,7 @@ export class TransportManager {
 		this.spellCastHandler();
 		this.spellEffectHandler();
 		this.spellEndCastHandler();
+		this.startFloatingTextUpdateLoop();
 	}
 
 	/**
@@ -74,6 +79,7 @@ export class TransportManager {
 			duration: 0,
 			autoloadStatus: false,
 			event: null,
+			floatingText: null,
 		};
 
 		this.transports.set(unit, transport);
@@ -111,6 +117,11 @@ export class TransportManager {
 			DestroyEffect(transportData.effect);
 		}
 
+		if (transportData.floatingText != null) {
+			DestroyTextTag(transportData.floatingText);
+			transportData.floatingText = null;
+		}
+
 		transportData.autoloadStatus = false;
 
 		this.transports.delete(unit);
@@ -143,7 +154,11 @@ export class TransportManager {
 				// Untrack the unit since it's now loaded and managed by the transport
 				UnitLagManager.getInstance().untrackUnit(loadedUnit);
 
-				this.transports.get(transport).cargo.push(loadedUnit);
+				const transportData = this.transports.get(transport);
+				transportData.cargo.push(loadedUnit);
+
+				// Update floating text after loading a unit
+				this.updateFloatingText(transportData);
 
 				transport = null;
 				loadedUnit = null;
@@ -188,6 +203,9 @@ export class TransportManager {
 							unloadedUnits.forEach((unit) => {
 								TransportManager.delayedTrackQueue.push(unit);
 							});
+
+							// Update floating text after unloading a unit
+							this.updateFloatingText(transport);
 
 							// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
 							// Consider moving the timer into the UnitLagManager.
@@ -296,6 +314,9 @@ export class TransportManager {
 						debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
 						UnitLagManager.getInstance().trackUnit(unit);
 					});
+
+					// Update floating text after unloading
+					this.updateFloatingText(transport);
 				}
 
 				return false;
@@ -310,6 +331,72 @@ export class TransportManager {
 	 */
 	private isTerrainInvalid(transport: unit): boolean {
 		return GetTerrainType(GetUnitX(transport), GetUnitY(transport)) != FourCC('Vcbp');
+	}
+
+	/**
+	 * Updates the floating text display above a transport unit showing cargo count.
+	 * Only visible to observers.
+	 * @param transport - The transport data to update the floating text for.
+	 */
+	private updateFloatingText(transport: Transport) {
+		const cargoCount = transport.cargo.length;
+
+		// If there's no cargo, hide/destroy the floating text
+		if (cargoCount === 0) {
+			if (transport.floatingText != null) {
+				// Only destroy for observers
+				if (IsPlayerObserver(GetLocalPlayer())) {
+					DestroyTextTag(transport.floatingText);
+				}
+				transport.floatingText = null;
+			}
+			return;
+		}
+
+		// Create floating text if it doesn't exist
+		if (transport.floatingText == null) {
+			transport.floatingText = CreateTextTag();
+			SetTextTagPermanent(transport.floatingText, true);
+			SetTextTagLifespan(transport.floatingText, 0);
+			SetTextTagFadepoint(transport.floatingText, 0);
+		}
+
+		// Update the text content
+		const text = cargoCount + '/' + MAX_CARGO_CAPACITY;
+		SetTextTagText(transport.floatingText, text, 0.017);
+		SetTextTagPos(
+			transport.floatingText,
+			GetUnitX(transport.unit) + FLOATING_TEXT_OFFSET_X,
+			GetUnitY(transport.unit),
+			FLOATING_TEXT_HEIGHT_OFFSET
+		);
+		SetTextTagColor(transport.floatingText, 255, 255, 255, 255);
+
+		// Show only to observers using GetLocalPlayer
+		if (IsPlayerObserver(GetLocalPlayer())) {
+			SetTextTagVisibility(transport.floatingText, true);
+		} else {
+			SetTextTagVisibility(transport.floatingText, false);
+		}
+	}
+
+	/**
+	 * Starts a periodic loop to update floating text positions for all transports.
+	 * This ensures the floating text follows the transport units as they move.
+	 */
+	private startFloatingTextUpdateLoop() {
+		const updateTimer: timer = CreateTimer();
+
+		TimerStart(updateTimer, 0.03, true, () => {
+			if (IsPlayerObserver(GetLocalPlayer())) {
+				this.transports.forEach((transport) => {
+					if (transport.floatingText != null && transport.cargo.length > 0) {
+						// Update position to follow the unit
+						SetTextTagPos(transport.floatingText, GetUnitX(transport.unit) + FLOATING_TEXT_OFFSET_X, GetUnitY(transport.unit), 100);
+					}
+				});
+			}
+		});
 	}
 
 	/**
