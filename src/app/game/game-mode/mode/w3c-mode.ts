@@ -45,6 +45,7 @@ export class W3CMode extends BaseMode<W3CData> {
 	wrapState<T extends StateData>(state: BaseState<T>): BaseState<T> {
 		const originalOnPlayerLeft = state.onPlayerLeft.bind(state);
 		const originalOnEnterState = state.onEnterState.bind(state);
+		const originalOnPlayerForfeit = state.onPlayerForfeit.bind(state);
 
 		state.onPlayerLeft = async (player: ActivePlayer) => {
 			debugPrint(`[W3CMode] onPlayerLeft`);
@@ -56,6 +57,12 @@ export class W3CMode extends BaseMode<W3CData> {
 			debugPrint(`[W3CMode] onEnterState)`);
 			const terminate = await this.checkAndHandleVictoryAsync('No human opponents found. Victory by default!');
 			if (!terminate) originalOnEnterState();
+		};
+
+		state.onPlayerForfeit = async (player: ActivePlayer) => {
+			debugPrint(`[W3CMode] onPlayerForfeit`);
+			const terminate = await this.checkAndHandleVictoryAsync('All human opponents have forfeited. Victory by default!');
+			if (!terminate) originalOnPlayerForfeit(player);
 		};
 
 		return state;
