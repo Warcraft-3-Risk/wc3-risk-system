@@ -20,6 +20,12 @@ export const TICK_DURATION_IN_SECONDS: number = 1;
 //This is the nomad duration in seconds. 60 seconds by default.
 export const NOMAD_DURATION: number = 60;
 
+//This is the base gold cap for the soft income cap. Default is 100.
+export const BASE_GOLD_CAP: number = 100;
+
+//This is the additional gold cap per city for the soft income cap. Default is 10.
+export const GOLD_CAP_PER_CITY: number = 10;
+
 //This represents the drop in required cities to win each turn. Default is 1.
 export const OVERTIME_MODIFIER: number = 1;
 
