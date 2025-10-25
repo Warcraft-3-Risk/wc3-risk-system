@@ -139,9 +139,7 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 }
 
 export function onPlayerForfeitHandle(player: ActivePlayer): void {
-	const playerStatus = PlayerManager.getInstance().getPlayerStatus(player.getPlayer());
-	if (playerStatus.isEliminated()) return;
-
+	player.status.status = PLAYER_STATUS.DEAD;
 	PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), PLAYER_STATUS.DEAD);
 	ScoreboardManager.getInstance().updatePartial();
 }

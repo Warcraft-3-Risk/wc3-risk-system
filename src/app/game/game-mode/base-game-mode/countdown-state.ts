@@ -3,9 +3,12 @@ import { PlayGlobalSound } from 'src/app/utils/utils';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { STARTING_COUNTDOWN } from '../../../../configs/game-settings';
+import { ActivePlayer } from 'src/app/player/types/active-player';
+import { PlayerManager } from 'src/app/player/player-manager';
 
 export class CountdownState<T extends StateData> extends BaseState<T> {
 	private initialDuration: number;
+	private shouldSkipToNextState: boolean = false;
 
 	public constructor(duration: number = STARTING_COUNTDOWN) {
 		super();
@@ -20,6 +23,18 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 			BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 			this.countdownDisplay(duration);
 			TimerStart(startDelayTimer, 1, true, () => {
+				// Check if we should skip to next state due to forfeit
+				if (this.shouldSkipToNextState) {
+					PauseTimer(startDelayTimer);
+					DestroyTimer(startDelayTimer);
+					BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), false);
+					EnableSelect(true, true);
+					EnableDragSelect(true, true);
+					PlayGlobalSound('Sound\\Interface\\Hint.flac');
+					this.nextState(this.stateData);
+					return;
+				}
+
 				BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 				this.countdownDisplay(duration);
 				if (duration <= 0) {
@@ -36,6 +51,18 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 			});
 		} catch (error) {
 			print('Error in Metagame ' + error);
+		}
+	}
+
+	onPlayerForfeit(player: ActivePlayer): void {
+		super.onPlayerForfeit(player);
+
+		// Check how many human players remain after this forfeit
+		const humanPlayers = PlayerManager.getInstance().getCurrentActiveHumanPlayers();
+
+		// If only 1 or 2 human players remain, skip countdown and go to next state
+		if (humanPlayers.length <= 2) {
+			this.shouldSkipToNextState = true;
 		}
 	}
 

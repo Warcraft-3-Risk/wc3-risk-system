@@ -80,10 +80,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	endIfLastActivePlayer(): boolean {
-		if (PlayerManager.getInstance().activePlayersThatAreAlive.size === 1) {
+		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
+			VictoryManager.getInstance().updateAndGetGameState();
 			GlobalGameData.matchState = 'postMatch';
 			return true;
-		}
+		});
 
 		return false;
 	}
