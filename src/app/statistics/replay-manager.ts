@@ -77,6 +77,22 @@ export class ReplayManager {
 
     record(`game ${fields.join(' ')}`);
 
+    // Record player colors after they've been shuffled
+    const nameManager = NameManager.getInstance();
+    
+    for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+      const player = Player(i);
+      const playerId = GetPlayerId(player);
+
+      if (player &&
+          GetPlayerController(player) === MAP_CONTROL_USER &&
+          GetPlayerSlotState(player) !== PLAYER_SLOT_STATE_EMPTY) {
+        const playerColor = pack(nameManager.getColor(player) ?? '');
+
+        record(`meta player id=${playerId} color=${playerColor}`);
+      }
+    }
+
     this.initialized = true;
   }
 
@@ -142,7 +158,10 @@ export class ReplayManager {
 
       const fields = [];
 
-      fields.push(`rival=${rivalName}`);
+      fields.push(`cities_max=${activePlayer.trackedData.cities.max}`);
+      fields.push(`income_max=${activePlayer.trackedData.income.max}`);
+      fields.push(`gold_max=${activePlayer.trackedData.gold.max}`);
+      fields.push(`rival=${pack(rivalName)}`);
       fields.push(`turn_died=${activePlayer.trackedData.turnDied}`);
 
       record(`player ${playerId} ${fields.join (' ')}`);
@@ -197,8 +216,8 @@ export class ReplayManager {
 
       bucket = activePlayer.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`);
 
-      kills = bucket?.killValue ?? 0;
-      deaths = bucket?.deathValue ?? 0;
+      kills = bucket?.kills ?? 0;
+      deaths = bucket?.deaths ?? 0;
 
       fields.push(`${this.keys.ss_kills}=${kills}`);
       fields.push(`${this.keys.ss_deaths}=${deaths}`);
@@ -206,8 +225,8 @@ export class ReplayManager {
 
       bucket = activePlayer.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`);
       
-      kills = bucket?.killValue ?? 0;
-      deaths = bucket?.deathValue ?? 0;
+      kills = bucket?.kills ?? 0;
+      deaths = bucket?.deaths ?? 0;
 
       fields.push(`${this.keys.tank_kills}=${kills}`);
       fields.push(`${this.keys.tank_deaths}=${deaths}`);

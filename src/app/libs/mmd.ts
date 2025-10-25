@@ -1,4 +1,5 @@
 import { addScriptHook, W3TS_HOOK } from 'w3ts';
+import { NameManager } from 'src/app/managers/names/name-manager';
 
 const ESCAPE = '\\';
 const ESCAPED = `${ESCAPE}"`;
@@ -21,6 +22,8 @@ addScriptHook(W3TS_HOOK.MAIN_AFTER, (): void => {
 
     record('meta version=2');
 
+    const nameManager = NameManager.getInstance ();
+
     for (let i = 0; i < bj_MAX_PLAYERS; i++) {
       const player = Player(i);
       const playerId = GetPlayerId(player);
@@ -28,7 +31,9 @@ addScriptHook(W3TS_HOOK.MAIN_AFTER, (): void => {
       if (player &&
           GetPlayerController(player) === MAP_CONTROL_USER &&
           GetPlayerSlotState(player) !== PLAYER_SLOT_STATE_EMPTY) {
-        record(`meta player id=${playerId} name=${pack(GetPlayerName(player) ?? '')}`);
+        const playerName = pack(nameManager.getBtag(player) ?? '');
+
+        record(`meta player id=${playerId} name=${playerName}`);
       }
     }
 
