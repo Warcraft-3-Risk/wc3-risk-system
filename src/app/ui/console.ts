@@ -20,6 +20,10 @@ export function SetConsoleUI() {
 	BlzFrameSetText(lumberFrame, '');
 	BlzFrameSetSize(lumberFrame, 0.0000001, 0.0000001);
 
+	// Widen the gold text frame to accommodate larger numbers (e.g., "1042/350")
+	const goldFrame: framehandle = BlzGetFrameByName('ResourceBarGoldText', 0);
+	BlzFrameSetSize(goldFrame, 0.06, 0.017);
+
 	const mapInfo: framehandle = BlzCreateFrameByType(
 		'TEXT',
 		'mapInfo',
@@ -48,6 +52,11 @@ export function SetConsoleUI() {
 		BlzFrameSetVisible(BlzGetFrameByName('LumberText', i), false);
 		BlzFrameSetVisible(BlzGetFrameByName('VisionCheckBox', i), false);
 	}
+
+	// for (let i = 0; i < 23; i++) {
+	// 	BlzFrameSetVisible(BlzGetFrameByName('GoldBackdrop', i), false);
+	// 	BlzFrameSetVisible(BlzGetFrameByName('GoldText', i), false);
+	// }
 
 	if (GetHandleId(BlzGetFrameByName('ChatPlayerLabel', 0)) == 0) {
 		Location(0, 0);

@@ -29,6 +29,10 @@ export function clearTickUI(): void {
 	setTickUI('', '');
 }
 
+export function setGold(goldAmount: number, goldCap: number): void {
+	BlzFrameSetText(BlzGetFrameByName('ResourceBarGoldText', 0), `${goldAmount}/${goldCap}`);
+}
+
 function getDayNightName(turn: number): string {
 	// 0 = dusk
 	// 1 = night
