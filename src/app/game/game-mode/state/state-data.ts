@@ -1,1 +1,2 @@
-export interface StateData {}
+export interface StateData {
+}

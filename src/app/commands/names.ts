@@ -6,7 +6,7 @@ import { ShuffleArray } from '../utils/utils';
 
 export function NamesCommand(chatManager: ChatManager, playerManager: PlayerManager, nameManager: NameManager) {
 	chatManager.addCmd(['-names', '-players'], () => {
-		if (GlobalGameData.matchState != 'inProgress') return;
+		if (GlobalGameData.matchState != 'inProgress' && GlobalGameData.matchState != 'preMatch') return;
 
 		const player: player = GetTriggerPlayer();
 		const nameList: player[] = [];
