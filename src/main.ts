@@ -36,6 +36,7 @@ import { FogManager } from './app/managers/fog-manager';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
 import { ClientManager } from './app/game/services/client-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
+import { PlayerManager } from './app/player/player-manager';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -62,6 +63,7 @@ function tsMain() {
 		//Handle names to prevent namebug
 		NameManager.getInstance();
 		ClientManager.getInstance();
+		PlayerManager.getInstance();
 
 		//Set up countries
 		SetCountries();

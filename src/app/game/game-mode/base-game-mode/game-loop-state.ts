@@ -37,6 +37,9 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		TimerStart(_matchLoopTimer, TICK_DURATION_IN_SECONDS, true, () => {
 			try {
+				// End game if only one player is remaining
+				this.endIfLastActivePlayer();
+
 				// Check if the match is over
 				if (this.isMatchOver()) {
 					PauseTimer(_matchLoopTimer);
@@ -74,6 +77,15 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				print('Error in Timer ' + error);
 			}
 		});
+	}
+
+	endIfLastActivePlayer(): boolean {
+		if (PlayerManager.getInstance().activePlayersThatAreAlive.size === 1) {
+			GlobalGameData.matchState = 'postMatch';
+			return true;
+		}
+
+		return false;
 	}
 
 	isMatchOver(): boolean {

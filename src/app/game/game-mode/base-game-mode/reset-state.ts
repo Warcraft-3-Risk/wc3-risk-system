@@ -7,6 +7,9 @@ import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { FogManager } from 'src/app/managers/fog-manager';
 import { ClientManager } from '../../services/client-manager';
+import { TeamManager } from 'src/app/teams/team-manager';
+import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
+import { GlobalGameData } from '../../state/global-game-state';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -36,6 +39,25 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 		await Wait.forSeconds(1);
 
 		ClientManager.getInstance().reset();
+
+		GlobalGameData.matchPlayers.forEach((val) => {
+			val.trackedData.reset();
+			val.trackedData.setKDMaps();
+		});
+
+		const participants = ParticipantEntityManager.getParticipantEntities();
+		ParticipantEntityManager.executeByParticipantEntities(
+			participants,
+			(_) => {},
+			(team) => {
+				team.reset();
+			}
+		);
+		TeamManager.getInstance()
+			.getTeams()
+			.forEach((team) => {
+				team.reset();
+			});
 
 		this.nextState(this.stateData);
 	}

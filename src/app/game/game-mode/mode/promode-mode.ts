@@ -9,12 +9,14 @@ import { StateData } from '../state/state-data';
 import { PromodeCountdownState } from '../promode-game-mode/promode-countdown-state';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-state';
+import { UpdatePlayerStatusState } from '../base-game-mode/update-player-status-state';
 
 export class PromodeData implements StateData {}
 
 export class PromodeMode extends BaseMode<PromodeData> {
 	protected setupStates() {
 		return [
+			new UpdatePlayerStatusState(),
 			new SetupState(),
 			new ApplyFogState(),
 			new CityDistributeState(),
