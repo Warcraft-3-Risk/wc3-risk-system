@@ -43,7 +43,8 @@ export function SetConsoleUI() {
 
 	// CRITICAL: Set font immediately after creating TEXT frame to avoid crashes
 	// TEXT frames require a font to be set before other operations
-	BlzFrameSetFont(customGoldText, 'Fonts\\FRIZQT__.TTF', 0.011, 0);
+	// MasterFont controls resource bar text - typically maps to Arialn.ttf in WC3
+	BlzFrameSetFont(customGoldText, 'Fonts\\Arialn.ttf', 0.011, 0);
 
 	// Set generous size for "XXXX/YYYY" format
 	BlzFrameSetSize(customGoldText, 0.09, 0.017);
