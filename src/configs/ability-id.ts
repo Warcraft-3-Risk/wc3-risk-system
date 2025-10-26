@@ -16,6 +16,7 @@ export const ABILITY_ID = {
 	//Transport Abilities
 	CARGO_HOLD: FourCC('a009'),
 	LOAD: FourCC('a010'),
+	UNLOAD_DEFAULT_HOTKEY: FourCC('Sdro'),
 	UNLOAD: FourCC('a011'),
 	AUTOLOAD_ON: FourCC('a013'),
 	AUTOLOAD_OFF: FourCC('a014'),
