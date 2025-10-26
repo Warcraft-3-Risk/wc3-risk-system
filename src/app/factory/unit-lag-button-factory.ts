@@ -2,12 +2,17 @@ import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
 
 export type ButtonConfig = {
+	active: boolean;
 	player: ActivePlayer;
 	createContext: number;
 	key: oskeytype;
-	texture: string;
+	textures: {
+		active: string, disabled: string
+	};
 	xOffset: number;
-	action: (context: number, texture: string) => void;
+	action: (context: number, texture: {
+		active: string, disabled: string
+	}, active: boolean) => void;
 };
 
 export function createUnitLagButton(config: ButtonConfig): framehandle {
@@ -24,7 +29,7 @@ export function createUnitLagButton(config: ButtonConfig): framehandle {
 	BlzFrameSetAllPoints(buttonIconFrame, button);
 	BlzFrameSetPoint(button, FRAMEPOINT_TOPLEFT, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_TOPLEFT, config.xOffset, -0.025);
 	BlzFrameSetSize(button, 0.02, 0.02);
-	BlzFrameSetTexture(buttonIconFrame, config.texture, 0, true);
+	BlzFrameSetTexture(buttonIconFrame, config.textures.active, 0, true);
 
 	const tooltipFrame = BlzCreateFrame(
 		'EscMenuControlBackdropTemplate',
@@ -42,7 +47,7 @@ export function createUnitLagButton(config: ButtonConfig): framehandle {
 	BlzFrameSetPoint(tooltipFrame, FRAMEPOINT_TOPRIGHT, tooltipText, FRAMEPOINT_TOPRIGHT, 0.01, 0.01);
 
 	BlzFrameSetPoint(tooltipText, FRAMEPOINT_TOPLEFT, button, FRAMEPOINT_BOTTOMLEFT, 0, -0.01);
-	BlzFrameSetEnable(tooltipText, false);
+	BlzFrameSetEnable(tooltipText, true);
 
 	BlzFrameSetText(
 		tooltipText,
@@ -54,7 +59,7 @@ export function createUnitLagButton(config: ButtonConfig): framehandle {
 	BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
 	TriggerAddCondition(
 		hotkeyTrigger,
-		Condition(() => config.action(config.createContext, config.texture))
+		Condition(() => config.action(config.createContext, config.textures, BlzFrameGetEnable(tooltipText)))
 	);
 
 	const buttonTrig = CreateTrigger();
@@ -62,7 +67,7 @@ export function createUnitLagButton(config: ButtonConfig): framehandle {
 	BlzTriggerRegisterFrameEvent(hotkeyTrigger, button, FRAMEEVENT_CONTROL_CLICK);
 	TriggerAddCondition(
 		buttonTrig,
-		Condition(() => config.action(config.createContext, config.texture))
+		Condition(() => config.action(config.createContext, config.textures, BlzFrameGetEnable(tooltipText)))
 	);
 
 	BlzFrameSetVisible(button, false);
