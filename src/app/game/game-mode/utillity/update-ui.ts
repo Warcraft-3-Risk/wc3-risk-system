@@ -25,12 +25,20 @@ export function setTickUI(tickCounter: string, turnCount: string): void {
 }
 
 export function clearTickUI(): void {
-	BlzFrameSetText(BlzGetFrameByName('ResourceBarGoldText', 0), '');
+	// Use the custom gold text frame
+	const customGoldText = BlzGetFrameByName('CustomGoldText', 0);
+	if (GetHandleId(customGoldText) !== 0) {
+		BlzFrameSetText(customGoldText, '');
+	}
 	setTickUI('', '');
 }
 
 export function setGold(goldAmount: number, goldCap: number): void {
-	BlzFrameSetText(BlzGetFrameByName('ResourceBarGoldText', 0), `${goldAmount}/${goldCap}`);
+	// Use the custom gold text frame created in SetConsoleUI
+	const customGoldText = BlzGetFrameByName('CustomGoldText', 0);
+	if (GetHandleId(customGoldText) !== 0) {
+		BlzFrameSetText(customGoldText, `${goldAmount}/${goldCap}`);
+	}
 }
 
 function getDayNightName(turn: number): string {
