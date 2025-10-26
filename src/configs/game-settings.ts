@@ -61,3 +61,9 @@ export const MMD_ENABLED: boolean = true;
 
 // Enable/disable player client allocation. Default is false.
 export const CLIENT_ALLOCATION_ENABLED = false;
+
+// This represents the base gold cap for players. Default is 100.
+export const BASE_GOLD_CAP: number = 100;
+
+// This represents the additional gold cap per city owned. Default is 10.
+export const GOLD_CAP_PER_CITY: number = 10;
