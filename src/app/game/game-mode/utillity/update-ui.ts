@@ -1,4 +1,6 @@
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
+import { IncomeManager } from 'src/app/managers/income-manager';
+import { PlayerManager } from 'src/app/player/player-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { PlayGlobalSound } from 'src/app/utils/utils';
@@ -25,19 +27,26 @@ export function setTickUI(tickCounter: string, turnCount: string): void {
 }
 
 export function clearTickUI(): void {
-	// Use the custom gold text frame
+	// Get frame reference outside of local player block to prevent desync
 	const customGoldText = BlzGetFrameByName('CustomGoldText', 0);
-	if (GetHandleId(customGoldText) !== 0) {
-		BlzFrameSetText(customGoldText, '');
+
+	if (!IsPlayerObserver(GetLocalPlayer())) {
+		if (GetHandleId(customGoldText) !== 0) {
+			BlzFrameSetText(customGoldText, '');
+		}
 	}
 	setTickUI('', '');
 }
 
-export function setGold(goldAmount: number, goldCap: number): void {
-	// Use the custom gold text frame created in SetConsoleUI
+export function updateGold(player: player, goldAmount: number): void {
+	// Get frame reference outside of local player block to prevent desync
 	const customGoldText = BlzGetFrameByName('CustomGoldText', 0);
-	if (GetHandleId(customGoldText) !== 0) {
-		BlzFrameSetText(customGoldText, `${goldAmount}/${goldCap}`);
+
+	if (player == GetLocalPlayer()) {
+		const cap = IncomeManager.calculateGoldCap(PlayerManager.getInstance().players.get(player));
+		if (GetHandleId(customGoldText) !== 0) {
+			BlzFrameSetText(customGoldText, `${goldAmount}/${cap}`);
+		}
 	}
 }
 
