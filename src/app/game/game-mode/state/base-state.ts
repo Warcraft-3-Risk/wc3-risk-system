@@ -12,6 +12,7 @@ import {
 	onPlayerNomadHandle,
 	onPlayerSTFUHandle,
 } from '../utillity/on-player-status';
+import { updateGold } from '../utillity/update-ui';
 
 export abstract class BaseState<T extends StateData> {
 	get stateData(): T {
@@ -55,7 +56,11 @@ export abstract class BaseState<T extends StateData> {
 		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 	}
 
-	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer) {}
+	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer) {
+		// Update soft gold cap display
+		updateGold(owner.getPlayer(), GetPlayerState(owner.getPlayer(), PLAYER_STATE_RESOURCE_GOLD));
+		updateGold(preOwner.getPlayer(), GetPlayerState(preOwner.getPlayer(), PLAYER_STATE_RESOURCE_GOLD));
+	}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit) {}
 
