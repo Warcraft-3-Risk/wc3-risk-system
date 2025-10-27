@@ -267,6 +267,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer): void {
+		super.onCityCapture(city, preOwner, owner);
 		ScoreboardManager.getInstance().updatePartial();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 	}
