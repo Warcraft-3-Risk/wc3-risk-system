@@ -5,9 +5,9 @@ import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
 import { debugPrint } from '../utils/debug-print';
+import { NameManager } from '../managers/names/name-manager';
 
-// const banList: string[] = [
-// ];
+const banList: string[] = [];
 
 export class PlayerManager {
 	public static readonly PLAYING: string = '|cFF00FFF0Playing|r';
@@ -28,12 +28,12 @@ export class PlayerManager {
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
 
-			// banList.forEach((name) => {
-			// 	if (NameManager.getInstance().getBtag(player).toLowerCase() == name) {
-			// 		CustomVictoryBJ(player, false, false);
-			// 		ClearTextMessages();
-			// 	}
-			// });
+			banList.forEach((name) => {
+				if (NameManager.getInstance().getBtag(player).toLowerCase() == name) {
+					CustomDefeatBJ(player, 'You have been defeated!');
+					ClearTextMessages();
+				}
+			});
 
 			if (IsPlayerObserver(player)) {
 				this._observerFromHandle.set(player, new HumanPlayer(player));
