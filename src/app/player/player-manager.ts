@@ -9,7 +9,7 @@ import { NameManager } from '../managers/names/name-manager';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 import { BAN_LIST_ACTIVE } from 'src/configs/game-settings';
 
-const banList: string[] = [];
+const banList: string[] = ['inbreeder#2416', 'remy#22303', 'overthrow#21522', 'vixen#22381'];
 
 export class PlayerManager {
 	public static readonly PLAYING: string = '|cFF00FFF0Playing|r';
@@ -33,7 +33,7 @@ export class PlayerManager {
 			if (BAN_LIST_ACTIVE && !W3C_MODE_ENABLED) {
 				banList.forEach((name) => {
 					if (NameManager.getInstance().getBtag(player).toLowerCase() == name) {
-						CustomDefeatBJ(player, 'You have been defeated!');
+						CustomDefeatBJ(player, 'You are map banned! Appeal: discord.gg/wc3risk');
 						ClearTextMessages();
 					}
 				});
