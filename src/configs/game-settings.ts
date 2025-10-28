@@ -67,3 +67,6 @@ export const BASE_GOLD_CAP: number = 100;
 
 // This represents the additional gold cap per city owned. Default is 10.
 export const GOLD_CAP_PER_CITY: number = 10;
+
+// This represents whether the ban list is active. Is set to true by default.
+export const BAN_LIST_ACTIVE: boolean = true;

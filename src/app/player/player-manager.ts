@@ -6,6 +6,8 @@ import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
 import { debugPrint } from '../utils/debug-print';
 import { NameManager } from '../managers/names/name-manager';
+import { W3C_MODE_ENABLED } from '../utils/map-info';
+import { BAN_LIST_ACTIVE } from 'src/configs/game-settings';
 
 const banList: string[] = [];
 
@@ -28,12 +30,14 @@ export class PlayerManager {
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
 
-			banList.forEach((name) => {
-				if (NameManager.getInstance().getBtag(player).toLowerCase() == name) {
-					CustomDefeatBJ(player, 'You have been defeated!');
-					ClearTextMessages();
-				}
-			});
+			if (BAN_LIST_ACTIVE && !W3C_MODE_ENABLED) {
+				banList.forEach((name) => {
+					if (NameManager.getInstance().getBtag(player).toLowerCase() == name) {
+						CustomDefeatBJ(player, 'You have been defeated!');
+						ClearTextMessages();
+					}
+				});
+			}
 
 			if (IsPlayerObserver(player)) {
 				this._observerFromHandle.set(player, new HumanPlayer(player));
