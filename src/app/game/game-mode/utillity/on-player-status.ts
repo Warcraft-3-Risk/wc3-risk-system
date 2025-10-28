@@ -26,6 +26,12 @@ export function onPlayerDeadHandle(player: ActivePlayer): void {
 	player.setEndData();
 	player.trackedData.income.income = 1;
 
+	// Disable player controls
+	if (player.getPlayer() == GetLocalPlayer()) {
+		EnableSelect(false, false);
+		EnableDragSelect(false, false);
+	}
+
 	if (player.killedBy) {
 		GlobalMessage(
 			`${NameManager.getInstance().getDisplayName(player.getPlayer())} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`,
@@ -140,6 +146,18 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 
 export function onPlayerForfeitHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.DEAD;
+
+	player.setEndData();
+	player.trackedData.income.income = 1;
+
+	// Disable player controls
+	if (player.getPlayer() == GetLocalPlayer()) {
+		EnableSelect(false, false);
+		EnableDragSelect(false, false);
+	}
+
+	GlobalMessage(`${NameManager.getInstance().getDisplayName(player.getPlayer())} has forfeited!`, 'Sound\\Interface\\SecretFound.flac');
+
 	PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), PLAYER_STATUS.DEAD);
 	ScoreboardManager.getInstance().updatePartial();
 }
