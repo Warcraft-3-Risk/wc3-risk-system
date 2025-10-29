@@ -2,7 +2,7 @@ import { City } from 'src/app/city/city';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { StateData } from './state-data';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
-import { EVENT_NEXT_STATE, EVENT_QUEST_UPDATE_PLAYER_STATUS } from 'src/app/utils/events/event-constants';
+import { EVENT_NEXT_STATE, EVENT_ON_PLAYER_DEAD, EVENT_QUEST_UPDATE_PLAYER_STATUS } from 'src/app/utils/events/event-constants';
 import { GlobalGameData } from '../../state/global-game-state';
 import {
 	onPlayerAliveHandle,
@@ -53,6 +53,7 @@ export abstract class BaseState<T extends StateData> {
 
 	onPlayerForfeit(player: ActivePlayer): void {
 		onPlayerForfeitHandle(player);
+		EventEmitter.getInstance().emit(EVENT_ON_PLAYER_DEAD, player);
 		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 	}
 
