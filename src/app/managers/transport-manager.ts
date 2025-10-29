@@ -22,7 +22,7 @@ type Transport = {
 };
 
 const AUTO_LOAD_DISTANCE: number = 450;
-const AUTO_LOAD_DURATION: number = 600;
+const AUTO_LOAD_DURATION: number = 180;
 const MAX_CARGO_CAPACITY: number = 10;
 const CARGO_TEXT_X_OFFSET: number = -160;
 const CAPACITY_TEXT_X_OFFSET: number = -85;
@@ -576,6 +576,7 @@ export class TransportManager {
 		const event: TimedEvent = timedEventManager.registerTimedEvent(AUTO_LOAD_DURATION, () => {
 			let group: group = CreateGroup();
 
+			print(event.duration);
 			GroupEnumUnitsInRange(
 				group,
 				GetUnitX(transport.unit),
@@ -598,6 +599,9 @@ export class TransportManager {
 			if (transport.cargo.length >= 10 || !transport.autoloadEnabled || this.isTerrainInvalid(transport.unit)) {
 				this.handleAutoLoadOff(transport);
 				timedEventManager.removeTimedEvent(event);
+			} else if (event.duration <= 1) {
+				// Timer is about to expire naturally - cleanup before auto-removal
+				this.handleAutoLoadOff(transport);
 			}
 		});
 
