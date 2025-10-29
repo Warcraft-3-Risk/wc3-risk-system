@@ -16,6 +16,8 @@ type Transport = {
 	duration: number;
 	autoloadEnabled: boolean;
 	loadTarget: unit;
+	unloadTargetX: number;
+	unloadTargetY: number;
 	event: TimedEvent | null;
 	floatingTextCargo: texttag | null;
 	floatingTextCapacity: texttag | null;
@@ -28,6 +30,7 @@ const CARGO_TEXT_X_OFFSET: number = -160;
 const CAPACITY_TEXT_X_OFFSET: number = -85;
 const FLOATING_TEXT_OFFSET_Y: number = 120;
 const FLOATING_TEXT_HEIGHT_OFFSET: number = 120;
+const MAX_UNLOAD_DISTANCE: number = 200;
 
 /**
  * Manages transport units and their cargo.
@@ -79,6 +82,8 @@ export class TransportManager {
 		this.onUnloadStart();
 		// Handler for order queued by clicking the unit icon in the transport ship for the unload ability
 		this.onUnloadUnitStart();
+		// Handler for order execution once unit reached destination point for the unload ability
+		this.onUnloadAction();
 		// Handler for order queued for the unload ability finish
 		this.onUnloadFinish();
 
@@ -102,6 +107,8 @@ export class TransportManager {
 			autoloadEnabled: false,
 			event: null,
 			loadTarget: null,
+			unloadTargetX: null,
+			unloadTargetY: null,
 			floatingTextCargo: null,
 			floatingTextCapacity: null,
 		};
@@ -210,6 +217,49 @@ export class TransportManager {
 		);
 	}
 
+	private onUnloadAction() {
+		const t = CreateTrigger();
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			debugPrint(`TransportManager: Registering onUnloadAction event for player ${i}`);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CHANNEL, null);
+		}
+
+		TriggerAddCondition(
+			t,
+			Condition(() => {
+				const transport: Transport = this.transports.get(GetTriggerUnit());
+
+				if (!transport || (GetSpellAbilityId() !== ABILITY_ID.UNLOAD && GetSpellAbilityId() !== ABILITY_ID.UNLOAD_DEFAULT_HOTKEY)) {
+					return false;
+				}
+
+				// Get transport unload ability target position
+				const abilityTargetX= transport.unloadTargetX;
+				const abilityTargetY= transport.unloadTargetY;
+
+				// Get target actual unload position
+				const actualTargetX = GetSpellTargetX();
+				const actualTargetY = GetSpellTargetY();
+
+				// Calculate distance
+				const dx = abilityTargetX - actualTargetX;
+				const dy = abilityTargetY - actualTargetY;
+				const distance = SquareRoot(dx * dx + dy * dy);
+
+				if (distance > MAX_UNLOAD_DISTANCE) {
+					BlzPauseUnitEx(transport.unit, true);
+					BlzPauseUnitEx(transport.unit, false);
+					IssueImmediateOrder(transport.unit, 'stop');
+					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+					return false;
+				}
+
+				return false;
+			})
+		);
+	}
+
 	private onUnloadUnitStart() {
 		const t = CreateTrigger();
 
@@ -295,6 +345,9 @@ export class TransportManager {
 
 					return false;
 				}
+
+				transport.unloadTargetX = GetOrderPointX();
+				transport.unloadTargetY = GetOrderPointY();
 
 				this.handleAutoLoadOff(transport);
 
