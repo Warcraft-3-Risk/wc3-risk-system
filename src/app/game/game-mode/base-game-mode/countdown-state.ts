@@ -27,16 +27,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 				if (this.shouldSkipToNextState) {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);
-					PlayerManager.getInstance().players.forEach((player) => {
-						// foreach active player, enable select and drag select if local player
-						if (GetLocalPlayer() == player.getPlayer() && player.status.isActive()) {
-							EnableSelect(true, true);
-							EnableDragSelect(true, true);
-						}
-					});
-
 					BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), false);
-
 					PlayGlobalSound('Sound\\Interface\\Hint.flac');
 					this.nextState(this.stateData);
 					return;
@@ -48,13 +39,6 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);
 					BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), false);
-					PlayerManager.getInstance().players.forEach((player) => {
-						// foreach active player, enable select and drag select if local player
-						if (GetLocalPlayer() == player.getPlayer() && player.status.isActive()) {
-							EnableSelect(true, true);
-							EnableDragSelect(true, true);
-						}
-					});
 					PlayGlobalSound('Sound\\Interface\\Hint.flac');
 
 					this.nextState(this.stateData);
