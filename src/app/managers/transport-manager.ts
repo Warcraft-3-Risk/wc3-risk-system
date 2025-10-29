@@ -576,7 +576,6 @@ export class TransportManager {
 		const event: TimedEvent = timedEventManager.registerTimedEvent(AUTO_LOAD_DURATION, () => {
 			let group: group = CreateGroup();
 
-			print(event.duration);
 			GroupEnumUnitsInRange(
 				group,
 				GetUnitX(transport.unit),
