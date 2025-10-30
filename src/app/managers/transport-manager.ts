@@ -27,8 +27,9 @@ const AUTO_LOAD_DISTANCE: number = 450;
 const AUTO_LOAD_DURATION: number = 180;
 const MAX_CARGO_CAPACITY: number = 10;
 const CARGO_TEXT_X_OFFSET: number = -140;
-const CAPACITY_TEXT_X_OFFSET: number = -65;
-const CAPACITY_TEXT_X_OFFSET_LONG: number = 0;
+const CAPACITY_TEXT_X_VALUE_OFFSET: number = 20;
+const CAPACITY_TEXT_X_MAX_OFFSET: number = 70;
+const CAPACITY_TEXT_X_CHARACTER_OFFSET: number = 30;
 const FLOATING_TEXT_OFFSET_Y: number = 120;
 const FLOATING_TEXT_HEIGHT_OFFSET: number = 120;
 const MAX_UNLOAD_DISTANCE: number = 200;
@@ -513,12 +514,6 @@ export class TransportManager {
 		}
 		const capacityStr = `${HexColors.TANGERINE} ${MAX_CARGO_CAPACITY}`;
 		SetTextTagText(transport.floatingTextCapacity, capacityStr, 0.017);
-		SetTextTagPos(
-			transport.floatingTextCapacity,
-			unitX + (cargoCount < 10 ? CAPACITY_TEXT_X_OFFSET : CAPACITY_TEXT_X_OFFSET_LONG),
-			unitY + FLOATING_TEXT_OFFSET_Y,
-			FLOATING_TEXT_HEIGHT_OFFSET
-		);
 
 		// Visibility for observers only
 		if (IsPlayerObserver(GetLocalPlayer())) {
@@ -565,7 +560,10 @@ export class TransportManager {
 						if (transport.floatingTextCargo != null) {
 							SetTextTagPos(
 								transport.floatingTextCargo,
-								unitX + CARGO_TEXT_X_OFFSET,
+								unitX +
+									CARGO_TEXT_X_OFFSET +
+									CAPACITY_TEXT_X_VALUE_OFFSET -
+									math.floor(transport.cargo.length / 10) * CAPACITY_TEXT_X_CHARACTER_OFFSET,
 								unitY + FLOATING_TEXT_OFFSET_Y,
 								FLOATING_TEXT_HEIGHT_OFFSET
 							);
@@ -573,7 +571,7 @@ export class TransportManager {
 						if (transport.floatingTextCapacity != null) {
 							SetTextTagPos(
 								transport.floatingTextCapacity,
-								unitX + CAPACITY_TEXT_X_OFFSET,
+								unitX + CARGO_TEXT_X_OFFSET + CAPACITY_TEXT_X_MAX_OFFSET,
 								unitY + FLOATING_TEXT_OFFSET_Y,
 								FLOATING_TEXT_HEIGHT_OFFSET
 							);

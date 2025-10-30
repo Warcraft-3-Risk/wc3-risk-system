@@ -9,7 +9,7 @@ export const CITIES_TO_WIN_RATIO: number = 0.6;
 export const STARTING_INCOME: number = 4;
 
 //This is the starting countdown for the game. 10 by default
-export const STARTING_COUNTDOWN: number = 10;
+export const STARTING_COUNTDOWN: number = 0;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
 export const TURN_DURATION_IN_SECONDS: number = 60;
