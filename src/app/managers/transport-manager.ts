@@ -349,34 +349,6 @@ export class TransportManager {
 				transport.unloadTargetX = GetOrderPointX();
 				transport.unloadTargetY = GetOrderPointY();
 
-				this.handleAutoLoadOff(transport);
-
-				const index: number = transport.cargo.indexOf(GetOrderTargetUnit());
-
-				if (index > -1) {
-					const unloadedUnits = transport.cargo.splice(index, 1);
-					unloadedUnits.forEach((unit) => {
-						TransportManager.delayedTrackQueue.push(unit);
-					});
-
-					// Update floating text after unloading a unit
-					this.updateFloatingText(transport);
-
-					// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
-					// Consider moving the timer into the UnitLagManager.
-					if (!TransportManager.delayedTrackTimerRunning) {
-						TransportManager.delayedTrackTimerRunning = true;
-						TimerStart(TransportManager.delayedTrackTimer, 0.1, false, () => {
-							TransportManager.delayedTrackQueue.forEach((unit) => {
-								debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
-								UnitLagManager.getInstance().trackUnit(unit);
-							});
-							TransportManager.delayedTrackQueue = [];
-							TransportManager.delayedTrackTimerRunning = false;
-						});
-					}
-				}
-
 				return false;
 			})
 		);
@@ -474,6 +446,9 @@ export class TransportManager {
 				unloadedUnits.forEach((unit) => {
 					UnitLagManager.getInstance().trackUnit(unit);
 				});
+
+				// Disable autoload
+				this.handleAutoLoadOff(transport);
 
 				// Update floating text after unloading
 				this.updateFloatingText(transport);
