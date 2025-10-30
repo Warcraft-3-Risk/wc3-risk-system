@@ -16,6 +16,15 @@ export class EnableControlsState<T extends StateData> extends BaseState<T> {
 				EnableDragSelect(false, false);
 			}
 		});
+
+		PlayerManager.getInstance().observers.forEach((player) => {
+			// foreach observer, enable select and drag select if local player
+			if (GetLocalPlayer() == player.getPlayer()) {
+				EnableSelect(true, true);
+				EnableDragSelect(true, true);
+			}
+		});
+
 		this.nextState(this.stateData);
 	}
 }
