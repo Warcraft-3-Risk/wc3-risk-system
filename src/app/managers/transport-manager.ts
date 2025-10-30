@@ -184,7 +184,7 @@ export class TransportManager {
 				transportData.cargo.push(loadedUnit);
 
 				// Update floating text after loading a unit
-				// this.updateFloatingText(transportData);
+				this.updateFloatingText(transportData);
 
 				transport = null;
 				loadedUnit = null;
@@ -236,8 +236,8 @@ export class TransportManager {
 				}
 
 				// Get transport unload ability target position
-				const abilityTargetX= transport.unloadTargetX;
-				const abilityTargetY= transport.unloadTargetY;
+				const abilityTargetX = transport.unloadTargetX;
+				const abilityTargetY = transport.unloadTargetY;
 
 				// Get target actual unload position
 				const actualTargetX = GetSpellTargetX();
@@ -298,7 +298,7 @@ export class TransportManager {
 					});
 
 					// Update floating text after unloading a unit
-					// this.updateFloatingText(transport);
+					this.updateFloatingText(transport);
 
 					// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
 					// Consider moving the timer into the UnitLagManager.
@@ -452,7 +452,7 @@ export class TransportManager {
 				this.handleAutoLoadOff(transport);
 
 				// Update floating text after unloading
-				// this.updateFloatingText(transport);
+				this.updateFloatingText(transport);
 
 				return false;
 			})
@@ -465,7 +465,7 @@ export class TransportManager {
 	 * @returns True if terrain is invalid, otherwise false.
 	 */
 	private isTerrainInvalid(u: unit): boolean {
-		const terrainType = GetTerrainType(GetUnitX(u), GetUnitY(u))
+		const terrainType = GetTerrainType(GetUnitX(u), GetUnitY(u));
 		return terrainType != FourCC('Vcbp');
 	}
 
