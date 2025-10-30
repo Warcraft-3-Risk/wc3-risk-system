@@ -26,8 +26,9 @@ type Transport = {
 const AUTO_LOAD_DISTANCE: number = 450;
 const AUTO_LOAD_DURATION: number = 180;
 const MAX_CARGO_CAPACITY: number = 10;
-const CARGO_TEXT_X_OFFSET: number = -160;
-const CAPACITY_TEXT_X_OFFSET: number = -85;
+const CARGO_TEXT_X_OFFSET: number = -140;
+const CAPACITY_TEXT_X_OFFSET: number = -65;
+const CAPACITY_TEXT_X_OFFSET_LONG: number = 0;
 const FLOATING_TEXT_OFFSET_Y: number = 120;
 const FLOATING_TEXT_HEIGHT_OFFSET: number = 120;
 const MAX_UNLOAD_DISTANCE: number = 200;
@@ -183,7 +184,7 @@ export class TransportManager {
 				transportData.cargo.push(loadedUnit);
 
 				// Update floating text after loading a unit
-				this.updateFloatingText(transportData);
+				// this.updateFloatingText(transportData);
 
 				transport = null;
 				loadedUnit = null;
@@ -297,7 +298,7 @@ export class TransportManager {
 					});
 
 					// Update floating text after unloading a unit
-					this.updateFloatingText(transport);
+					// this.updateFloatingText(transport);
 
 					// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
 					// Consider moving the timer into the UnitLagManager.
@@ -451,7 +452,7 @@ export class TransportManager {
 				this.handleAutoLoadOff(transport);
 
 				// Update floating text after unloading
-				this.updateFloatingText(transport);
+				// this.updateFloatingText(transport);
 
 				return false;
 			})
@@ -514,7 +515,7 @@ export class TransportManager {
 		SetTextTagText(transport.floatingTextCapacity, capacityStr, 0.017);
 		SetTextTagPos(
 			transport.floatingTextCapacity,
-			unitX + CAPACITY_TEXT_X_OFFSET,
+			unitX + (cargoCount < 10 ? CAPACITY_TEXT_X_OFFSET : CAPACITY_TEXT_X_OFFSET_LONG),
 			unitY + FLOATING_TEXT_OFFSET_Y,
 			FLOATING_TEXT_HEIGHT_OFFSET
 		);
