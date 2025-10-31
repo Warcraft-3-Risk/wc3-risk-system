@@ -2,20 +2,20 @@ import { City } from '../city/city';
 import { ActivePlayer } from '../player/types/active-player';
 import { EventEmitter } from '../utils/events/event-emitter';
 import {
+	EVENT_NEXT_STATE,
 	EVENT_ON_CITY_CAPTURE,
+	EVENT_ON_CITY_SELECTED,
 	EVENT_ON_PLAYER_ALIVE,
 	EVENT_ON_PLAYER_DEAD,
 	EVENT_ON_PLAYER_FORFEIT,
 	EVENT_ON_PLAYER_LEFT,
 	EVENT_ON_PLAYER_NOMAD,
-	EVENT_ON_PLAYER_STFU,
-	EVENT_ON_UNIT_KILLED,
-	EVENT_SET_GAME_MODE,
-	EVENT_ON_CITY_SELECTED,
-	EVENT_QUEST_UPDATE_PLAYER_STATUS,
-	EVENT_NEXT_STATE,
 	EVENT_ON_PLAYER_RESTART,
+	EVENT_ON_PLAYER_STFU,
 	EVENT_ON_SWAP_GUARD,
+	EVENT_ON_UNIT_KILLED,
+	EVENT_QUEST_UPDATE_PLAYER_STATUS,
+	EVENT_SET_GAME_MODE,
 } from '../utils/events/event-constants';
 import { StandardMode } from './game-mode/mode/standard-mode';
 import { GameType } from '../settings/strategies/game-type-strategy';
@@ -48,8 +48,8 @@ export class EventCoordinator {
 		EventEmitter.getInstance().on(EVENT_ON_PLAYER_ALIVE, (player: ActivePlayer) =>
 			this._currentMode?.getCurrentState().onPlayerAlive(player)
 		);
-		EventEmitter.getInstance().on(EVENT_ON_PLAYER_DEAD, (player: ActivePlayer) =>
-			this._currentMode?.getCurrentState().onPlayerDead(player)
+		EventEmitter.getInstance().on(EVENT_ON_PLAYER_DEAD, (player: ActivePlayer, forfeit?) =>
+			this._currentMode?.getCurrentState().onPlayerDead(player, forfeit)
 		);
 		EventEmitter.getInstance().on(EVENT_ON_PLAYER_LEFT, (player: ActivePlayer) =>
 			this._currentMode?.getCurrentState().onPlayerLeft(player)

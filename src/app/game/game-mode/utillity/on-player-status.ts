@@ -19,13 +19,12 @@ export function onPlayerAliveHandle(player: ActivePlayer): void {
 	ScoreboardManager.getInstance().updatePartial();
 }
 
-export function onPlayerDeadHandle(player: ActivePlayer): void {
+export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): void {
 	if (player.status.isEliminated()) {
 		return;
 	}
 
 	player.status.status = PLAYER_STATUS.DEAD;
-
 	player.killedBy = player.trackedData.lastUnitKilledBy;
 	player.setEndData();
 	player.trackedData.income.income = 1;
@@ -36,7 +35,10 @@ export function onPlayerDeadHandle(player: ActivePlayer): void {
 		EnableDragSelect(false, false);
 	}
 
-	if (player.killedBy) {
+	print(forfeit ? "true" : "false");
+	if(forfeit) {
+		GlobalMessage(`${NameManager.getInstance().getDisplayName(player.getPlayer())} has forfeited!`, 'Sound\\Interface\\SecretFound.flac');
+	} else if (player.killedBy) {
 		GlobalMessage(
 			`${NameManager.getInstance().getDisplayName(player.getPlayer())} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`,
 			'Sound\\Interface\\SecretFound.flac'
@@ -146,11 +148,4 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 	});
 
 	ScoreboardManager.getInstance().updatePartial();
-}
-
-export function onPlayerForfeitHandle(player: ActivePlayer): void {
-	if (player.status.isEliminated()) {
-		return;
-	}
-	GlobalMessage(`${NameManager.getInstance().getDisplayName(player.getPlayer())} has forfeited!`, 'Sound\\Interface\\SecretFound.flac');
 }

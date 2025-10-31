@@ -7,7 +7,6 @@ import { GlobalGameData } from '../../state/global-game-state';
 import {
 	onPlayerAliveHandle,
 	onPlayerDeadHandle,
-	onPlayerForfeitHandle,
 	onPlayerLeftHandle,
 	onPlayerNomadHandle,
 	onPlayerSTFUHandle,
@@ -33,9 +32,8 @@ export abstract class BaseState<T extends StateData> {
 		onPlayerAliveHandle(player);
 	}
 
-	onPlayerDead(player: ActivePlayer): void {
-		onPlayerDeadHandle(player);
-		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
+	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
+		onPlayerDeadHandle(player, forfeit);
 	}
 
 	onPlayerNomad(player: ActivePlayer): void {
@@ -52,9 +50,7 @@ export abstract class BaseState<T extends StateData> {
 	}
 
 	onPlayerForfeit(player: ActivePlayer): void {
-		onPlayerForfeitHandle(player);
-		EventEmitter.getInstance().emit(EVENT_ON_PLAYER_DEAD, player);
-		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
+		EventEmitter.getInstance().emit(EVENT_ON_PLAYER_DEAD, player, true);
 	}
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer) {

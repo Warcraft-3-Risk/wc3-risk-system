@@ -319,8 +319,8 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		});
 	}
 
-	onPlayerDead(player: ActivePlayer): void {
-		super.onPlayerDead(player);
+	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
+		super.onPlayerDead(player, forfeit);
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
