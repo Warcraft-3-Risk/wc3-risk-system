@@ -600,7 +600,7 @@ export class TransportManager {
 
 		const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
 
-		const event: TimedEvent = timedEventManager.registerTimedEvent(AUTO_LOAD_DURATION, () => {
+		transport.event = timedEventManager.registerTimedEvent(AUTO_LOAD_DURATION, () => {
 			let group: group = CreateGroup();
 
 			GroupEnumUnitsInRange(
@@ -624,14 +624,11 @@ export class TransportManager {
 
 			if (transport.cargo.length >= 10 || !transport.autoloadEnabled || this.isTerrainInvalid(transport.unit)) {
 				this.handleAutoLoadOff(transport);
-				timedEventManager.removeTimedEvent(event);
-			} else if (event.duration <= 1) {
+			} else if (transport.event.duration <= 1) {
 				// Timer is about to expire naturally - cleanup before auto-removal
 				this.handleAutoLoadOff(transport);
 			}
 		});
-
-		transport.event = event;
 	}
 
 	/**
