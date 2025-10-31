@@ -35,7 +35,6 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 		EnableDragSelect(false, false);
 	}
 
-	print(forfeit ? "true" : "false");
 	if(forfeit) {
 		GlobalMessage(`${NameManager.getInstance().getDisplayName(player.getPlayer())} has forfeited!`, 'Sound\\Interface\\SecretFound.flac');
 	} else if (player.killedBy) {
