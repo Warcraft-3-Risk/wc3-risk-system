@@ -32,7 +32,7 @@ const CAPACITY_TEXT_X_MAX_OFFSET: number = 70;
 const CAPACITY_TEXT_X_CHARACTER_OFFSET: number = 30;
 const FLOATING_TEXT_OFFSET_Y: number = 120;
 const FLOATING_TEXT_HEIGHT_OFFSET: number = 120;
-const MAX_UNLOAD_DISTANCE: number = 250;
+const MAX_UNLOAD_DISTANCE: number = 300;
 
 /**
  * Manages transport units and their cargo.
@@ -237,30 +237,37 @@ export class TransportManager {
 				}
 
 				// If the transport itself is currently standing on valid terrain, unloading is possible and units will run
-				// to the direction of the unload action click
-				if (!this.isTerrainInvalid(transport.unit)) {
-					return false;
-				}
+				// to the direction of the unload action click else we check more in-depth where transport ship is at so
+				// we can allow unloading ships when the transport ship is standing on ocean terrain and unload to edge of port
+				if(this.isTerrainInvalid(transport.unit)) {
+					// Get transport unload ability target position
+					const abilityTargetX = transport.unloadTargetX;
+					const abilityTargetY = transport.unloadTargetY;
 
-				// Get transport unload ability target position
-				const abilityTargetX = transport.unloadTargetX;
-				const abilityTargetY = transport.unloadTargetY;
+					// Get target actual unload position
+					const actualTargetX = GetSpellTargetX();
+					const actualTargetY = GetSpellTargetY();
 
-				// Get target actual unload position
-				const actualTargetX = GetSpellTargetX();
-				const actualTargetY = GetSpellTargetY();
+					// Calculate distance
+					const dx = abilityTargetX - actualTargetX;
+					const dy = abilityTargetY - actualTargetY;
+					const distance = SquareRoot(dx * dx + dy * dy);
 
-				// Calculate distance
-				const dx = abilityTargetX - actualTargetX;
-				const dy = abilityTargetY - actualTargetY;
-				const distance = SquareRoot(dx * dx + dy * dy);
-
-				if (distance > MAX_UNLOAD_DISTANCE) {
-					BlzPauseUnitEx(transport.unit, true);
-					BlzPauseUnitEx(transport.unit, false);
-					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
-					return false;
+					if (distance > MAX_UNLOAD_DISTANCE) {
+						BlzPauseUnitEx(transport.unit, true);
+						BlzPauseUnitEx(transport.unit, false);
+						IssueImmediateOrder(transport.unit, 'stop');
+						ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+						return false;
+					} else {
+						if(this.isTargetTerrainInvalid(abilityTargetX, abilityTargetY)) {
+							BlzPauseUnitEx(transport.unit, true);
+							BlzPauseUnitEx(transport.unit, false);
+							IssueImmediateOrder(transport.unit, 'stop');
+							ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+							return false;
+						}
+					}
 				}
 
 				return false;
