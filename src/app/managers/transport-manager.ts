@@ -32,7 +32,7 @@ const CAPACITY_TEXT_X_MAX_OFFSET: number = 70;
 const CAPACITY_TEXT_X_CHARACTER_OFFSET: number = 30;
 const FLOATING_TEXT_OFFSET_Y: number = 120;
 const FLOATING_TEXT_HEIGHT_OFFSET: number = 120;
-const MAX_UNLOAD_DISTANCE: number = 200;
+const MAX_UNLOAD_DISTANCE: number = 250;
 
 /**
  * Manages transport units and their cargo.
@@ -236,6 +236,12 @@ export class TransportManager {
 					return false;
 				}
 
+				// If the transport itself is currently standing on valid terrain, unloading is possible and units will run
+				// to the direction of the unload action click
+				if (!this.isTerrainInvalid(transport.unit)) {
+					return false;
+				}
+
 				// Get transport unload ability target position
 				const abilityTargetX = transport.unloadTargetX;
 				const abilityTargetY = transport.unloadTargetY;
@@ -336,15 +342,6 @@ export class TransportManager {
 				const transport: Transport = this.transports.get(GetTriggerUnit());
 
 				if (GetIssuedOrderId() !== ORDER_ID.UNLOAD_ALL || !transport) {
-					return false;
-				}
-
-				if (this.isTargetTerrainInvalid(GetOrderPointX(), GetOrderPointY())) {
-					BlzPauseUnitEx(transport.unit, true);
-					BlzPauseUnitEx(transport.unit, false);
-					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
-
 					return false;
 				}
 
