@@ -6,7 +6,6 @@ import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { debugPrint } from '../utils/debug-print';
 import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
-import { HexColors } from '../utils/hex-colors';
 import { ORDER_ID } from '../../configs/order-id';
 
 type Transport = {
@@ -25,13 +24,6 @@ type Transport = {
 
 const AUTO_LOAD_DISTANCE: number = 450;
 const AUTO_LOAD_DURATION: number = 180;
-const MAX_CARGO_CAPACITY: number = 10;
-const CARGO_TEXT_X_OFFSET: number = -140;
-const CAPACITY_TEXT_X_VALUE_OFFSET: number = 20;
-const CAPACITY_TEXT_X_MAX_OFFSET: number = 70;
-const CAPACITY_TEXT_X_CHARACTER_OFFSET: number = 30;
-const FLOATING_TEXT_OFFSET_Y: number = 120;
-const FLOATING_TEXT_HEIGHT_OFFSET: number = 120;
 const MAX_UNLOAD_DISTANCE: number = 300;
 
 /**
@@ -91,9 +83,6 @@ export class TransportManager {
 
 		// Autoload management
 		this.onAutoLoadOn();
-
-		// Observer update loop for transport capacity indicators
-		this.startFloatingTextUpdateLoop();
 	}
 
 	/**
@@ -150,10 +139,6 @@ export class TransportManager {
 			DestroyEffect(transportData.effect);
 		}
 
-		if (transportData.floatingTextCapacity != null || transportData.floatingTextCargo != null) {
-			this.destroyTextTags(transportData);
-		}
-
 		transportData.autoloadEnabled = false;
 
 		this.transports.delete(unit);
@@ -183,9 +168,6 @@ export class TransportManager {
 
 				const transportData = this.transports.get(transport);
 				transportData.cargo.push(loadedUnit);
-
-				// Update floating text after loading a unit
-				this.updateFloatingText(transportData);
 
 				transport = null;
 				loadedUnit = null;
@@ -239,7 +221,7 @@ export class TransportManager {
 				// If the transport itself is currently standing on valid terrain, unloading is possible and units will run
 				// to the direction of the unload action click else we check more in-depth where transport ship is at so
 				// we can allow unloading ships when the transport ship is standing on ocean terrain and unload to edge of port
-				if(this.isTerrainInvalid(transport.unit)) {
+				if (this.isTerrainInvalid(transport.unit)) {
 					// Get transport unload ability target position
 					const abilityTargetX = transport.unloadTargetX;
 					const abilityTargetY = transport.unloadTargetY;
@@ -260,7 +242,7 @@ export class TransportManager {
 						ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 						return false;
 					} else {
-						if(this.isTargetTerrainInvalid(abilityTargetX, abilityTargetY)) {
+						if (this.isTargetTerrainInvalid(abilityTargetX, abilityTargetY)) {
 							BlzPauseUnitEx(transport.unit, true);
 							BlzPauseUnitEx(transport.unit, false);
 							IssueImmediateOrder(transport.unit, 'stop');
@@ -310,9 +292,6 @@ export class TransportManager {
 					unloadedUnits.forEach((unit) => {
 						TransportManager.delayedTrackQueue.push(unit);
 					});
-
-					// Update floating text after unloading a unit
-					this.updateFloatingText(transport);
 
 					// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
 					// Consider moving the timer into the UnitLagManager.
@@ -456,9 +435,6 @@ export class TransportManager {
 				// Disable autoload
 				this.handleAutoLoadOff(transport);
 
-				// Update floating text after unloading
-				this.updateFloatingText(transport);
-
 				return false;
 			})
 		);
@@ -480,110 +456,6 @@ export class TransportManager {
 	private isTargetTerrainInvalid(positionX: number, positionY: number): boolean {
 		const terrainType = GetTerrainType(positionX, positionY);
 		return terrainType != FourCC('Vcbp');
-	}
-
-	/**
-	 * Updates the floating text display above a transport unit showing cargo count.
-	 * Only visible to observers.
-	 * @param transport - The transport data to update the floating text for.
-	 */
-	private updateFloatingText(transport: Transport) {
-		const cargoCount = transport.cargo.length;
-		const unitX = GetUnitX(transport.unit);
-		const unitY = GetUnitY(transport.unit);
-
-		// If no cargo, hide both texts
-		if (cargoCount === 0) {
-			this.destroyTextTags(transport);
-			return;
-		}
-
-		// Create cargo text ("3 /") if needed
-		if (transport.floatingTextCargo == null) {
-			transport.floatingTextCargo = CreateTextTag();
-			SetTextTagPermanent(transport.floatingTextCargo, true);
-			SetTextTagLifespan(transport.floatingTextCargo, 0);
-			SetTextTagFadepoint(transport.floatingTextCargo, 0);
-		}
-		const cargoStr = `${HexColors.TANGERINE} ${cargoCount} /`;
-		SetTextTagText(transport.floatingTextCargo, cargoStr, 0.017);
-		SetTextTagPos(transport.floatingTextCargo, unitX + CARGO_TEXT_X_OFFSET, unitY + FLOATING_TEXT_OFFSET_Y, FLOATING_TEXT_HEIGHT_OFFSET);
-
-		// Create capacity text ("10") if needed
-		if (transport.floatingTextCapacity == null) {
-			transport.floatingTextCapacity = CreateTextTag();
-			SetTextTagPermanent(transport.floatingTextCapacity, true);
-			SetTextTagLifespan(transport.floatingTextCapacity, 0);
-			SetTextTagFadepoint(transport.floatingTextCapacity, 0);
-		}
-		const capacityStr = `${HexColors.TANGERINE} ${MAX_CARGO_CAPACITY}`;
-		SetTextTagText(transport.floatingTextCapacity, capacityStr, 0.017);
-
-		// Visibility for observers only
-		if (IsPlayerObserver(GetLocalPlayer())) {
-			SetTextTagVisibility(transport.floatingTextCargo, true);
-			SetTextTagVisibility(transport.floatingTextCapacity, true);
-		} else {
-			SetTextTagVisibility(transport.floatingTextCargo, false);
-			SetTextTagVisibility(transport.floatingTextCapacity, false);
-		}
-	}
-
-	/**
-	 * Helper function to destroy transport ship text tags
-	 */
-	private destroyTextTags(transport: Transport) {
-		if (transport.floatingTextCargo != null) {
-			if (IsPlayerObserver(GetLocalPlayer())) {
-				DestroyTextTag(transport.floatingTextCargo);
-			}
-			transport.floatingTextCargo = null;
-		}
-		if (transport.floatingTextCapacity != null) {
-			if (IsPlayerObserver(GetLocalPlayer())) {
-				DestroyTextTag(transport.floatingTextCapacity);
-			}
-			transport.floatingTextCapacity = null;
-		}
-	}
-
-	/**
-	 * Starts a periodic loop to update floating text positions for all transports.
-	 * This ensures the floating text follows the transport units as they move.
-	 */
-	private startFloatingTextUpdateLoop() {
-		const updateTimer: timer = CreateTimer();
-
-		TimerStart(updateTimer, 0.03, true, () => {
-			if (IsPlayerObserver(GetLocalPlayer())) {
-				this.transports.forEach((transport) => {
-					// Update both if exist and cargo >0
-					if (transport.cargo.length > 0) {
-						const unitX = GetUnitX(transport.unit);
-						const unitY = GetUnitY(transport.unit);
-						if (transport.floatingTextCargo != null) {
-							SetTextTagPos(
-								transport.floatingTextCargo,
-								unitX +
-									CARGO_TEXT_X_OFFSET +
-									CAPACITY_TEXT_X_VALUE_OFFSET -
-									math.floor(transport.cargo.length / 10) * CAPACITY_TEXT_X_CHARACTER_OFFSET,
-								unitY + FLOATING_TEXT_OFFSET_Y,
-								FLOATING_TEXT_HEIGHT_OFFSET
-							);
-						}
-						if (transport.floatingTextCapacity != null) {
-							SetTextTagPos(
-								transport.floatingTextCapacity,
-								unitX + CARGO_TEXT_X_OFFSET + CAPACITY_TEXT_X_MAX_OFFSET,
-								unitY + FLOATING_TEXT_OFFSET_Y,
-								FLOATING_TEXT_HEIGHT_OFFSET
-							);
-						}
-					}
-				});
-			}
-		});
 	}
 
 	/**
