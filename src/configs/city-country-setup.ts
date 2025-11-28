@@ -187,6 +187,16 @@ export function SetCountries() {
 		cities: [{ barrack: { x: 15808.0, y: -12224.0 } }],
 	});
 	CountrySettings.push({
+		name: 'Iraq',
+		spawnerData: {
+			unitData: { x: 17727.0, y: -12614.0 },
+		},
+		cities: [
+			{ barrack: { x: 18257.0, y: -11937.0 } },
+			{ barrack: { x: 17800.0, y: -13249.0 } },
+		],
+	});
+	CountrySettings.push({
 		name: 'Israel',
 		spawnerData: {
 			unitData: { x: 14656.0, y: -12736.0 },
@@ -196,9 +206,13 @@ export function SetCountries() {
 	CountrySettings.push({
 		name: 'Jordan',
 		spawnerData: {
-			unitData: { x: 16960.0, y: -13504.0 },
+			unitData: { x: 16958.0, y: -14398.0 },
 		},
-		cities: [{ barrack: { x: 17344.0, y: -12480.0 } }, { barrack: { x: 17728.0, y: -13440.0 } }, { barrack: { x: 16128.0, y: -14272.0 } }],
+		cities: [
+			{ barrack: { x: 16424.0, y: -13604.0 } },
+			{ barrack: { x: 16097.0, y: -14921.0 } },
+			{ barrack: { x: 18066.0, y: -14658.0 } },
+		],
 	});
 	CountrySettings.push({
 		name: 'Egypt',
