@@ -1,8 +1,23 @@
 import { exec, execFile, execSync } from 'child_process';
-import { loadJsonFile, logger, compileMap, IProjectConfig } from './utils';
+import { loadJsonFile, loadTerrainConfig, logger, compileMap, updateTsFileWithConfig, IProjectConfig } from './utils';
 
 function main() {
-	const config: IProjectConfig = loadJsonFile('config.json');
+	// Get terrain from command line args (e.g., npm run test world)
+	const terrain = process.argv[2];
+
+	if (!terrain) {
+		logger.error('No terrain specified. Usage: npm run test <terrain>');
+		logger.error('Example: npm run test asia');
+		logger.error('Example: npm run test europe');
+		logger.error('Example: npm run test world');
+		process.exit(1);
+	}
+
+	const config: IProjectConfig = loadTerrainConfig(terrain);
+
+	// Update map-info.ts with the correct MAP_TYPE before compiling
+	updateTsFileWithConfig(config);
+
 	const result = compileMap(config);
 
 	if (!result) {

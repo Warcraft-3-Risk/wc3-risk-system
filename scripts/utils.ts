@@ -9,6 +9,7 @@ import 'dotenv/config';
 
 export interface IProjectConfig {
 	mapFolder: string;
+	mapType: string;
 	minifyScript: boolean;
 	gameExecutable: string;
 	outputFolder: string;
@@ -34,6 +35,24 @@ export function loadJsonFile(fname: string) {
 		logger.error(e.toString());
 		return {};
 	}
+}
+
+/**
+ * Load terrain-specific config from maps/risk_{terrain}.json
+ * @param terrain The terrain name (e.g., 'europe', 'world')
+ * @returns The project configuration
+ */
+export function loadTerrainConfig(terrain: string): IProjectConfig {
+	const configPath = path.join('maps', `risk_${terrain}.json`);
+
+	if (!fs.existsSync(configPath)) {
+		logger.error(`Config file not found: ${configPath}`);
+		logger.error(`Available terrains should have config files: maps/risk_{terrain}.json`);
+		throw new Error(`Config file not found for terrain: ${terrain}`);
+	}
+
+	logger.info(`Loading config from: ${configPath}`);
+	return loadJsonFile(configPath);
 }
 
 /**
@@ -168,3 +187,24 @@ export const logger = createLogger({
 		}),
 	],
 });
+
+/**
+ * Updates the map-info.ts file with values from the config
+ * This injects MAP_NAME, MAP_VERSION, MAP_TYPE, and W3C_MODE_ENABLED constants
+ * @param config The project configuration
+ */
+export function updateTsFileWithConfig(config: IProjectConfig) {
+	const tsFilePath = path.join(__dirname, '..', 'src/app/utils', 'map-info.ts');
+	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
+
+	const fileContent = `
+	//Do not edit - this will automatically update based on the project config.json upon building the map
+	export const MAP_NAME: string = '${config.mapName}';
+	export const MAP_VERSION: string = '${config.mapVersion}';
+	export const MAP_TYPE: string = '${config.mapType}';
+	export const W3C_MODE_ENABLED: boolean = ${w3cModeEnabled};
+  `;
+
+	fs.writeFileSync(tsFilePath, fileContent);
+	logger.info(`Updated map-info.ts with MAP_TYPE='${config.mapType}'`);
+}

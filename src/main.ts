@@ -50,7 +50,6 @@ function tsMain() {
 
 		if (!BlzChangeMinimapTerrainTex('minimap.blp')) {
 			print('Failed to load minimap file!');
-			return;
 		}
 
 		SetGameSpeed(MAP_SPEED_FASTEST);

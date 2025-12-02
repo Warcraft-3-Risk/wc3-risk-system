@@ -1,5 +1,6 @@
 {
 	"mapFolder": "risk_europe.w3x",
+	"mapType": "europe",
 	"mapName": "Risk Europe",
 	"mapNameStringId": 7531,
 	"mapVersion": "${TAG_NAME}",

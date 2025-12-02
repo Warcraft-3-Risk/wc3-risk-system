@@ -6,13 +6,13 @@
 export const CITIES_TO_WIN_RATIO: number = 0.6;
 
 //This is the starting gold for each player. 4 gold by default.
-export const STARTING_INCOME: number = 4;
+export const STARTING_INCOME: number = 800;
 
 //This is the starting countdown for the game. 10 by default
-export const STARTING_COUNTDOWN: number = 10;
+export const STARTING_COUNTDOWN: number = 3;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
-export const TURN_DURATION_IN_SECONDS: number = 60;
+export const TURN_DURATION_IN_SECONDS: number = 15;
 
 //This is the duration of a tick in seconds. 1 second by default.
 export const TICK_DURATION_IN_SECONDS: number = 1;
@@ -33,7 +33,7 @@ export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 export const STFU_DURATION: number = 300;
 
 //This represents whether debug messages should be printed. Default is false.
-export const SHOW_DEBUG_PRINTS = false;
+export const SHOW_DEBUG_PRINTS = true;
 
 // This represents whether debug logs should be saved to a file. Default is true.
 export const SAVE_DEBUG_LOGS_TO_FILE = false;

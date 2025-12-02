@@ -1,20 +1,40 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import War3Map from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/map';
-import { compileMap, getFilesInDirectory, loadJsonFile, logger, toArrayBuffer, IProjectConfig, toBuffer } from './utils';
+import { compileMap, getFilesInDirectory, loadJsonFile, loadTerrainConfig, logger, toArrayBuffer, IProjectConfig, toBuffer, updateTsFileWithConfig } from './utils';
 import War3MapW3i from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/w3i/file';
 import War3MapWts from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/wts/file';
 
 function main() {
-	const config: IProjectConfig = loadJsonFile('config.json');
-	const minify = process.argv[2] === '-minify' || config.minifyScript;
+	// Get terrain from command line args (e.g., npm run build world)
+	// Support -minify flag as well
+	let terrain: string | undefined;
+	let minifyOverride: boolean | undefined;
+
+	for (let i = 2; i < process.argv.length; i++) {
+		if (process.argv[i] === '-minify') {
+			minifyOverride = true;
+		} else {
+			terrain = process.argv[i];
+		}
+	}
+
+	if (!terrain) {
+		logger.error('No terrain specified. Usage: npm run build <terrain> [-minify]');
+		logger.error('Example: npm run build europe');
+		logger.error('Example: npm run build world -minify');
+		process.exit(1);
+	}
+
+	const config: IProjectConfig = loadTerrainConfig(terrain);
+	const minify = minifyOverride !== undefined ? minifyOverride : config.minifyScript;
 
 	if (minify !== config.minifyScript) {
 		logger.warn(`minifyScript has been overridden by command line argument "-minify"`);
 		config.minifyScript = minify;
 	}
 
-	updateTsFileWithConfig();
+	updateTsFileWithConfig(config);
 
 	const result = compileMap(config);
 
@@ -96,21 +116,6 @@ function updateStrings(wtsDir: string | undefined, w3iDir: string | undefined, c
 
 	wtsBuffer = wts.save();
 	fs.writeFileSync(wtsDir, wtsBuffer);
-}
-
-function updateTsFileWithConfig() {
-	const config: IProjectConfig = loadJsonFile('config.json');
-	const tsFilePath = path.join(__dirname, '..', 'src/app/utils', 'map-info.ts'); // Replace with your file path
-	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
-
-	const fileContent = `
-	//Do not edit - this will automatically update based on the project config.json upon building the map
-	export const MAP_NAME: string = '${config.mapName}';
-	export const MAP_VERSION: string = '${config.mapVersion}';
-	export const W3C_MODE_ENABLED: boolean = ${w3cModeEnabled};
-  `;
-
-	fs.writeFileSync(tsFilePath, fileContent);
 }
 
 main();
