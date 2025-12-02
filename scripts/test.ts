@@ -18,6 +18,7 @@ function main() {
 	// Update map-info.ts with the correct MAP_TYPE before compiling
 	updateTsFileWithConfig(config);
 
+	// compileMap will sync object editor files from risk_europe to dist/ automatically
 	const result = compileMap(config);
 
 	if (!result) {

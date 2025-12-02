@@ -36,6 +36,7 @@ function main() {
 
 	updateTsFileWithConfig(config);
 
+	// compileMap will sync object editor files from risk_europe to dist/ automatically
 	const result = compileMap(config);
 
 	if (!result) {
