@@ -32,34 +32,37 @@ Frame "TEXT" "CountdownFrame" INHERITS "EscMenuButtonTextTemplate" {
 	FontShadowOffset 0.001 -0.001,
 }
 
+
 //Fight Bonus Bar Frames
-String "MyBarTextTemplate" { 
-	//FontColor 0.99 0.427 0.0705 1.0, //Red Green Blue Alpha 0.0 to 1.0
+String "FightBonusBarTextTemplate" {
 	FontColor 1.0 1.0 1.0 1.0,
 	FontShadowColor 0.0 0.0 0.0 0.9,
 	FontShadowOffset 0.001 -0.001,
-	Font "MasterFont", 0.01, //MasterFont is only valid with "DecorateFileNames,"
+	Font "MasterFont", 0.01,
 }
 
-Frame "SIMPLESTATUSBAR" "MyBarEx" {
-	Width 0.25, //Default Width
-	Height 0.015, //Default Height
-	BarTexture "Replaceabletextures\Teamcolor\Teamcolor00.blp", //Default BarTexture
-	Layer "BACKGROUND" { //A simpleFrames thing, where this is placed layer wise
-		Texture "MyBarExBackground"{ //the BACKGROUND Texture named "MyBarExBackground" its also a frame and a child
-			File "Replaceabletextures\Teamcolor\Teamcolor27.blp", //Default Texture for "MyBarExBackground"
+Frame "SIMPLESTATUSBAR" "FightBonusBar" {
+	Width 0.25,
+	Height 0.015,
+	BarTexture "Replaceabletextures\Teamcolor\Teamcolor00.blp",
+
+	Layer "BACKGROUND" {
+		Texture "FightBonusBarBackground" {
+			File "Replaceabletextures\Teamcolor\Teamcolor27.blp",
 		}
 	}
-	
-	Frame "SIMPLEFRAME" "MyBarExFrame" { //Child of "MyBarEx"
-		DecorateFileNames, //Lookup FileNames in a StringList
-		SetAllPoints, //copy "MyBarEx"
+
+	Frame "SIMPLEFRAME" "FightBonusBarFrame" {
+		DecorateFileNames,
+		SetPoint TOPLEFT, "FightBonusBar", TOPLEFT, -0.135, 0.004,
+		SetPoint BOTTOMRIGHT, "FightBonusBar", BOTTOMRIGHT, 0.135, -0.004,
+
 		Layer "ARTWORK" {
-			Texture "MyBarExBorder" {
-				File "SimpleXpBarBorder", //Default Texture for "MyBarExBorder" // switch to in order to get rid of black sqaures ReplayTimelineBorder
+			Texture "FightBonusBarBorder" {
+				File "ReplayTimelineBorder",
 			}
-			String "MyBarExText" INHERITS "MyBarTextTemplate" {
-				Text "MyBarEx", //Default Text for "MyBarExText" which takes over Data from "MyBarTextTemplate"
+			String "FightBonusBarText" INHERITS "FightBonusBarTextTemplate" {
+				Text "Fight Bonus",
 			}
 		}
 	}
@@ -396,4 +399,190 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			Text "Off",
 		}
 	}
+}
+
+Frame "BACKDROP" "BackdropTemplate" {
+    BackdropBackground  "UI\Widgets\EscMenu\Human\quest-normal-background.blp",
+    BackdropBackgroundInsets 0.005 0.005 0.005 0.005,
+    BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+    BackdropCornerSize  0.0125,
+    BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-menu-border.blp",
+}
+
+Frame "TEXT" "TextTemplate" {
+    FrameFont "Fonts\BLQ55Web.ttf", 0.008, "",
+    FontColor 1.0 1.0 1.0,
+    FontFlags "IGNORENEWLINES",
+}
+
+Frame "POPUPMENU" "PopupMenuTemplate" {
+    Width 0.095,
+    Height 0.021,
+    PopupButtonInset 0.01,
+
+    ControlBackdrop "PopupMenuTemplateBackdrop",
+    ControlDisabledBackdrop "PopupMenuTemplateBackdrop",
+    Frame "BACKDROP" "PopupMenuTemplateBackdrop" {
+        BackdropBackground  "UI\Widgets\EscMenu\Human\human-options-menu-background",
+        BackdropBackgroundInsets 0.002 0.002 0.002 0.002,
+        BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+        BackdropCornerSize  0.0125,
+        BackdropEdgeFile  "UI\Widgets\BattleNet\bnet-inputbox-border.blp",
+    }
+
+    PopupTitleFrame "PopupMenuTemplateTitle",
+    Frame "GLUETEXTBUTTON" "PopupMenuTemplateTitle" {
+        FrameFont "Fonts\BLQ55Web.ttf", 0.008, "",
+
+        ButtonText "PopupMenuTemplateTitleText",
+        Frame "TEXT" "PopupMenuTemplateTitleText" {
+            FontJustificationOffset 0.01 0.0,
+        }
+    }
+
+    PopupArrowFrame "PopupMenuTemplateArrow",
+    Frame "BUTTON" "PopupMenuTemplateArrow" {
+        Height 0.008,
+        Width 0.008,
+
+        ControlBackdrop "PopupMenuTemplateArrowBackdrop",
+        Frame "BACKDROP" "PopupMenuTemplateArrowBackdrop" {
+            BackdropBackground "UI\Widgets\Glues\GlueScreen-Pulldown-Arrow.blp",
+        }
+    }
+}
+
+Frame "BACKDROP" "ColorButtonTemplate" INHERITS "BackdropTemplate" {
+    Width 0.0265,
+    Height 0.0265,
+    BackdropBackgroundInsets 0 0 0 0,
+
+    Frame "BUTTON" "ColorSelectionColorButtonButton" {
+        SetPoint CENTER, "ColorButtonTemplate", CENTER, 0, 0,
+        Width 0.0176,
+        Height 0.0176,
+        ControlStyle "AUTOTRACK|HIGHLIGHTONMOUSEOVER",
+
+        ControlBackdrop "ColorButtonTexture",
+        Frame "BACKDROP" "ColorButtonTexture" {
+        }
+
+        ControlMouseOverHighlight "ColorButtonHighlight",
+        Frame "HIGHLIGHT" "ColorButtonHighlight" {
+            HighlightType "FILETEXTURE",
+            HighlightAlphaFile "UI\Widgets\EscMenu\Human\human-options-button-highlight.blp",
+            HighlightAlphaMode "ADD",
+        }
+    }
+}
+
+Frame "BACKDROP" "TeamOptionsBackdrop" INHERITS "BackdropTemplate" {
+    BackdropCornerSize 0.02,
+    Width 0.25,
+    Height 0.25,
+
+    Frame "BACKDROP" "TeamOptionsInnerBackdrop" INHERITS "BackdropTemplate" {
+        BackdropEdgeFile  "UI\Widgets\BattleNet\bnet-inputbox-border.blp",
+        SetPoint CENTER, "TeamOptionsBackdrop", CENTER, 0, 0,
+        Width 0.24,
+        Height 0.24,
+
+        Frame "TEXT" "TeamOptionsTeamNameText" INHERITS "TextTemplate" {
+            SetPoint TOPLEFT, "TeamOptionsBackdrop", TOPLEFT, 0.01, -0.0135,
+            Width 0.11,
+            Height 0.025,
+            Text "Team Name:"
+        }
+
+        Frame "EDITBOX" "TeamOptionsEditBox" {
+            SetPoint TOP, "TeamOptionsBackdrop", TOP, 0, -0.01,
+            Width 0.095,
+            Height 0.019,
+            EditMaxChars 16,
+            EditBorderSize 0.004,
+            EditCursorColor 1.0 1.0 1.0,
+
+            EditTextFrame "TeamOptionsEditBoxText",
+            Frame "TEXT" "TeamOptionsEditBoxText" INHERITS "TextTemplate" {
+            }
+
+            ControlBackdrop "TeamOptionsEditBackdrop",
+            Frame "BACKDROP" "TeamOptionsEditBackdrop" {
+                BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+                BackdropBackground  "UI\Widgets\EscMenu\Human\human-options-menu-background",
+                BackdropCornerSize  0.01,
+                BackdropEdgeFile  "UI\Widgets\BattleNet\bnet-inputbox-border.blp",
+            }
+        }
+
+        Frame "GLUETEXTBUTTON" "TeamOptionsCloseButton" {
+            SetPoint TOPRIGHT, "TeamOptionsBackdrop", TOPRIGHT, -0.005, -0.005,
+            Width  0.02,
+            Height 0.02,
+            ControlStyle "AUTOTRACK|HIGHLIGHTONMOUSEOVER",
+            ButtonPushedTextOffset 0.001 -0.001,
+
+            ControlBackdrop "TeamOptionsCloseButtonBackdrop",
+            ControlPushedBackdrop "TeamOptionsCloseButtonBackdrop",
+            Frame "BACKDROP" "TeamOptionsCloseButtonBackdrop" INHERITS "BackdropTemplate" {
+                BackdropBackground "UI\Widgets\EscMenu\Human\human-options-menu-background",
+                BackdropBackgroundInsets 0.003 0.003 0.003 0.003,
+                BackdropEdgeFile "UI\Widgets\BattleNet\bnet-inputbox-border.blp",
+            }
+
+            ControlMouseOverHighlight "TeamOptionsCloseButtonHighlight",
+            Frame "HIGHLIGHT" "TeamOptionsCloseButtonHighlight" {
+                HighlightType "FILETEXTURE",
+                HighlightAlphaFile "UI\Widgets\EscMenu\Human\human-options-button-highlight.blp",
+                HighlightAlphaMode "ADD",
+            }
+
+            ButtonText "TeamOptionsCloseButtonText",
+            Frame "TEXT" "TeamOptionsCloseButtonText" {
+                FrameFont "Fonts\BLQ55Web.ttf", 0.008, "",
+                FontJustificationH JUSTIFYCENTER,
+                FontJustificationV JUSTIFYMIDDLE,
+                FontFlags "FIXEDSIZE",
+                FontColor 0.99 0.827 0.0705 1.0,
+                Text "X",
+            }
+        }
+
+        Frame "TEXT" "TeamOptionsControlText" INHERITS "TextTemplate" {
+            SetPoint TOPLEFT, "TeamOptionsBackdrop", TOPLEFT, 0.01, -0.04,
+            Width 0.11,
+            Height 0.025,
+            Text "Shared Control:"
+        }
+
+        Frame "POPUPMENU" "TeamControlPopup" INHERITS WITHCHILDREN "PopupMenuTemplate" {
+            SetPoint TOP, "TeamOptionsBackdrop", TOP, 0, -0.034,
+
+            PopupMenuFrame "TeamControlPopupMenu",
+            Frame "MENU" "TeamControlPopupMenu" {
+                Height 0.03,
+                FrameFont "Fonts\BLQ55Web.ttf", 0.008, "",
+                MenuTextHighlightColor 1.0 0.0 0,
+                MenuItemHeight 0.011,
+                MenuBorder 0.009,
+                MenuItem "Full", -2,
+                MenuItem "Partial", -2,
+                MenuItem "Off", -2,
+
+                ControlBackdrop "TeamControlPopupMenuBackdrop",
+                Frame "BACKDROP" "TeamControlPopupMenuBackdrop" INHERITS "BackdropTemplate" {
+                    BackdropBackground  "UI\Widgets\EscMenu\Human\human-options-menu-background",
+                    BackdropEdgeFile  "UI\Widgets\BattleNet\bnet-inputbox-border.blp",
+                    BackdropBackgroundInsets 0.002 0.002 0.002 0.002,
+                }
+            }
+        }
+
+        Frame "TEXT" "ColorSelectionTitleText" INHERITS "TextTemplate" {
+            SetPoint TOP, "TeamOptionsBackdrop", TOP, 0.034,  -0.065,
+            Width 0.11,
+            Height 0.025,
+            Text "Team Color:"
+        }
+    }
 }

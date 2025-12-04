@@ -43,12 +43,12 @@ import { PlayerGoldChangeEvent } from './app/triggers/player-gold-change-event';
 
 function tsMain() {
 	try {
-		if (!BlzLoadTOCFile('war3mapimported\\Risk.toc')) {
+		if (!BlzLoadTOCFile('Assets\\Frames\\frames.toc')) {
 			print('Failed to load TOC file!');
 			return;
 		}
 
-		if (!BlzChangeMinimapTerrainTex('minimap.blp')) {
+		if (!BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
 			print('Failed to load minimap file!');
 		}
 

@@ -19,13 +19,22 @@ function main() {
 		}
 	}
 
+	// If no terrain specified, build all terrains
 	if (!terrain) {
-		logger.error('No terrain specified. Usage: npm run build <terrain> [-minify]');
-		logger.error('Example: npm run build europe');
-		logger.error('Example: npm run build world -minify');
-		process.exit(1);
+		logger.info('No terrain specified. Building all terrains...');
+		const terrains = ['asia', 'europe', 'world'];
+		for (const t of terrains) {
+			logger.info(`\n=== Building ${t} ===`);
+			buildTerrain(t, minifyOverride);
+		}
+		logger.info('\nAll terrains built successfully!');
+		return;
 	}
 
+	buildTerrain(terrain, minifyOverride);
+}
+
+function buildTerrain(terrain: string, minifyOverride?: boolean) {
 	const config: IProjectConfig = loadTerrainConfig(terrain);
 	const minify = minifyOverride !== undefined ? minifyOverride : config.minifyScript;
 
@@ -61,22 +70,23 @@ function main() {
 		fs.renameSync(ddsDir, copyDest);
 	}
 
-	createMapFromDir(`${config.outputFolder}/${formattedMapName}`, distDir);
+	createMapFromDir(`${config.outputFolder}/${formattedMapName}`, distDir, config);
 }
 
 /**
  * Creates a w3x archive from a directory
  * @param output The output filename
  * @param dir The directory to create the archive from
+ * @param config The project configuration
  */
-export function createMapFromDir(output: string, dir: string) {
+export function createMapFromDir(output: string, dir: string, config: IProjectConfig) {
 	const map = new War3Map();
 	const files = getFilesInDirectory(dir);
 
 	updateStrings(
 		files.find((filename) => filename.indexOf('.wts') >= 0),
 		files.find((filename) => filename.indexOf('.w3i') >= 0),
-		loadJsonFile('config.json')
+		config
 	);
 
 	map.archive.resizeHashtable(files.length);
