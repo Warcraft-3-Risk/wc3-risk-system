@@ -67,8 +67,8 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 		createContext: GetPlayerId(player.getPlayer()) + 200,
 		key: OSKEY_F8,
 		textures: {
-			primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp',
-			secondary: 'ReplaceableTextures\\CommandButtons\\BTNRecipe.blp',
+			primary: 'ReplaceableTextures\\CommandButtons\\BTNRecipe.blp',
+			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp',
 		},
 		xOffset: 0.046,
 		initialTooltipText: `Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ${HexColors.GREEN}Visible`,
@@ -87,7 +87,7 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 			});
 
 			const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
-			const texture = player.options.labels ? textures.secondary : textures.primary;
+			const texture = player.options.labels ? textures.primary : textures.secondary;
 
 			BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
 
