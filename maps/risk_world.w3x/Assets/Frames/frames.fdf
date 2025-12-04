@@ -324,7 +324,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			LayerStyle "IGNORETRACKEVENTS", 
 			FontJustificationH JUSTIFYLEFT,
 			FontJustificationV JUSTIFYMIDDLE,
-			Text "Promode?",
+			Text "Promode:",
 		}
 	}
 
