@@ -1,6 +1,6 @@
 import { ActivePlayer } from './types/active-player';
 import { HumanPlayer } from './types/human-player';
-import { buildGuardHealthButton, buildGuardValueButton } from '../ui/player-preference-buttons';
+import { buildGuardHealthButton, buildGuardValueButton, buildLabelToggleButton } from '../ui/player-preference-buttons';
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
@@ -54,6 +54,7 @@ export class PlayerManager {
 
 				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
 				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
+				const labelButton = buildLabelToggleButton(this._playerFromHandle.get(player));
 				let contents: string = '';
 
 				if (player == GetLocalPlayer()) {
@@ -62,6 +63,7 @@ export class PlayerManager {
 					if (contents == 'false') {
 						BlzFrameSetVisible(healthButton, false);
 						BlzFrameSetVisible(valueButton, false);
+						BlzFrameSetVisible(labelButton, false);
 					}
 				}
 			}

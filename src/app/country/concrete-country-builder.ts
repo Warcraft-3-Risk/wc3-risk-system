@@ -9,6 +9,8 @@ import { Spawner } from '../spawner/spawner';
 import { SpawnerBuilder } from '../spawner/spawner-builder';
 import { SpawnerData } from '../spawner/spawner-data';
 import { PlayerManager } from '../player/player-manager';
+import { File } from 'w3ts';
+import { HexColors } from '../utils/hex-colors';
 
 /**
  * ConcreteCountryBuilder is an implementation of the CountryBuilder interface.
@@ -109,7 +111,29 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 		const countrySet: Set<Country> = new Set(CityToCountry.values());
 		PlayerManager.getInstance().playersAndObservers.forEach((player) => {
 			if (GetLocalPlayer() == player.getPlayer()) {
+				// Create all country labels
 				countrySet.forEach((country) => country.createText());
+
+				// Load saved labels preference and apply it
+				const labelsPreference = File.read('risk/labels.pld');
+				if (labelsPreference === 'false') {
+					player.options.labels = false;
+					countrySet.forEach((country) => country.setLabelVisibility(false));
+
+					// Update button texture and tooltip to match the hidden state
+					const labelButtonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', GetPlayerId(player.getPlayer()) + 200);
+					if (labelButtonBackdrop) {
+						BlzFrameSetTexture(labelButtonBackdrop, 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp', 0, false);
+					}
+
+					const labelButtonTooltip = BlzGetFrameByName('GuardButtonToolTip', GetPlayerId(player.getPlayer()) + 200);
+					if (labelButtonTooltip) {
+						BlzFrameSetText(
+							labelButtonTooltip,
+							`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ${HexColors.RED}Hidden`
+						);
+					}
+				}
 			}
 		});
 	}

@@ -3,4 +3,5 @@ export type Options = {
 	value: boolean;
 	ping: boolean;
 	board: number;
+	labels: boolean;
 };
