@@ -82,13 +82,19 @@ Check out the base [wc3-ts-template](https://cipherxof.github.io/w3ts/docs/getti
 ### Testing the project locally
 
 ```
-npm run test
+npm run test <terrain>
+
+npm run test europe
+npm run test asia
 ```
 
 ### Building the project for release
 
 ```
-npm run build
+npm run build <terrain>
+
+npm run build europe
+npm run build asia
 ```
 
 This instruction may fail if you have saved through the World Editor. The error message looks like this:
