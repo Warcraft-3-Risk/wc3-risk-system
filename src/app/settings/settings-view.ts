@@ -1,4 +1,5 @@
 import { HexColors } from '../utils/hex-colors';
+import { MAP_NAME } from '../utils/map-info';
 import { SettingsContext } from './settings-context';
 import { DiplomacyStringsColorFormatted } from './strategies/diplomacy-strategy';
 import { FogOptionsColorFormatted } from './strategies/fog-strategy';
@@ -12,6 +13,7 @@ export class SettingsView {
 
 	public constructor() {
 		this.backdrop = BlzCreateFrame('SettingsView', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
+		BlzFrameSetText(BlzGetFrameByName('SettingsTitle', 0), MAP_NAME);
 		BlzFrameSetValue(BlzGetFrameByName('GameTypePopup', 0), 0);
 		BlzFrameSetValue(BlzGetFrameByName('FogPopup', 0), 0);
 		BlzFrameSetValue(BlzGetFrameByName('DiplomacyPopup', 0), 0);

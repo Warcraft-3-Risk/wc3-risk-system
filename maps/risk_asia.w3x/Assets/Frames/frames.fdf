@@ -168,25 +168,14 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 	SetPoint CENTER, "ConsoleUI", CENTER, 0.0,0.05,
 
 	Frame "TEXT" "SettingsTitle" {
-		SetPoint TOP,"SettingsView",TOP, 0, -0.01,
+		SetPoint TOP,"SettingsView",TOP, 0, -0.02,
 		DecorateFileNames,
 		FrameFont "MasterFont", 0.03,"",
 		FontColor 1.0 0.8 0.0 1.0,
-		LayerStyle "IGNORETRACKEVENTS", 
+		LayerStyle "IGNORETRACKEVENTS",
 		FontJustificationH JUSTIFYLEFT,
 		FontJustificationV JUSTIFYMIDDLE,
-		Text "Risk Europe",
-	}
-
-	Frame "TEXT" "SettingsSubTitle" {
-		SetPoint TOP,"SettingsTitle",BOTTOM, 0, 0,
-		DecorateFileNames,
-		FrameFont "MasterFont", 0.015,"",
-		FontColor 1.0 0.8 0.0 1.0,
-		LayerStyle "IGNORETRACKEVENTS", 
-		FontJustificationH JUSTIFYLEFT,
-		FontJustificationV JUSTIFYMIDDLE,
-		Text "Settings",
+		Text "Risk",
 	}
 
 	Frame "FRAME" "PopupMenus" {
