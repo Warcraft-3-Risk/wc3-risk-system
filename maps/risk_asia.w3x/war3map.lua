@@ -701,7 +701,7 @@ SetStartLocPrio(22, 21, 21, MAP_LOC_PRIO_HIGH)
 end
 
 function main()
-SetCameraBounds(-17792.0 + GetCameraMargin(CAMERA_MARGIN_LEFT), -15872.0 + GetCameraMargin(CAMERA_MARGIN_BOTTOM), 14720.0 - GetCameraMargin(CAMERA_MARGIN_RIGHT), 16256.0 - GetCameraMargin(CAMERA_MARGIN_TOP), -17792.0 + GetCameraMargin(CAMERA_MARGIN_LEFT), 16256.0 - GetCameraMargin(CAMERA_MARGIN_TOP), 14720.0 - GetCameraMargin(CAMERA_MARGIN_RIGHT), -15872.0 + GetCameraMargin(CAMERA_MARGIN_BOTTOM))
+SetCameraBounds(-17792.0 + GetCameraMargin(CAMERA_MARGIN_LEFT), -15872.0 + GetCameraMargin(CAMERA_MARGIN_BOTTOM), 14720.0 - GetCameraMargin(CAMERA_MARGIN_RIGHT), 16384.0 - GetCameraMargin(CAMERA_MARGIN_TOP), -17792.0 + GetCameraMargin(CAMERA_MARGIN_LEFT), 16384.0 - GetCameraMargin(CAMERA_MARGIN_TOP), 14720.0 - GetCameraMargin(CAMERA_MARGIN_RIGHT), -15872.0 + GetCameraMargin(CAMERA_MARGIN_BOTTOM))
 SetDayNightModels("Environment\\DNC\\DNCAshenvale\\DNCAshenvaleTerrain\\DNCAshenvaleTerrain.mdl", "Environment\\DNC\\DNCAshenvale\\DNCAshenvaleUnit\\DNCAshenvaleUnit.mdl")
 SetTerrainFogEx(0, 100000.0, 100000.0, 0.000, 0.000, 0.000, 0.000)
 NewSoundEnvironment("Default")
@@ -713,7 +713,7 @@ InitGlobals()
 end
 
 function config()
-SetMapName("")
+SetMapName("TRIGSTR_7531")
 SetMapDescription("TRIGSTR_7297")
 SetPlayers(23)
 SetTeams(23)
