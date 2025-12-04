@@ -1,21 +1,51 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import War3Map from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/map';
-import { compileMap, getFilesInDirectory, loadJsonFile, logger, toArrayBuffer, IProjectConfig, toBuffer } from './utils';
+import { compileMap, getFilesInDirectory, loadJsonFile, loadTerrainConfig, logger, toArrayBuffer, IProjectConfig, toBuffer, updateTsFileWithConfig } from './utils';
 import War3MapW3i from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/w3i/file';
 import War3MapWts from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/wts/file';
 
 function main() {
-	const config: IProjectConfig = loadJsonFile('config.json');
-	const minify = process.argv[2] === '-minify' || config.minifyScript;
+	// Get terrain from command line args (e.g., npm run build world)
+	// Support -minify flag as well
+	let terrain: string | undefined;
+	let minifyOverride: boolean | undefined;
+
+	for (let i = 2; i < process.argv.length; i++) {
+		if (process.argv[i] === '-minify') {
+			minifyOverride = true;
+		} else {
+			terrain = process.argv[i];
+		}
+	}
+
+	// If no terrain specified, build all terrains
+	if (!terrain) {
+		logger.info('No terrain specified. Building all terrains...');
+		const terrains = ['asia', 'europe', 'world'];
+		for (const t of terrains) {
+			logger.info(`\n=== Building ${t} ===`);
+			buildTerrain(t, minifyOverride);
+		}
+		logger.info('\nAll terrains built successfully!');
+		return;
+	}
+
+	buildTerrain(terrain, minifyOverride);
+}
+
+function buildTerrain(terrain: string, minifyOverride?: boolean) {
+	const config: IProjectConfig = loadTerrainConfig(terrain);
+	const minify = minifyOverride !== undefined ? minifyOverride : config.minifyScript;
 
 	if (minify !== config.minifyScript) {
 		logger.warn(`minifyScript has been overridden by command line argument "-minify"`);
 		config.minifyScript = minify;
 	}
 
-	updateTsFileWithConfig();
+	updateTsFileWithConfig(config);
 
+	// compileMap will sync object editor files from risk_europe to dist/ automatically
 	const result = compileMap(config);
 
 	if (!result) {
@@ -40,22 +70,23 @@ function main() {
 		fs.renameSync(ddsDir, copyDest);
 	}
 
-	createMapFromDir(`${config.outputFolder}/${formattedMapName}`, distDir);
+	createMapFromDir(`${config.outputFolder}/${formattedMapName}`, distDir, config);
 }
 
 /**
  * Creates a w3x archive from a directory
  * @param output The output filename
  * @param dir The directory to create the archive from
+ * @param config The project configuration
  */
-export function createMapFromDir(output: string, dir: string) {
+export function createMapFromDir(output: string, dir: string, config: IProjectConfig) {
 	const map = new War3Map();
 	const files = getFilesInDirectory(dir);
 
 	updateStrings(
 		files.find((filename) => filename.indexOf('.wts') >= 0),
 		files.find((filename) => filename.indexOf('.w3i') >= 0),
-		loadJsonFile('config.json')
+		config
 	);
 
 	map.archive.resizeHashtable(files.length);
@@ -96,21 +127,6 @@ function updateStrings(wtsDir: string | undefined, w3iDir: string | undefined, c
 
 	wtsBuffer = wts.save();
 	fs.writeFileSync(wtsDir, wtsBuffer);
-}
-
-function updateTsFileWithConfig() {
-	const config: IProjectConfig = loadJsonFile('config.json');
-	const tsFilePath = path.join(__dirname, '..', 'src/app/utils', 'map-info.ts'); // Replace with your file path
-	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
-
-	const fileContent = `
-	//Do not edit - this will automatically update based on the project config.json upon building the map
-	export const MAP_NAME: string = '${config.mapName}';
-	export const MAP_VERSION: string = '${config.mapVersion}';
-	export const W3C_MODE_ENABLED: boolean = ${w3cModeEnabled};
-  `;
-
-	fs.writeFileSync(tsFilePath, fileContent);
 }
 
 main();

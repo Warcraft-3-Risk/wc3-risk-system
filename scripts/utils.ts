@@ -9,6 +9,7 @@ import 'dotenv/config';
 
 export interface IProjectConfig {
 	mapFolder: string;
+	mapType: string;
 	minifyScript: boolean;
 	gameExecutable: string;
 	outputFolder: string;
@@ -34,6 +35,24 @@ export function loadJsonFile(fname: string) {
 		logger.error(e.toString());
 		return {};
 	}
+}
+
+/**
+ * Load terrain-specific config from maps/risk_{terrain}.json
+ * @param terrain The terrain name (e.g., 'europe', 'world')
+ * @returns The project configuration
+ */
+export function loadTerrainConfig(terrain: string): IProjectConfig {
+	const configPath = path.join('maps', `risk_${terrain}.json`);
+
+	if (!fs.existsSync(configPath)) {
+		logger.error(`Config file not found: ${configPath}`);
+		logger.error(`Available terrains should have config files: maps/risk_{terrain}.json`);
+		throw new Error(`Config file not found for terrain: ${terrain}`);
+	}
+
+	logger.info(`Loading config from: ${configPath}`);
+	return loadJsonFile(configPath);
 }
 
 /**
@@ -111,6 +130,10 @@ export function compileMap(config: IProjectConfig) {
 	logger.info(`Building "${config.mapFolder}"...`);
 	fs.copySync(`./maps/${config.mapFolder}`, `./dist/${config.mapFolder}`);
 
+	// Sync object editor files from risk_europe.w3x to the dist folder
+	// This happens after copying the map files, so it only modifies the dist/ folder
+	syncObjectEditorFiles(config.mapType, config.mapFolder);
+
 	logger.info('Modifying tsconfig.json to work with war3-transformer...');
 	updateTSConfig(config.mapFolder);
 
@@ -168,3 +191,81 @@ export const logger = createLogger({
 		}),
 	],
 });
+
+/**
+ * Updates the map-info.ts file with values from the config
+ * This injects MAP_NAME, MAP_VERSION, MAP_TYPE, and W3C_MODE_ENABLED constants
+ * @param config The project configuration
+ */
+export function updateTsFileWithConfig(config: IProjectConfig) {
+	const tsFilePath = path.join(__dirname, '..', 'src/app/utils', 'map-info.ts');
+	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
+
+	const fileContent = `
+	//Do not edit - this will automatically update based on the project config.json upon building the map
+	export const MAP_NAME: string = '${config.mapName}';
+	export const MAP_VERSION: string = '${config.mapVersion}';
+	export const MAP_TYPE: string = '${config.mapType}';
+	export const W3C_MODE_ENABLED: boolean = ${w3cModeEnabled};
+  `;
+
+	fs.writeFileSync(tsFilePath, fileContent);
+	logger.info(`Updated map-info.ts with MAP_TYPE='${config.mapType}'`);
+}
+
+/**
+ * Syncs object editor files from risk_europe.w3x (master) to the target terrain in dist/
+ * This ensures all terrains use the same unit/ability/buff/destructable data
+ * This function should be called AFTER the map files have been copied to dist/
+ * @param targetTerrain The terrain to sync to (e.g., 'world', 'asia')
+ * @param mapFolder The map folder name (e.g., 'risk_world.w3x')
+ */
+export function syncObjectEditorFiles(targetTerrain: string, mapFolder: string) {
+	// If building europe, no sync needed (it's the master)
+	if (targetTerrain === 'europe') {
+		logger.info('Building europe terrain (master) - skipping object editor sync');
+		return;
+	}
+
+	const sourcePath = path.join('maps', 'risk_europe.w3x');
+	const targetPath = path.join('dist', mapFolder);
+
+	// Object editor files to sync
+	const objectEditorFiles = [
+		// Regular object modifications
+		'war3map.w3u', // Units
+		'war3map.w3a', // Abilities
+		'war3map.w3b', // Destructables
+		'war3map.w3h', // Buffs/Effects
+		'war3map.wts', // Strings
+		// Skin modifications
+		'war3mapSkin.w3u',
+		'war3mapSkin.w3a',
+		'war3mapSkin.w3b',
+		'war3mapSkin.w3h',
+	];
+
+	logger.info(`Syncing object editor files from risk_europe.w3x to dist/${mapFolder}...`);
+
+	let syncedCount = 0;
+	let skippedCount = 0;
+
+	for (const file of objectEditorFiles) {
+		const sourceFile = path.join(sourcePath, file);
+		const targetFile = path.join(targetPath, file);
+
+		// Only copy if source file exists
+		if (fs.existsSync(sourceFile)) {
+			fs.copyFileSync(sourceFile, targetFile);
+			syncedCount++;
+			logger.info(`  ✓ Synced ${file}`);
+		} else {
+			skippedCount++;
+			logger.warn(`  ⚠ Skipped ${file} (not found in source)`);
+		}
+	}
+
+	logger.info(
+		`Object editor sync complete: ${syncedCount} files synced, ${skippedCount} files skipped`
+	);
+}

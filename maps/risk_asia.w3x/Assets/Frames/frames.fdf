@@ -1,0 +1,577 @@
+IncludeFile "UI\FrameDef\UI\EscMenuTemplates.fdf",
+IncludeFile "UI\FrameDef\UI\UpperButtonBar.fdf",
+IncludeFile "UI\FrameDef\UI\ScriptDialog.fdf",
+IncludeFile "UI\FrameDef\UI\QuestDialog.fdf",
+
+//UI Message Frames
+Frame "TEXT" "ErrorMessageFrame" INHERITS "EscMenuButtonTextTemplate" {
+	Text "",
+    SetPoint CENTER, "ConsoleUI", CENTER, -0.2, -0.11,
+	LayerStyle "IGNORETRACKEVENTS",
+}
+
+Frame "TEXT" "GlobalMessageFrame" INHERITS "EscMenuButtonTextTemplate" {
+	Text "",
+    SetPoint CENTER, "ConsoleUI", CENTER, 0, .15,
+	LayerStyle "IGNORETRACKEVENTS",
+}
+
+Frame "TEXT" "LocalMessageFrame" INHERITS "EscMenuButtonTextTemplate" {
+	Text "",
+    SetPoint CENTER, "ConsoleUI", CENTER, 0, .17,
+	LayerStyle "IGNORETRACKEVENTS",
+}
+
+Frame "TEXT" "CountdownFrame" INHERITS "EscMenuButtonTextTemplate" {
+	Text "",
+    SetPoint CENTER, "ConsoleUI", CENTER, 0, .07,
+	LayerStyle "IGNORETRACKEVENTS",
+	FrameFont "MasterFont", 0.025, "",
+	FontColor 1.0 1.0 1.0 1.0,
+	FontShadowColor 0.0 0.4 0.7 0.5,
+	FontShadowOffset 0.001 -0.001,
+}
+
+
+//Fight Bonus Bar Frames
+String "FightBonusBarTextTemplate" {
+	FontColor 1.0 1.0 1.0 1.0,
+	FontShadowColor 0.0 0.0 0.0 0.9,
+	FontShadowOffset 0.001 -0.001,
+	Font "MasterFont", 0.01,
+}
+
+Frame "SIMPLESTATUSBAR" "FightBonusBar" {
+	Width 0.25,
+	Height 0.015,
+	BarTexture "Replaceabletextures\Teamcolor\Teamcolor00.blp",
+
+	Layer "BACKGROUND" {
+		Texture "FightBonusBarBackground" {
+			File "Replaceabletextures\Teamcolor\Teamcolor27.blp",
+		}
+	}
+
+	Frame "SIMPLEFRAME" "FightBonusBarFrame" {
+		DecorateFileNames,
+		SetPoint TOPLEFT, "FightBonusBar", TOPLEFT, -0.135, 0.004,
+		SetPoint BOTTOMRIGHT, "FightBonusBar", BOTTOMRIGHT, 0.135, -0.004,
+
+		Layer "ARTWORK" {
+			Texture "FightBonusBarBorder" {
+				File "ReplayTimelineBorder",
+			}
+			String "FightBonusBarText" INHERITS "FightBonusBarTextTemplate" {
+				Text "Fight Bonus",
+			}
+		}
+	}
+}
+
+Frame "TEXT" "ColumnHeaderText" {
+	FontColor 0.99 0.827 0.0705 1.0,
+	DecorateFileNames,
+	FrameFont "MasterFont", 0.011,"",
+	LayerStyle "IGNORETRACKEVENTS", 
+	FontJustificationH JUSTIFYLEFT,
+	FontJustificationV JUSTIFYMIDDLE,
+	Width  0.11f,
+	Height 0.02f,
+}
+
+Frame "TEXT" "ColumnDataText" {
+    DecorateFileNames,
+    FrameFont "MasterFont", 0.0090,"",
+    LayerStyle "IGNORETRACKEVENTS", 
+    FontJustificationH JUSTIFYLEFT,
+    FontJustificationV JUSTIFYMIDDLE,
+	Width  0.11f,
+	Height 0.02f,
+}
+
+Frame "BACKDROP" "StatisticsBoard" INHERITS "QuestButtonBaseTemplate" {
+	Width 1.0f,
+    Height 0.56f,
+	SetPoint CENTER, "ConsoleUI", CENTER, 0.0,0.0,
+
+	Frame "FRAME" "StatisticsHeader" {
+		Width  1.0f,
+		Height 0.05f,
+		SetPoint TOPLEFT,"StatisticsBoard",TOPLEFT,0.0,0.0,
+
+		Frame "TEXT" "PlayedTime" {
+			SetPoint TOPLEFT,"StatisticsHeader",TOPLEFT,0.01,-0.01,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.0115,"",
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+		}
+
+		Frame "TEXT" "WinningPlayer" {
+			SetPoint TOP,"StatisticsHeader",TOP,0,-0.01,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.0115,"",
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+		}
+
+		Frame "TEXT" "MapName" {
+			SetPoint TOPRIGHT,"StatisticsHeader",TOPRIGHT,-0.085,-0.01,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.0115,"",
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+		}
+
+		Frame "GLUETEXTBUTTON" "HideButton" INHERITS WITHCHILDREN "EscMenuButtonTemplate" {
+			SetPoint TOPRIGHT,"StatisticsHeader",TOPRIGHT,0,0,
+			Width  0.08f,
+			Height 0.03f,
+			UseActiveContext,
+			ButtonText "ScriptDialogButtonText",
+
+			Frame "TEXT" "ScriptDialogButtonText" INHERITS "EscMenuButtonTextTemplate" {
+				Text "Hide Stats",
+			}
+		}  
+	}
+}
+
+Frame "POPUPMENU" "MyPopupTemplate" {
+    Width 0.13,
+    Height 0.03,
+    PopupButtonInset 0.01,
+
+    ControlBackdrop "MyPopupTemplateBackdropTemplate",
+    Frame "BACKDROP" "MyPopupTemplateBackdropTemplate" INHERITS "EscMenuButtonBackdropTemplate" {
+    }
+
+    ControlDisabledBackdrop "MyPopupTemplateDisabledBackdropTemplate",
+    Frame "BACKDROP" "MyPopupTemplateDisabledBackdropTemplate" INHERITS "EscMenuButtonDisabledBackdropTemplate" {
+    }
+
+    PopupTitleFrame "PopupMenuTitleTemplate",
+    Frame "GLUETEXTBUTTON" "PopupMenuTitleTemplate" INHERITS WITHCHILDREN "EscMenuPopupMenuTitleTemplate" {
+    }
+
+    PopupArrowFrame "PopupMenuArrowTemplate",
+    Frame "BUTTON" "PopupMenuArrowTemplate" INHERITS WITHCHILDREN "EscMenuPopupMenuArrowTemplate" { 
+    }	
+}
+
+Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
+	Width 0.25f,
+    Height 0.33f,
+	SetPoint CENTER, "ConsoleUI", CENTER, 0.0,0.05,
+
+	Frame "TEXT" "SettingsTitle" {
+		SetPoint TOP,"SettingsView",TOP, 0, -0.02,
+		DecorateFileNames,
+		FrameFont "MasterFont", 0.03,"",
+		FontColor 1.0 0.8 0.0 1.0,
+		LayerStyle "IGNORETRACKEVENTS",
+		FontJustificationH JUSTIFYLEFT,
+		FontJustificationV JUSTIFYMIDDLE,
+		Text "Risk",
+	}
+
+	Frame "FRAME" "PopupMenus" {
+		Width  0.14f,
+		Height 0.1f,
+		SetPoint TOP,"SettingsView",TOP,0.03,-0.06,
+
+		Frame "POPUPMENU" "GameTypePopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
+		SetPoint TOP,"PopupMenus",TOP,0.0,0.00,
+		PopupMenuFrame "GameTypePopupMenu",
+			Frame "MENU" "GameTypePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
+				MenuItem "Standard",     -2,
+				MenuItem "Capitals",     -2,
+			}
+		}
+
+		Frame "POPUPMENU" "FogPopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.04,
+		PopupMenuFrame "FogPopupMenu",
+			Frame "MENU" "FogPopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
+				MenuItem "Off",     -2,
+				MenuItem "On",     -2,
+				MenuItem "Night",     -2,
+			}
+		}
+
+		Frame "POPUPMENU" "DiplomacyPopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.08,
+    	PopupMenuFrame "DiplomacyPopupMenu",
+			Frame "MENU" "DiplomacyPopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
+				MenuItem "FFA",     -2,
+				MenuItem "Lobby Teams",     -2,
+				//MenuItem "Random Teams of: ",     -2,
+			}
+		}
+
+		Frame "POPUPMENU" "OvertimePopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.12,
+    	PopupMenuFrame "OvertimePopupMenu",
+			Frame "MENU" "OvertimePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
+				MenuItem "Turbo (Turn 0)",     -2,
+				MenuItem "Medium (Turn 30)",     -2,
+				MenuItem "Extended (Turn 60)",     -2,
+				MenuItem "Off",     -2,
+			}
+		}
+
+		Frame "GLUECHECKBOX" "PromodeCheckbox" {
+		Width 0.024,
+		Height 0.024,
+		SetPoint TOP,"PopupMenus",TOP,-0.053,-0.17,
+
+		ControlBackdrop "EscMenuCheckBoxBackdrop",
+			Frame "BACKDROP" "EscMenuCheckBoxBackdrop" {
+				DecorateFileNames,
+				BackdropBlendAll,
+				BackdropBackground  "EscMenuCheckBoxBackground",
+			}
+
+		ControlDisabledBackdrop "EscMenuDisabledCheckBoxBackdrop",
+			Frame "BACKDROP" "EscMenuDisabledCheckBoxBackdrop" {
+				DecorateFileNames,
+				BackdropBlendAll,
+				BackdropBackground  "EscMenuDisabledCheckBoxBackground",
+			}
+
+		ControlPushedBackdrop "EscMenuCheckBoxPushedBackdrop",
+			Frame "BACKDROP" "EscMenuCheckBoxPushedBackdrop" {
+				DecorateFileNames,
+				BackdropBlendAll,
+				BackdropBackground  "EscMenuCheckBoxPushedBackground",
+			}
+
+		CheckBoxCheckHighlight "EscMenuCheckHighlightTemplate",
+			Frame "HIGHLIGHT" "EscMenuCheckHighlightTemplate" {
+				DecorateFileNames,
+				HighlightType "FILETEXTURE",
+				HighlightAlphaFile "EscMenuCheckBoxCheckHighlight",
+				HighlightAlphaMode "BLEND",
+			}
+
+		CheckBoxDisabledCheckHighlight "EscMenuDisabledCheckHighlightTemplate",
+			Frame "HIGHLIGHT" "EscMenuDisabledCheckHighlightTemplate" {
+				DecorateFileNames,
+				HighlightType "FILETEXTURE",
+				HighlightAlphaFile "EscMenuDisabledCheckHighlight",
+				HighlightAlphaMode "BLEND",
+			}
+		}
+	}
+
+	Frame "FRAME" "PopupLabels" {
+		Width  0.08f,
+		Height 0.1f,
+		SetPoint TOPLEFT,"SettingsView",TOPLEFT,0.02,-0.068,
+
+		Frame "TEXT" "GameTypeLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, 0,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Game Type:",
+		}
+
+		Frame "TEXT" "FogLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.04,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Fog:",
+		}
+
+		Frame "TEXT" "DiplomacyLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.08,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS",
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Diplomacy:",
+		}
+
+		Frame "TEXT" "OvertimeLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.12,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS",
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Overtime:",
+		}
+
+		Frame "TEXT" "PromodeLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.17,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Promode?",
+		}
+	}
+
+	Frame "FRAME" "PopupMenuOptions" {
+		Width  0.1f,
+		Height 0.1f,
+		SetPoint TOPLEFT,"PopupLabels",TOPRIGHT,0.0,-0.001,
+
+		Frame "TEXT" "GameTypeOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, 0,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Standard",
+		}
+
+		Frame "TEXT" "FogOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.04,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Off",
+		}
+
+		Frame "TEXT" "DiplomacyOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.08,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "FFA",
+		}
+
+		Frame "TEXT" "OvertimeOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.12,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Off",
+		}
+
+		Frame "TEXT" "PromodeOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.17,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Off",
+		}
+	}
+}
+
+Frame "BACKDROP" "BackdropTemplate" {
+    BackdropBackground  "UI\Widgets\EscMenu\Human\quest-normal-background.blp",
+    BackdropBackgroundInsets 0.005 0.005 0.005 0.005,
+    BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+    BackdropCornerSize  0.0125,
+    BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-menu-border.blp",
+}
+
+Frame "TEXT" "TextTemplate" {
+    FrameFont "Fonts\BLQ55Web.ttf", 0.008, "",
+    FontColor 1.0 1.0 1.0,
+    FontFlags "IGNORENEWLINES",
+}
+
+Frame "POPUPMENU" "PopupMenuTemplate" {
+    Width 0.095,
+    Height 0.021,
+    PopupButtonInset 0.01,
+
+    ControlBackdrop "PopupMenuTemplateBackdrop",
+    ControlDisabledBackdrop "PopupMenuTemplateBackdrop",
+    Frame "BACKDROP" "PopupMenuTemplateBackdrop" {
+        BackdropBackground  "UI\Widgets\EscMenu\Human\human-options-menu-background",
+        BackdropBackgroundInsets 0.002 0.002 0.002 0.002,
+        BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+        BackdropCornerSize  0.0125,
+        BackdropEdgeFile  "UI\Widgets\BattleNet\bnet-inputbox-border.blp",
+    }
+
+    PopupTitleFrame "PopupMenuTemplateTitle",
+    Frame "GLUETEXTBUTTON" "PopupMenuTemplateTitle" {
+        FrameFont "Fonts\BLQ55Web.ttf", 0.008, "",
+
+        ButtonText "PopupMenuTemplateTitleText",
+        Frame "TEXT" "PopupMenuTemplateTitleText" {
+            FontJustificationOffset 0.01 0.0,
+        }
+    }
+
+    PopupArrowFrame "PopupMenuTemplateArrow",
+    Frame "BUTTON" "PopupMenuTemplateArrow" {
+        Height 0.008,
+        Width 0.008,
+
+        ControlBackdrop "PopupMenuTemplateArrowBackdrop",
+        Frame "BACKDROP" "PopupMenuTemplateArrowBackdrop" {
+            BackdropBackground "UI\Widgets\Glues\GlueScreen-Pulldown-Arrow.blp",
+        }
+    }
+}
+
+Frame "BACKDROP" "ColorButtonTemplate" INHERITS "BackdropTemplate" {
+    Width 0.0265,
+    Height 0.0265,
+    BackdropBackgroundInsets 0 0 0 0,
+
+    Frame "BUTTON" "ColorSelectionColorButtonButton" {
+        SetPoint CENTER, "ColorButtonTemplate", CENTER, 0, 0,
+        Width 0.0176,
+        Height 0.0176,
+        ControlStyle "AUTOTRACK|HIGHLIGHTONMOUSEOVER",
+
+        ControlBackdrop "ColorButtonTexture",
+        Frame "BACKDROP" "ColorButtonTexture" {
+        }
+
+        ControlMouseOverHighlight "ColorButtonHighlight",
+        Frame "HIGHLIGHT" "ColorButtonHighlight" {
+            HighlightType "FILETEXTURE",
+            HighlightAlphaFile "UI\Widgets\EscMenu\Human\human-options-button-highlight.blp",
+            HighlightAlphaMode "ADD",
+        }
+    }
+}
+
+Frame "BACKDROP" "TeamOptionsBackdrop" INHERITS "BackdropTemplate" {
+    BackdropCornerSize 0.02,
+    Width 0.25,
+    Height 0.25,
+
+    Frame "BACKDROP" "TeamOptionsInnerBackdrop" INHERITS "BackdropTemplate" {
+        BackdropEdgeFile  "UI\Widgets\BattleNet\bnet-inputbox-border.blp",
+        SetPoint CENTER, "TeamOptionsBackdrop", CENTER, 0, 0,
+        Width 0.24,
+        Height 0.24,
+
+        Frame "TEXT" "TeamOptionsTeamNameText" INHERITS "TextTemplate" {
+            SetPoint TOPLEFT, "TeamOptionsBackdrop", TOPLEFT, 0.01, -0.0135,
+            Width 0.11,
+            Height 0.025,
+            Text "Team Name:"
+        }
+
+        Frame "EDITBOX" "TeamOptionsEditBox" {
+            SetPoint TOP, "TeamOptionsBackdrop", TOP, 0, -0.01,
+            Width 0.095,
+            Height 0.019,
+            EditMaxChars 16,
+            EditBorderSize 0.004,
+            EditCursorColor 1.0 1.0 1.0,
+
+            EditTextFrame "TeamOptionsEditBoxText",
+            Frame "TEXT" "TeamOptionsEditBoxText" INHERITS "TextTemplate" {
+            }
+
+            ControlBackdrop "TeamOptionsEditBackdrop",
+            Frame "BACKDROP" "TeamOptionsEditBackdrop" {
+                BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+                BackdropBackground  "UI\Widgets\EscMenu\Human\human-options-menu-background",
+                BackdropCornerSize  0.01,
+                BackdropEdgeFile  "UI\Widgets\BattleNet\bnet-inputbox-border.blp",
+            }
+        }
+
+        Frame "GLUETEXTBUTTON" "TeamOptionsCloseButton" {
+            SetPoint TOPRIGHT, "TeamOptionsBackdrop", TOPRIGHT, -0.005, -0.005,
+            Width  0.02,
+            Height 0.02,
+            ControlStyle "AUTOTRACK|HIGHLIGHTONMOUSEOVER",
+            ButtonPushedTextOffset 0.001 -0.001,
+
+            ControlBackdrop "TeamOptionsCloseButtonBackdrop",
+            ControlPushedBackdrop "TeamOptionsCloseButtonBackdrop",
+            Frame "BACKDROP" "TeamOptionsCloseButtonBackdrop" INHERITS "BackdropTemplate" {
+                BackdropBackground "UI\Widgets\EscMenu\Human\human-options-menu-background",
+                BackdropBackgroundInsets 0.003 0.003 0.003 0.003,
+                BackdropEdgeFile "UI\Widgets\BattleNet\bnet-inputbox-border.blp",
+            }
+
+            ControlMouseOverHighlight "TeamOptionsCloseButtonHighlight",
+            Frame "HIGHLIGHT" "TeamOptionsCloseButtonHighlight" {
+                HighlightType "FILETEXTURE",
+                HighlightAlphaFile "UI\Widgets\EscMenu\Human\human-options-button-highlight.blp",
+                HighlightAlphaMode "ADD",
+            }
+
+            ButtonText "TeamOptionsCloseButtonText",
+            Frame "TEXT" "TeamOptionsCloseButtonText" {
+                FrameFont "Fonts\BLQ55Web.ttf", 0.008, "",
+                FontJustificationH JUSTIFYCENTER,
+                FontJustificationV JUSTIFYMIDDLE,
+                FontFlags "FIXEDSIZE",
+                FontColor 0.99 0.827 0.0705 1.0,
+                Text "X",
+            }
+        }
+
+        Frame "TEXT" "TeamOptionsControlText" INHERITS "TextTemplate" {
+            SetPoint TOPLEFT, "TeamOptionsBackdrop", TOPLEFT, 0.01, -0.04,
+            Width 0.11,
+            Height 0.025,
+            Text "Shared Control:"
+        }
+
+        Frame "POPUPMENU" "TeamControlPopup" INHERITS WITHCHILDREN "PopupMenuTemplate" {
+            SetPoint TOP, "TeamOptionsBackdrop", TOP, 0, -0.034,
+
+            PopupMenuFrame "TeamControlPopupMenu",
+            Frame "MENU" "TeamControlPopupMenu" {
+                Height 0.03,
+                FrameFont "Fonts\BLQ55Web.ttf", 0.008, "",
+                MenuTextHighlightColor 1.0 0.0 0,
+                MenuItemHeight 0.011,
+                MenuBorder 0.009,
+                MenuItem "Full", -2,
+                MenuItem "Partial", -2,
+                MenuItem "Off", -2,
+
+                ControlBackdrop "TeamControlPopupMenuBackdrop",
+                Frame "BACKDROP" "TeamControlPopupMenuBackdrop" INHERITS "BackdropTemplate" {
+                    BackdropBackground  "UI\Widgets\EscMenu\Human\human-options-menu-background",
+                    BackdropEdgeFile  "UI\Widgets\BattleNet\bnet-inputbox-border.blp",
+                    BackdropBackgroundInsets 0.002 0.002 0.002 0.002,
+                }
+            }
+        }
+
+        Frame "TEXT" "ColorSelectionTitleText" INHERITS "TextTemplate" {
+            SetPoint TOP, "TeamOptionsBackdrop", TOP, 0.034,  -0.065,
+            Width 0.11,
+            Height 0.025,
+            Text "Team Color:"
+        }
+    }
+}
