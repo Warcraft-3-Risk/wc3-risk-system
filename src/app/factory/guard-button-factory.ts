@@ -11,6 +11,7 @@ export type ButtonConfig = {
 	};
 	xOffset: number;
 	action: (context: number, textures: { primary: string; secondary: string }) => void;
+	initialTooltipText?: string;
 };
 
 export function createGuardButton(config: ButtonConfig): framehandle {
@@ -47,13 +48,17 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 	BlzFrameSetPoint(tooltipText, FRAMEPOINT_TOPLEFT, button, FRAMEPOINT_BOTTOMLEFT, 0, -0.01);
 	BlzFrameSetEnable(tooltipText, false);
 
-	const str = config.key == OSKEY_F6 ? 'Health' : 'Value';
+	if (config.initialTooltipText) {
+		BlzFrameSetText(tooltipText, config.initialTooltipText);
+	} else {
+		const str = config.key == OSKEY_F6 ? 'Health' : 'Value';
 
-	BlzFrameSetText(
-		tooltipText,
-		`Guard ${str} Preference ${HexColors.TANGERINE}(F${str === 'Health' ? `6` : `7`})|r\nSets your preference for unit ${str} when taking possession of a city.\nCurrent preference: ` +
-			`${str === 'Health' ? `${HexColors.RED}Highest` : `${HexColors.GREEN}Lowest`}`
-	);
+		BlzFrameSetText(
+			tooltipText,
+			`Guard ${str} Preference ${HexColors.TANGERINE}(F${str === 'Health' ? `6` : `7`})|r\nSets your preference for unit ${str} when taking possession of a city.\nCurrent preference: ` +
+				`${str === 'Health' ? `${HexColors.RED}Highest` : `${HexColors.GREEN}Lowest`}`
+		);
+	}
 
 	const hotkeyTrigger = CreateTrigger();
 
