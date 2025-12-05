@@ -52,6 +52,9 @@ export class Guard implements Resetable {
 		this._unit = guard;
 		UnitAddAbility(guard, FourCC("A006"));
 		UnitAddType(this._unit, UNIT_TYPE.GUARD);
+
+		// Hide the guard's minimap icon
+		BlzSetUnitBooleanFieldBJ(guard, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 	}
 
 	/**
@@ -62,6 +65,10 @@ export class Guard implements Resetable {
 
 		UnitRemoveType(this._unit, UNIT_TYPE.GUARD);
 		UnitRemoveAbility(this._unit, FourCC("A006"));
+
+		// Show the unit's minimap icon again
+		BlzSetUnitBooleanFieldBJ(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+
 		this._unit = null;
 	}
 
