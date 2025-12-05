@@ -18,8 +18,10 @@ export class MinimapIconManager {
 	// Minimap constants (corner minimap dimensions)
 	private readonly MINIMAP_WIDTH = 0.140; // Minimap width in screen coordinates
 	private readonly MINIMAP_HEIGHT = 0.140; // Minimap height in screen coordinates
-	private readonly ICON_SIZE = 0.0035; // Icon size
-	private readonly BORDER_SIZE = 0.0050; // Border size (larger for visibility)
+	private readonly ICON_SIZE = 0.0035; // Icon size for regular cities
+	private readonly CAPITAL_ICON_SIZE = 0.0025; // Capital colored center size (smaller to show borders)
+	private readonly CAPITAL_BORDER_INNER = 0.0035; // Capital inner border size (black ring)
+	private readonly CAPITAL_BORDER_OUTER = 0.0045; // Capital outer border size (white ring)
 
 	// World bounds
 	private worldMinX: number;
@@ -306,15 +308,14 @@ export class MinimapIconManager {
 				return;
 			}
 
-			// Set outer border size (largest)
-			const outerSize = this.BORDER_SIZE + 0.001;
-			BlzFrameSetSize(outerBorderFrame, outerSize, outerSize);
+			// Set outer border size (same as regular city size)
+			BlzFrameSetSize(outerBorderFrame, this.CAPITAL_BORDER_OUTER, this.CAPITAL_BORDER_OUTER);
 
 			// Set white color for outer border
 			BlzFrameSetTexture(outerBorderFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 
-			// Set level to render above minimap but behind everything else
-			BlzFrameSetLevel(outerBorderFrame, 8);
+			// Set level to render above regular city icons (which are at level 10)
+			BlzFrameSetLevel(outerBorderFrame, 11);
 
 			// Position the outer border
 			this.updateIconPosition(outerBorderFrame, worldX, worldY);
@@ -329,14 +330,14 @@ export class MinimapIconManager {
 				return;
 			}
 
-			// Set inner border size (medium)
-			BlzFrameSetSize(innerBorderFrame, this.BORDER_SIZE, this.BORDER_SIZE);
+			// Set inner border size (between outer border and capital icon)
+			BlzFrameSetSize(innerBorderFrame, this.CAPITAL_BORDER_INNER, this.CAPITAL_BORDER_INNER);
 
 			// Set black color for inner border
 			BlzFrameSetTexture(innerBorderFrame, 'ReplaceableTextures\\TeamColor\\TeamColor24.blp', 0, true);
 
 			// Set level to render above outer border
-			BlzFrameSetLevel(innerBorderFrame, 9);
+			BlzFrameSetLevel(innerBorderFrame, 12);
 
 			// Position the inner border
 			this.updateIconPosition(innerBorderFrame, worldX, worldY);
@@ -351,12 +352,11 @@ export class MinimapIconManager {
 			// Mark this as a capital icon
 			this.capitalIcons.set(city, true);
 
-			// Also make the capital icon itself slightly larger
+			// Make the capital icon smaller (border makes it stand out)
 			const iconFrame = this.cityIcons.get(city);
 			if (iconFrame) {
-				const capitalIconSize = this.ICON_SIZE + 0.0005; // Slightly larger
-				BlzFrameSetSize(iconFrame, capitalIconSize, capitalIconSize);
-				BlzFrameSetLevel(iconFrame, 10); // Above all borders
+				BlzFrameSetSize(iconFrame, this.CAPITAL_ICON_SIZE, this.CAPITAL_ICON_SIZE);
+				BlzFrameSetLevel(iconFrame, 13); // Above borders (which are at 11-12)
 
 				// Update color immediately
 				const localPlayer = GetLocalPlayer();
