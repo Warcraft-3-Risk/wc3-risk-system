@@ -75,28 +75,29 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 		action: (context: number, textures: { primary: string; secondary: string }) => {
 			player.options.labels = !player.options.labels;
 
-			// Save labels preference to file
+			// Only update visuals for the local player
 			if (player.getPlayer() == GetLocalPlayer()) {
+				// Save labels preference to file
 				File.write('risk/labels.pld', `${player.options.labels}`);
+
+				// Toggle visibility for all country labels
+				const countrySet: Set<Country> = new Set(CityToCountry.values());
+				countrySet.forEach((country) => {
+					country.setLabelVisibility(player.options.labels);
+				});
+
+				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+				const texture = player.options.labels ? textures.primary : textures.secondary;
+
+				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+				BlzFrameSetText(
+					buttonTooltip,
+					`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ` +
+						`${player.options.labels ? `${HexColors.GREEN}Visible` : `${HexColors.RED}Hidden`}`
+				);
 			}
-
-			// Toggle visibility for all country labels (local player only)
-			const countrySet: Set<Country> = new Set(CityToCountry.values());
-			countrySet.forEach((country) => {
-				country.setLabelVisibility(player.options.labels);
-			});
-
-			const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
-			const texture = player.options.labels ? textures.primary : textures.secondary;
-
-			BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
-
-			const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
-			BlzFrameSetText(
-				buttonTooltip,
-				`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ` +
-					`${player.options.labels ? `${HexColors.GREEN}Visible` : `${HexColors.RED}Hidden`}`
-			);
 		},
 	});
 }
