@@ -8,6 +8,9 @@ import { debugPrint } from '../utils/debug-print';
 export class MinimapIconManager {
 	private static instance: MinimapIconManager;
 	private cityIcons: Map<City, framehandle> = new Map();
+	private cityBorders: Map<City, framehandle> = new Map(); // Inner border frames for capital cities
+	private cityOuterBorders: Map<City, framehandle> = new Map(); // Outer border frames for capital cities
+	private capitalIcons: Map<City, boolean> = new Map(); // Track which cities are capitals
 	private lastSeenOwners: Map<City, player> = new Map(); // Remember last seen owner
 	private minimapFrame: framehandle;
 	private updateTimer: timer;
@@ -16,6 +19,7 @@ export class MinimapIconManager {
 	private readonly MINIMAP_WIDTH = 0.140; // Minimap width in screen coordinates
 	private readonly MINIMAP_HEIGHT = 0.140; // Minimap height in screen coordinates
 	private readonly ICON_SIZE = 0.0035; // Icon size
+	private readonly BORDER_SIZE = 0.0050; // Border size (larger for visibility)
 
 	// World bounds
 	private worldMinX: number;
@@ -81,8 +85,11 @@ export class MinimapIconManager {
 	 */
 	private createCityIcon(city: City): void {
 		try {
-			// Create backdrop frame as child of game UI (NOT minimap)
 			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
+			const worldX = city.barrack.defaultX;
+			const worldY = city.barrack.defaultY;
+
+			// Create color icon frame
 			const iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCityIcon', gameUI, '', 0);
 
 			if (!iconFrame) {
@@ -93,15 +100,13 @@ export class MinimapIconManager {
 			// Set icon size
 			BlzFrameSetSize(iconFrame, this.ICON_SIZE, this.ICON_SIZE);
 
-			// Set level to render above minimap
+			// Set level to render above minimap (and above border if present)
 			BlzFrameSetLevel(iconFrame, 10);
 
 			// Store the frame first (needed for updateIconColor)
 			this.cityIcons.set(city, iconFrame);
 
-			// Calculate and set initial position
-			const worldX = city.barrack.defaultX;
-			const worldY = city.barrack.defaultY;
+			// Position the icon
 			this.updateIconPosition(iconFrame, worldX, worldY);
 
 			// Check initial visibility
@@ -182,6 +187,16 @@ export class MinimapIconManager {
 			const worldX = city.barrack.defaultX;
 			const worldY = city.barrack.defaultY;
 			this.updateIconPosition(iconFrame, worldX, worldY);
+
+			// Update border positions if this is a capital
+			const innerBorder = this.cityBorders.get(city);
+			const outerBorder = this.cityOuterBorders.get(city);
+			if (innerBorder) {
+				this.updateIconPosition(innerBorder, worldX, worldY);
+			}
+			if (outerBorder) {
+				this.updateIconPosition(outerBorder, worldX, worldY);
+			}
 
 			// Update color based on owner and visibility
 			this.updateIconColor(iconFrame, city, isVisible);
@@ -267,13 +282,111 @@ export class MinimapIconManager {
 	}
 
 	/**
+	 * Adds a prominent double-ring border to a city's minimap icon (call when city becomes a capital).
+	 * Creates a white outer ring + black inner ring for maximum visibility.
+	 * @param city - The city to add a border for
+	 */
+	public addCapitalBorder(city: City): void {
+		// Check if border already exists
+		if (this.cityBorders.has(city)) {
+			return;
+		}
+
+		try {
+			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
+			const worldX = city.barrack.defaultX;
+			const worldY = city.barrack.defaultY;
+
+			debugPrint('MinimapIconManager: Adding double-ring border for capital city');
+
+			// Create outer border (white, largest)
+			const outerBorderFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCapitalOuterBorder', gameUI, '', 0);
+			if (!outerBorderFrame) {
+				debugPrint('MinimapIconManager: Failed to create outer border frame for capital');
+				return;
+			}
+
+			// Set outer border size (largest)
+			const outerSize = this.BORDER_SIZE + 0.001;
+			BlzFrameSetSize(outerBorderFrame, outerSize, outerSize);
+
+			// Set white color for outer border
+			BlzFrameSetTexture(outerBorderFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
+
+			// Set level to render above minimap but behind everything else
+			BlzFrameSetLevel(outerBorderFrame, 8);
+
+			// Position the outer border
+			this.updateIconPosition(outerBorderFrame, worldX, worldY);
+
+			// Make outer border visible
+			BlzFrameSetVisible(outerBorderFrame, true);
+
+			// Create inner border (black, medium size)
+			const innerBorderFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCapitalInnerBorder', gameUI, '', 0);
+			if (!innerBorderFrame) {
+				debugPrint('MinimapIconManager: Failed to create inner border frame for capital');
+				return;
+			}
+
+			// Set inner border size (medium)
+			BlzFrameSetSize(innerBorderFrame, this.BORDER_SIZE, this.BORDER_SIZE);
+
+			// Set black color for inner border
+			BlzFrameSetTexture(innerBorderFrame, 'ReplaceableTextures\\TeamColor\\TeamColor24.blp', 0, true);
+
+			// Set level to render above outer border
+			BlzFrameSetLevel(innerBorderFrame, 9);
+
+			// Position the inner border
+			this.updateIconPosition(innerBorderFrame, worldX, worldY);
+
+			// Make inner border visible
+			BlzFrameSetVisible(innerBorderFrame, true);
+
+			// Store both border frames
+			this.cityOuterBorders.set(city, outerBorderFrame);
+			this.cityBorders.set(city, innerBorderFrame);
+
+			// Mark this as a capital icon
+			this.capitalIcons.set(city, true);
+
+			// Also make the capital icon itself slightly larger
+			const iconFrame = this.cityIcons.get(city);
+			if (iconFrame) {
+				const capitalIconSize = this.ICON_SIZE + 0.0005; // Slightly larger
+				BlzFrameSetSize(iconFrame, capitalIconSize, capitalIconSize);
+				BlzFrameSetLevel(iconFrame, 10); // Above all borders
+
+				// Update color immediately
+				const localPlayer = GetLocalPlayer();
+				const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
+				this.updateIconColor(iconFrame, city, isVisible);
+			}
+
+			debugPrint('MinimapIconManager: Capital double-ring border created successfully');
+		} catch (e) {
+			debugPrint('MinimapIconManager: Error adding capital border - ' + e);
+		}
+	}
+
+	/**
 	 * Cleans up all icons (call on game reset).
 	 */
 	public cleanup(): void {
 		this.cityIcons.forEach((iconFrame) => {
 			BlzDestroyFrame(iconFrame);
 		});
+		this.cityBorders.forEach((borderFrame) => {
+			BlzDestroyFrame(borderFrame);
+		});
+		this.cityOuterBorders.forEach((outerBorderFrame) => {
+			BlzDestroyFrame(outerBorderFrame);
+		});
 		this.cityIcons.clear();
+		this.cityBorders.clear();
+		this.cityOuterBorders.clear();
+		this.capitalIcons.clear();
 		this.lastSeenOwners.clear();
 
 		if (this.updateTimer) {

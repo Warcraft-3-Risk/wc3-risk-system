@@ -130,6 +130,10 @@ export class LandCity extends City {
 		this.capital = true;
 		CityToCountry.get(this).getSpawn().setMultiplier(2);
 		IssueImmediateOrderById(this.barrack.unit, UNIT_ID.CAPITAL);
+
+		// Add capital border on minimap
+		const MinimapIconManager = require('../managers/minimap-icon-manager').MinimapIconManager;
+		MinimapIconManager.getInstance().addCapitalBorder(this);
 	}
 
 	/**
