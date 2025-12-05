@@ -37,6 +37,7 @@ import { ClientManager } from './app/game/services/client-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 import { PlayerManager } from './app/player/player-manager';
 import { PlayerGoldChangeEvent } from './app/triggers/player-gold-change-event';
+import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -102,6 +103,7 @@ function tsMain() {
 		UnitDamagedEvent();
 		UnitDeathEvent();
 		UnitTrainedEvent();
+		UnitUpgradeEvent();
 		OwnershipChangeEvent();
 		PlayerLeaveEvent();
 		SpellEffectEvent();
