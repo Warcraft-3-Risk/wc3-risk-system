@@ -1,5 +1,5 @@
 import { addScriptHook, W3TS_HOOK } from 'w3ts/hooks';
-import { MAP_NAME } from './app/utils/map-info';
+import { MAP_NAME, MAP_TYPE } from './app/utils/map-info';
 import { ConcreteCityBuilder } from './app/city/concrete-city-builder';
 import { ConcreteCountryBuilder } from './app/country/concrete-country-builder';
 import { CountrySettings } from './app/country/countries';
@@ -47,8 +47,10 @@ function tsMain() {
 			return;
 		}
 
-		if (!BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
-			print('Failed to load minimap file!');
+		// Only load custom minimap texture if file exists
+		if (MAP_TYPE !== 'world' && !BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
+				print('Failed to load minimap file!');
+				return;
 		}
 
 		SetGameSpeed(MAP_SPEED_FASTEST);

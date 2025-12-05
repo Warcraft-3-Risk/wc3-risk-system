@@ -1,9 +1,11 @@
 import { City } from '../city/city';
 import { debugPrint } from '../utils/debug-print';
+import { MAP_TYPE } from '../utils/map-info';
 
 /**
  * Manages custom minimap icons using SimpleFrames for cities.
  * This allows for custom-sized icons between unit and building size.
+ * NOTE: Only active for "world" terrain - other terrains use default WC3 minimap icons.
  */
 export class MinimapIconManager {
 	private static instance: MinimapIconManager;
@@ -14,6 +16,7 @@ export class MinimapIconManager {
 	private lastSeenOwners: Map<City, player> = new Map(); // Remember last seen owner
 	private minimapFrame: framehandle;
 	private updateTimer: timer;
+	private isActive: boolean; // Whether custom icons are active (only for world terrain)
 
 	// Minimap constants (corner minimap dimensions)
 	private readonly MINIMAP_WIDTH = 0.140; // Minimap width in screen coordinates
@@ -45,6 +48,16 @@ export class MinimapIconManager {
 	 * Private constructor - initializes world bounds.
 	 */
 	private constructor() {
+		// Only activate for world terrain
+		this.isActive = MAP_TYPE === 'world';
+
+		debugPrint('MinimapIconManager: Initialized for terrain: ' + MAP_TYPE);
+		debugPrint('MinimapIconManager: Active: ' + this.isActive);
+
+		if (!this.isActive) {
+			return;
+		}
+
 		// Get world bounds
 		const worldBounds = GetWorldBounds();
 		this.worldMinX = GetRectMinX(worldBounds);
@@ -57,7 +70,6 @@ export class MinimapIconManager {
 		// Get minimap frame
 		this.minimapFrame = BlzGetFrameByName('Minimap', 0);
 
-		debugPrint('MinimapIconManager: Initialized');
 		debugPrint('World bounds: ' + this.worldMinX + ', ' + this.worldMinY + ' to ' + this.worldMaxX + ', ' + this.worldMaxY);
 		debugPrint('World size: ' + this.worldWidth + 'x' + this.worldHeight);
 		debugPrint('Minimap frame handle: ' + (this.minimapFrame ? 'FOUND' : 'NULL'));
@@ -69,6 +81,10 @@ export class MinimapIconManager {
 	 * NOTE: Should only be called for the local player (caller's responsibility).
 	 */
 	public initializeCityIcons(cities: City[]): void {
+		if (!this.isActive) {
+			return;
+		}
+
 		debugPrint(`MinimapIconManager: Creating icons for ${cities.length} cities`);
 
 		// Create icons for all cities
@@ -90,6 +106,9 @@ export class MinimapIconManager {
 			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
 			const worldX = city.barrack.defaultX;
 			const worldY = city.barrack.defaultY;
+
+			// Hide the default minimap display for the city's barrack unit
+			BlzSetUnitBooleanField(city.barrack.unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 
 			// Create color icon frame
 			const iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCityIcon', gameUI, '', 0);
@@ -289,6 +308,10 @@ export class MinimapIconManager {
 	 * @param city - The city to add a border for
 	 */
 	public addCapitalBorder(city: City): void {
+		if (!this.isActive) {
+			return;
+		}
+
 		// Check if border already exists
 		if (this.cityBorders.has(city)) {
 			return;
@@ -374,6 +397,10 @@ export class MinimapIconManager {
 	 * Cleans up all icons (call on game reset).
 	 */
 	public cleanup(): void {
+		if (!this.isActive) {
+			return;
+		}
+
 		this.cityIcons.forEach((iconFrame) => {
 			BlzDestroyFrame(iconFrame);
 		});
