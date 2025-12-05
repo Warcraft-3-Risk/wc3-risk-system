@@ -102,8 +102,12 @@ export class MinimapIconManager {
 			const worldY = city.barrack.defaultY;
 			this.updateIconPosition(iconFrame, worldX, worldY);
 
-			// Set initial color based on owner
-			this.updateIconColor(iconFrame, city);
+			// Check initial visibility
+			const localPlayer = GetLocalPlayer();
+			const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
+
+			// Set initial color based on owner and visibility
+			this.updateIconColor(iconFrame, city, isVisible);
 
 			// Make it visible
 			BlzFrameSetVisible(iconFrame, true);
@@ -166,21 +170,35 @@ export class MinimapIconManager {
 	 * Updates all city icons (positions and visibility).
 	 */
 	private updateAllIcons(): void {
+		const localPlayer = GetLocalPlayer();
+
 		this.cityIcons.forEach((iconFrame, city) => {
+			// Check if the city's barrack is visible through fog of war
+			const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
+
 			// Update position (in case anything changed)
 			const worldX = city.barrack.defaultX;
 			const worldY = city.barrack.defaultY;
 			this.updateIconPosition(iconFrame, worldX, worldY);
 
-			// Update color based on owner
-			this.updateIconColor(iconFrame, city);
+			// Update color based on owner and visibility
+			this.updateIconColor(iconFrame, city, isVisible);
 		});
 	}
 
 	/**
-	 * Updates an icon's color based on the city's owner.
+	 * Updates an icon's color based on the city's owner and fog of war visibility.
+	 * @param iconFrame - The frame to update
+	 * @param city - The city whose owner to check
+	 * @param isVisible - Whether the city is visible through fog of war
 	 */
-	private updateIconColor(iconFrame: framehandle, city: City): void {
+	private updateIconColor(iconFrame: framehandle, city: City, isVisible: boolean): void {
+		// If not visible through fog of war, always show as neutral gray
+		if (!isVisible) {
+			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
+			return;
+		}
+
 		const owner = city.getOwner();
 		const localPlayer = GetLocalPlayer();
 
