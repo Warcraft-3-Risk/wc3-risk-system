@@ -190,7 +190,7 @@ export class MinimapIconManager {
 
 		// If the local player owns this city, show it in WHITE
 		if (owner == localPlayer) {
-			BlzFrameSetTexture(iconFrame, 'UI\\Widgets\\EscMenu\\Human\\editbox-background.blp', 0, true);
+			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
 		}
 
@@ -199,22 +199,27 @@ export class MinimapIconManager {
 			// Check if owner is ally or enemy
 			if (IsPlayerAlly(owner, localPlayer)) {
 				// Ally = White/Light gray
-				BlzFrameSetTexture(iconFrame, 'UI\\Widgets\\EscMenu\\Human\\editbox-background.blp', 0, true);
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			} else if (IsPlayerEnemy(owner, localPlayer)) {
 				// Enemy = Red (Player 0 color)
 				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor00.blp', 0, true);
 			} else {
-				// Neutral = Gray
-				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor27.blp', 0, true);
+				// Neutral = Gray (standard WC3 neutral color)
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
 			}
 			return;
 		}
 
 		// Default: Use player colors (mode 0)
-		const playerId = GetPlayerId(owner);
-		let colorIndex = playerId;
+		// Use GetPlayerColor to get the actual color, then convert to integer
+		const playerColor = GetPlayerColor(owner);
+		const colorIndex = GetHandleId(playerColor); // Convert playercolor to integer
+
+		// Validate color index
 		if (colorIndex < 0 || colorIndex > 11) {
-			colorIndex = 12; // Neutral/gray
+			// Neutral/invalid = Gray
+			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
+			return;
 		}
 
 		const colorStr = colorIndex < 10 ? '0' + colorIndex : '' + colorIndex;
