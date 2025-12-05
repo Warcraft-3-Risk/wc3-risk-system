@@ -130,6 +130,9 @@ export function compileMap(config: IProjectConfig) {
 	logger.info(`Building "${config.mapFolder}"...`);
 	fs.copySync(`./maps/${config.mapFolder}`, `./dist/${config.mapFolder}`);
 
+	// Copy loading screen files to root of dist folder if they exist
+	copyLoadingScreenFiles(config.mapFolder);
+
 	// Sync object editor files from risk_europe.w3x to the dist folder
 	// This happens after copying the map files, so it only modifies the dist/ folder
 	syncObjectEditorFiles(config.mapType, config.mapFolder);
@@ -211,6 +214,44 @@ export function updateTsFileWithConfig(config: IProjectConfig) {
 
 	fs.writeFileSync(tsFilePath, fileContent);
 	logger.info(`Updated map-info.ts with MAP_TYPE='${config.mapType}'`);
+}
+
+/**
+ * Copies loading screen files from the map source folder to the root of the dist folder
+ * This ensures loading screen assets are at the correct path for WC3 to load them
+ * @param mapFolder The map folder name (e.g., 'risk_world.w3x')
+ */
+export function copyLoadingScreenFiles(mapFolder: string) {
+	const sourcePath = path.join('maps', mapFolder);
+	const targetPath = path.join('dist', mapFolder);
+
+	// Loading screen files to copy
+	const loadingScreenFiles = [
+		'Fullscreen.dds',
+		'LoadingScreen.mdx',
+	];
+
+	logger.info(`Checking for loading screen files in ${mapFolder}...`);
+
+	let copiedCount = 0;
+
+	for (const file of loadingScreenFiles) {
+		const sourceFile = path.join(sourcePath, 'Assets', 'Loading Screen', file);
+		const targetFile = path.join(targetPath, file);
+
+		// Only copy if source file exists
+		if (fs.existsSync(sourceFile)) {
+			fs.copyFileSync(sourceFile, targetFile);
+			copiedCount++;
+			logger.info(`  ✓ Copied ${file} to root of dist folder`);
+		}
+	}
+
+	if (copiedCount > 0) {
+		logger.info(`Loading screen files copied: ${copiedCount} file(s)`);
+	} else {
+		logger.info('No loading screen files found to copy');
+	}
 }
 
 /**
