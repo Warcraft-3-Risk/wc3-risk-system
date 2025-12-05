@@ -80,7 +80,7 @@ export class MinimapIconManager {
 	private createCityIcon(city: City): void {
 		try {
 			// Create backdrop frame as child of game UI (NOT minimap)
-			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0);
+			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
 			const iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCityIcon', gameUI, '', 0);
 
 			if (!iconFrame) {
@@ -136,8 +136,8 @@ export class MinimapIconManager {
 		// Minimap positioning (BOTTOM-left corner of screen in WC3)
 		// The minimap doesn't start exactly at 0,0 - need offset
 		// Adjust these values to align with actual minimap
-		const minimapBaseX = 0.008; // Shift right (reduced to move icons left)
-		const minimapBaseY = 0.004; // Shift up from bottom (reduced to move icons down)
+		const minimapBaseX = 0.009; // Shift right (reduce to move icons left)
+		const minimapBaseY = 0.004; // Shift up from bottom (reduce to move icons down)
 
 		// Calculate position within minimap bounds
 		const iconX = minimapBaseX + (coords.x * this.MINIMAP_WIDTH);
