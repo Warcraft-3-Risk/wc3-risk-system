@@ -253,8 +253,8 @@ export class MinimapIconManager {
 		const playerColor = GetPlayerColor(owner);
 		const colorIndex = GetHandleId(playerColor); // Convert playercolor to integer
 
-		// Validate color index
-		if (colorIndex < 0 || colorIndex > 11) {
+		// Validate color index (WC3 supports 24 player colors: 0-23)
+		if (colorIndex < 0 || colorIndex > 23) {
 			// Neutral/invalid = Gray
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
 			return;
