@@ -7,6 +7,7 @@ import { City } from '../city/city';
 export class MinimapIconManager {
 	private static instance: MinimapIconManager;
 	private cityIcons: Map<City, framehandle> = new Map();
+	private lastSeenOwners: Map<City, player> = new Map(); // Remember last seen owner
 	private minimapFrame: framehandle;
 	private updateTimer: timer;
 
@@ -193,14 +194,24 @@ export class MinimapIconManager {
 	 * @param isVisible - Whether the city is visible through fog of war
 	 */
 	private updateIconColor(iconFrame: framehandle, city: City, isVisible: boolean): void {
-		// If not visible through fog of war, always show as neutral gray
-		if (!isVisible) {
-			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
-			return;
-		}
-
-		const owner = city.getOwner();
 		const localPlayer = GetLocalPlayer();
+		let owner: player;
+
+		if (isVisible) {
+			// City is visible - update and remember the owner
+			owner = city.getOwner();
+			this.lastSeenOwners.set(city, owner);
+		} else {
+			// City is in fog of war - check if we've seen it before
+			const lastSeenOwner = this.lastSeenOwners.get(city);
+			if (!lastSeenOwner) {
+				// Never seen this city - show as neutral gray
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
+				return;
+			}
+			// Use the last seen owner
+			owner = lastSeenOwner;
+		}
 
 		// Check ally color filter mode
 		// 0 = Player colors, 1/2 = Ally/Enemy colors
@@ -214,6 +225,14 @@ export class MinimapIconManager {
 
 		// If ally color mode is enabled (mode 1 or 2)
 		if (allyColorMode > 0) {
+			// Check if owner is a neutral player (Player 24+)
+			const ownerId = GetPlayerId(owner);
+			if (ownerId >= 24) {
+				// Neutral player = Gray (standard WC3 neutral color)
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
+				return;
+			}
+
 			// Check if owner is ally or enemy
 			if (IsPlayerAlly(owner, localPlayer)) {
 				// Ally = White/Light gray
@@ -254,6 +273,7 @@ export class MinimapIconManager {
 			BlzDestroyFrame(iconFrame);
 		});
 		this.cityIcons.clear();
+		this.lastSeenOwners.clear();
 
 		if (this.updateTimer) {
 			DestroyTimer(this.updateTimer);
