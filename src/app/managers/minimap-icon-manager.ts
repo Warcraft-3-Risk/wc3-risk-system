@@ -1,4 +1,5 @@
 import { City } from '../city/city';
+import { debugPrint } from '../utils/debug-print';
 
 /**
  * Manages custom minimap icons using SimpleFrames for cities.
@@ -50,10 +51,10 @@ export class MinimapIconManager {
 		// Get minimap frame
 		this.minimapFrame = BlzGetFrameByName('Minimap', 0);
 
-		print('MinimapIconManager: Initialized');
-		print('World bounds: ' + this.worldMinX + ', ' + this.worldMinY + ' to ' + this.worldMaxX + ', ' + this.worldMaxY);
-		print('World size: ' + this.worldWidth + 'x' + this.worldHeight);
-		print('Minimap frame handle: ' + (this.minimapFrame ? 'FOUND' : 'NULL'));
+		debugPrint('MinimapIconManager: Initialized');
+		debugPrint('World bounds: ' + this.worldMinX + ', ' + this.worldMinY + ' to ' + this.worldMaxX + ', ' + this.worldMaxY);
+		debugPrint('World size: ' + this.worldWidth + 'x' + this.worldHeight);
+		debugPrint('Minimap frame handle: ' + (this.minimapFrame ? 'FOUND' : 'NULL'));
 	}
 
 	/**
@@ -62,14 +63,14 @@ export class MinimapIconManager {
 	 * NOTE: Should only be called for the local player (caller's responsibility).
 	 */
 	public initializeCityIcons(cities: City[]): void {
-		print(`MinimapIconManager: Creating icons for ${cities.length} cities`);
+		debugPrint(`MinimapIconManager: Creating icons for ${cities.length} cities`);
 
 		// Create icons for all cities
 		cities.forEach((city) => {
 			this.createCityIcon(city);
 		});
 
-		print(`MinimapIconManager: Created ${this.cityIcons.size} icons`);
+		debugPrint(`MinimapIconManager: Created ${this.cityIcons.size} icons`);
 
 		// Start update timer (update every 1 second)
 		this.startUpdateTimer();
@@ -85,7 +86,7 @@ export class MinimapIconManager {
 			const iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCityIcon', gameUI, '', 0);
 
 			if (!iconFrame) {
-				print('MinimapIconManager: Failed to create frame for city');
+				debugPrint('MinimapIconManager: Failed to create frame for city');
 				return;
 			}
 
@@ -113,7 +114,7 @@ export class MinimapIconManager {
 			// Make it visible
 			BlzFrameSetVisible(iconFrame, true);
 		} catch (e) {
-			print('MinimapIconManager: Error creating icon - ' + e);
+			debugPrint('MinimapIconManager: Error creating icon - ' + e);
 		}
 	}
 
@@ -149,8 +150,8 @@ export class MinimapIconManager {
 
 		// Debug first few icons
 		if (this.cityIcons.size <= 2) {
-			print('MinimapIconManager: Icon #' + this.cityIcons.size + ' normalized: ' + coords.x + ', ' + coords.y);
-			print('MinimapIconManager: Icon #' + this.cityIcons.size + ' absolute: ' + iconX + ', ' + iconY);
+			debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' normalized: ' + coords.x + ', ' + coords.y);
+			debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' absolute: ' + iconX + ', ' + iconY);
 		}
 	}
 
