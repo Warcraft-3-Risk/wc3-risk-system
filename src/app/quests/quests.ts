@@ -49,13 +49,15 @@ export class Quests {
 	private Credits() {
 		let description = `Join our community on Discord: https://discord.gg/wc3risk
 		 
-		Devs/Code: ForLolz#11696, microhive#2772, roflmaooo#2930, xate#21335
-		Terrain: Nerla#1510
+		Code: ForLolz#11696, microhive#2772, roflmaooo#2930, xate#21335
+		Terrain: Nerla#1510, Quetra#8939
 		Units: Saran, ForLolz#11696
 		Overhead buff pack: HerrDave
-		Icons: High/Low Health Guard: Moy | High Value Guard: The Panda | Low Value Guard NemoVonFish
-		SS Ship Model: ??, please let ForLolz know if you know the author
-		Special Thanks: The Risk Community, Priwin, PsycoMarauder, RodOfNod, goble-r1sk, Saran, and all the devs before me!
+		High/Low Health Guard: Moy
+		High Value Guard: The Panda
+		Low Value Guard: NemoVonFish
+		SS Ship Model: Unknown
+		Special Thanks: The Risk Community, Priwin, PsycoMarauder, RodOfNod, goble-r1sk, Saran, and all the devs before us!
 	`;
 
 		this.BuildQuest('QUEST_CREDITS', 'Credits', description, 'ReplaceableTextures\\CommandButtons\\BTNTome.blp', false);

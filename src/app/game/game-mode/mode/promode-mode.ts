@@ -10,6 +10,7 @@ import { PromodeCountdownState } from '../promode-game-mode/promode-countdown-st
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-state';
 import { UpdatePlayerStatusState } from '../base-game-mode/update-player-status-state';
+import { EnableControlsState } from '../base-game-mode/enable-controls-state';
 
 export class PromodeData implements StateData {}
 
@@ -22,6 +23,7 @@ export class PromodeMode extends BaseMode<PromodeData> {
 			new CityDistributeState(),
 			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),
+			new EnableControlsState(),
 			new ProModeGameLoopState(),
 			new GameOverState(),
 			new ResetState(),

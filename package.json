@@ -7,7 +7,13 @@
   "main": "src/main.ts",
   "scripts": {
     "test": "ts-node --transpile-only scripts/test.ts",
+    "test:asia": "npm run test asia",
+    "test:europe": "npm run test europe",
+    "test:world": "npm run test world",
     "build": "ts-node --transpile-only scripts/build.ts",
+    "build:asia": "npm run build asia",
+    "build:europe": "npm run build europe",
+    "build:world": "npm run build world",
     "dev": "npm-watch",
     "build:defs": "ts-node scripts/dev"
   },

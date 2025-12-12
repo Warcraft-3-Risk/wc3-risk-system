@@ -7,6 +7,7 @@ export function UICommand(chatManager: ChatManager) {
 
 		const healthButton = BlzGetFrameByName('GuardButton', GetPlayerId(player));
 		const valueButton = BlzGetFrameByName('GuardButton', GetPlayerId(player) + 100);
+		const labelButton = BlzGetFrameByName('GuardButton', GetPlayerId(player) + 200);
 
 		let isHidden: boolean = BlzFrameIsVisible(healthButton);
 
@@ -16,6 +17,7 @@ export function UICommand(chatManager: ChatManager) {
 
 				BlzFrameSetVisible(healthButton, false);
 				BlzFrameSetVisible(valueButton, false);
+				BlzFrameSetVisible(labelButton, false);
 			}
 		} else {
 			if (player == GetLocalPlayer()) {
@@ -24,6 +26,7 @@ export function UICommand(chatManager: ChatManager) {
 
 			BlzFrameSetVisible(healthButton, true);
 			BlzFrameSetVisible(valueButton, true);
+			BlzFrameSetVisible(labelButton, true);
 		}
 	});
 }

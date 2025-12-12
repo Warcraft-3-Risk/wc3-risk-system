@@ -19,14 +19,25 @@ export function onPlayerAliveHandle(player: ActivePlayer): void {
 	ScoreboardManager.getInstance().updatePartial();
 }
 
-export function onPlayerDeadHandle(player: ActivePlayer): void {
-	player.status.status = PLAYER_STATUS.DEAD;
+export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): void {
+	if (player.status.isEliminated()) {
+		return;
+	}
 
+	player.status.status = PLAYER_STATUS.DEAD;
 	player.killedBy = player.trackedData.lastUnitKilledBy;
 	player.setEndData();
 	player.trackedData.income.income = 1;
 
-	if (player.killedBy) {
+	// Disable player controls
+	if (player.getPlayer() == GetLocalPlayer()) {
+		EnableSelect(false, false);
+		EnableDragSelect(false, false);
+	}
+
+	if(forfeit) {
+		GlobalMessage(`${NameManager.getInstance().getDisplayName(player.getPlayer())} has forfeited!`, 'Sound\\Interface\\SecretFound.flac');
+	} else if (player.killedBy) {
 		GlobalMessage(
 			`${NameManager.getInstance().getDisplayName(player.getPlayer())} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`,
 			'Sound\\Interface\\SecretFound.flac'
@@ -135,11 +146,5 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 		player.status.statusDuration--;
 	});
 
-	ScoreboardManager.getInstance().updatePartial();
-}
-
-export function onPlayerForfeitHandle(player: ActivePlayer): void {
-	player.status.status = PLAYER_STATUS.DEAD;
-	PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), PLAYER_STATUS.DEAD);
 	ScoreboardManager.getInstance().updatePartial();
 }

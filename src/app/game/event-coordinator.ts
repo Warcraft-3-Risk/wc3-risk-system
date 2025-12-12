@@ -2,20 +2,20 @@ import { City } from '../city/city';
 import { ActivePlayer } from '../player/types/active-player';
 import { EventEmitter } from '../utils/events/event-emitter';
 import {
+	EVENT_NEXT_STATE,
 	EVENT_ON_CITY_CAPTURE,
+	EVENT_ON_CITY_SELECTED,
 	EVENT_ON_PLAYER_ALIVE,
 	EVENT_ON_PLAYER_DEAD,
 	EVENT_ON_PLAYER_FORFEIT,
 	EVENT_ON_PLAYER_LEFT,
 	EVENT_ON_PLAYER_NOMAD,
-	EVENT_ON_PLAYER_STFU,
-	EVENT_ON_UNIT_KILLED,
-	EVENT_SET_GAME_MODE,
-	EVENT_ON_CITY_SELECTED,
-	EVENT_QUEST_UPDATE_PLAYER_STATUS,
-	EVENT_NEXT_STATE,
 	EVENT_ON_PLAYER_RESTART,
+	EVENT_ON_PLAYER_STFU,
 	EVENT_ON_SWAP_GUARD,
+	EVENT_ON_UNIT_KILLED,
+	EVENT_QUEST_UPDATE_PLAYER_STATUS,
+	EVENT_SET_GAME_MODE,
 } from '../utils/events/event-constants';
 import { StandardMode } from './game-mode/mode/standard-mode';
 import { GameType } from '../settings/strategies/game-type-strategy';
@@ -25,6 +25,7 @@ import { StateData } from './game-mode/state/state-data';
 import { CapitalsMode } from './game-mode/mode/capitals-mode';
 import { SettingsContext } from '../settings/settings-context';
 import { PromodeMode } from './game-mode/mode/promode-mode';
+import { EqualizedPromodeMode } from './game-mode/mode/equalized-promode-mode';
 import { W3CMode } from './game-mode/mode/w3c-mode';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 
@@ -48,8 +49,8 @@ export class EventCoordinator {
 		EventEmitter.getInstance().on(EVENT_ON_PLAYER_ALIVE, (player: ActivePlayer) =>
 			this._currentMode?.getCurrentState().onPlayerAlive(player)
 		);
-		EventEmitter.getInstance().on(EVENT_ON_PLAYER_DEAD, (player: ActivePlayer) =>
-			this._currentMode?.getCurrentState().onPlayerDead(player)
+		EventEmitter.getInstance().on(EVENT_ON_PLAYER_DEAD, (player: ActivePlayer, forfeit?) =>
+			this._currentMode?.getCurrentState().onPlayerDead(player, forfeit)
 		);
 		EventEmitter.getInstance().on(EVENT_ON_PLAYER_LEFT, (player: ActivePlayer) =>
 			this._currentMode?.getCurrentState().onPlayerLeft(player)
@@ -94,6 +95,8 @@ export class EventCoordinator {
 		} else {
 			if (W3C_MODE_ENABLED) {
 				this._currentMode = new W3CMode();
+			} else if (SettingsContext.getInstance().isEqualizedPromode()) {
+				this._currentMode = new EqualizedPromodeMode();
 			} else if (SettingsContext.getInstance().isPromode()) {
 				this._currentMode = new PromodeMode();
 			} else {

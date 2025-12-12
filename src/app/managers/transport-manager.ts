@@ -6,18 +6,25 @@ import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { debugPrint } from '../utils/debug-print';
 import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
+import { ORDER_ID } from '../../configs/order-id';
 
 type Transport = {
 	unit: unit;
 	cargo: unit[];
 	effect: effect | null;
 	duration: number;
-	autoloadStatus: boolean;
+	autoloadEnabled: boolean;
+	loadTarget: unit;
+	unloadTargetX: number;
+	unloadTargetY: number;
 	event: TimedEvent | null;
+	floatingTextCargo: texttag | null;
+	floatingTextCapacity: texttag | null;
 };
 
-const AUTO_LOAD_DISTANCE: number = 350;
-const AUTO_LOAD_DURATION: number = 600;
+const AUTO_LOAD_DISTANCE: number = 450;
+const AUTO_LOAD_DURATION: number = 180;
+const MAX_UNLOAD_DISTANCE: number = 300;
 
 /**
  * Manages transport units and their cargo.
@@ -55,11 +62,27 @@ export class TransportManager {
 	 */
 	private constructor() {
 		this.transports = new Map<unit, Transport>();
-		this.onLoad();
-		this.orderUnloadHandler();
-		this.spellCastHandler();
-		this.spellEffectHandler();
-		this.spellEndCastHandler();
+
+		// Unit load management
+		// Handler for order queued for the load ability start
+		this.onLoadStart();
+		// Handler for order execution once unit reached destination point for the load ability
+		this.onLoadAction();
+		// Handler for order queued for the load ability finish
+		this.onLoadFinish();
+
+		// Unit unload management
+		// Handler for order queued for the unload ability start
+		this.onUnloadStart();
+		// Handler for order queued by clicking the unit icon in the transport ship for the unload ability
+		this.onUnloadUnitStart();
+		// Handler for order execution once unit reached destination point for the unload ability
+		this.onUnloadAction();
+		// Handler for order queued for the unload ability finish
+		this.onUnloadFinish();
+
+		// Autoload management
+		this.onAutoLoadOn();
 	}
 
 	/**
@@ -72,8 +95,13 @@ export class TransportManager {
 			cargo: [],
 			effect: null,
 			duration: 0,
-			autoloadStatus: false,
+			autoloadEnabled: false,
 			event: null,
+			loadTarget: null,
+			unloadTargetX: null,
+			unloadTargetY: null,
+			floatingTextCargo: null,
+			floatingTextCapacity: null,
 		};
 
 		this.transports.set(unit, transport);
@@ -111,7 +139,7 @@ export class TransportManager {
 			DestroyEffect(transportData.effect);
 		}
 
-		transportData.autoloadStatus = false;
+		transportData.autoloadEnabled = false;
 
 		this.transports.delete(unit);
 	}
@@ -119,31 +147,27 @@ export class TransportManager {
 	/**
 	 * Initializes the trigger for units being loaded into transports using the generic load event
 	 */
-	private onLoad() {
+	private onLoadFinish() {
 		const t: trigger = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`Registering unit loaded event for player ${i}`);
+			debugPrint(`TransportManager: Registering onLoadFinish event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_LOADED, null);
-			debugPrint(`Registered unit loaded event for player ${i}`);
 		}
 
 		TriggerAddCondition(
 			t,
 			Condition(() => {
-				debugPrint(`Transport Load Event Triggered for unit: ${GetUnitName(GetTriggerUnit())}`);
 				let transport: unit = GetTransportUnit();
-
 				if (!transport) return false;
 
 				let loadedUnit: unit = GetLoadedUnit();
 
-				debugPrint(`Unit Loaded Event Triggered for unit: ${GetUnitName(loadedUnit)} into transport: ${GetUnitName(transport)}`);
-
 				// Untrack the unit since it's now loaded and managed by the transport
 				UnitLagManager.getInstance().untrackUnit(loadedUnit);
 
-				this.transports.get(transport).cargo.push(loadedUnit);
+				const transportData = this.transports.get(transport);
+				transportData.cargo.push(loadedUnit);
 
 				transport = null;
 				loadedUnit = null;
@@ -153,55 +177,77 @@ export class TransportManager {
 		);
 	}
 
-	/**
-	 * Initializes the trigger for the unload order for transports.
-	 */
-	private orderUnloadHandler() {
+	private onLoadStart() {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`Registering unit issued target order event for player ${i}`);
+			debugPrint(`TransportManager: Registering onLoadStart event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
-			debugPrint(`Registered unit issued target order event for player ${i}`);
 		}
 
 		TriggerAddCondition(
 			t,
 			Condition(() => {
-				if (GetIssuedOrderId() == 852047) {
-					const transport: Transport = this.transports.get(GetTriggerUnit());
+				const transport: Transport = this.transports.get(GetTriggerUnit());
 
-					if (!transport) return false;
+				if (GetIssuedOrderId() !== 852046 || !transport) {
+					return false;
+				}
 
-					this.handleAutoLoadOff(transport);
+				transport.loadTarget = GetOrderTargetUnit();
 
-					if (this.isTerrainInvalid(transport.unit)) {
+				return false;
+			})
+		);
+	}
+
+	private onUnloadAction() {
+		const t = CreateTrigger();
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			debugPrint(`TransportManager: Registering onUnloadAction event for player ${i}`);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CHANNEL, null);
+		}
+
+		TriggerAddCondition(
+			t,
+			Condition(() => {
+				const transport: Transport = this.transports.get(GetTriggerUnit());
+
+				if (!transport || (GetSpellAbilityId() !== ABILITY_ID.UNLOAD && GetSpellAbilityId() !== ABILITY_ID.UNLOAD_DEFAULT_HOTKEY)) {
+					return false;
+				}
+
+				// If the transport itself is currently standing on valid terrain, unloading is possible and units will run
+				// to the direction of the unload action click else we check more in-depth where transport ship is at so
+				// we can allow unloading ships when the transport ship is standing on ocean terrain and unload to edge of port
+				if (this.isTerrainInvalid(transport.unit)) {
+					// Get transport unload ability target position
+					const abilityTargetX = transport.unloadTargetX;
+					const abilityTargetY = transport.unloadTargetY;
+
+					// Get target actual unload position
+					const actualTargetX = GetSpellTargetX();
+					const actualTargetY = GetSpellTargetY();
+
+					// Calculate distance
+					const dx = abilityTargetX - actualTargetX;
+					const dy = abilityTargetY - actualTargetY;
+					const distance = SquareRoot(dx * dx + dy * dy);
+
+					if (distance > MAX_UNLOAD_DISTANCE) {
 						BlzPauseUnitEx(transport.unit, true);
 						BlzPauseUnitEx(transport.unit, false);
 						IssueImmediateOrder(transport.unit, 'stop');
 						ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+						return false;
 					} else {
-						const index: number = transport.cargo.indexOf(GetOrderTargetUnit());
-
-						if (index > -1) {
-							const unloadedUnits = transport.cargo.splice(index, 1);
-							unloadedUnits.forEach((unit) => {
-								TransportManager.delayedTrackQueue.push(unit);
-							});
-
-							// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
-							// Consider moving the timer into the UnitLagManager.
-							if (!TransportManager.delayedTrackTimerRunning) {
-								TransportManager.delayedTrackTimerRunning = true;
-								TimerStart(TransportManager.delayedTrackTimer, 0.1, false, () => {
-									TransportManager.delayedTrackQueue.forEach((unit) => {
-										debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
-										UnitLagManager.getInstance().trackUnit(unit);
-									});
-									TransportManager.delayedTrackQueue = [];
-									TransportManager.delayedTrackTimerRunning = false;
-								});
-							}
+						if (this.isTargetTerrainInvalid(abilityTargetX, abilityTargetY)) {
+							BlzPauseUnitEx(transport.unit, true);
+							BlzPauseUnitEx(transport.unit, false);
+							IssueImmediateOrder(transport.unit, 'stop');
+							ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+							return false;
 						}
 					}
 				}
@@ -211,13 +257,12 @@ export class TransportManager {
 		);
 	}
 
-	private spellCastHandler() {
+	private onUnloadUnitStart() {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`Registering transport spell cast event for player ${i}`);
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, null);
-			debugPrint(`Registered transport spell cast event for player ${i}`);
+			debugPrint(`TransportManager: Registering onUnloadUnitStart event for player ${i}`);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
 		}
 
 		TriggerAddCondition(
@@ -225,9 +270,96 @@ export class TransportManager {
 			Condition(() => {
 				const transport: Transport = this.transports.get(GetTriggerUnit());
 
-				if (GetSpellAbilityId() != ABILITY_ID.AUTOLOAD_ON) return false;
-				if (this.isTerrainInvalid(transport.unit)) return false;
-				if (transport.autoloadStatus) return false;
+				if (GetIssuedOrderId() !== ORDER_ID.UNLOAD_UNIT || !transport) {
+					return false;
+				}
+
+				if (this.isTerrainInvalid(transport.unit)) {
+					BlzPauseUnitEx(transport.unit, true);
+					BlzPauseUnitEx(transport.unit, false);
+					IssueImmediateOrder(transport.unit, 'stop');
+					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+
+					return false;
+				}
+
+				this.handleAutoLoadOff(transport);
+
+				const index: number = transport.cargo.indexOf(GetOrderTargetUnit());
+
+				if (index > -1) {
+					const unloadedUnits = transport.cargo.splice(index, 1);
+					unloadedUnits.forEach((unit) => {
+						TransportManager.delayedTrackQueue.push(unit);
+					});
+
+					// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
+					// Consider moving the timer into the UnitLagManager.
+					if (!TransportManager.delayedTrackTimerRunning) {
+						TransportManager.delayedTrackTimerRunning = true;
+						TimerStart(TransportManager.delayedTrackTimer, 0.1, false, () => {
+							TransportManager.delayedTrackQueue.forEach((unit) => {
+								debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
+								UnitLagManager.getInstance().trackUnit(unit);
+							});
+							TransportManager.delayedTrackQueue = [];
+							TransportManager.delayedTrackTimerRunning = false;
+						});
+					}
+				}
+			})
+		);
+	}
+
+	/**
+	 * Initializes the trigger for the unload order for transports.
+	 */
+	private onUnloadStart() {
+		const t = CreateTrigger();
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			debugPrint(`TransportManager: Registering onUnloadStart event for player ${i}`);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, null);
+		}
+
+		TriggerAddCondition(
+			t,
+			Condition(() => {
+				const transport: Transport = this.transports.get(GetTriggerUnit());
+
+				if (GetIssuedOrderId() !== ORDER_ID.UNLOAD_ALL || !transport) {
+					return false;
+				}
+
+				transport.unloadTargetX = GetOrderPointX();
+				transport.unloadTargetY = GetOrderPointY();
+
+				return false;
+			})
+		);
+	}
+
+	private onAutoLoadOn() {
+		const t = CreateTrigger();
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			debugPrint(`TransportManager: Registering onAutoLoadOn event for player ${i}`);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, null);
+		}
+
+		TriggerAddCondition(
+			t,
+			Condition(() => {
+				const transport: Transport = this.transports.get(GetTriggerUnit());
+
+				if (
+					GetSpellAbilityId() !== ABILITY_ID.AUTOLOAD_ON ||
+					!transport ||
+					this.isTerrainInvalid(transport.unit) ||
+					transport.autoloadEnabled
+				) {
+					return false;
+				}
 
 				this.handleAutoLoadOn(transport);
 
@@ -239,13 +371,12 @@ export class TransportManager {
 	/**
 	 * Initializes the trigger for spell effects on transports.
 	 */
-	private spellEffectHandler() {
+	private onLoadAction() {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`Registering transport spell effect event for player ${i}`);
+			debugPrint(`TransportManager: Registering onLoadAction event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
-			debugPrint(`Registered transport spell effect event for player ${i}`);
 		}
 
 		TriggerAddCondition(
@@ -253,17 +384,20 @@ export class TransportManager {
 			Condition(() => {
 				const transport: Transport = this.transports.get(GetTriggerUnit());
 
-				if (!transport) return false;
-				if (!this.isTerrainInvalid(transport.unit)) return false;
+				if (!transport || GetSpellAbilityId() !== ABILITY_ID.LOAD) {
+					return false;
+				}
 
-				if (GetSpellAbilityId() == ABILITY_ID.LOAD) {
-					IssueImmediateOrder(transport.unit, 'stop');
+				if (this.isTerrainInvalid(transport.loadTarget) && this.isTerrainInvalid(transport.unit)) {
+					BlzPauseUnitEx(transport.loadTarget, true);
+					BlzPauseUnitEx(transport.loadTarget, false);
+					IssueImmediateOrder(transport.loadTarget, 'stop');
+
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
-				} else if (GetSpellAbilityId() == ABILITY_ID.UNLOAD) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					return false;
 				}
 
 				return false;
@@ -274,13 +408,12 @@ export class TransportManager {
 	/**
 	 * Initializes the trigger for spell end casting on transports.
 	 */
-	private spellEndCastHandler() {
+	private onUnloadFinish() {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`Registering transport spell end cast event for player ${i}`);
+			debugPrint(`TransportManager: Registering onUnloadFinish event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_ENDCAST, null);
-			debugPrint(`Registered transport spell end cast event for player ${i}`);
 		}
 
 		TriggerAddCondition(
@@ -288,15 +421,19 @@ export class TransportManager {
 			Condition(() => {
 				const transport: Transport = this.transports.get(GetTriggerUnit());
 
-				if (GetSpellAbilityId() == ABILITY_ID.UNLOAD) {
-					debugPrint(`Unload Spell End Cast Event Triggered for unit: ${GetUnitName(transport.unit)}`);
-					const unloadedUnits = transport.cargo.filter((unit) => !IsUnitInTransport(unit, transport.unit));
-					transport.cargo = transport.cargo.filter((unit) => IsUnitInTransport(unit, transport.unit));
-					unloadedUnits.forEach((unit) => {
-						debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
-						UnitLagManager.getInstance().trackUnit(unit);
-					});
+				if (!transport || (GetSpellAbilityId() !== ABILITY_ID.UNLOAD && GetSpellAbilityId() !== ABILITY_ID.UNLOAD_DEFAULT_HOTKEY)) {
+					return false;
 				}
+
+				// Track unloaded units
+				const unloadedUnits = transport.cargo.filter((unit) => !IsUnitInTransport(unit, transport.unit));
+				transport.cargo = transport.cargo.filter((unit) => IsUnitInTransport(unit, transport.unit));
+				unloadedUnits.forEach((unit) => {
+					UnitLagManager.getInstance().trackUnit(unit);
+				});
+
+				// Disable autoload
+				this.handleAutoLoadOff(transport);
 
 				return false;
 			})
@@ -304,24 +441,32 @@ export class TransportManager {
 	}
 
 	/**
-	 * Checks if a transport unit is on invalid terrain.
-	 * @param transport - The transport unit to be checked.
+	 * Checks if a unit is on invalid terrain.
+	 * @param u - The unit to be checked.
 	 * @returns True if terrain is invalid, otherwise false.
 	 */
-	private isTerrainInvalid(transport: unit): boolean {
-		return GetTerrainType(GetUnitX(transport), GetUnitY(transport)) != FourCC('Vcbp');
+	private isTerrainInvalid(u: unit): boolean {
+		const terrainType = GetTerrainType(GetUnitX(u), GetUnitY(u));
+		return terrainType != FourCC('Vcbp');
+	}
+
+	/**
+	 * Checks if the target is invalid terrain.
+	 */
+	private isTargetTerrainInvalid(positionX: number, positionY: number): boolean {
+		const terrainType = GetTerrainType(positionX, positionY);
+		return terrainType != FourCC('Vcbp');
 	}
 
 	/**
 	 * Handles the activation of the Auto-Load ability.
-	 * @param transport - The transport unit with the Auto-Load ability activated.
 	 */
 	private handleAutoLoadOn(transport: Transport) {
 		if (transport.cargo.length >= 10) {
 			return;
 		}
 
-		transport.autoloadStatus = true;
+		transport.autoloadEnabled = true;
 
 		transport.effect = AddSpecialEffectTarget(
 			'Abilities\\Spells\\NightElf\\Rejuvenation\\RejuvenationTarget.mdl',
@@ -331,7 +476,7 @@ export class TransportManager {
 
 		const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
 
-		const event: TimedEvent = timedEventManager.registerTimedEvent(AUTO_LOAD_DURATION, () => {
+		transport.event = timedEventManager.registerTimedEvent(AUTO_LOAD_DURATION, () => {
 			let group: group = CreateGroup();
 
 			GroupEnumUnitsInRange(
@@ -353,13 +498,13 @@ export class TransportManager {
 			DestroyGroup(group);
 			group = null;
 
-			if (transport.cargo.length >= 10 || !transport.autoloadStatus || this.isTerrainInvalid(transport.unit)) {
+			if (transport.cargo.length >= 10 || !transport.autoloadEnabled || this.isTerrainInvalid(transport.unit)) {
 				this.handleAutoLoadOff(transport);
-				timedEventManager.removeTimedEvent(event);
+			} else if (transport.event.duration <= 1) {
+				// Timer is about to expire naturally - cleanup before auto-removal
+				this.handleAutoLoadOff(transport);
 			}
 		});
-
-		transport.event = event;
 	}
 
 	/**
@@ -367,7 +512,7 @@ export class TransportManager {
 	 * @param transport - The transport unit with the Auto-Load ability deactivated.
 	 */
 	private handleAutoLoadOff(transport: Transport) {
-		transport.autoloadStatus = false;
+		transport.autoloadEnabled = false;
 		DestroyEffect(transport.effect);
 
 		if (transport.event != null) {

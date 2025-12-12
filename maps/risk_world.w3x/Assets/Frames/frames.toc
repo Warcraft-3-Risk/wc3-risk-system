@@ -1,0 +1,4 @@
+ui\framedef\ui\escmenutemplates.fdf
+ui\framedef\glue\standardtemplates.fdf
+ui\framedef\glue\battlenettemplates.fdf
+Assets\Frames\frames.fdf

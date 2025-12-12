@@ -37,19 +37,19 @@ import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
 import { ClientManager } from './app/game/services/client-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 import { PlayerManager } from './app/player/player-manager';
+import { PlayerGoldChangeEvent } from './app/triggers/player-gold-change-event';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
 function tsMain() {
 	try {
-		if (!BlzLoadTOCFile('war3mapimported\\Risk.toc')) {
+		if (!BlzLoadTOCFile('Assets\\Frames\\frames.toc')) {
 			print('Failed to load TOC file!');
 			return;
 		}
 
-		if (!BlzChangeMinimapTerrainTex('minimap.blp')) {
+		if (!BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
 			print('Failed to load minimap file!');
-			return;
 		}
 
 		SetGameSpeed(MAP_SPEED_FASTEST);
@@ -109,6 +109,7 @@ function tsMain() {
 		AntiSpam();
 		KeyEvents();
 		CitySelectedEvent();
+		PlayerGoldChangeEvent();
 
 		//Create Quests
 		Quests.getInstance().Create();

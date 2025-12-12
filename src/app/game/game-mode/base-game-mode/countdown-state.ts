@@ -28,8 +28,6 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);
 					BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), false);
-					EnableSelect(true, true);
-					EnableDragSelect(true, true);
 					PlayGlobalSound('Sound\\Interface\\Hint.flac');
 					this.nextState(this.stateData);
 					return;
@@ -41,8 +39,6 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);
 					BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), false);
-					EnableSelect(true, true);
-					EnableDragSelect(true, true);
 					PlayGlobalSound('Sound\\Interface\\Hint.flac');
 
 					this.nextState(this.stateData);

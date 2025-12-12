@@ -1,0 +1,12 @@
+{
+	"mapFolder": "risk_world.w3x",
+	"mapType": "world",
+	"mapName": "Risk World",
+	"mapNameStringId": 7531,
+	"mapVersion": "${TAG_NAME}",
+	"w3cModeEnabled": "${W3C_MODE_ENABLED}",
+	"minifyScript": false,
+	"gameExecutable": "${GAME_EXECUTABLE}",
+	"outputFolder": "${OUTPUT_FOLDER}",
+	"launchArgs": ["-launch", "-windowmode", "windowed"]
+}

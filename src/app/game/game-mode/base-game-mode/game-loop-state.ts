@@ -22,6 +22,7 @@ import { AnnounceOnLocation } from '../../announcer/announce';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { ClientManager } from '../../services/client-manager';
+import { IncomeManager } from 'src/app/managers/income-manager';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -169,7 +170,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		GlobalGameData.matchPlayers
 			.filter((x) => x.status.isActive())
 			.forEach((player) => {
-				player.giveGold();
+				IncomeManager.giveIncome(player);
 			});
 
 		StringToCountry.forEach((country) => {
@@ -266,6 +267,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer): void {
+		super.onCityCapture(city, preOwner, owner);
 		ScoreboardManager.getInstance().updatePartial();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 	}
@@ -317,8 +319,8 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		});
 	}
 
-	onPlayerDead(player: ActivePlayer): void {
-		super.onPlayerDead(player);
+	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
+		super.onPlayerDead(player, forfeit);
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();

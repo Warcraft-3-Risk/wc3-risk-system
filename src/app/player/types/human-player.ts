@@ -41,7 +41,10 @@ export class HumanPlayer extends ActivePlayer {
 
 	onDeath(killer: player, unit: unit, isPlayerCombat: boolean): void {
 		this.trackedData.units.delete(unit);
-		this.trackedData.lastUnitKilledBy = killer;
+
+		if(isPlayerCombat) {
+			this.trackedData.lastUnitKilledBy = killer;
+		}
 
 		if (!this.status.isAlive() && !this.status.isNomad()) return;
 

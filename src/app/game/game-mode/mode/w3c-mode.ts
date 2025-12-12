@@ -17,6 +17,7 @@ import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-state';
 import { W3CTipsState } from '../w3c-mode/w3c-tips-state';
 import { UpdatePlayerStatusState } from '../base-game-mode/update-player-status-state';
+import { EnableControlsState } from '../base-game-mode/enable-controls-state';
 
 export class W3CData implements StateData {}
 
@@ -30,6 +31,7 @@ export class W3CMode extends BaseMode<W3CData> {
 			new SetPromodeTempVisionState(),
 			new W3CTipsState(),
 			new PromodeCountdownState(),
+			new EnableControlsState(),
 			new ProModeGameLoopState(),
 			new W3CGameOverState(),
 			new ResetState(),

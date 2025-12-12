@@ -18,7 +18,7 @@ export class FightBonus implements Bonus {
 		this.goldEarned = 0;
 		this.player = player;
 		this.enabled = true;
-		this.ui = BlzCreateSimpleFrame('MyBarEx', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), GetPlayerId(player));
+		this.ui = BlzCreateSimpleFrame('FightBonusBar', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), GetPlayerId(player));
 		this.reset();
 		BlzFrameSetVisible(this.ui, false);
 	}
@@ -70,6 +70,7 @@ export class FightBonus implements Bonus {
 	public repositon() {
 		if (!this.enabled) return;
 
+		BlzFrameSetSize(this.ui, 0.278, 0.015);
 		BlzFrameSetAbsPoint(this.ui, FRAMEPOINT_TOPRIGHT, ((0.6 * BlzGetLocalClientWidth()) / BlzGetLocalClientHeight() + 0.793) / 2, 0.573);
 	}
 
@@ -100,6 +101,6 @@ export class FightBonus implements Bonus {
 	private setText() {
 		if (!this.enabled) return;
 
-		BlzFrameSetText(BlzGetFrameByName('MyBarExText', GetPlayerId(this.player)), `Fight Bonus: ${this.delta} / ${FightBonus.INTERVAL}`);
+		BlzFrameSetText(BlzGetFrameByName('FightBonusBarText', GetPlayerId(this.player)), `Fight Bonus: ${this.delta} / ${FightBonus.INTERVAL}`);
 	}
 }
