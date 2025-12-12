@@ -88,7 +88,7 @@ export class TeamBoard extends Scoreboard {
 			const team = this.teams[i];
 
 			if (this.showTeamTotals) {
-				this.setItemValue(`${HexColors.ORANGE}${team.getIncome()}`, row, this.INCOME_COL);
+				this.setItemValue(`${HexColors.LIGHT_BLUE}${team.getIncome()}`, row, this.INCOME_COL);
 				this.updateTeamData(team, row);
 				row++;
 			}
@@ -153,9 +153,9 @@ export class TeamBoard extends Scoreboard {
 
 	private updateTeamData(team: Team, row: number) {
 		this.setItemValue(`${HexColors.WHITE}Team #${team.getNumber()}|r`, row, this.PLAYER_COL);
-		this.setItemValue(`${HexColors.ORANGE}${team.getCities()}`, row, this.CITIES_COL);
-		this.setItemValue(`${HexColors.ORANGE}${team.getKills()}`, row, this.KILLS_COL);
-		this.setItemValue(`${HexColors.ORANGE}${team.getDeaths()}`, row, this.DEATHS_COL);
+		this.setItemValue(`${HexColors.LIGHT_BLUE}${team.getCities()}`, row, this.CITIES_COL);
+		this.setItemValue(`${HexColors.LIGHT_BLUE}${team.getKills()}`, row, this.KILLS_COL);
+		this.setItemValue(`${HexColors.LIGHT_BLUE}${team.getDeaths()}`, row, this.DEATHS_COL);
 	}
 
 	/**
