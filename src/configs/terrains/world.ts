@@ -339,11 +339,31 @@ export function SetCountriesWorld() {
 			unitData: { x: -10680.1, y: 10185.9 },
 		},
 		cities: [
-			{ barrack: { x: -9813.1, y: 12061.9 } },
-			{ barrack: { x: -10529.1, y: 11016.9 } },
-			{ barrack: { typeId: UNIT_ID.PORT, x: -10100.9, y: 11221.1 }, cityType: 'port' },
-			{ barrack: { x: -9818.1, y: 9914.9 } },
-			{ barrack: { x: -11632.1, y: 9723.9 } },
+			{ barrack: { x: -11603.6, y: 9684.7 } },
+			{ barrack: { x: -10047.4, y: 9940.0 } },
+			{ barrack: { x: -10441.3, y: 11029.1 } },
+			{ barrack: { x: -9286.5, y: 11664.1 } },
+		],
+	});
+	CountrySettings.push({
+		name: 'Newfoundland',
+		spawnerData: {
+			unitData: { x: -8772.4, y: 16198.6 },
+		},
+		cities: [
+			{ barrack: { x: -9615.2, y: 15691.3 } },
+			{ barrack: { x: -9287.8, y: 16772.3 } },
+			{ barrack: { x: -7797.4, y: 15956.2 } },
+		],
+	});
+	CountrySettings.push({
+		name: 'New Brunswick',
+		spawnerData: {
+			unitData: { x: -9293.8, y: 13384.7 },
+		},
+		cities: [
+			{ barrack: { x: -9671.9, y: 13061.8 } },
+			{ barrack: { x: -8766.9, y: 13514.4 } },
 		],
 	});
 	CountrySettings.push({
@@ -887,4 +907,14 @@ export function SetCountriesWorld() {
 			{ barrack: { typeId: UNIT_ID.PORT, x: -9503.0, y: 3754.0 }, cityType: 'port' },
 		],
 	});
+	CountrySettings.push({
+		name: 'Santa Cruz',
+		spawnerData: {
+			unitData: {x: -5567.6, y:10695.3}
+		},
+	cities: [
+		{ barrack: { x: -5197.0, y: 10605.5 } },
+		{ barrack: { typeId: UNIT_ID.PORT, x: -6273.8, y: 11115.1 }, cityType: 'port' },
+	],
+	})
 }
