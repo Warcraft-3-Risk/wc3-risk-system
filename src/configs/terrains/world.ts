@@ -277,8 +277,17 @@ export function SetCountriesWorld() {
 		},
 		cities: [
 			{ barrack: { x: -12969.1, y: 8484.9 } },
-			{ barrack: { typeId: UNIT_ID.PORT, x: -11230.1, y: 6110.9 }, cityType: 'port' },
+			{ barrack: { typeId: UNIT_ID.PORT, x: -11120.9, y: 5813.8 }, cityType: 'port' },
 			{ barrack: { x: -11007.1, y: 8224.9 } },
+		],
+	});
+	CountrySettings.push({
+		name: 'Bahamas',
+		spawnerData: {
+			unitData: { x: -8127.0, y: 5832.1 },
+		},
+		cities: [
+			{ barrack: { x: -7614.9, y: 5255.2 } },
 		],
 	});
 	CountrySettings.push({
@@ -525,7 +534,7 @@ export function SetCountriesWorld() {
 			unitData: { x: -1729.4, y: 15549.6 },
 		},
 		cities: [
-			{ barrack: { x: -1951.6, y: 1689.1 } },
+			{ barrack: { x: -1947.7, y: 16646.0 } },
 			{ barrack: { x: -1675.4, y: 14716.6 } },
 			{ barrack: { x: -1022.4, y: 15826.6 } },
 		],
@@ -701,24 +710,14 @@ export function SetCountriesWorld() {
 		],
 	});
 	CountrySettings.push({
-		name: 'North Algeria',
+		name: 'Algeria',
 		spawnerData: {
-			unitData: { x: -1845.0, y: 8012.0 },
+			unitData: { x: -62.4, y: 6706.7 },
 		},
 		cities: [
-			{ barrack: { x: -2100.0, y: 8606.0 } },
-			{ barrack: { x: -1749.0, y: 7304.0 } },
-		],
-	});
-	CountrySettings.push({
-		name: 'South Algeria',
-		spawnerData: {
-			unitData: { x: -60.0, y: 6732.0 },
-		},
-		cities: [
-			{ barrack: { x: -641.0, y: 7300.0 } },
-			{ barrack: { x: 732.0, y: 7432.0 } },
-			{ barrack: { x: -442.0, y: 6083.0 } },
+			{ barrack: { x: -601.4, y: 7443.0 } },
+			{ barrack: { x: -835.1, y: 6348.4 } },
+			{ barrack: { x: 569.6, y: 7199.6 } },
 		],
 	});
 	CountrySettings.push({
@@ -775,34 +774,42 @@ export function SetCountriesWorld() {
 		],
 	});
 	CountrySettings.push({
-		name: 'Mauritania&WesternSahara',
+		name: 'Mauritania',
 		spawnerData: {
-			unitData: { x: -3383.0, y: 4046.0 },
+			unitData: { x: -3139.8, y: 4796.7 },
 		},
 		cities: [
-			{ barrack: { x: -3590.0, y: 4625.0 } },
-			{ barrack: { x: -4433.0, y: 3854.0 } },
+			{ barrack: { x: -2630.2, y: 5650.7 } },
+			{ barrack: { x: -3922.1, y: 4112.0 } },
+		],
+	});
+	CountrySettings.push({
+		name: 'Western Sahara',
+		spawnerData: {
+			unitData: { x: -3658.2, y: 6091.1 },
+		},
+		cities: [
+			{ barrack: { x: -4101.3, y: 5588.0 } },
+			{ barrack: { x: -2985.9, y: 6589.3 } },
 		],
 	});
 	CountrySettings.push({
 		name: 'Morocco',
 		spawnerData: {
-			unitData: { x: -3253.0, y: 5830.0 },
+			unitData: { x: -1866.6, y: 8017.4 },
 		},
 		cities: [
-			{ barrack: { x: -2824.0, y: 6499.0 } },
-			{ barrack: { x: -3862.0, y: 5652.0 } },
-			{ barrack: { x: -2562.0, y: 5257.0 } },
+			{ barrack: { x: -2057.8, y: 7373.6 } },
+			{ barrack: { typeId: UNIT_ID.PORT, x: -2716.2, y: 8426.8 }, cityType: 'port' },
 		],
 	});
 	CountrySettings.push({
 		name: 'Tunisia',
 		spawnerData: {
-			unitData: { x: 589.0, y: 8399.0 },
+			unitData: { x: 320.6, y: 8513.6 },
 		},
 		cities: [
-			{ barrack: { x: 129.0, y: 8404.0 } },
-			{ barrack: { typeId: UNIT_ID.PORT, x: 743.0, y: 9506.0 }, cityType: 'port' },
+			{ barrack: { x: 842.8, y: 8846.9 } },
 		],
 	});
 	CountrySettings.push({
@@ -889,11 +896,11 @@ export function SetCountriesWorld() {
 	CountrySettings.push({
 		name: 'Bermuda',
 		spawnerData: {
-			unitData: { x: -7365.0, y: 7758.4 },
+			unitData: { x: -6468.3, y: 10180.0 },
 		},
 		cities: [
-			{ barrack: { typeId: UNIT_ID.PORT, x: -6638.0, y: 7900.0 }, cityType: 'port' },
-			{ barrack: { typeId: UNIT_ID.PORT, x: -7995.0, y: 7251.0 }, cityType: 'port' },
+			{ barrack: { typeId: UNIT_ID.PORT, x: -7040.2, y: 9746.9 }, cityType: 'port' },
+			{ barrack: { typeId: UNIT_ID.PORT, x: -5710.3, y: 10355.6 }, cityType: 'port' },
 		],
 	});
 	CountrySettings.push({
@@ -907,14 +914,4 @@ export function SetCountriesWorld() {
 			{ barrack: { typeId: UNIT_ID.PORT, x: -9503.0, y: 3754.0 }, cityType: 'port' },
 		],
 	});
-	CountrySettings.push({
-		name: 'Santa Cruz',
-		spawnerData: {
-			unitData: {x: -5567.6, y:10695.3}
-		},
-	cities: [
-		{ barrack: { x: -5197.0, y: 10605.5 } },
-		{ barrack: { typeId: UNIT_ID.PORT, x: -6273.8, y: 11115.1 }, cityType: 'port' },
-	],
-	})
 }
