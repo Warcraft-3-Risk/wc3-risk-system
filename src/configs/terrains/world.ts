@@ -818,7 +818,7 @@ export function SetCountriesWorld() {
 			unitData: { x: 2640.0, y: 8012.0 },
 		},
 		cities: [
-			{ barrack: { x: 2045.0, y: 8543.0 } },
+			{ barrack: { x: 2045.0, y: 8443.0 } },
 			{ barrack: { x: 2303.0, y: 7310.0 } },
 		],
 	});
