@@ -57,10 +57,13 @@ export class EqualizedPromodeGameOverState extends BaseState<EqualizedPromodeDat
 		EqualizedPromodeDistributionService.setRound1Winner(round1Winner);
 		EqualizedPromodeDistributionService.setRoundNumber(2);
 
+		// Get winner's name for display
+		const winnerName = round1Winner ? NameManager.getInstance().getDisplayName(round1Winner) : 'Unknown';
+
 		// Show message that Round 1 is over and Round 2 is starting
 		GlobalMessage(
-			`${HexColors.TANGERINE}Round 1 Complete!|r\n\n` +
-			`${HexColors.GREEN}Starting Round 2 with swapped positions...|r`,
+			`${HexColors.TANGERINE}${winnerName} won the first round!|r\n\n` +
+			`${HexColors.GREEN}Starting round 2 with swapped positions...|r`,
 			'Sound\\Interface\\ItemReceived.flac',
 			5
 		);
