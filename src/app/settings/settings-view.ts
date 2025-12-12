@@ -1,5 +1,6 @@
 import { HexColors } from '../utils/hex-colors';
 import { MAP_NAME } from '../utils/map-info';
+import { PLAYER_SLOTS } from '../utils/utils';
 import { SettingsContext } from './settings-context';
 import { DiplomacyStringsColorFormatted } from './strategies/diplomacy-strategy';
 import { FogOptionsColorFormatted } from './strategies/fog-strategy';
@@ -26,8 +27,23 @@ export class SettingsView {
 		this.diplomacyPopup();
 		this.overtimePopup();
 		this.promodePopup();
+		this.disablePromodeIfMoreThanTwoTeams();
 		this.hostSetup();
 		this.playerSetup();
+	}
+
+	private disablePromodeIfMoreThanTwoTeams() {
+		const uniqueTeams = new Set<number>();
+		for (let i = 0; i < PLAYER_SLOTS; i++) {
+			const p = Player(i);
+			if (IsPlayerSlotState(p, PLAYER_SLOT_STATE_PLAYING) && !IsPlayerObserver(p)) {
+				uniqueTeams.add(GetPlayerTeam(p));
+			}
+		}
+
+		if (uniqueTeams.size > 2) {
+			BlzFrameSetEnable(BlzGetFrameByName('PromodePopup', 0), false);
+		}
 	}
 
 	public update(time: number) {
