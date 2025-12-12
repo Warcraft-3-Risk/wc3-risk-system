@@ -5,7 +5,6 @@ import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
 import { debugPrint } from '../utils/debug-print';
-import { buildUnitLagButton } from '../ui/unit-lag-button';
 
 // const banList: string[] = [
 // ];
@@ -49,7 +48,6 @@ export class PlayerManager {
 				this._playerFromHandle.set(player, new HumanPlayer(player));
 				this._playerControllerHandle.set(player, MAP_CONTROL_USER);
 
-				const unitLagButton = buildUnitLagButton(this._playerFromHandle.get(player));
 				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
 				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
 				let contents: string = '';
@@ -58,7 +56,6 @@ export class PlayerManager {
 					contents = File.read('risk/ui.pld');
 
 					if (contents == 'false') {
-						BlzFrameSetVisible(unitLagButton, false);
 						BlzFrameSetVisible(healthButton, false);
 						BlzFrameSetVisible(valueButton, false);
 					}
