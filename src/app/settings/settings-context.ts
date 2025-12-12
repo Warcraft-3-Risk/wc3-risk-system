@@ -83,6 +83,14 @@ export class SettingsContext {
 	}
 
 	/**
+	 * Checks if the game setting is equalized promode
+	 * @returns true if game is "equalized promode"
+	 */
+	public isEqualizedPromode(): boolean {
+		return this.settings.Promode == 2;
+	}
+
+	/**
 	 * Checks if the game setting for Fog is on or off
 	 * @returns true if fog is off
 	 */
