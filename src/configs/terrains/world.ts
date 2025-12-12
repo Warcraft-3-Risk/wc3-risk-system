@@ -235,15 +235,15 @@ export function SetCountriesWorld() {
 	CountrySettings.push({
 		name: 'Mexico',
 		spawnerData: {
-			unitData: { x: -18117.0, y: 6719.0 },
+			unitData: { x: -16450.1, y: 6742.5 },
 		},
 		cities: [
-			{ barrack: { x: -17554.0, y: 5617.0 } },
-			{ barrack: { x: -18668.0, y: 5816.0 } },
-			{ barrack: { x: -16962.0, y: 6934.0 } },
-			{ barrack: { typeId: UNIT_ID.PORT, x: -20917.0, y: 7729.0 }, cityType: 'port' },
+			{ barrack: { x: -17998.7, y: 6034.6 } },
+			{ barrack: { x: -16055.2, y: 5946.4 } },
+			{ barrack: { x: -17159.7, y: 6862.0 } },
+			{ barrack: { x: -18380.2, y: 7310.5 } },
+			{ barrack: { x: -15928.4, y: 7180.7 } },
 			{ barrack: { typeId: UNIT_ID.PORT, x: -16542.0, y: 3683.0 }, cityType: 'port' },
-			{ barrack: { x: -19388.0, y: 7327.0 } },
 			{ barrack: { x: -15062.0, y: 4056.0 } },
 		],
 	});
@@ -418,7 +418,7 @@ export function SetCountriesWorld() {
 			unitData: { x: -15553.1, y: 18883.9 },
 		},
 		cities: [
-			{ barrack: { x: -15426.1, y: 19940.9 } },
+			{ barrack: { x: -15086.4, y: 19565.7 } },
 			{ barrack: { x: -16405.1, y: 18837.9 } },
 			{ barrack: { x: -15045.1, y: 18120.9 } },
 		],
@@ -505,7 +505,7 @@ export function SetCountriesWorld() {
 			unitData: { x: -1729.4, y: 15549.6 },
 		},
 		cities: [
-			{ barrack: { x: -2199.4, y: 16076.6 } },
+			{ barrack: { x: -1951.6, y: 1689.1 } },
 			{ barrack: { x: -1675.4, y: 14716.6 } },
 			{ barrack: { x: -1022.4, y: 15826.6 } },
 		],
