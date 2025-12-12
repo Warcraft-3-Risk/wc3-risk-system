@@ -12,8 +12,6 @@ export function ReplaceGuard(city: City, searchGroup: group) {
 		guardChoice = CompareUnitByValue(GetEnumUnit(), guardChoice);
 	});
 
-	DestroyGroup(searchGroup);
-
 	if (UnitLagManager.IsUnitEnemy(guardChoice, city.getOwner())) {
 		city.changeOwner(ClientManager.getInstance().getOwnerOfUnit(guardChoice));
 	}
