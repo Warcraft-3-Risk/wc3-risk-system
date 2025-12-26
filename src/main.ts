@@ -124,6 +124,7 @@ function tsMain() {
 			FogEnable(false);
 			FogMaskEnable(false);
 			SetConsoleUI();
+			// UnitKillDisplay.getInstance(); // Removed - using button tooltip instead
 			CameraManager.getInstance();
 			ChatManager.getInstance();
 			TransportManager.getInstance();
