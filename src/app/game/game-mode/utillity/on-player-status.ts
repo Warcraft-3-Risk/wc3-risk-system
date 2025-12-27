@@ -131,19 +131,25 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 	const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
 
 	const event: TimedEvent = timedEventManager.registerTimedEvent(player.status.statusDuration, () => {
+		// Decrement first
+		player.status.statusDuration--;
+		
+		// Then check exit conditions
 		if (GetPlayerSlotState(player.getPlayer()) == PLAYER_SLOT_STATE_LEFT) {
 			player.status.set(PLAYER_STATUS.LEFT);
 			timedEventManager.removeTimedEvent(event);
-		} else if (player.status.statusDuration <= 1) {
+		} else if (player.status.statusDuration <= 0) {
 			SetPlayerState(player.getPlayer(), PLAYER_STATE_OBSERVER, 0);
 			player.status.status = oldStatus;
+			player.status.statusDuration = -1;
 			timedEventManager.removeTimedEvent(event);
 		} else if (player.status.isAlive()) {
 			SetPlayerState(player.getPlayer(), PLAYER_STATE_OBSERVER, 0);
+			player.status.statusDuration = -1;
 			timedEventManager.removeTimedEvent(event);
 		}
-
-		player.status.statusDuration--;
+		
+		ScoreboardManager.getInstance().updatePartial();
 	});
 
 	ScoreboardManager.getInstance().updatePartial();
