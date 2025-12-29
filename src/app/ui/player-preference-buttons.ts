@@ -6,6 +6,7 @@ import { Country } from '../country/country';
 import { File } from 'w3ts';
 import { UnitKillTracker } from '../managers/unit-kill-tracker';
 import { UNIT_TYPE } from '../utils/unit-types';
+import { UNIT_ID } from '../../configs/unit-id';
 
 /**
  * Finds the closest country to a unit based on city COP (Circle of Power) positions.
@@ -230,8 +231,12 @@ export function buildKillCounterButton(player: ActivePlayer): framehandle {
 			return;
 		}
 
-		// Don't show stats for spawners - just show default tooltip
-		if (IsUnitType(selectedUnit, UNIT_TYPE.SPAWN)) {
+		// Don't show stats for spawners, spawner buildings, cities, or ports - just show default tooltip
+		if (
+			IsUnitType(selectedUnit, UNIT_TYPE.SPAWN) ||
+			IsUnitType(selectedUnit, UNIT_TYPE.CITY) ||
+			GetUnitTypeId(selectedUnit) === UNIT_ID.SPAWNER
+		) {
 			BlzFrameSetText(
 				buttonTooltip,
 				`Unit Stats ${HexColors.TANGERINE}(F9)|r\nClick to display the top five units by kill count.`
