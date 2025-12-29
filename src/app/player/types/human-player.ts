@@ -63,6 +63,9 @@ export class HumanPlayer extends ActivePlayer {
 		kdData.get(victim).deaths++;
 		kdData.get(`${GetUnitTypeId(unit)}`).deaths++;
 
+		// Add to fight bonus for dead units
+		this.giveGold(this.trackedData.bonus.add(val));
+
 		if (isPlayerCombat) {
 			this.trackedData.lastCombat =
 				GlobalGameData.turnCount * TURN_DURATION_IN_SECONDS + (TURN_DURATION_IN_SECONDS - GlobalGameData.tickCounter);
