@@ -224,7 +224,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		}
 
 		Frame "POPUPMENU" "PromodePopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
-		SetPoint TOP,"PopupMenus",TOP,0.0,-0.17,
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.16,
 		PopupMenuFrame "PromodePopupMenu",
 			Frame "MENU" "PromodePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
 				MenuItem "Off",     -2,
@@ -284,7 +284,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		}
 
 		Frame "TEXT" "PromodeLabel" {
-			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.17,
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.16,
 			DecorateFileNames,
 			FrameFont "MasterFont", 0.012,"",
 			FontColor 1.0 0.8 0.0 1.0,
@@ -345,7 +345,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		}
 
 		Frame "TEXT" "PromodeOption" {
-			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.17,
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.16,
 			DecorateFileNames,
 			FrameFont "MasterFont", 0.012,"",
 			FontColor 1.0 0.8 0.0 1.0,
