@@ -143,7 +143,7 @@ export class ObserverBoard extends Scoreboard {
 
 		// Status
 		if (player.status.isSTFU()) {
-			this.setItemValue(`${grey}${player.status.statusDuration}`, row, this.STATUS_COL);
+			this.setItemValue(`${grey}${player.status.status} ${player.status.statusDuration}`, row, this.STATUS_COL);
 		} else {
 			this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
 		}
