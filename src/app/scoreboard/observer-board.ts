@@ -8,6 +8,7 @@ import { VictoryManager } from '../managers/victory-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
 import { TeamManager } from '../teams/team-manager';
+import { SettingsContext } from '../settings/settings-context';
 
 export class ObserverBoard extends Scoreboard {
 	private players: ActivePlayer[];
@@ -207,7 +208,7 @@ export class ObserverBoard extends Scoreboard {
 	}
 
 	private getTeamPrefix(player: player): string {
-		if (TeamManager.getInstance().getTeams().length > 1) {
+		if (!SettingsContext.getInstance().isFFA()) {
 			return `${HexColors.TANGERINE}[${TeamManager.getInstance().getTeamNumberFromPlayer(player)}]|r`;
 		}
 		return '';

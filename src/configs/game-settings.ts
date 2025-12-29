@@ -6,10 +6,10 @@
 export const CITIES_TO_WIN_RATIO: number = 0.6;
 
 //This is the starting gold for each player. 4 gold by default.
-export const STARTING_INCOME: number = 400;
+export const STARTING_INCOME: number = 4;
 
 //This is the starting countdown for the game. 10 by default
-export const STARTING_COUNTDOWN: number = 2;
+export const STARTING_COUNTDOWN: number = 10;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
 export const TURN_DURATION_IN_SECONDS: number = 60;
@@ -33,7 +33,7 @@ export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 export const STFU_DURATION: number = 300;
 
 //This represents whether debug messages should be printed. Default is false.
-export const SHOW_DEBUG_PRINTS = true;
+export const SHOW_DEBUG_PRINTS = false;
 
 // This represents whether debug logs should be saved to a file. Default is true.
 export const SAVE_DEBUG_LOGS_TO_FILE = false;
@@ -62,5 +62,12 @@ export const MMD_ENABLED: boolean = true;
 // Enable/disable player client allocation. Default is false.
 export const CLIENT_ALLOCATION_ENABLED = false;
 
+// This represents the base gold cap for players. Default is 100.
+export const BASE_GOLD_CAP: number = 100;
+
+// This represents the additional gold cap per city owned. Default is 10.
+export const GOLD_CAP_PER_CITY: number = 10;
+
 // This represents whether the ban list is active. Is set to true by default.
 export const BAN_LIST_ACTIVE: boolean = true;
+
