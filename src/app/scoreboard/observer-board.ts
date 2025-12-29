@@ -7,8 +7,6 @@ import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
-import { IncomeManager } from '../managers/income-manager';
-import { PlayerManager } from '../player/player-manager';
 import { TeamManager } from '../teams/team-manager';
 
 export class ObserverBoard extends Scoreboard {
@@ -168,9 +166,7 @@ export class ObserverBoard extends Scoreboard {
 
 		// Gold
 		const playerGold = GetPlayerState(player.getPlayer(), PLAYER_STATE_RESOURCE_GOLD);
-		const isPlayerGoldHighlighted =
-			playerGold === 0 || playerGold >= IncomeManager.calculateGoldCap(PlayerManager.getInstance().players.get(player.getPlayer()));
-		const playerGoldTextColor = isPlayerGoldHighlighted ? HexColors.RED : textColor;
+		const playerGoldTextColor = playerGold === 0 ? HexColors.RED : textColor;
 		this.setItemValue(`${playerGoldTextColor}${playerGold}`, row, this.GOLD_COL);
 
 		// Cities
