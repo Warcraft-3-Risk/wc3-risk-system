@@ -499,7 +499,7 @@ S
 }
 
 STRING 7185
-// Units: u005 (|cffff8000General|r), Hotkey (Hotkey)
+// Units: u005 (), Hotkey (Hotkey)
 {
 D
 }
@@ -523,7 +523,7 @@ Q
 }
 
 STRING 7202
-// Units: u009 (|cffff8000Major|r), Hotkey (Hotkey)
+// Units: u009 (), Hotkey (Hotkey)
 {
 W
 }
@@ -565,7 +565,7 @@ Build |cffff8000Artillery|r
 }
 
 STRING 7212
-// Units: u010 (|cffff8000Admiral|r), Hotkey (Hotkey)
+// Units: u010 (), Hotkey (Hotkey)
 {
 E
 }
@@ -613,25 +613,25 @@ Grants 25% damage bonus to all nearby friendly units.|nLasts 45 seconds.
 }
 
 STRING 7226
-// Abilities: a010 (Load), Hotkey (Hotkey - Normal)
+// Abilities: a032 (), Hotkey (Hotkey - Normal)
 {
 Q
 }
 
 STRING 7227
-// Abilities: a003 (Frenzy), Hotkey (Hotkey - Normal)
+// Abilities: a050 (), Hotkey (Hotkey - Normal)
 {
 Q
 }
 
 STRING 7232
-// Abilities: a011 (Unload), Hotkey (Hotkey - Normal)
+// Abilities: a033 (), Hotkey (Hotkey - Normal)
 {
 W
 }
 
 STRING 7236
-// Abilities: a003 (Frenzy), Unhotkey (Hotkey - Turn Off)
+// Abilities: a003 (), Hotkey (Hotkey - Normal)
 {
 Q
 }
@@ -685,13 +685,12 @@ Produces every round spawns.
 }
 
 STRING 7259
-// Abilities: A007 (Artillery), Name (Name)
 {
 Artillery
 }
 
 STRING 7263
-// Abilities: a004 (Adrenaline), Hotkey (Hotkey - Normal)
+// Abilities: a003 (), Unhotkey (Hotkey - Turn Off)
 {
 Q
 }
@@ -715,7 +714,7 @@ The selected unit will be set as the new defender|n|nThis can be used to give an
 }
 
 STRING 7284
-// Abilities: a053 (Lowest Value Defender), Hotkey (Hotkey - Normal)
+// Abilities: a031 (), Hotkey (Hotkey - Normal)
 {
 E
 }
@@ -802,7 +801,7 @@ Barrens Canopy Tree For Placement
 }
 
 STRING 7307
-// Abilities: a034 (Reset All Spawner Rally Points), Hotkey (Hotkey - Normal)
+// Abilities: a034 (), Hotkey (Hotkey - Normal)
 {
 Z
 }
@@ -874,7 +873,7 @@ Options
 }
 
 STRING 7351
-// Abilities: a054 (Highest Value Defender), Hotkey (Hotkey - Normal)
+// Abilities: a053 (Lowest Value Defender), Hotkey (Hotkey - Normal)
 {
 E
 }
@@ -916,7 +915,7 @@ Adrenaline
 }
 
 STRING 7373
-// Abilities: a005 (Berserk), Hotkey (Hotkey - Normal)
+// Abilities: a004 (Adrenaline), Hotkey (Hotkey - Normal)
 {
 Q
 }
@@ -999,503 +998,13 @@ STRING 7406
 Camera Lock Unit
 }
 
-STRING 7429
-// Abilities: a034 (Reset All Spawner Rally Points), Name (Name)
-{
-Reset All Spawner Rally Points
-}
-
-STRING 7431
-// Abilities: a034 (Reset All Spawner Rally Points), Tip (Tooltip - Normal)
-{
-Reset All Spawner Rally Points
-}
-
-STRING 7432
-// Abilities: a034 (Reset All Spawner Rally Points), Ubertip (Tooltip - Normal - Extended)
-{
-Resets the rally point of each owned spawner to its origin.
-}
-
-STRING 7433
-// Abilities: a032 (Set Spawner Rally Point - Radius 6000), Name (Name)
-{
-Set Spawner Rally Point - Radius 6000
-}
-
-STRING 7434
-// Abilities: a032 (Set Spawner Rally Point - Radius 6000), Tip (Tooltip - Normal)
-{
-Set Spawner Rally Point - Radius 6000
-}
-
-STRING 7435
-// Abilities: a032 (Set Spawner Rally Point - Radius 6000), Ubertip (Tooltip - Normal - Extended)
-{
-This will allow you to set the rally point of all owned spawners in a radius of 6000 from the origin of the casting spawner.
-}
-
-STRING 7436
-// Abilities: a033 (Set Spawner Rally Point - All), Name (Name)
-{
-Set Spawner Rally Point - All
-}
-
-STRING 7437
-// Abilities: a033 (Set Spawner Rally Point - All), Tip (Tooltip - Normal)
-{
-Set Spawner Rally Point - All
-}
-
-STRING 7439
-// Abilities: a031 (Set Spawner Rally Point - Radius 3000), Name (Name)
-{
-Set Spawner Rally Point - Radius 3000
-}
-
-STRING 7440
-// Abilities: a031 (Set Spawner Rally Point - Radius 3000), Tip (Tooltip - Normal)
-{
-Set Spawner Rally Point - Radius 3000
-}
-
-STRING 7441
-// Abilities: a031 (Set Spawner Rally Point - Radius 3000), Ubertip (Tooltip - Normal - Extended)
-{
-This will allow you to set the rally point of all owned spawners in a radius of 3000 from the origin of the casting spawner.
-}
-
-STRING 7442
-// Abilities: a052 (Highest Health Defender), Hotkey (Hotkey - Normal)
-{
-W
-}
-
-STRING 7443
-// Abilities: a033 (Set Spawner Rally Point - All), Hotkey (Hotkey - Normal)
-{
-E
-}
-
-STRING 7449
-// Units: u052 (Dummy Caster), Name (Name)
-{
-Dummy Caster
-}
-
-STRING 7454
-// Units: u005 (|cffff8000General|r), Name (Name)
-{
-|cffff8000General|r
-}
-
-STRING 7455
-// Units: u005 (|cffff8000General|r), Tip (Tooltip - Basic)
-{
-Recruit |cffff8000General|r
-}
-
-STRING 7456
-// Units: u009 (|cffff8000Major|r), Name (Name)
-{
-|cffff8000Major|r
-}
-
-STRING 7457
-// Units: u009 (|cffff8000Major|r), Tip (Tooltip - Basic)
-{
-Recruit |cffff8000Major|r
-}
-
-STRING 7458
-// Units: u010 (|cffff8000Admiral|r), Name (Name)
-{
-|cffff8000Admiral|r
-}
-
-STRING 7459
-// Units: u010 (|cffff8000Admiral|r), Tip (Tooltip - Basic)
-{
-Recruit |cffff8000Admiral|r
-}
-
-STRING 7460
-// Destructibles: B004 (Pathing Blocker (Both) (6x10)), Name (Name)
-{
-Pathing Blocker (Both) (6x10)
-}
-
-STRING 7461
-// Destructibles: B004 (Pathing Blocker (Both) (6x10)), EditorSuffix (Editor Suffix)
-{
-Vertical
-}
-
-STRING 7462
-// Destructibles: B005 (Pathing Blocker (Both) (6x10)), Name (Name)
-{
-Pathing Blocker (Both) (6x10)
-}
-
-STRING 7463
-// Destructibles: B005 (Pathing Blocker (Both) (6x10)), EditorSuffix (Editor Suffix)
-{
-Horizontal
-}
-
-STRING 7464
-// Destructibles: B006 (Pathing Blocker (Both) (4x6)), Name (Name)
-{
-Pathing Blocker (Both) (4x6)
-}
-
-STRING 7465
-// Destructibles: B006 (Pathing Blocker (Both) (4x6)), EditorSuffix (Editor Suffix)
-{
-Horizontal
-}
-
-STRING 7466
-// Destructibles: B009 (Pathing Blocker (Both) (4x6)), Name (Name)
-{
-Pathing Blocker (Both) (4x6)
-}
-
-STRING 7467
-// Destructibles: B009 (Pathing Blocker (Both) (4x6)), EditorSuffix (Editor Suffix)
-{
-Vertical
-}
-
-STRING 7470
-// Abilities: a013 (Autoload - ON), Name (Name)
-{
-Autoload - ON
-}
-
-STRING 7472
-// Abilities: a014 (Autoload - OFF), Name (Name)
-{
-Autoload - OFF
-}
-
-STRING 7475
-// Abilities: a013 (Autoload - ON), Hotkey (Hotkey - Normal)
-{
-V
-}
-
-STRING 7476
-// Abilities: a013 (Autoload - ON), Tip (Tooltip - Normal)
-{
-|cffff8000Autoload |cff3BA0CBOn|r
-}
-
-STRING 7478
-// Abilities: a014 (Autoload - OFF), Hotkey (Hotkey - Normal)
-{
-V
-}
-
-STRING 7479
-// Abilities: a014 (Autoload - OFF), Tip (Tooltip - Normal)
-{
-|cffff8000Autoload |cff3BA0CBOff|r
-}
-
 STRING 7487
 {
 Force 1
 }
 
-STRING 7490
-// Abilities: a013 (Autoload - ON), Ubertip (Tooltip - Normal - Extended)
-{
-|cffff8000Autoload units who come within |cff3BA0CB350|r |cffff8000range of this transport|r|n|cffff8000Autoload will stop if any of the three conditions are met.|n1. The transport is full.|n2. The transport is no longer on pebble terrain.|n3. Autoload is manually turned off.
-}
-
-STRING 7491
-// Abilities: a014 (Autoload - OFF), Ubertip (Tooltip - Normal - Extended)
-{
-|cffff8000Deactivate autoload|r
-}
-
-STRING 7492
-// Units: h005 (|cffff8000Capital|r), Name (Name)
-{
-|cffff8000Capital|r
-}
-
-STRING 7493
-// Units: h005 (|cffff8000Capital|r), Ubertip (Tooltip - Extended)
-{
-Produces units for your armies.
-}
-
-STRING 7500
-{
-Information (|Cfffed312F9|R)
-}
-
-STRING 7503
-{
-   
-}
-
-STRING 7504
-{
-    
-}
-
-STRING 7505
-{
-   
-}
-
-STRING 7506
-// Units: s000 (|cffff8000Transport Ship|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000Hitpoints:|r 300 |cffff8000Hp Regen:|r .50
-|cffff8000Armor:|r 0 |cffff8000Type:|r Large
-|cffff8000Movespeed:|r 340
-
-|cff3BA0CBAbilties:|r Load (10 Units)
-}
-
-STRING 7509
-// Units: s004 (|cffff8000Battleship SS|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000DPS:|r 98.57 |cffff8000Type:|r Normal
-|cffff8000Range:|r 1500
-
-|cffff8000Hitpoints:|r 5000 |cffff8000Hp Regen:|r 5.0
-|cffff8000Armor:|r 0 |cffff8000Type:|r Small
-|cffff8000Movespeed:|r 330
-
-|cff3BA0CBAbilties:|r Splash Damage (50 Range)
-}
-
-STRING 7510
-// Units: u001 (|cffff8000Medic|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000DPS:|r 4.5 |cffff8000Type:|r Magic
-|cffff8000Range:|r 500
-
-|cffff8000Hitpoints:|r 250 |cffff8000Hp Regen:|r .25
-|cffff8000Armor:|r 0 |cffff8000Type:|r Unarmored
-|cffff8000Movespeed:|r 270
-
-|cff3BA0CBAbilties:|r Heal
-}
-
-STRING 7511
-// Units: u003 (|cffff8000Roarer|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000DPS:|r 15.5 |cffff8000Type:|r Magic
-|cffff8000Range:|r 500
-
-|cffff8000Hitpoints:|r 425 |cffff8000Hp Regen:|r .75
-|cffff8000Armor:|r 0 |cffff8000Type:|r Unarmored
-|cffff8000Movespeed:|r 270
-
-|cff3BA0CBAbilties:|r Roar, Dispel Magic
-}
-
-STRING 7512
-// Units: u004 (|cffff8000Knight|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000DPS:|r 28.67 |cffff8000Type:|r Normal
-|cffff8000Range:|r Melee
-
-|cffff8000Hitpoints:|r 900 |cffff8000Hp Regen:|r 1.25
-|cffff8000Armor:|r 0 |cffff8000Type:|r Large
-|cffff8000Movespeed:|r 350
-
-|cff3BA0CBAbilties:|r Frenzy
-}
-
-STRING 7513
-// Units: u005 (|cffff8000General|r), Ubertip (Tooltip - Extended)
-{
-|cFFFF8000DPS:|r|cFFFFFFFF 42.76 |r|cFFFF8000Type:|r|cFFFFFFFF Normal|n|r|cFFFF8000Range:|r|cFFFFFFFF Melee|n|n|r|cFFFF8000Hitpoints:|r|cFFFFFFFF 1300 |r|cFFFF8000Hp Regen:|r|cFFFFFFFF 2.0|n|r|cFFFF8000Armor:|r|cFFFFFFFF 0 |r|cFFFF8000Type:|r|cFFFFFFFF Large|n|r|cFFFF8000Movespeed:|r|cFFFFFFFF 350|n|n|r|cFF3BA0CBAbilties:|r|cFFFFFFFF Roar, Frenzy|r
-}
-
-STRING 7515
-// Units: u007 (|cffff8000Tank|r), Ubertip (Tooltip - Extended)
-{
-|cFFFF8000DPS:|r|cFFFFFFFF 35.56 |r|cFFFF8000Type:|r|cFFFFFFFF Siege|n|r|cFFFF8000Range:|r|cFFFFFFFF 500|n|n|r|cFFFF8000Hitpoints:|r|cFFFFFFFF 2600 |r|cFFFF8000Hp Regen:|r|cFFFFFFFF 2.5|n|r|cFFFF8000Armor:|r|cFFFFFFFF 0 |r|cFFFF8000Type:|r|cFFFFFFFF Normal|n|r|cFFFF8000Movespeed:|r|cFFFFFFFF 260|n|n|r|cFF3BA0CBAbilties:|r|cFFFFFFFF Splash Damage (90 Range)|n|r|cFFFF0000*Cannot attack trees|r
-}
-
-STRING 7516
-// Units: u008 (|cffff8000Marine|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000DPS:|r 14 |cffff8000Type:|r Normal
-|cffff8000Range:|r 350
-
-|cffff8000Hitpoints:|r 215 |cffff8000Hp Regen:|r .25
-|cffff8000Armor:|r 0 |cffff8000Type:|r Medium
-|cffff8000Movespeed:|r 270
-}
-
-STRING 7517
-// Units: u009 (|cffff8000Major|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000DPS:|r 28.67 |cffff8000Type:|r Normal
-|cffff8000Range:|r Melee
-
-|cffff8000Hitpoints:|r 950 |cffff8000Hp Regen:|r 1.25
-|cffff8000Armor:|r 0 |cffff8000Type:|r Large
-|cffff8000Movespeed:|r 280
-
-|cff3BA0CBAbilties:|r Frenzy
-}
-
-STRING 7518
-// Units: u010 (|cffff8000Admiral|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000DPS:|r 48.28 |cffff8000Type:|r Normal
-|cffff8000Range:|r Melee
-
-|cffff8000Hitpoints:|r 1400 |cffff8000Hp Regen:|r 2.0
-|cffff8000Armor:|r 0 |cffff8000Type:|r Large
-|cffff8000Movespeed:|r 280
-
-|cff3BA0CBAbilties:|r Berserk
-}
-
-STRING 7519
-// Units: s001 (|cffff8000Armoured Transport Ship|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000Hitpoints:|r 800 |cffff8000Hp Regen:|r 1.5
-|cffff8000Armor:|r 0 |cffff8000Type:|r Large
-|cffff8000Movespeed:|r 370
-
-|cff3BA0CBAbilties:|r Load (10 Units)
-}
-
-STRING 7520
-// Units: s002 (|cffff8000Warship A|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000DPS:|r 30.4 |cffff8000Type:|r Normal
-|cffff8000Range:|r 1000
-
-|cffff8000Hitpoints:|r 550 |cffff8000Hp Regen:|r .75
-|cffff8000Armor:|r 0 |cffff8000Type:|r Small
-|cffff8000Movespeed:|r 340
-
-|cff3BA0CBAbilties:|r Splash Damage (50 Range)
-}
-
-STRING 7521
-// Units: s003 (|cffff8000Warship B|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000DPS:|r 72.59 |cffff8000Type:|r Normal
-|cffff8000Range:|r 500
-
-|cffff8000Hitpoints:|r 2000 |cffff8000Hp Regen:|r 1.6
-|cffff8000Armor:|r 0 |cffff8000Type:|r Small
-|cffff8000Movespeed:|r 450
-
-|cff3BA0CBAbilties:|r Attacks cannot be dodged
-}
-
-STRING 7522
-// Units: u006 (|cffff8000Artillery|r), Ubertip (Tooltip - Extended)
-{
-|cffff8000DPS:|r 20.67 |cffff8000Type:|r Siege
-|cffff8000Range:|r 1000
-
-|cffff8000Hitpoints:|r 1000 |cffff8000Hp Regen:|r 2.0
-|cffff8000Armor:|r 0 |cffff8000Type:|r Unarmored
-|cffff8000Movespeed:|r 200
-
-|cff3BA0CBAbilties:|r Splash Damage (170 Range), Attack Ground
-}
-
-STRING 7523
-// Abilities: a002 (Dispel Magic), Ubertip (Tooltip - Normal - Extended)
-{
-Removes all buffs from units in a target area.
-}
-
-STRING 7524
-// Units: h006 (|cffff8000Conquered Capital|r), Name (Name)
-{
-|cffff8000Conquered Capital|r
-}
-
-STRING 7525
-// Units: h006 (|cffff8000Conquered Capital|r), Ubertip (Tooltip - Extended)
-{
-Produces units for your armies.
-}
-
-STRING 7526
-// Units: u00A (|cffff8000MinimapIndicator|r), Name (Name)
-{
-|cffff8000MinimapIndicator|r
-}
-
-STRING 7528
-{
- 
-}
-
-STRING 7529
-// Abilities: a032 (Set Spawner Rally Point - Radius 6000), Hotkey (Hotkey - Normal)
-{
-W
-}
-
-STRING 7530
-// Abilities: a031 (Set Spawner Rally Point - Radius 3000), Hotkey (Hotkey - Normal)
-{
-Q
-}
-
 STRING 7531
 {
-Risk Europe
-}
-
-STRING 7532
-// Abilities: A006 (Guard), Name (Name)
-{
-Guard
-}
-
-STRING 7533
-// Abilities: A006 (Guard), Tip (Tooltip - Normal)
-{
-Guard
-}
-
-STRING 7535
-// Abilities: A006 (Guard), Ubertip (Tooltip - Normal - Extended)
-{
-This unit is a guard.
-}
-
-STRING 7537
-// Abilities: a033 (Set Spawner Rally Point - All), Ubertip (Tooltip - Normal - Extended)
-{
-This will allow you to set the rally point of all owned spawners from the origin of the casting spawner.
-}
-
-STRING 7538
-// Abilities: A007 (Artillery), Tip (Tooltip - Normal)
-{
-Artillery
-}
-
-STRING 7539
-// Abilities: A007 (Artillery), Ubertip (Tooltip - Normal - Extended)
-{
-This unit has 10% increased damage and 10% increased range against ships.
-}
-
-STRING 7540
-{
-Artillery
+Risk Asia
 }
 

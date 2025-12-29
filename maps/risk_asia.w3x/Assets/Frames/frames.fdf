@@ -223,13 +223,46 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			}
 		}
 
-		Frame "POPUPMENU" "PromodePopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
-		SetPoint TOP,"PopupMenus",TOP,0.0,-0.16,
-		PopupMenuFrame "PromodePopupMenu",
-			Frame "MENU" "PromodePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
-				MenuItem "Off",     -2,
-				MenuItem "On",     -2,
-				MenuItem "Equalized",     -2,
+		Frame "GLUECHECKBOX" "PromodeCheckbox" {
+		Width 0.024,
+		Height 0.024,
+		SetPoint TOP,"PopupMenus",TOP,-0.053,-0.17,
+
+		ControlBackdrop "EscMenuCheckBoxBackdrop",
+			Frame "BACKDROP" "EscMenuCheckBoxBackdrop" {
+				DecorateFileNames,
+				BackdropBlendAll,
+				BackdropBackground  "EscMenuCheckBoxBackground",
+			}
+
+		ControlDisabledBackdrop "EscMenuDisabledCheckBoxBackdrop",
+			Frame "BACKDROP" "EscMenuDisabledCheckBoxBackdrop" {
+				DecorateFileNames,
+				BackdropBlendAll,
+				BackdropBackground  "EscMenuDisabledCheckBoxBackground",
+			}
+
+		ControlPushedBackdrop "EscMenuCheckBoxPushedBackdrop",
+			Frame "BACKDROP" "EscMenuCheckBoxPushedBackdrop" {
+				DecorateFileNames,
+				BackdropBlendAll,
+				BackdropBackground  "EscMenuCheckBoxPushedBackground",
+			}
+
+		CheckBoxCheckHighlight "EscMenuCheckHighlightTemplate",
+			Frame "HIGHLIGHT" "EscMenuCheckHighlightTemplate" {
+				DecorateFileNames,
+				HighlightType "FILETEXTURE",
+				HighlightAlphaFile "EscMenuCheckBoxCheckHighlight",
+				HighlightAlphaMode "BLEND",
+			}
+
+		CheckBoxDisabledCheckHighlight "EscMenuDisabledCheckHighlightTemplate",
+			Frame "HIGHLIGHT" "EscMenuDisabledCheckHighlightTemplate" {
+				DecorateFileNames,
+				HighlightType "FILETEXTURE",
+				HighlightAlphaFile "EscMenuDisabledCheckHighlight",
+				HighlightAlphaMode "BLEND",
 			}
 		}
 	}
@@ -284,7 +317,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		}
 
 		Frame "TEXT" "PromodeLabel" {
-			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.16,
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.17,
 			DecorateFileNames,
 			FrameFont "MasterFont", 0.012,"",
 			FontColor 1.0 0.8 0.0 1.0,
@@ -345,7 +378,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		}
 
 		Frame "TEXT" "PromodeOption" {
-			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.16,
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.17,
 			DecorateFileNames,
 			FrameFont "MasterFont", 0.012,"",
 			FontColor 1.0 0.8 0.0 1.0,
