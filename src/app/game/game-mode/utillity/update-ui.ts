@@ -1,6 +1,4 @@
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
-import { IncomeManager } from 'src/app/managers/income-manager';
-import { PlayerManager } from 'src/app/player/player-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { PlayGlobalSound } from 'src/app/utils/utils';
@@ -43,31 +41,8 @@ export function updateGold(player: player, goldAmount: number): void {
 	const customGoldText = BlzGetFrameByName('CustomGoldText', 0);
 
 	if (player == GetLocalPlayer()) {
-		const cap = IncomeManager.calculateGoldCap(PlayerManager.getInstance().players.get(player));
 		if (GetHandleId(customGoldText) !== 0) {
-			// Calculate percentage of cap
-			const percentage = (goldAmount / cap) * 100;
-			
-			// Determine colors based on percentage
-			let goldColor = HexColors.WHITE; // Default for < 75%
-			let capColor = HexColors.LIGHT_GRAY; // Default gray
-			
-			if (goldAmount > cap) {
-				// Above cap: red gold amount
-				goldColor = HexColors.RED;
-				capColor = HexColors.ORANGE;
-			} else if (percentage >= 90) {
-				// 90%+: white gold, orange cap
-				goldColor = HexColors.WHITE;
-				capColor = HexColors.ORANGE;
-			} else if (percentage >= 75) {
-				// 75%-89%: white gold, gray cap
-				goldColor = HexColors.WHITE;
-				capColor = HexColors.LIGHT_GRAY;
-			}
-			// else: < 75% uses defaults (white gold, gray cap)
-			
-			BlzFrameSetText(customGoldText, `${goldColor}${goldAmount}|r/${capColor}${cap}|r`);
+			BlzFrameSetText(customGoldText, `${goldAmount}`);
 		}
 	}
 }
