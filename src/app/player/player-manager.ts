@@ -1,6 +1,6 @@
 import { ActivePlayer } from './types/active-player';
 import { HumanPlayer } from './types/human-player';
-import { buildGuardHealthButton, buildGuardValueButton, buildLabelToggleButton, buildKillCounterButton } from '../ui/player-preference-buttons';
+import { buildGuardHealthButton, buildGuardValueButton, buildLabelToggleButton } from '../ui/player-preference-buttons';
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
@@ -41,21 +41,6 @@ export class PlayerManager {
 
 			if (IsPlayerObserver(player)) {
 				this._observerFromHandle.set(player, new HumanPlayer(player));
-
-				// Create observer-relevant buttons (labels and unit stats)
-				const labelButton = buildLabelToggleButton(this._observerFromHandle.get(player));
-				const killButton = buildKillCounterButton(this._observerFromHandle.get(player));
-				let contents: string = '';
-
-				if (player == GetLocalPlayer()) {
-					contents = File.read('risk/ui.pld');
-
-					if (contents == 'false') {
-						BlzFrameSetVisible(labelButton, false);
-						BlzFrameSetVisible(killButton, false);
-					}
-				}
-
 				continue;
 			}
 
@@ -70,7 +55,6 @@ export class PlayerManager {
 				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
 				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
 				const labelButton = buildLabelToggleButton(this._playerFromHandle.get(player));
-				const killButton = buildKillCounterButton(this._playerFromHandle.get(player));
 				let contents: string = '';
 
 				if (player == GetLocalPlayer()) {
@@ -80,7 +64,6 @@ export class PlayerManager {
 						BlzFrameSetVisible(healthButton, false);
 						BlzFrameSetVisible(valueButton, false);
 						BlzFrameSetVisible(labelButton, false);
-						BlzFrameSetVisible(killButton, false);
 					}
 				}
 			}
@@ -171,23 +154,6 @@ export class PlayerManager {
 		}
 
 		return activePlayers;
-	}
-
-	public getAllPlayerSlotsExceptObservers(): player[] {
-		let players: player[] = [];
-
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			const player = Player(i);
-
-			if (IsPlayerObserver(player)) {
-				this._observerFromHandle.set(player, new HumanPlayer(player));
-				continue;
-			}
-
-			players.push(player);
-		}
-
-		return players;
 	}
 
 	public activeToObs(player: player) {
