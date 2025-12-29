@@ -13,6 +13,7 @@ import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { ClientManager } from 'src/app/game/services/client-manager';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
+import { updateUnitNameWithKillValue } from '../../utils/unit-name-helper';
 
 export function UnitDeathEvent() {
 	const t: trigger = CreateTrigger();
@@ -41,6 +42,19 @@ export function UnitDeathEvent() {
 			// Track kill for the killing unit
 			if (killingUnit) {
 				UnitKillTracker.getInstance().incrementKills(killingUnit);
+			}
+
+			// Track kill value and update unit name (only for non-buildings)
+			try {
+				if (killingUnit && !IsUnitType(killingUnit, UNIT_TYPE.BUILDING)) {
+					const pointValue = GetUnitPointValue(dyingUnit);
+					const totalKillValue = UnitKillTracker.getInstance().addKillValue(killingUnit, pointValue);
+					updateUnitNameWithKillValue(killingUnit, totalKillValue);
+				} else if (killingUnit) {
+					debugPrint(`[KILL TRACKER] Skipping name update - killing unit is a building`);
+				}
+			} catch (e) {
+				debugPrint(`[KILL TRACKER ERROR] Exception: ${e}`);
 			}
 
 			// Remove the dying unit from kill tracking
