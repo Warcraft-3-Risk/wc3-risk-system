@@ -44,12 +44,17 @@ export function UnitDeathEvent() {
 				UnitKillTracker.getInstance().incrementKills(killingUnit);
 			}
 
-			// Track kill value and update unit name (only for non-buildings)
+			// Track kill value and update unit name (only for non-buildings and non-deny kills)
 			try {
 				if (killingUnit && !IsUnitType(killingUnit, UNIT_TYPE.BUILDING)) {
-					const pointValue = GetUnitPointValue(dyingUnit);
-					const totalKillValue = UnitKillTracker.getInstance().addKillValue(killingUnit, pointValue);
-					updateUnitNameWithKillValue(killingUnit, totalKillValue);
+					// Only count kills of enemy/allied units, not own units (denies)
+					if (killingUnitOwnerHandle !== dyingUnitOwnerHandle) {
+						const pointValue = GetUnitPointValue(dyingUnit);
+						const totalKillValue = UnitKillTracker.getInstance().addKillValue(killingUnit, pointValue);
+						updateUnitNameWithKillValue(killingUnit, totalKillValue);
+					} else {
+						debugPrint(`[KILL TRACKER] Skipping deny - unit killed its own unit`);
+					}
 				} else if (killingUnit) {
 					debugPrint(`[KILL TRACKER] Skipping name update - killing unit is a building`);
 				}

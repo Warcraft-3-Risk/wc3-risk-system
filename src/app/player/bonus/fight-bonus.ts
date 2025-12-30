@@ -101,8 +101,9 @@ export class FightBonus implements Bonus {
 	private setText() {
 		if (!this.enabled) return;
 
-		// Calculate projected bonus when bar fills
-		let projectedBonus: number = Math.floor(this.totalBonusVal / FightBonus.INTERVAL) + FightBonus.BASE;
+		// Calculate projected bonus when bar fills (project what totalBonusVal will be when bar completes)
+		let projectedTotalValue: number = this.totalBonusVal + (FightBonus.INTERVAL - this.delta);
+		let projectedBonus: number = Math.floor(projectedTotalValue / FightBonus.INTERVAL) + FightBonus.BASE;
 		projectedBonus = Math.min(projectedBonus, FightBonus.CAP);
 
 		BlzFrameSetText(
