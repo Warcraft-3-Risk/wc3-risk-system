@@ -5,7 +5,7 @@ import { HexColors } from 'src/app/utils/hex-colors';
 export class FightBonus implements Bonus {
 	private static readonly BASE: number = 10;
 	private static readonly CAP: number = 60;
-	private static readonly INTERVAL: number = 100;
+	private static readonly INTERVAL: number = 150;
 
 	private goldEarned: number;
 	private delta: number;
