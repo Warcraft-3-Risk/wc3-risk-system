@@ -51,9 +51,8 @@ export class HumanPlayer extends ActivePlayer {
 		const victim: player = this.getPlayer();
 		const val: number = GetUnitPointValue(unit);
 
-		// For denies (killing own units), only add to fight bonus, don't track as kill/death
+		// For denies (killing own units), don't track as kill/death or add to fight bonus
 		if (victim == killer) {
-			this.giveGold(this.trackedData.bonus.add(val));
 			return;
 		}
 
@@ -68,9 +67,6 @@ export class HumanPlayer extends ActivePlayer {
 		kdData.get(killer).deaths++;
 		kdData.get(victim).deaths++;
 		kdData.get(`${GetUnitTypeId(unit)}`).deaths++;
-
-		// Add to fight bonus for dead units
-		this.giveGold(this.trackedData.bonus.add(val));
 
 		if (isPlayerCombat) {
 			this.trackedData.lastCombat =
