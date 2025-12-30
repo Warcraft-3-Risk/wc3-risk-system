@@ -12,6 +12,8 @@ import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { ClientManager } from 'src/app/game/services/client-manager';
+import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
+import { updateUnitNameWithKillValue } from '../../utils/unit-name-helper';
 
 export function UnitDeathEvent() {
 	const t: trigger = CreateTrigger();
@@ -36,6 +38,32 @@ export function UnitDeathEvent() {
 			const killingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(killingUnitOwnerHandle);
 
 			UnitLagManager.getInstance().untrackUnit(dyingUnit);
+
+			// Track kill for the killing unit
+			if (killingUnit) {
+				UnitKillTracker.getInstance().incrementKills(killingUnit);
+			}
+
+			// Track kill value and update unit name (only for non-buildings and non-deny kills)
+			try {
+				if (killingUnit && !IsUnitType(killingUnit, UNIT_TYPE.BUILDING)) {
+					// Only count kills of enemy/allied units, not own units (denies)
+					if (killingUnitOwnerHandle !== dyingUnitOwnerHandle) {
+						const pointValue = GetUnitPointValue(dyingUnit);
+						const totalKillValue = UnitKillTracker.getInstance().addKillValue(killingUnit, pointValue);
+						updateUnitNameWithKillValue(killingUnit, totalKillValue);
+					} else {
+						debugPrint(`[KILL TRACKER] Skipping deny - unit killed its own unit`);
+					}
+				} else if (killingUnit) {
+					debugPrint(`[KILL TRACKER] Skipping name update - killing unit is a building`);
+				}
+			} catch (e) {
+				debugPrint(`[KILL TRACKER ERROR] Exception: ${e}`);
+			}
+
+			// Remove the dying unit from kill tracking
+			UnitKillTracker.getInstance().removeUnit(dyingUnit);
 
 			if (killingUnitOwner) {
 				killingUnitOwner.onKill(

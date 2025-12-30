@@ -10,6 +10,7 @@ import { ClientManager } from '../../services/client-manager';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { GlobalGameData } from '../../state/global-game-state';
+import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -34,6 +35,8 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 		print('Removing units...');
 		removeUnits();
 		await Wait.forSeconds(1);
+		print('Resetting kill tracker...');
+		UnitKillTracker.getInstance().reset();
 		print('Resetting trees...');
 		TreeManager.getInstance().reset();
 		await Wait.forSeconds(1);

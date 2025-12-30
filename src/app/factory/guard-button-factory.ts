@@ -12,6 +12,7 @@ export type ButtonConfig = {
 	xOffset: number;
 	action: (context: number, textures: { primary: string; secondary: string }) => void;
 	initialTooltipText?: string;
+	textXOffset?: number;
 };
 
 export function createGuardButton(config: ButtonConfig): framehandle {
@@ -42,10 +43,11 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 	const tooltipText = BlzCreateFrameByType('TEXT', 'GuardButtonToolTip', tooltipFrame, '', config.createContext);
 
 	BlzFrameSetSize(tooltipText, 0.15, 0);
-	BlzFrameSetPoint(tooltipFrame, FRAMEPOINT_BOTTOMLEFT, tooltipText, FRAMEPOINT_BOTTOMLEFT, -0.01, -0.01);
-	BlzFrameSetPoint(tooltipFrame, FRAMEPOINT_TOPRIGHT, tooltipText, FRAMEPOINT_TOPRIGHT, 0.01, 0.01);
+	BlzFrameSetTextAlignment(tooltipText, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
+	BlzFrameSetPoint(tooltipFrame, FRAMEPOINT_BOTTOMLEFT, tooltipText, FRAMEPOINT_BOTTOMLEFT, -0.012, -0.01);
+	BlzFrameSetPoint(tooltipFrame, FRAMEPOINT_TOPRIGHT, tooltipText, FRAMEPOINT_TOPRIGHT, 0.012, 0.01);
 
-	BlzFrameSetPoint(tooltipText, FRAMEPOINT_TOPLEFT, button, FRAMEPOINT_BOTTOMLEFT, 0, -0.01);
+	BlzFrameSetPoint(tooltipText, FRAMEPOINT_TOPLEFT, button, FRAMEPOINT_BOTTOMLEFT, config.textXOffset || 0, -0.01);
 	BlzFrameSetEnable(tooltipText, false);
 
 	if (config.initialTooltipText) {

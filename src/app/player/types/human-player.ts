@@ -49,10 +49,15 @@ export class HumanPlayer extends ActivePlayer {
 		if (!this.status.isAlive() && !this.status.isNomad()) return;
 
 		const victim: player = this.getPlayer();
-		if (victim == killer) return;
+		const val: number = GetUnitPointValue(unit);
+
+		// For denies (killing own units), don't track as kill/death or add to fight bonus
+		if (victim == killer) {
+			return;
+		}
+
 		if (IsPlayerAlly(victim, killer)) return;
 
-		const val: number = GetUnitPointValue(unit);
 		const kdData = this.trackedData.killsDeaths;
 
 		kdData.get(killer).deathValue += val;

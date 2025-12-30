@@ -14,7 +14,8 @@ export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 			primary: 'ReplaceableTextures\\CommandButtons\\BTNHeartBottleHalfEmpty.blp',
 			secondary: 'ReplaceableTextures\\CommandButtons\\BTNHeartBottle_Full.blp',
 		},
-		xOffset: 0.00,
+		xOffset: 0.0,
+		textXOffset: 0.015,
 		action: (context: number, textures: { primary: string; secondary: string }) => {
 			player.options.health = !player.options.health;
 

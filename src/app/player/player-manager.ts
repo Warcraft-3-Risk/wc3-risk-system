@@ -156,23 +156,6 @@ export class PlayerManager {
 		return activePlayers;
 	}
 
-	public getAllPlayerSlotsExceptObservers(): player[] {
-		let players: player[] = [];
-
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			const player = Player(i);
-
-			if (IsPlayerObserver(player)) {
-				this._observerFromHandle.set(player, new HumanPlayer(player));
-				continue;
-			}
-
-			players.push(player);
-		}
-
-		return players;
-	}
-
 	public activeToObs(player: player) {
 		this._observerFromHandle.set(player, this._playerFromHandle.get(player) as HumanPlayer);
 		this._playerFromHandle.delete(player);

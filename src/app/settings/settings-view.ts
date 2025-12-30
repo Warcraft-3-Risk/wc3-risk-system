@@ -1,5 +1,6 @@
 import { HexColors } from '../utils/hex-colors';
 import { MAP_NAME } from '../utils/map-info';
+import { PLAYER_SLOTS } from '../utils/utils';
 import { SettingsContext } from './settings-context';
 import { DiplomacyStringsColorFormatted } from './strategies/diplomacy-strategy';
 import { FogOptionsColorFormatted } from './strategies/fog-strategy';
@@ -18,15 +19,31 @@ export class SettingsView {
 		BlzFrameSetValue(BlzGetFrameByName('FogPopup', 0), 0);
 		BlzFrameSetValue(BlzGetFrameByName('DiplomacyPopup', 0), 0);
 		BlzFrameSetValue(BlzGetFrameByName('OvertimePopup', 0), 0);
+		BlzFrameSetValue(BlzGetFrameByName('PromodePopup', 0), 0);
 		this.buildStartButton();
 		this.buildTimer();
 		this.gameTypePopup();
 		this.fogPopup();
 		this.diplomacyPopup();
 		this.overtimePopup();
-		this.promodeBox();
+		this.promodePopup();
+		this.disablePromodeIfMoreThanTwoTeams();
 		this.hostSetup();
 		this.playerSetup();
+	}
+
+	private disablePromodeIfMoreThanTwoTeams() {
+		const uniqueTeams = new Set<number>();
+		for (let i = 0; i < PLAYER_SLOTS; i++) {
+			const p = Player(i);
+			if (IsPlayerSlotState(p, PLAYER_SLOT_STATE_PLAYING) && !IsPlayerObserver(p)) {
+				uniqueTeams.add(GetPlayerTeam(p));
+			}
+		}
+
+		if (uniqueTeams.size > 2) {
+			BlzFrameSetEnable(BlzGetFrameByName('PromodePopup', 0), false);
+		}
 	}
 
 	public update(time: number) {
@@ -169,22 +186,23 @@ export class SettingsView {
 		BlzFrameSetText(BlzFrameGetChild(BlzGetFrameByName('OvertimePopup', 0), 2), `${OvertimeStringsColorFormatted[value]}`);
 	}
 
-	private promodeBox() {
-		const frame: framehandle = BlzGetFrameByName('PromodeCheckbox', 0);
+	private promodePopup() {
 		const t: trigger = CreateTrigger();
 
-		BlzTriggerRegisterFrameEvent(t, frame, FRAMEEVENT_CHECKBOX_CHECKED);
-		BlzTriggerRegisterFrameEvent(t, frame, FRAMEEVENT_CHECKBOX_UNCHECKED);
+		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('PromodePopup', 0), FRAMEEVENT_POPUPMENU_ITEM_CHANGED);
 		TriggerAddCondition(
 			t,
 			Condition(() => {
+				const frameValue: number = R2I(BlzGetTriggerFrameValue());
 				const gameTypeFrame: framehandle = BlzGetFrameByName('GameTypePopup', 0);
 				const fogFrame: framehandle = BlzGetFrameByName('FogPopup', 0);
 				const diploFrame: framehandle = BlzGetFrameByName('DiplomacyPopup', 0);
 				const overtimeFrame: framehandle = BlzGetFrameByName('OvertimePopup', 0);
 
-				if (BlzGetTriggerFrameEvent() == FRAMEEVENT_CHECKBOX_CHECKED) {
-					SettingsContext.getInstance().getSettings().Promode = 1;
+				SettingsContext.getInstance().getSettings().Promode = frameValue;
+
+				// ProMode On (1) or Equalized (2): lock other settings
+				if (frameValue === 1 || frameValue === 2) {
 					SettingsContext.getInstance().getSettings().GameType = 0;
 					SettingsContext.getInstance().getSettings().Fog = 1;
 					SettingsContext.getInstance().getSettings().Diplomacy.option = 1;
@@ -199,11 +217,12 @@ export class SettingsView {
 					BlzFrameSetValue(overtimeFrame, 3);
 					BlzFrameSetEnable(overtimeFrame, false);
 				} else {
-					SettingsContext.getInstance().getSettings().Promode = 0;
+					// ProMode Off (0): unlock other settings
 					SettingsContext.getInstance().getSettings().GameType = 0;
 					SettingsContext.getInstance().getSettings().Fog = 0;
 					SettingsContext.getInstance().getSettings().Diplomacy.option = 0;
 					SettingsContext.getInstance().getSettings().Overtime.option = 0;
+
 					BlzFrameSetValue(gameTypeFrame, 0);
 					BlzFrameSetEnable(gameTypeFrame, true);
 					BlzFrameSetValue(fogFrame, 0);
@@ -218,17 +237,16 @@ export class SettingsView {
 				this.colorizeFogText(BlzFrameGetValue(fogFrame));
 				this.colorizeDiplomacyText(BlzFrameGetValue(diploFrame));
 				this.colorizeOvertimeText(BlzFrameGetValue(overtimeFrame));
-				BlzFrameSetText(
-					BlzGetFrameByName('PromodeOption', 0),
-					`${PromodeOptionsColorFormatted[SettingsContext.getInstance().getSettings().Promode]}`
-				);
+				this.colorizePromodeText(frameValue);
 			})
 		);
 
-		BlzFrameSetText(
-			BlzGetFrameByName('PromodeOption', 0),
-			`${PromodeOptionsColorFormatted[SettingsContext.getInstance().getSettings().Promode]}`
-		);
+		this.colorizePromodeText(BlzFrameGetValue(BlzGetFrameByName('PromodePopup', 0)));
+	}
+
+	private colorizePromodeText(value: number) {
+		BlzFrameSetText(BlzGetFrameByName('PromodeOption', 0), `${PromodeOptionsColorFormatted[value]}`);
+		BlzFrameSetText(BlzFrameGetChild(BlzGetFrameByName('PromodePopup', 0), 2), `${PromodeOptionsColorFormatted[value]}`);
 	}
 
 	private hostSetup() {

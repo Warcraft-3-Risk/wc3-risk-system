@@ -4,8 +4,9 @@ import { HexColors } from 'src/app/utils/hex-colors';
 
 export class FightBonus implements Bonus {
 	private static readonly BASE: number = 10;
-	private static readonly CAP: number = 60;
-	private static readonly INTERVAL: number = 200;
+	private static readonly CAP: number = 35;
+	private static readonly INTERVAL: number = 175;
+	private static readonly UI_MAX_VALUE: number = 100;
 
 	private goldEarned: number;
 	private delta: number;
@@ -45,7 +46,7 @@ export class FightBonus implements Bonus {
 
 		this.delta = 0;
 		this.totalBonusVal = 0;
-		BlzFrameSetValue(this.ui, this.delta);
+		BlzFrameSetValue(this.ui, 0);
 		this.setText();
 	}
 
@@ -61,7 +62,7 @@ export class FightBonus implements Bonus {
 			bonusAmount = this.processBonus();
 		}
 
-		BlzFrameSetValue(this.ui, this.delta / 2);
+		BlzFrameSetValue(this.ui, (this.delta * FightBonus.UI_MAX_VALUE) / FightBonus.INTERVAL);
 		this.setText();
 
 		return bonusAmount;
@@ -101,6 +102,14 @@ export class FightBonus implements Bonus {
 	private setText() {
 		if (!this.enabled) return;
 
-		BlzFrameSetText(BlzGetFrameByName('FightBonusBarText', GetPlayerId(this.player)), `Fight Bonus: ${this.delta} / ${FightBonus.INTERVAL}`);
+		// Calculate projected bonus when bar fills (project what totalBonusVal will be when bar completes)
+		let projectedTotalValue: number = this.totalBonusVal + (FightBonus.INTERVAL - this.delta);
+		let projectedBonus: number = Math.floor(projectedTotalValue / FightBonus.INTERVAL) + FightBonus.BASE;
+		projectedBonus = Math.min(projectedBonus, FightBonus.CAP);
+
+		BlzFrameSetText(
+			BlzGetFrameByName('FightBonusBarText', GetPlayerId(this.player)),
+			`Fight Bonus: ${this.delta} / ${FightBonus.INTERVAL} (+${projectedBonus} gold)`
+		);
 	}
 }

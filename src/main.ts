@@ -38,6 +38,7 @@ import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 import { PlayerManager } from './app/player/player-manager';
 import { PlayerGoldChangeEvent } from './app/triggers/player-gold-change-event';
 import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
+import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCreatorSaveEvent } from './app/triggers/country-creator-event';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -50,8 +51,8 @@ function tsMain() {
 
 		// Only load custom minimap texture if file exists
 		if (MAP_TYPE !== 'world' && !BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
-				print('Failed to load minimap file!');
-				return;
+			print('Failed to load minimap file!');
+			return;
 		}
 
 		SetGameSpeed(MAP_SPEED_FASTEST);
@@ -111,6 +112,14 @@ function tsMain() {
 		AntiSpam();
 		KeyEvents();
 		CitySelectedEvent();
+
+		//if singleplayer
+		if (ReloadGameCachesFromDisk()) {
+			CountryCreatorSaveEvent();
+			CountryCreatorCountryEvent();
+			CountryCreatorCoordinatesEvent();
+		}
+
 		PlayerGoldChangeEvent();
 
 		//Create Quests
@@ -126,6 +135,7 @@ function tsMain() {
 			FogEnable(false);
 			FogMaskEnable(false);
 			SetConsoleUI();
+			// UnitKillDisplay.getInstance(); // Removed - using button tooltip instead
 			CameraManager.getInstance();
 			ChatManager.getInstance();
 			TransportManager.getInstance();

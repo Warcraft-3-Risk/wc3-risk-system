@@ -20,6 +20,7 @@ type QuestType =
 	| 'QUEST_HOW_TO_PLAY'
 	| 'QUEST_ARMY_COMPOSITION'
 	| 'QUEST_OVERTIME'
+	| 'QUEST_FIGHT_BONUS'
 	| 'QUEST_CAMERA'
 	| 'QUEST_SETTINGS'
 	| 'QUEST_PLAYERS';
@@ -43,6 +44,7 @@ export class Quests {
 		this.HowToPlay();
 		this.ArmyComposition();
 		this.Overtime();
+		this.FightBonus();
 		this.Camera();
 	}
 
@@ -106,19 +108,36 @@ export class Quests {
 
 	private Overtime() {
 		const description = `Overtime is a feature designed to help conclude games more efficiently by gradually reducing the number of cities required for victory. Once activated, each turn decreases the victory threshold by one city until a player wins.
-			
+
 			There are four Overtime settings:
 			1. Turbo Mode: Overtime starts immediately, accelerating the game pace early on. This is the default setting.
-			2. Medium Mode: Overtime starts at turn 30, allowing a longer game before the mechanic activates. 
+			2. Medium Mode: Overtime starts at turn 30, allowing a longer game before the mechanic activates.
 			3. Extended Mode: Overtime starts at turn 60, allowing for extended gameplay before the mechanic activates.
 			4. Off: Overtime is disabled.
-			
+
 			If two or more players exceed the city requirement to win while having the exact same number of cities, the game will be extended by additional turns until one player breaks the tie and leads in city count.
 
 			This system ensures flexibility and adaptability based on player preferences.
 		`;
 
 		this.BuildQuest('QUEST_OVERTIME', 'Overtime', description, 'ReplaceableTextures\\CommandButtons\\BTNSorceressMaster.blp', true);
+	}
+
+	private FightBonus() {
+		const description = `Fight Bonus and Bounty reward active combat with gold.
+
+			Fight Bonus:
+			The bar in the top-right fills as you kill or lose units. At 100 points, you receive 10-60 gold (scales with total value) and the bar resets.
+
+			Denying your own units fills your Fight Bonus bar but NOT your opponent's. Bounty is only awarded for enemy kills, not denies.
+
+			Strategy:
+			- Aggressive play earns more bonus gold
+			- Both winning and losing fights fill Fight Bonus
+			- Denying high-value units benefits you without helping your opponent
+		`;
+
+		this.BuildQuest('QUEST_FIGHT_BONUS', 'Fight Bonus & Bounty', description, 'ReplaceableTextures\\CommandButtons\\BTNChestOfGold.blp', true);
 	}
 
 	private Camera() {

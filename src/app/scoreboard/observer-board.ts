@@ -7,8 +7,8 @@ import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
-import { IncomeManager } from '../managers/income-manager';
-import { PlayerManager } from '../player/player-manager';
+import { TeamManager } from '../teams/team-manager';
+import { SettingsContext } from '../settings/settings-context';
 
 export class ObserverBoard extends Scoreboard {
 	private players: ActivePlayer[];
@@ -123,9 +123,10 @@ export class ObserverBoard extends Scoreboard {
 
 	private setEliminatedColumns(player: ActivePlayer, row: number, data: TrackedData) {
 		const grey = HexColors.LIGHT_GRAY;
+		const teamPrefix = this.getTeamPrefix(player.getPlayer());
 
 		// Name
-		this.setItemValue(`${grey}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
+		this.setItemValue(`${grey}${teamPrefix}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
 		// Income
 		this.setItemValue(`${grey}-`, row, this.INCOME_COL);
@@ -143,15 +144,17 @@ export class ObserverBoard extends Scoreboard {
 
 		// Status
 		if (player.status.isSTFU()) {
-			this.setItemValue(`${grey}${player.status.statusDuration}`, row, this.STATUS_COL);
+			this.setItemValue(`${grey}${player.status.status} ${player.status.statusDuration}`, row, this.STATUS_COL);
 		} else {
 			this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
 		}
 	}
 
 	private setActiveColumns(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
+		const teamPrefix = this.getTeamPrefix(player.getPlayer());
+
 		// Name
-		this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
+		this.setItemValue(`${teamPrefix}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
 		// Income
 		this.setItemValue(
@@ -164,9 +167,7 @@ export class ObserverBoard extends Scoreboard {
 
 		// Gold
 		const playerGold = GetPlayerState(player.getPlayer(), PLAYER_STATE_RESOURCE_GOLD);
-		const isPlayerGoldHighlighted =
-			playerGold === 0 || playerGold >= IncomeManager.calculateGoldCap(PlayerManager.getInstance().players.get(player.getPlayer()));
-		const playerGoldTextColor = isPlayerGoldHighlighted ? HexColors.RED : textColor;
+		const playerGoldTextColor = playerGold === 0 ? HexColors.RED : textColor;
 		this.setItemValue(`${playerGoldTextColor}${playerGold}`, row, this.GOLD_COL);
 
 		// Cities
@@ -204,5 +205,12 @@ export class ObserverBoard extends Scoreboard {
 		if (delta == 0) return `${HexColors.LIGHT_GRAY}${delta}|r`;
 		if (delta >= 1) return `${HexColors.GREEN}${delta}|r`;
 		if (delta < 0) return `${HexColors.RED}${delta}|r`;
+	}
+
+	private getTeamPrefix(player: player): string {
+		if (!SettingsContext.getInstance().isFFA()) {
+			return `${HexColors.TANGERINE}[${TeamManager.getInstance().getTeamNumberFromPlayer(player)}]|r`;
+		}
+		return '';
 	}
 }
