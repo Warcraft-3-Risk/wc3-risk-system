@@ -127,7 +127,7 @@ export class Quests {
 		const description = `Fight Bonus and Bounty reward active combat with gold.
 
 			Fight Bonus:
-			The bar in the top-right fills as you kill units. At 150 points, you receive 10-35 gold (scales with total value) and the bar resets.
+			The bar in the top-right fills as you kill units. At 150 points, you receive 10-40 gold (scales with total value) and the bar resets.
 
 			Bounty:
 			You instantly receive 25% of each killed unit's value as gold. This reward is immediate and separate from the Fight Bonus.
