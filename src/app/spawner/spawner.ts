@@ -94,9 +94,12 @@ export class Spawner implements Resetable, Ownable {
 			BlzSetUnitName(u, `${GetUnitName(u)} (${this.country})`);
 			this.spawnMap.get(this.getOwner()).push(u);
 			SPAWNER_UNITS.set(u, this);
-			IssuePointOrderLoc(u, 'attack', loc);
 
-			RemoveLocation(loc);
+			if (loc != null) {
+				IssuePointOrderLoc(u, 'attack', loc);
+				RemoveLocation(loc);
+			}
+
 			loc = null;
 			u = null;
 		}
