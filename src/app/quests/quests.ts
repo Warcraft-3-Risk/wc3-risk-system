@@ -127,14 +127,15 @@ export class Quests {
 		const description = `Fight Bonus and Bounty reward active combat with gold.
 
 			Fight Bonus:
-			The bar in the top-right fills as you kill or lose units. At 100 points, you receive 10-60 gold (scales with total value) and the bar resets.
+			The bar in the top-right fills as you kill units. At 150 points, you receive 10-35 gold (scales with total value) and the bar resets.
 
-			Denying your own units fills your Fight Bonus bar but NOT your opponent's. Bounty is only awarded for enemy kills, not denies.
+			Bounty:
+			You instantly receive 25% of each killed unit's value as gold. This reward is immediate and separate from the Fight Bonus.
 
 			Strategy:
-			- Aggressive play earns more bonus gold
-			- Both winning and losing fights fill Fight Bonus
-			- Denying high-value units benefits you without helping your opponent
+			- Aggressive play earns more bonus gold from both systems
+			- Denying high-value units denies both bounty and fight bonus for your opponent
+			- Bounty provides immediate income, while Fight Bonus provides larger periodic rewards
 		`;
 
 		this.BuildQuest('QUEST_FIGHT_BONUS', 'Fight Bonus & Bounty', description, 'ReplaceableTextures\\CommandButtons\\BTNChestOfGold.blp', true);
