@@ -3,7 +3,7 @@ import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
 import { AddLeadingZero } from '../utils/utils';
 import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
-import { MAP_VERSION } from '../utils/map-info';
+import { MAP_VERSION, MAP_TYPE } from '../utils/map-info';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { SettingsContext } from '../settings/settings-context';
 import { TeamManager } from '../teams/team-manager';
@@ -110,7 +110,7 @@ export class StatisticsModel {
 
 		this.timePlayed = `${HexColors.TANGERINE}Game Time:|r ${formattedTime}
 		${HexColors.TANGERINE}Total Turns:|r ${totalTurns.toFixed(2)}
-		${HexColors.TANGERINE}Version:|r v${MAP_VERSION}
+		${HexColors.TANGERINE}Version:|r ${MAP_TYPE.charAt(0).toUpperCase() + MAP_TYPE.slice(1)} v${MAP_VERSION}
 		${HexColors.TANGERINE}Settings:|r ${settings}`;
 	}
 
