@@ -50,7 +50,11 @@ export class Quests {
 
 	private Credits() {
 		let description = `Join our community on Discord: https://discord.gg/wc3risk
-		 
+
+		Learn about the history of Risk in "Risk Revolution, Devolution, and Reforged" - available on Amazon.
+		
+		https://www.amazon.com/Risk-Revolution-Devolution-Reforged-Color/dp/B084QKMX25
+
 		Code: ForLolz#11696, microhive#2772, roflmaooo#2930, xate#21335
 		Terrain: Nerla#1510, Quetra#8939
 		Units: Saran, ForLolz#11696
@@ -127,7 +131,7 @@ export class Quests {
 		const description = `Fight Bonus and Bounty reward active combat with gold.
 
 			Fight Bonus:
-			The bar in the top-right fills as you kill units. At 150 points, you receive 10-40 gold (scales with total value) and the bar resets.
+			The bar in the top-right fills as you kill units. At 175 points, you receive 10-35 gold (scales with total value) and the bar resets.
 
 			Bounty:
 			You instantly receive 25% of each killed unit's value as gold. This reward is immediate and separate from the Fight Bonus.
