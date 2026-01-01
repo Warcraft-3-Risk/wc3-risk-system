@@ -82,6 +82,13 @@ export class TeamManager {
 		});
 	}
 
+	public disableSharedControl() {
+		for (let i = 0; i < 23; i++) {
+			BlzFrameSetEnable(BlzGetFrameByName('UnitsCheckBox', i), false);
+			BlzFrameSetVisible(BlzGetFrameByName('UnitsCheckBox', i), false);
+		}
+	}
+
 	public getActiveTeams(): Team[] {
 		return this.getTeams().filter((team) => team.getMembers().find((member) => member.status.isActive()));
 	}

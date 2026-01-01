@@ -22,6 +22,7 @@ type QuestType =
 	| 'QUEST_OVERTIME'
 	| 'QUEST_FIGHT_BONUS'
 	| 'QUEST_CAMERA'
+	| 'QUEST_COMMANDS'
 	| 'QUEST_SETTINGS'
 	| 'QUEST_PLAYERS';
 
@@ -42,6 +43,7 @@ export class Quests {
 	public Create() {
 		this.Credits();
 		this.HowToPlay();
+		this.Commands();
 		this.ArmyComposition();
 		this.Overtime();
 		this.FightBonus();
@@ -145,24 +147,59 @@ export class Quests {
 
 	private Camera() {
 		const description = `The camera system allows full control over a player's camera. You can adjust the distance, rotation, and angle of attack (AoA).
-			
-			To use the camera command, type -cam or -zoom.  
+
+			To use the camera command, type -cam or -zoom.
 			Format: -cam <distance> <rotation> <AoA>
-			
-			You don’t need to supply all three parameters. However, if you want to change the second or third, you must also provide all preceding parameters.  
+
+			You don't need to supply all three parameters. However, if you want to change the second or third, you must also provide all preceding parameters.
 			To reset your camera to default values, type the command with no parameters.
-			
+
 			This example sets your camera to a top-down view with the default rotation and a distance of 5000:
-			-cam 5000 90 270  
+			-cam 5000 90 270
 			-zoom 5000 90 270
-			
+
 			Parameter Ranges:
-			- Distance: 1000 – 8500  
-			- Rotation: 0 – 360  
+			- Distance: 1000 – 8500
+			- Rotation: 0 – 360
 			- AoA: 270 – 350
 		`;
 
 		this.BuildQuest('QUEST_CAMERA', 'Camera', description, 'ReplaceableTextures\\WorldEditUI\\Doodad-Cinematic.blp', true);
+	}
+
+	private Commands() {
+		const description = `Available commands you can use in-game:
+
+			${HexColors.YELLOW}General Commands:|r
+			-help / -commands - Display the command list in chat
+			-howto / -tut / -tutorial - Quick tutorial on how to play
+			-cam / -zoom <distance> <rotation> <AoA> - Adjust camera settings
+			-ui - Toggle visibility of UI buttons (guard health, value, labels)
+
+			${HexColors.YELLOW}Game Commands:|r
+			-ff - Forfeit the game without leaving (counts as defeat)
+			-ng - Restart the game when it is over
+			-names - Display a list of all alive/nomad players in the game
+
+			${HexColors.YELLOW}Team Mode Commands:|r
+			-allies / -ally - Show your allies with their colors and real names
+			-gold / -g <player> <amount> - Send gold to an ally
+			  Example: -gold red 100 (sends 100 gold to red player)
+			  Example: -g blue (sends all your gold to blue player)
+
+			${HexColors.YELLOW}Social Commands:|r
+			-stfu <player name/color> - Mute a dead player for 300 seconds
+			  Example: -stfu blue
+
+			${HexColors.YELLOW}Hotkeys:|r
+			F6 - Toggle guard health bar preference
+			F7 - Toggle guard value display preference
+			F8 - Toggle country label visibility
+			F9 - Open quest/information panel
+			F11 - Toggle allies tab visibility
+		`;
+
+		this.BuildQuest('QUEST_COMMANDS', 'Commands', description, 'ReplaceableTextures\\CommandButtons\\BTNSelectHeroOn.blp', true);
 	}
 
 	private BuildQuest(questType: QuestType, title: string, description: string, icon: string, required: boolean) {
