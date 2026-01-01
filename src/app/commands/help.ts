@@ -26,7 +26,7 @@ export function HelpCommand(chatManager: ChatManager) {
 			0,
 			0,
 			5,
-			`${HexColors.GREEN}Commands available:|r\n${commandsText}\n\nThere is a more detailed information in the Information (quests) section.\nPress ${HexColors.TANGERINE}F9|r or click the button in top left to access it!`
+			`${HexColors.GREEN}Commands available:|r\n${commandsText}`
 		);
 	});
 }
