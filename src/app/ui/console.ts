@@ -181,15 +181,15 @@ export function AllyMenuFFASetup() {
 	let AllyMenuTitle: framehandle = BlzGetFrameByName('AllianceTitle', 0);
 	let tempText: string = 'discord.me/risk';
 	tempText += '|n|n|cffffcc00Commands:|r';
-	tempText += '|n|cffffffff-cam OR -zoom #### (1000 min, 8500 max)';
-	tempText += '|n|cffffffff-ff (forfeits the game without leaving it)';
-	tempText += '|n|cffffffff-ng (restarts the game if its over)';
-	tempText += '|n|cffffffff-names displays a list of alive/nomad players in game';
-	tempText += '|n|cffffffff-stfu <player name/color> (mutes a player for 300 seconds)';
+	tempText += '|n|cffffffff-cam OR -zoom #### - Set camera distance (1000 min, 8500 max)';
+	tempText += '|n|cffffffff-ff - Forfeit the game without leaving it';
+	tempText += '|n|cffffffff-ng - Restart the game when it is over';
+	tempText += '|n|cffffffff-names - Display a list of alive/nomad players in the game';
+	tempText += '|n|cffffffff-stfu <player name/color> - Mute a dead player for 300 seconds';
 	tempText += '|n|n|cffffcc00Hotkeys:|r';
-	tempText += '|n|cffffffff F1 (selects player tools)';
-	tempText += '|n|cffffffff F7 (cycles scoreboard)';
-	tempText += '|n|cffffffff F8 (cycles owned spawners)';
+	tempText += '|n|cffffffff F6 - Toggle guard health preference';
+	tempText += '|n|cffffffff F7 - Toggle guard value preference';
+	tempText += '|n|cffffffff F8 - Toggle country labels';
 
 	BlzFrameSetText(AllyMenuTitle, tempText);
 
