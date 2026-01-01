@@ -51,10 +51,8 @@ export class Quests {
 	private Credits() {
 		let description = `Join our community on Discord: https://discord.gg/wc3risk
 
-		Learn about the history of Risk in "Risk Revolution, Devolution, and Reforged" - available on Amazon and our community Discord.
+		Learn about the history of Risk in "Risk Revolution, Devolution and Reforged" - available on Amazon and our community Discord.
 		
-		https://www.amazon.com/Risk-Revolution-Devolution-Reforged-Color/dp/B084QKMX25
-
 		Code: ForLolz#11696, microhive#2772, roflmaooo#2930, xate#21335
 		Terrain: Nerla#1510, Quetra#8939
 		Units: Saran, ForLolz#11696
