@@ -75,7 +75,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				updateTickUI();
 			} catch (error) {
 				File.write('errors', error as string);
-				print('Error in Timer ' + error);
+				debugPrint('Error in Timer ' + error);
 			}
 		});
 	}
