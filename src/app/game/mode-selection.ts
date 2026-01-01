@@ -45,7 +45,7 @@ export class ModeSelection {
 			settingsContext.getSettings().Promode = 1;
 			settingsContext.getSettings().GameType = 0;
 			settingsContext.getSettings().Fog = 1;
-			settingsContext.getSettings().Diplomacy.option = 1;
+			settingsContext.getSettings().Diplomacy.option = 2;
 			settingsContext.getSettings().Overtime.option = 3;
 			this.end();
 			return;
