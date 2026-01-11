@@ -102,3 +102,21 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 		},
 	});
 }
+export function buildRatingStatsButton(player: ActivePlayer): framehandle {
+	return createGuardButton({
+		player: player,
+		createContext: GetPlayerId(player.getPlayer()) + 300,
+		key: OSKEY_F4,
+		textures: {
+			primary: 'ReplaceableTextures\\CommandButtons\\BTNMedalHeroism.blp',
+			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
+		},
+		xOffset: 0.069,
+		initialTooltipText: `Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.`,
+		action: (context: number, textures: { primary: string; secondary: string }) => {
+			if (GetLocalPlayer() == player.getPlayer()) {
+				player.ratingStatsUI.toggle();
+			}
+		},
+	});
+}

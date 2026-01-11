@@ -1,6 +1,11 @@
 import { ActivePlayer } from './types/active-player';
 import { HumanPlayer } from './types/human-player';
-import { buildGuardHealthButton, buildGuardValueButton, buildLabelToggleButton } from '../ui/player-preference-buttons';
+import {
+	buildGuardHealthButton,
+	buildGuardValueButton,
+	buildLabelToggleButton,
+	buildRatingStatsButton,
+} from '../ui/player-preference-buttons';
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
@@ -8,6 +13,7 @@ import { debugPrint } from '../utils/debug-print';
 import { NameManager } from '../managers/names/name-manager';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 import { BAN_LIST_ACTIVE } from 'src/configs/game-settings';
+import { RatingStatsUI } from '../ui/rating-stats-ui';
 
 const banList: string[] = ['inbreeder#2416', 'remy#22303', 'overthrow#21522', 'vixen#22381'];
 
@@ -49,12 +55,17 @@ export class PlayerManager {
 			}
 
 			if (GetPlayerController(player) == MAP_CONTROL_USER || GetPlayerController(player) == MAP_CONTROL_COMPUTER) {
-				this._playerFromHandle.set(player, new HumanPlayer(player));
+				const humanPlayer = new HumanPlayer(player);
+				this._playerFromHandle.set(player, humanPlayer);
 				this._playerControllerHandle.set(player, MAP_CONTROL_USER);
+
+				// Create and inject RatingStatsUI after player creation
+				humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
 
 				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
 				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
 				const labelButton = buildLabelToggleButton(this._playerFromHandle.get(player));
+				const ratingButton = buildRatingStatsButton(this._playerFromHandle.get(player));
 				let contents: string = '';
 
 				if (player == GetLocalPlayer()) {
@@ -64,6 +75,13 @@ export class PlayerManager {
 						BlzFrameSetVisible(healthButton, false);
 						BlzFrameSetVisible(valueButton, false);
 						BlzFrameSetVisible(labelButton, false);
+						BlzFrameSetVisible(ratingButton, false);
+					}
+
+					// Load rating preference
+					const ratingPref = File.read('risk/rating.pld');
+					if (ratingPref === 'false') {
+						this._playerFromHandle.get(player).options.showRating = false;
 					}
 				}
 			}
@@ -174,6 +192,18 @@ export class PlayerManager {
 
 	public getHumanPlayers(): ActivePlayer[] {
 		return Array.from(this._playerFromHandle.values()).filter((p: ActivePlayer) => GetPlayerController(p.getPlayer()) === MAP_CONTROL_USER);
+	}
+
+	/**
+	 * Get only human players (excludes AI/Computer players)
+	 * Used for P2P rating synchronization to exclude Computer players
+	 * @returns Array of human ActivePlayer objects
+	 */
+	public getHumanPlayersOnly(): ActivePlayer[] {
+		return Array.from(this._playerFromHandle.values()).filter((p: ActivePlayer) => {
+			const controller = GetPlayerController(p.getPlayer());
+			return controller === MAP_CONTROL_USER;
+		});
 	}
 
 	public getHumanPlayersCount(): number {

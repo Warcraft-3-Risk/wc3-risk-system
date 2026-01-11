@@ -23,6 +23,8 @@ import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { ClientManager } from '../../services/client-manager';
 import { IncomeManager } from 'src/app/managers/income-manager';
+import { RatingManager } from 'src/app/rating/rating-manager';
+import { StatisticsController } from 'src/app/statistics/statistics-controller';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -187,6 +189,27 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		}
 
 		ScoreboardManager.getInstance().updateFull();
+
+		// Save preliminary ratings for crash recovery (only for ranked games)
+		const ratingManager = RatingManager.getInstance();
+		if (ratingManager.isRankedGame()) {
+			const statsModel = StatisticsController.getInstance().getModel();
+			statsModel.setData(); // Refresh the rankings
+			const currentRanks = statsModel.getRanks();
+			ratingManager.saveRatingsInProgress(currentRanks, turn);
+		}
+
+		// Refresh rating stats UI for all players to show updated K/D values
+		// This runs REGARDLESS of ranked status so players can see their current game stats
+		debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`);
+		GlobalGameData.matchPlayers.forEach((player) => {
+			if (player.ratingStatsUI && player.ratingStatsUI.refresh) {
+				debugPrint(`  Calling refresh for player ${GetPlayerId(player.getPlayer())}`);
+				player.ratingStatsUI.refresh();
+			} else {
+				debugPrint(`  Player ${GetPlayerId(player.getPlayer())} has no ratingStatsUI or refresh method`);
+			}
+		});
 	}
 
 	onTick(tick: number): void {

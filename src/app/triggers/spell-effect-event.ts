@@ -105,11 +105,20 @@ function onSpellCast(trigger: trigger) {
 	TriggerAddCondition(
 		trigger,
 		Condition(() => {
+			const castingPlayer: player = GetTriggerPlayer();
+			const player: ActivePlayer = PlayerManager.getInstance().players.get(castingPlayer);
+
 			switch (GetSpellAbilityId()) {
 				case ABILITY_ID.ROAR:
+					if (player) {
+						player.trackedData.roarCasts += 1;
+					}
 					AnnounceOnUnitObserverOnly('ROAR', GetSpellAbilityUnit(), 2.0, 3.0, true, 0, 20);
 					break;
 				case ABILITY_ID.DISPEL_MAGIC:
+					if (player) {
+						player.trackedData.dispelCasts += 1;
+					}
 					AnnounceOnUnitObserverOnly('DISPELLING', GetSpellAbilityUnit(), 2.0, 3.0, true, 0, 20);
 					break;
 				default:

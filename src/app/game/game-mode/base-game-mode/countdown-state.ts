@@ -5,6 +5,10 @@ import { StateData } from '../state/state-data';
 import { STARTING_COUNTDOWN } from '../../../../configs/game-settings';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { PlayerManager } from 'src/app/player/player-manager';
+import { RatingManager } from 'src/app/rating/rating-manager';
+import { RatingSyncManager } from 'src/app/rating/rating-sync-manager';
+import { GlobalMessage } from 'src/app/utils/messages';
+import { HexColors } from 'src/app/utils/hex-colors';
 
 export class CountdownState<T extends StateData> extends BaseState<T> {
 	private initialDuration: number;
@@ -18,6 +22,37 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
 		try {
 			PlayGlobalSound('Sound\\Interface\\ArrangedTeamInvitation.flac');
+
+			// Check if this is a ranked game (ratings will be loaded per-player when needed)
+			const ratingManager = RatingManager.getInstance();
+			const humanPlayerCount = PlayerManager.getInstance().getHumanPlayersCount();
+			if (ratingManager.checkRankedGameEligibility(humanPlayerCount)) {
+				// Generate unique game ID for crash recovery
+				ratingManager.generateGameId();
+				const message = ratingManager.isDeveloperModeEnabled()
+					? `${HexColors.TANGERINE}This is a ranked game!|r Use ${HexColors.TANGERINE}-help|r if you're new to the game. Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats. Using developer mode settings.`
+					: `${HexColors.TANGERINE}This is a ranked game!|r Use ${HexColors.TANGERINE}-help|r if you're new to the game. Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats.`;
+
+				// Send message to all players as chat text (like -help command)
+				PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
+					DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 8, message);
+				});
+
+				// Start P2P rating synchronization
+				const syncManager = RatingSyncManager.getInstance();
+
+				// Enable developer mode if rating manager has it enabled
+				if (ratingManager.isDeveloperModeEnabled()) {
+					syncManager.enableDeveloperMode();
+				}
+
+				// Get human players only (excludes AI/Computer)
+				const humanPlayers = PlayerManager.getInstance().getHumanPlayersOnly();
+				syncManager.startSync(humanPlayers);
+			} else {
+
+			}
+
 			const startDelayTimer: timer = CreateTimer();
 			let duration: number = this.initialDuration;
 			BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);

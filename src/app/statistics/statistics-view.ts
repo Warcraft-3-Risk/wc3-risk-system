@@ -9,6 +9,7 @@ export class StatisticsView {
 	private minimizeButton: framehandle;
 	private columns: framehandle[];
 	private rows: Map<string, framehandle>;
+	private icons: Map<string, framehandle>;
 	private leftButton: framehandle;
 	private rightButton: framehandle;
 	private pageIndicator: framehandle;
@@ -35,6 +36,7 @@ export class StatisticsView {
 		this.minimizeButton = BlzFrameGetChild(this.header, 3);
 		this.columns = [];
 		this.rows = new Map<string, framehandle>();
+		this.icons = new Map<string, framehandle>();
 
 		this.setupPaginationUI();
 		this.buildColumns();
@@ -83,6 +85,15 @@ export class StatisticsView {
 				const player = this.model.getRanks()[rowIndex];
 				const newText = columnData.textFunction(player);
 				BlzFrameSetText(frame, newText);
+
+				// Update icon if this column has one
+				if (columnData.iconFunction) {
+					const iconFrame = this.icons.get(key);
+					if (iconFrame) {
+						const iconPath = columnData.iconFunction(player);
+						BlzFrameSetTexture(iconFrame, iconPath, 0, true);
+					}
+				}
 			}
 		});
 	}
@@ -215,15 +226,44 @@ export class StatisticsView {
 			let rowIndex = 0;
 
 			this.model.getRanks().forEach((player) => {
-				const dataFrame = BlzCreateFrame('ColumnDataText', headerFrame, 0, 0);
-				BlzFrameSetPoint(dataFrame, FRAMEPOINT_TOPLEFT, headerFrame, FRAMEPOINT_TOPLEFT, 0, yGap);
-
-				const rowKey = `${columnIndex}_${rowIndex}`;
-				this.rows.set(rowKey, dataFrame);
-
 				const columnData = this.model.getColumnData()[columnIndex];
-				const newText = columnData.textFunction(player);
-				BlzFrameSetText(dataFrame, newText);
+				const rowKey = `${columnIndex}_${rowIndex}`;
+
+				// Check if this column has an icon
+				if (columnData.iconFunction) {
+					const iconSize = columnData.iconSize || 0.015;
+					const iconPadding = 0.002;
+					const iconVerticalOffset = -0.0025; // Offset to vertically center icon with text
+
+					// Create icon frame
+					const iconFrame = BlzCreateFrameByType('BACKDROP', `ColumnIcon_${rowKey}`, headerFrame, '', 0);
+					BlzFrameSetSize(iconFrame, iconSize, iconSize);
+					BlzFrameSetPoint(iconFrame, FRAMEPOINT_TOPLEFT, headerFrame, FRAMEPOINT_TOPLEFT, 0, yGap + iconVerticalOffset);
+
+					// Set icon texture
+					const iconPath = columnData.iconFunction(player);
+					BlzFrameSetTexture(iconFrame, iconPath, 0, true);
+
+					this.icons.set(rowKey, iconFrame);
+
+					// Create text frame positioned to the right of the icon
+					const dataFrame = BlzCreateFrame('ColumnDataText', headerFrame, 0, 0);
+					BlzFrameSetPoint(dataFrame, FRAMEPOINT_TOPLEFT, headerFrame, FRAMEPOINT_TOPLEFT, iconSize + iconPadding, yGap);
+
+					const newText = columnData.textFunction(player);
+					BlzFrameSetText(dataFrame, newText);
+
+					this.rows.set(rowKey, dataFrame);
+				} else {
+					// No icon, create text frame normally
+					const dataFrame = BlzCreateFrame('ColumnDataText', headerFrame, 0, 0);
+					BlzFrameSetPoint(dataFrame, FRAMEPOINT_TOPLEFT, headerFrame, FRAMEPOINT_TOPLEFT, 0, yGap);
+
+					const newText = columnData.textFunction(player);
+					BlzFrameSetText(dataFrame, newText);
+
+					this.rows.set(rowKey, dataFrame);
+				}
 
 				rowIndex++;
 				yGap -= rowHeight;

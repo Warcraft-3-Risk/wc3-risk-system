@@ -4,4 +4,5 @@ export type Options = {
 	ping: boolean;
 	board: number;
 	labels: boolean;
+	showRating: boolean;
 };

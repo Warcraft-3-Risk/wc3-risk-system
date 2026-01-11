@@ -17,6 +17,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 	private _options: Options;
 	private _admin: boolean;
 	private _killedBy: player;
+	private _ratingStatsUI: any = null;
 
 	constructor(player: player) {
 		this._player = player;
@@ -28,6 +29,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 			labels: true,
+			showRating: true,
 		};
 		this._killedBy = null;
 		this._admin = false;
@@ -59,6 +61,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 			labels: true,
+			showRating: true,
 		};
 	}
 
@@ -83,7 +86,15 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 
 		this.trackedData.income.end = this.trackedData.income.income;
 		this.trackedData.cities.end = this.trackedData.cities.cities.length;
-		this.trackedData.turnDied = S2I(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
+
+		// If game hasn't started yet (still in countdown/preMatch), mark as early leaver with -1
+		// Otherwise use the actual turn number when they died/left
+		if (GlobalGameData.matchState === 'preMatch') {
+			this.trackedData.turnDied = -1;
+		} else {
+			this.trackedData.turnDied = S2I(BlzFrameGetText(BlzGetFrameByName('ResourceBarSupplyText', 0)));
+		}
+
 		this.trackedData.gold.end = GetPlayerState(handle, PLAYER_STATE_RESOURCE_GOLD);
 
 		if (handle == GetLocalPlayer()) {
@@ -116,5 +127,13 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 
 	public isAdmin(): boolean {
 		return this._admin;
+	}
+
+	public get ratingStatsUI(): any {
+		return this._ratingStatsUI;
+	}
+
+	public set ratingStatsUI(value: any) {
+		this._ratingStatsUI = value;
 	}
 }

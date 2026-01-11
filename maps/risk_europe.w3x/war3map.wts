@@ -1412,12 +1412,6 @@ STRING 7522
 |cff3BA0CBAbilties:|r Splash Damage (170 Range), Attack Ground
 }
 
-STRING 7523
-// Abilities: a002 (Dispel Magic), Ubertip (Tooltip - Normal - Extended)
-{
-Removes all buffs from units in a target area.
-}
-
 STRING 7524
 // Units: h006 (|cffff8000Conquered Capital|r), Name (Name)
 {
@@ -1497,5 +1491,11 @@ This unit has 10% increased damage and 10% increased range against ships.
 STRING 7540
 {
 Artillery
+}
+
+STRING 7541
+// Abilities: a002 (Dispel Magic), Ubertip (Tooltip - Normal - Extended)
+{
+Removes all buffs from enemy units in a target area.
 }
 

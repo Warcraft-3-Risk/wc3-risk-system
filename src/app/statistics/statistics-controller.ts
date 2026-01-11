@@ -6,6 +6,7 @@ import { StatisticsModel } from './statistics-model';
 import { StatisticsView } from './statistics-view';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { ParticipantEntityManager } from '../utils/participant-entity';
+import { RatingManager } from '../rating/rating-manager';
 
 export class StatisticsController {
 	private static instance: StatisticsController;
@@ -74,6 +75,20 @@ export class StatisticsController {
 
 	public writeStatisticsData() {
 		const ranks = this.model.getRanks();
+
+		// Calculate and save ratings if this is a ranked game
+		const ratingManager = RatingManager.getInstance();
+		if (ratingManager.isRankedGame()) {
+			ratingManager.calculateAndSaveRatings(ranks);
+
+			// Refresh rating stats UI for all players to show updated ratings
+			ranks.forEach((player) => {
+				player.ratingStatsUI.refresh();
+			});
+
+			// Refresh the statistics view to show rating changes immediately
+			this.view.refreshRows();
+		}
 
 		const data = ranks.map((player) => {
 			const rivalPlayer = this.model.getRival(player);
