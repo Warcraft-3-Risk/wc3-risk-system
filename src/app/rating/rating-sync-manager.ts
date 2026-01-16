@@ -151,6 +151,21 @@ export class RatingSyncManager {
 		const ratingFile = readRatings(filePath);
 
 		if (ratingFile) {
+			// Finalize pending game if exists (crash recovery)
+			// This ensures other players receive the correct updated values
+			if (ratingFile.player.pendingGame) {
+				const pg = ratingFile.player.pendingGame;
+				ratingFile.player.rating = pg.rating;
+				ratingFile.player.wins = pg.wins;
+				ratingFile.player.losses = pg.losses;
+				ratingFile.player.gamesPlayed = pg.gamesPlayed;
+				ratingFile.player.totalKillValue = pg.totalKillValue;
+				ratingFile.player.totalDeathValue = pg.totalDeathValue;
+				ratingFile.player.totalPlacement = pg.totalPlacement;
+				ratingFile.player.lastUpdated = pg.timestamp;
+				delete ratingFile.player.pendingGame;
+				debugPrint(`[RATING SYNC] Finalized pending game for sync: ${btag}`);
+			}
 			playersToSync.push(ratingFile.player);
 		} else {
 			// New player - add default starting data
@@ -293,6 +308,21 @@ export class RatingSyncManager {
 			const ratingFile = readRatings(filePath);
 
 			if (ratingFile) {
+				// Finalize pending game if exists (crash recovery)
+				// This applies the pending game values to the base player data
+				if (ratingFile.player.pendingGame) {
+					const pg = ratingFile.player.pendingGame;
+					ratingFile.player.rating = pg.rating;
+					ratingFile.player.wins = pg.wins;
+					ratingFile.player.losses = pg.losses;
+					ratingFile.player.gamesPlayed = pg.gamesPlayed;
+					ratingFile.player.totalKillValue = pg.totalKillValue;
+					ratingFile.player.totalDeathValue = pg.totalDeathValue;
+					ratingFile.player.totalPlacement = pg.totalPlacement;
+					ratingFile.player.lastUpdated = pg.timestamp;
+					delete ratingFile.player.pendingGame;
+					debugPrint(`[RATING SYNC] Finalized pending game for ${btag}`);
+				}
 				receivedPlayers.push(ratingFile.player);
 			} else {
 				// New player - add default starting data (same as P2P sync does)
