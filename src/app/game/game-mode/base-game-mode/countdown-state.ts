@@ -9,6 +9,8 @@ import { RatingManager } from 'src/app/rating/rating-manager';
 import { RatingSyncManager } from 'src/app/rating/rating-sync-manager';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { HexColors } from 'src/app/utils/hex-colors';
+import { NameManager } from 'src/app/managers/names/name-manager';
+import { SettingsContext } from 'src/app/settings/settings-context';
 
 export class CountdownState<T extends StateData> extends BaseState<T> {
 	private initialDuration: number;
@@ -26,32 +28,61 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 			// Check if this is a ranked game (ratings will be loaded per-player when needed)
 			const ratingManager = RatingManager.getInstance();
 			const humanPlayerCount = PlayerManager.getInstance().getHumanPlayersCount();
-			if (ratingManager.checkRankedGameEligibility(humanPlayerCount)) {
+			const isFFA = SettingsContext.getInstance().isFFA();
+			const isRanked = ratingManager.checkRankedGameEligibility(humanPlayerCount, isFFA);
+			print(`[COUNTDOWN] Ranked eligibility check: humanPlayerCount=${humanPlayerCount}, isFFA=${isFFA}, isRanked=${isRanked}`);
+			if (isRanked) {
 				// Generate unique game ID for crash recovery
 				ratingManager.generateGameId();
 				const message = ratingManager.isDeveloperModeEnabled()
-					? `${HexColors.TANGERINE}This is a ranked game!|r Use ${HexColors.TANGERINE}-help|r if you're new to the game. Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats. Using developer mode settings.`
-					: `${HexColors.TANGERINE}This is a ranked game!|r Use ${HexColors.TANGERINE}-help|r if you're new to the game. Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats.`;
+					? `${HexColors.TANGERINE}This is a ranked game!|r Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats. Using developer mode settings.`
+					: `${HexColors.TANGERINE}This is a ranked game!|r Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats.`;
 
-				// Send message to all players as chat text (like -help command)
+				// Send message only to players who have rating display enabled
 				PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
-					DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 8, message);
+					const btag = NameManager.getInstance().getBtag(activePlayer.getPlayer());
+					const showRating = ratingManager.getShowRatingPreference(btag);
+
+					// Only show message if player has rating display enabled
+					if (showRating) {
+						DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 8, message);
+					}
 				});
 
 				// Start P2P rating synchronization
 				const syncManager = RatingSyncManager.getInstance();
 
-				// Enable developer mode if rating manager has it enabled
-				if (ratingManager.isDeveloperModeEnabled()) {
-					syncManager.enableDeveloperMode();
-				}
-
 				// Get human players only (excludes AI/Computer)
 				const humanPlayers = PlayerManager.getInstance().getHumanPlayersOnly();
+				print(`[COUNTDOWN] Starting sync with ${humanPlayers.length} human players`);
 				syncManager.startSync(humanPlayers);
 			} else {
+				const message = `${HexColors.TANGERINE}This is an unranked game!|r.`;
 
+				// Send message only to players who have rating display enabled
+				PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
+					const btag = NameManager.getInstance().getBtag(activePlayer.getPlayer());
+					const showRating = ratingManager.getShowRatingPreference(btag);
+
+					// Only show message if player has rating display enabled
+					if (showRating) {
+						DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 8, message);
+					}
+				});
 			}
+
+			// Pre-initialize rating stats UI frames for all players during countdown
+			// This prevents desync issues from frame creation during button clicks
+			// Use a small delay to ensure player setup is complete
+			const frameInitTimer = CreateTimer();
+			TimerStart(frameInitTimer, 0.5, false, () => {
+				DestroyTimer(frameInitTimer);
+				PlayerManager.getInstance().players.forEach((player) => {
+					if (player.ratingStatsUI && player.ratingStatsUI.preInitialize) {
+						player.ratingStatsUI.preInitialize();
+					}
+				});
+			});
 
 			const startDelayTimer: timer = CreateTimer();
 			let duration: number = this.initialDuration;

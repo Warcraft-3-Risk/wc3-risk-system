@@ -33,9 +33,9 @@ export class StatisticsController {
 		this.view.setMinimizeButtonClickEvent(() => {
 			const player: player = GetTriggerPlayer();
 
-			if (this.view.getMinimizeButtonText() === 'Hide Stats') {
+			if (this.view.getMinimizeButtonText() === 'Minimize') {
 				this.view.hideStats(player);
-			} else if (this.view.getMinimizeButtonText() === 'Show Stats') {
+			} else if (this.view.getMinimizeButtonText() === 'Maximize') {
 				this.view.showStats(player);
 			}
 

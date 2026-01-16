@@ -6,12 +6,12 @@ export function Advanced(chatManager: ChatManager) {
 		const player: player = GetTriggerPlayer();
 
 		let description: string = `
-		${HexColors.GREEN}Overtime|r When Overtime is configured, once the configured time is hit, every turn the required amount of cities to win is reduced by one.
-		${HexColors.GREEN}One-Manning|r To kill a guard of a city with only one riflemen(1g), engage the guard from the south side, damage him a little, run back to the city you own and use the barracks ability "swap position".
-		${HexColors.GREEN}South Advantage|r As all guard towers are placed on the north side of each city, players fighting from the south have an advantage in combat. 
-		${HexColors.GREEN}Knight Rush|r The Knight is the fastest unit in the game so it is often used to get the remaining amount of cities to win the game quickly.
-		${HexColors.GREEN}Denying|r By attacking and killing your own units like an SS Ship or a Tank, the enemy will not receive any fight bonus for it.
-		${HexColors.GREEN}Pirate Buffering|r In some situations it can be a good choice to use pirates as a buffer between you and someone that could potentially backstab you.`
+		${HexColors.GREEN}Overtime|r When Overtime is active, each turn after the configured time reduces the required number of cities to win by one.
+		${HexColors.GREEN}One-Manning|r To kill a city guard with a single Rifleman (1g), engage from the south, weaken the guard, retreat to your city, then use the Barracks ability "Swap Position".
+		${HexColors.GREEN}South Advantage|r Since guard towers are always on the north side of cities, players attacking from the south have a combat advantage. 
+		${HexColors.GREEN}Knight Rush|r The Knight is the fastest unit in the game and is often used to quickly capture the remaining cities needed to win.
+		${HexColors.GREEN}Denying|r If you attack and kill your own units (e.g., an SS Ship or a Tank), the enemy will not receive a fight bonus.
+		${HexColors.GREEN}Pirate Buffering|r In some situations, using pirates as a buffer between you and a potential backstabber can be a good choice.`
 
 		DisplayTimedTextToPlayer(player, 0, 0, 8, description);
 	});

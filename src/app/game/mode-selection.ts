@@ -33,6 +33,18 @@ export class ModeSelection {
 	}
 
 	public run(): void {
+		// Consuming pauses to maintain continous gameplay
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			const player = Player(i);
+
+			if (player == GetLocalPlayer()) {
+				for (let index = 0; index < 3; index++) {
+					PauseGame(true);
+					PauseGame(false);
+				}
+			}
+		}
+
 		if (W3C_MODE_ENABLED) {
 			LocalMessage(
 				GetLocalPlayer(),

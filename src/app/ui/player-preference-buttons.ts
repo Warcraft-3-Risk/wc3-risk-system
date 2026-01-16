@@ -112,9 +112,25 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
 		},
 		xOffset: 0.069,
-		initialTooltipText: `Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.`,
+		initialTooltipText: `Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
 		action: (context: number, textures: { primary: string; secondary: string }) => {
 			if (GetLocalPlayer() == player.getPlayer()) {
+				// Import RatingSyncManager at runtime to check sync status
+				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager');
+
+				// Check if sync is complete before allowing UI access
+				if (!RatingSyncManager.getInstance().isSyncComplete()) {
+					// Show warning message and don't open UI (prevents desync)
+					DisplayTimedTextToPlayer(
+						player.getPlayer(),
+						0,
+						0,
+						3,
+						`${HexColors.TANGERINE}Rating data is still synchronizing...|r Please wait a moment.`
+					);
+					return;
+				}
+
 				player.ratingStatsUI.toggle();
 			}
 		},

@@ -204,10 +204,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`);
 		GlobalGameData.matchPlayers.forEach((player) => {
 			if (player.ratingStatsUI && player.ratingStatsUI.refresh) {
-				debugPrint(`  Calling refresh for player ${GetPlayerId(player.getPlayer())}`);
 				player.ratingStatsUI.refresh();
-			} else {
-				debugPrint(`  Player ${GetPlayerId(player.getPlayer())} has no ratingStatsUI or refresh method`);
 			}
 		});
 	}

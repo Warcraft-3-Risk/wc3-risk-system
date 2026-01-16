@@ -12,6 +12,7 @@ import { TeamManager } from 'src/app/teams/team-manager';
 import { TreeManager } from '../../services/tree-service';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { CountdownMessage } from '../../../utils/messages';
+import { HexColors } from '../../../utils/hex-colors';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -20,6 +21,13 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 
 	run(): void {
 		CountdownMessage('Initializing the game');
+
+		const message = `Use ${HexColors.TANGERINE}-help|r if you're new to the game.`;
+
+		// Send message to all players as chat text (like -help command)
+		PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
+			DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 5, message);
+		});
 
 		clearTickUI();
 

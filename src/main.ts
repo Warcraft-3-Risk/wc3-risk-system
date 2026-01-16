@@ -30,14 +30,13 @@ import { EventEmitter } from './app/utils/events/event-emitter';
 import { EVENT_MODE_SELECTION } from './app/utils/events/event-constants';
 import { CitySelectedEvent } from './app/triggers/city-selected-event';
 import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
-import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST } from './configs/game-settings';
+import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST, DEVELOPER_MODE } from './configs/game-settings';
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
 import { FogManager } from './app/managers/fog-manager';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
 import { ClientManager } from './app/game/services/client-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 import { PlayerManager } from './app/player/player-manager';
-import { PlayerGoldChangeEvent } from './app/triggers/player-gold-change-event';
 import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCreatorSaveEvent } from './app/triggers/country-creator-event';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
@@ -112,14 +111,11 @@ function tsMain() {
 		CitySelectedEvent();
 
 		//if singleplayer
-		if (ReloadGameCachesFromDisk()) {
+		if (DEVELOPER_MODE && ReloadGameCachesFromDisk()) {
 			CountryCreatorSaveEvent();
 			CountryCreatorCountryEvent();
 			CountryCreatorCoordinatesEvent();
 		}
-
-
-		PlayerGoldChangeEvent();
 
 		//Create Quests
 		Quests.getInstance().Create();

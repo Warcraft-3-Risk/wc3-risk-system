@@ -78,11 +78,9 @@ export class PlayerManager {
 						BlzFrameSetVisible(ratingButton, false);
 					}
 
-					// Load rating preference
-					const ratingPref = File.read('risk/rating.pld');
-					if (ratingPref === 'false') {
-						this._playerFromHandle.get(player).options.showRating = false;
-					}
+					// Note: Rating preference is now stored in the rating file itself
+					// and loaded via RatingManager.getShowRatingPreference()
+					// The old 'risk/rating.pld' file is no longer used
 				}
 			}
 		}

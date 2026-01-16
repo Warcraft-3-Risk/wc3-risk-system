@@ -4,43 +4,70 @@ import { RatingManager } from '../rating/rating-manager';
 import { getRankIcon } from '../rating/rating-calculator';
 import { NameManager } from '../managers/names/name-manager';
 import { debugPrint } from '../utils/debug-print';
-import { readGlobalRatings } from '../rating/global-rating-handler';
 import { RANKED_SEASON_ID } from 'src/configs/game-settings';
 
 export class RatingStatsUI {
 	private player: ActivePlayer;
 	private frameBackdrop: framehandle | null = null;
 	private isVisible: boolean = false;
+	private titleText: framehandle | null = null;
 	private rankIconBadge: framehandle | null = null;
 	private ratingText: framehandle | null = null;
+	private seasonText: framehandle | null = null;
+	private averageRankText: framehandle | null = null;
 	private gamesText: framehandle | null = null;
 	private winBarFill: framehandle | null = null;
 	private winPercentText: framehandle | null = null;
+	private killBarFill: framehandle | null = null;
+	private killPercentText: framehandle | null = null;
 	private toggleButton: framehandle | null = null;
 	private closeButton: framehandle | null = null;
-	private top10Frame: framehandle | null = null;
-	private top10CloseButton: framehandle | null = null;
-	private top10RankIconFrames: framehandle[] = [];
-	private top10RankFrames: framehandle[] = [];
-	private top10ELOFrames: framehandle[] = [];
-	private top10NameFrames: framehandle[] = [];
-	private top10WinRateFrames: framehandle[] = [];
-	private top10WinsFrames: framehandle[] = [];
-	private top10LossesFrames: framehandle[] = [];
-	private top10GamesFrames: framehandle[] = [];
-	private top10PrevButton: framehandle | null = null;
-	private top10NextButton: framehandle | null = null;
-	private top10PageText: framehandle | null = null;
-	private isTop10Visible: boolean = false;
+	private enableDisableButton: framehandle | null = null;
+	private enableDisableButtonText: framehandle | null = null;
+	private leaderboardFrame: framehandle | null = null;
+	private leaderboardCloseButton: framehandle | null = null;
+	private leaderboardRankIconFrames: framehandle[] = [];
+	private leaderboardRankFrames: framehandle[] = [];
+	private leaderboardELOFrames: framehandle[] = [];
+	private leaderboardNameFrames: framehandle[] = [];
+	private leaderboardWinRateFrames: framehandle[] = [];
+	private leaderboardWinsFrames: framehandle[] = [];
+	private leaderboardLossesFrames: framehandle[] = [];
+	private leaderboardGamesFrames: framehandle[] = [];
+	private leaderboardPrevButton: framehandle | null = null;
+	private leaderboardNextButton: framehandle | null = null;
+	private leaderboardMyPlaceButton: framehandle | null = null;
+	private leaderboardPageText: framehandle | null = null;
+	private isLeaderboardVisible: boolean = false;
 	private isInitialized: boolean = false;
-	private isTop10Initialized: boolean = false;
+	private isLeaderboardInitialized: boolean = false;
 	private currentPage: number = 0;
 	private totalPages: number = 1;
 	private readonly PLAYERS_PER_PAGE: number = 10;
+	private escTrigger: trigger | null = null;
 
 	constructor(player: ActivePlayer) {
 		this.player = player;
 		// Initialize frames when first needed
+	}
+
+	/**
+	 * Pre-initialize frames during game setup (synchronized event)
+	 * This prevents desync issues from frame creation during button clicks
+	 * Should be called during countdown or setup phase
+	 */
+	public preInitialize(): void {
+		if (GetLocalPlayer() == this.player.getPlayer()) {
+			// Initialize main rating stats frames
+			if (!this.isInitialized) {
+				this.initializeFrames();
+			}
+			// Also initialize leaderboard frames
+			// This prevents desync when leaderboard button is clicked
+			if (!this.isLeaderboardInitialized) {
+				this.initializeLeaderboardFrame();
+			}
+		}
 	}
 
 	private initializeFrames(): void {
@@ -53,24 +80,55 @@ export class RatingStatsUI {
 			this.frameBackdrop = BlzCreateFrame('RatingStatsFrame', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 
 			// Get child frame references
+			this.titleText = BlzGetFrameByName('RatingStatsTitle', 0);
 			this.rankIconBadge = BlzGetFrameByName('RankIconBadge', 0);
 			this.ratingText = BlzGetFrameByName('RatingValueText', 0);
+			this.seasonText = BlzGetFrameByName('SeasonText', 0);
+			this.averageRankText = BlzGetFrameByName('AverageRankText', 0);
 			this.gamesText = BlzGetFrameByName('GamesPlayedText', 0);
 			this.winBarFill = BlzGetFrameByName('WinBarFill', 0);
 			this.winPercentText = BlzGetFrameByName('WinPercentText', 0);
+			this.killBarFill = BlzGetFrameByName('KillBarFill', 0);
+			this.killPercentText = BlzGetFrameByName('KillPercentText', 0);
 			this.toggleButton = BlzGetFrameByName('RatingToggleButton', 0);
 			this.closeButton = BlzGetFrameByName('RatingCloseButton', 0);
+			this.enableDisableButton = BlzGetFrameByName('RatingDisableButton', 0);
+			this.enableDisableButtonText = BlzGetFrameByName('RatingDisableButtonText', 0);
+
+			// Set static label colors to match other labels (TANGERINE)
+			const winLossLabel = BlzGetFrameByName('WinLossLabel', 0);
+			if (winLossLabel) {
+				BlzFrameSetText(winLossLabel, `${HexColors.TANGERINE}Win/Loss:|r`);
+			}
+			const killDeathLabel = BlzGetFrameByName('KillDeathLabel', 0);
+			if (killDeathLabel) {
+				BlzFrameSetText(killDeathLabel, `${HexColors.TANGERINE}Kill/Death Value:|r`);
+			}
 
 			if (!this.frameBackdrop || !this.toggleButton) {
 				return;
 			}
 
-			// Register toggle button click event for Top 10
+			// Register toggle button click event for leaderboard
 			const toggleTrigger = CreateTrigger();
 			BlzTriggerRegisterFrameEvent(toggleTrigger, this.toggleButton, FRAMEEVENT_CONTROL_CLICK);
 			TriggerAddAction(toggleTrigger, () => {
-				if (GetLocalPlayer() == this.player.getPlayer()) {
-					this.toggleTop10Display();
+				// Only execute for the player who owns this UI instance
+				if (GetTriggerPlayer() == this.player.getPlayer()) {
+					// Check if leaderboard has data before showing
+					const ratingManager = RatingManager.getInstance();
+					if (!ratingManager.hasLeaderboardData()) {
+						// Show message that leaderboard is empty
+						DisplayTimedTextToPlayer(
+							this.player.getPlayer(),
+							0,
+							0,
+							3,
+							`${HexColors.RED}No leaderboard data available|r - no players have completed a game yet.`
+						);
+						return;
+					}
+					this.toggleLeaderboardDisplay();
 				}
 			});
 
@@ -79,11 +137,30 @@ export class RatingStatsUI {
 				const closeTrigger = CreateTrigger();
 				BlzTriggerRegisterFrameEvent(closeTrigger, this.closeButton, FRAMEEVENT_CONTROL_CLICK);
 				TriggerAddAction(closeTrigger, () => {
-					if (GetLocalPlayer() == this.player.getPlayer()) {
+					// Only execute for the player who owns this UI instance
+					if (GetTriggerPlayer() == this.player.getPlayer()) {
 						this.hide();
 					}
 				});
 			}
+
+			// Register enable/disable button click event
+			if (this.enableDisableButton) {
+				const enableDisableTrigger = CreateTrigger();
+				BlzTriggerRegisterFrameEvent(enableDisableTrigger, this.enableDisableButton, FRAMEEVENT_CONTROL_CLICK);
+				TriggerAddAction(enableDisableTrigger, () => {
+					// Only execute for the player who owns this UI instance
+					if (GetTriggerPlayer() == this.player.getPlayer()) {
+						this.toggleShowRatingPreference();
+					}
+				});
+			}
+
+			// Set initial button text based on preference
+			this.updateEnableDisableButtonText();
+
+			// Register ESC key to close windows
+			this.registerEscapeKey();
 
 			// Initially hide the frame
 			BlzFrameSetEnable(this.frameBackdrop, false);
@@ -92,7 +169,7 @@ export class RatingStatsUI {
 			this.isInitialized = true;
 			this.updateStatsFromManager();
 		} catch (error) {
-			// Silent fail - frame creation error
+			// Silent fail
 		}
 	}
 
@@ -104,11 +181,20 @@ export class RatingStatsUI {
 					return; // Initialization failed
 				}
 			}
+
 			this.updateStatsFromManager();
+
+			// Update the F4 button icon based on current preference
+			const ratingManager = RatingManager.getInstance();
+			const btag = NameManager.getInstance().getBtag(this.player.getPlayer());
+			const showRating = ratingManager.getShowRatingPreference(btag);
+			this.updateRatingButtonIcon(showRating);
+
 			if (this.frameBackdrop) {
 				BlzFrameSetEnable(this.frameBackdrop, true);
 				BlzFrameSetVisible(this.frameBackdrop, true);
 			}
+
 			this.isVisible = true;
 		}
 	}
@@ -124,8 +210,10 @@ export class RatingStatsUI {
 	}
 
 	public toggle(): void {
-		if(this.isTop10Visible) {
-			this.toggleTop10Display();
+		// If leaderboard is visible, close it and return to main window (don't toggle main window)
+		if (this.isLeaderboardVisible) {
+			this.hideLeaderboard();
+			return;
 		}
 
 		if (this.isVisible) {
@@ -135,9 +223,120 @@ export class RatingStatsUI {
 		}
 	}
 
+	/**
+	 * Register ESC key to close rating stats window and leaderboard
+	 * ESC priority: close leaderboard first, then close rating stats window
+	 * Note: F4 is handled by guard-button-factory for toggle functionality (open/close)
+	 */
+	private registerEscapeKey(): void {
+		// Register ESC key
+		if (!this.escTrigger) {
+			this.escTrigger = CreateTrigger();
+
+			// Register ESC key for this player only (use key DOWN = true for more reliable capture)
+			BlzTriggerRegisterPlayerKeyEvent(this.escTrigger, this.player.getPlayer(), OSKEY_ESCAPE, 0, true);
+
+			// Use TriggerAddCondition pattern (same as guard-button-factory) to avoid desync
+			TriggerAddCondition(
+				this.escTrigger,
+				Condition(() => {
+					// Priority: close leaderboard first, then rating stats window
+					if (this.isLeaderboardVisible) {
+						this.hideLeaderboard();
+					} else if (this.isVisible) {
+						this.hide();
+					}
+				})
+			);
+		}
+	}
+
+	private toggleShowRatingPreference(): void {
+		const ratingManager = RatingManager.getInstance();
+		const btag = NameManager.getInstance().getBtag(this.player.getPlayer());
+
+		// Get current preference
+		const currentPreference = ratingManager.getShowRatingPreference(btag);
+
+		// Toggle preference
+		const newPreference = !currentPreference;
+		const success = ratingManager.setShowRatingPreference(btag, newPreference);
+
+		if (success) {
+			// Update button text
+			this.updateEnableDisableButtonText();
+
+			// Update the F4 button icon to reflect the preference
+			this.updateRatingButtonIcon(newPreference);
+
+			// Show confirmation message
+			const statusText = newPreference ? 'enabled' : 'disabled';
+			const message = `${HexColors.TANGERINE}Displaying of stats has been ${statusText}.|r`;
+			DisplayTimedTextToPlayer(this.player.getPlayer(), 0, 0, 3, message);
+		} else {
+			// Show error message
+			DisplayTimedTextToPlayer(
+				this.player.getPlayer(),
+				0,
+				0,
+				3,
+				`${HexColors.RED}Failed to save rating preference|r`
+			);
+		}
+	}
+
+	/**
+	 * Update the F4 rating button icon based on the showRating preference
+	 * @param showRating True if rating is enabled, false if disabled
+	 */
+	private updateRatingButtonIcon(showRating: boolean): void {
+		// Calculate the button context (same as in buildRatingStatsButton)
+		const buttonContext = GetPlayerId(this.player.getPlayer()) + 300;
+		const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', buttonContext);
+
+		if (buttonBackdrop) {
+			const texture = showRating
+				? 'ReplaceableTextures\\CommandButtons\\BTNMedalHeroism.blp'
+				: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp';
+			BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+		}
+
+		// Also update the tooltip text
+		this.updateRatingButtonTooltip(showRating);
+	}
+
+	/**
+	 * Update the F4 rating button tooltip to show current preference
+	 * @param showRating True if rating is enabled, false if disabled
+	 */
+	private updateRatingButtonTooltip(showRating: boolean): void {
+		const buttonContext = GetPlayerId(this.player.getPlayer()) + 300;
+		const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', buttonContext);
+
+		if (buttonTooltip) {
+			const preferenceText = showRating
+				? `${HexColors.GREEN}Enabled`
+				: `${HexColors.RED}Disabled`;
+			BlzFrameSetText(
+				buttonTooltip,
+				`Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${preferenceText}`
+			);
+		}
+	}
+
+	private updateEnableDisableButtonText(): void {
+		if (!this.enableDisableButtonText) return;
+
+		const ratingManager = RatingManager.getInstance();
+		const btag = NameManager.getInstance().getBtag(this.player.getPlayer());
+		const showRating = ratingManager.getShowRatingPreference(btag);
+
+		const buttonText = showRating ? 'Enabled' : 'Disabled';
+		BlzFrameSetText(this.enableDisableButtonText, buttonText);
+	}
+
 	public refresh(): void {
 		if (GetLocalPlayer() == this.player.getPlayer()) {
-			debugPrint(`RatingStatsUI.refresh() called for player ${GetPlayerId(this.player.getPlayer())}, initialized: ${this.isInitialized}, visible: ${this.isVisible}`);
 			// Initialize frames if not already initialized
 			if (!this.isInitialized) {
 				this.initializeFrames();
@@ -162,21 +361,44 @@ export class RatingStatsUI {
 	}
 
 	private updateStatsFromManager(): void {
-		if (!this.isInitialized) return;
+		if (!this.isInitialized) {
+			return;
+		}
+
+		try {
+			const ratingManager = RatingManager.getInstance();
+			const btag = NameManager.getInstance().getBtag(this.player.getPlayer());
+			const playerData = ratingManager.getPlayerData(btag);
+
+			// Update leaderboard button state based on data availability
+			this.updateLeaderboardButtonState();
+
+			// If there's a pending game (ranked game in progress), display those values
+			if (playerData && playerData.pendingGame) {
+				this.updateStatsFromPendingGame(playerData);
+			}
+			// Otherwise, show current stats
+			else {
+				this.updateStats(playerData);
+			}
+		} catch (error) {
+			// Silent fail
+		}
+	}
+
+	private updateLeaderboardButtonState(): void {
+		if (!this.toggleButton) return;
 
 		const ratingManager = RatingManager.getInstance();
-		const btag = NameManager.getInstance().getBtag(this.player.getPlayer());
-		const playerData = ratingManager.getPlayerData(btag);
+		const hasData = ratingManager.hasLeaderboardData();
 
-		debugPrint(`RatingStatsUI.updateStatsFromManager() - btag: ${btag}, hasPlayerData: ${playerData !== null}, hasPendingGame: ${playerData && playerData.pendingGame ? 'yes' : 'no'}`);
+		// Enable/disable button based on data availability
+		BlzFrameSetEnable(this.toggleButton, hasData);
 
-		// If there's a pending game (ranked game in progress), display those values
-		if (playerData && playerData.pendingGame) {
-			this.updateStatsFromPendingGame(playerData);
-		}
-		// Otherwise, show current stats
-		else {
-			this.updateStats(playerData);
+		// Visual feedback: make button look disabled when no data
+		if (!hasData) {
+			// Set tooltip or visual indication (optional)
+			BlzFrameSetTooltip(this.toggleButton, BlzCreateFrame('BoxedText', this.toggleButton, 0, 0));
 		}
 	}
 
@@ -185,9 +407,40 @@ export class RatingStatsUI {
 
 		const pending = playerData.pendingGame;
 
+		// Update title with player name (colored, without hashtag, max 10 chars)
+		try {
+			const nameManager = NameManager.getInstance();
+			let playerAcct = nameManager.getAcct(this.player.getPlayer());
+			// Truncate to 10 characters
+			if (playerAcct.length > 10) {
+				playerAcct = playerAcct.substring(0, 10);
+			}
+			const colorCode = nameManager.getColorCode(this.player.getPlayer());
+			const coloredName = `${colorCode}${playerAcct}|r`;
+			if (this.titleText) BlzFrameSetText(this.titleText, coloredName);
+		} catch (error) {
+			// Fallback to display name if acct/color fails
+			if (this.titleText) {
+				let fallbackName = NameManager.getInstance().getDisplayName(this.player.getPlayer());
+				if (fallbackName.length > 10) {
+					fallbackName = fallbackName.substring(0, 10);
+				}
+				BlzFrameSetText(this.titleText, fallbackName);
+			}
+		}
+
 		// Rating (show pending rating)
 		this.updateRankIcon(pending.rating);
 		if (this.ratingText) BlzFrameSetText(this.ratingText, `${HexColors.TANGERINE}Rating:|r ${HexColors.WHITE}${pending.rating}|r`);
+
+		// Season
+		if (this.seasonText) BlzFrameSetText(this.seasonText, `${HexColors.TANGERINE}Season:|r ${HexColors.WHITE}${RANKED_SEASON_ID}|r`);
+
+		// Average Rank (calculated from pending total placement / pending games)
+		const totalPlacement = pending.totalPlacement || 0;
+		const avgRank = pending.gamesPlayed > 0 ? totalPlacement / pending.gamesPlayed : 0;
+		const avgRankText = pending.gamesPlayed > 0 ? `#${math.floor(avgRank + 0.5)}` : '-';
+		if (this.averageRankText) BlzFrameSetText(this.averageRankText, `${HexColors.TANGERINE}Average Rank:|r ${HexColors.WHITE}${avgRankText}|r`);
 
 		// Games played (show pending games count)
 		if (this.gamesText) BlzFrameSetText(this.gamesText, `${HexColors.TANGERINE}Games Played:|r ${HexColors.WHITE}${pending.gamesPlayed}|r`);
@@ -199,24 +452,93 @@ export class RatingStatsUI {
 
 		if (this.winPercentText) BlzFrameSetText(this.winPercentText, `${pending.wins}W / ${pending.losses}L (${winPercent}%)`);
 		if (this.winBarFill) BlzFrameSetSize(this.winBarFill, winBarWidth, 0.02);
+
+		// Kill/Death (show pending K/D stats)
+		const totalKills = pending.totalKillValue || 0;
+		const totalDeaths = pending.totalDeathValue || 0;
+
+		const kdRatio = totalDeaths > 0 ? totalKills / totalDeaths : totalKills;
+		const kdRatioText = string.format("%.2f", kdRatio);
+		const kdBarWidth = totalDeaths > 0 ? math.min((totalKills / totalDeaths) * 0.105, 0.21) : (totalKills > 0 ? 0.21 : 0);
+
+		if (this.killPercentText) BlzFrameSetText(this.killPercentText, `${totalKills} K / ${totalDeaths} D (${kdRatioText})`);
+		if (this.killBarFill) BlzFrameSetSize(this.killBarFill, kdBarWidth, 0.02);
 	}
 
 	private updateStats(playerData: any): void {
-		if (!this.isInitialized) return;
+		if (!this.isInitialized) {
+			return;
+		}
+
+		// Update title with player name (colored, without hashtag, max 10 chars)
+		try {
+			const nameManager = NameManager.getInstance();
+			let playerAcct = nameManager.getAcct(this.player.getPlayer());
+			// Truncate to 10 characters
+			if (playerAcct.length > 10) {
+				playerAcct = playerAcct.substring(0, 10);
+			}
+			const colorCode = nameManager.getColorCode(this.player.getPlayer());
+			const coloredName = `${colorCode}${playerAcct}|r`;
+			if (this.titleText) {
+				BlzFrameSetText(this.titleText, coloredName);
+			}
+		} catch (error) {
+			// Fallback to display name if acct/color fails
+			if (this.titleText) {
+				let fallbackName = NameManager.getInstance().getDisplayName(this.player.getPlayer());
+				if (fallbackName.length > 10) {
+					fallbackName = fallbackName.substring(0, 10);
+				}
+				BlzFrameSetText(this.titleText, fallbackName);
+			}
+		}
 
 		if (!playerData) {
-			// No data yet - show starting rating
+			// No data yet - show starting rating with current game's K/D stats
 			this.updateRankIcon(1000);
 			if (this.ratingText) BlzFrameSetText(this.ratingText, `${HexColors.TANGERINE}Rating:|r ${HexColors.WHITE}1000|r`);
+			if (this.seasonText) BlzFrameSetText(this.seasonText, `${HexColors.TANGERINE}Season:|r ${HexColors.WHITE}${RANKED_SEASON_ID}|r`);
+			if (this.averageRankText) BlzFrameSetText(this.averageRankText, `${HexColors.TANGERINE}Average Rank:|r ${HexColors.WHITE}-|r`);
 			if (this.gamesText) BlzFrameSetText(this.gamesText, `${HexColors.TANGERINE}Games Played:|r ${HexColors.WHITE}0|r`);
 			if (this.winPercentText) BlzFrameSetText(this.winPercentText, `0W / 0L (0%)`);
 			if (this.winBarFill) BlzFrameSetSize(this.winBarFill, 0, 0.02);
+
+			// Show current game's K/D even with no saved data
+			let currentGameKills = 0;
+			let currentGameDeaths = 0;
+
+			try {
+				if (this.player.trackedData && this.player.trackedData.killsDeaths) {
+					const killsDeaths = this.player.trackedData.killsDeaths.get(this.player.getPlayer());
+					currentGameKills = killsDeaths ? killsDeaths.killValue : 0;
+					currentGameDeaths = killsDeaths ? killsDeaths.deathValue : 0;
+				}
+			} catch (error) {
+				// Silent fail
+			}
+
+			const kdRatio = currentGameDeaths > 0 ? currentGameKills / currentGameDeaths : currentGameKills;
+			const kdRatioText = string.format("%.2f", kdRatio);
+			const kdBarWidth = currentGameDeaths > 0 ? math.min((currentGameKills / currentGameDeaths) * 0.105, 0.21) : (currentGameKills > 0 ? 0.21 : 0);
+
+			if (this.killPercentText) BlzFrameSetText(this.killPercentText, `${currentGameKills} K / ${currentGameDeaths} D (${kdRatioText})`);
+			if (this.killBarFill) BlzFrameSetSize(this.killBarFill, kdBarWidth, 0.02);
 			return;
 		}
 
 		// Rating
 		this.updateRankIcon(playerData.rating);
 		if (this.ratingText) BlzFrameSetText(this.ratingText, `${HexColors.TANGERINE}Rating:|r ${HexColors.WHITE}${playerData.rating}|r`);
+
+		// Season
+		if (this.seasonText) BlzFrameSetText(this.seasonText, `${HexColors.TANGERINE}Season:|r ${HexColors.WHITE}${RANKED_SEASON_ID}|r`);
+
+		// Average Rank (calculated from total placement / games played)
+		const totalPlacement = playerData.totalPlacement || 0;
+		const avgRank = playerData.gamesPlayed > 0 ? totalPlacement / playerData.gamesPlayed : 0;
+		const avgRankText = playerData.gamesPlayed > 0 ? `#${math.floor(avgRank + 0.5)}` : '-';
+		if (this.averageRankText) BlzFrameSetText(this.averageRankText, `${HexColors.TANGERINE}Average Rank:|r ${HexColors.WHITE}${avgRankText}|r`);
 
 		// Games played
 		if (this.gamesText) BlzFrameSetText(this.gamesText, `${HexColors.TANGERINE}Games Played:|r ${HexColors.WHITE}${playerData.gamesPlayed}|r`);
@@ -228,231 +550,241 @@ export class RatingStatsUI {
 
 		if (this.winPercentText) BlzFrameSetText(this.winPercentText, `${playerData.wins}W / ${playerData.losses}L (${winPercent}%)`);
 		if (this.winBarFill) BlzFrameSetSize(this.winBarFill, winBarWidth, 0.02);
+
+		// Kill/Death - show saved totals only (current game is shown via pendingGame during game)
+		// Note: During the game, updateStatsFromPendingGame is used which includes current game K/D
+		// After game ends, playerData.totalKillValue already includes the current game's values
+		const totalKills = playerData.totalKillValue || 0;
+		const totalDeaths = playerData.totalDeathValue || 0;
+
+		const kdRatio = totalDeaths > 0 ? totalKills / totalDeaths : totalKills;
+		const kdRatioText = string.format("%.2f", kdRatio);
+		const kdBarWidth = totalDeaths > 0 ? math.min((totalKills / totalDeaths) * 0.105, 0.21) : (totalKills > 0 ? 0.21 : 0);
+
+		if (this.killPercentText) BlzFrameSetText(this.killPercentText, `${totalKills} K / ${totalDeaths} D (${kdRatioText})`);
+		if (this.killBarFill) BlzFrameSetSize(this.killBarFill, kdBarWidth, 0.02);
 	}
 
-	public toggleTop10Display(): void {
-		if (this.isTop10Visible) {
-			this.hideTop10();
+	public toggleLeaderboardDisplay(): void {
+		if (this.isLeaderboardVisible) {
+			this.hideLeaderboard();
 		} else {
-			this.showTop10();
+			this.showLeaderboard();
 		}
 	}
 
-	public showTop10(): void {
-		if (!this.isInitialized) return;
+	public showLeaderboard(): void {
+		if (GetLocalPlayer() == this.player.getPlayer()) {
+			if (!this.isInitialized) return;
 
-		// Initialize top 10 frame if needed
-		if (!this.isTop10Initialized) {
-			this.initializeTop10Frame();
+			// Check if leaderboard has data
+			const ratingManager = RatingManager.getInstance();
+			if (!ratingManager.hasLeaderboardData()) {
+				// Don't show leaderboard if no data available
+				return;
+			}
+
+			// Initialize leaderboard frame if needed
+			if (!this.isLeaderboardInitialized) {
+				this.initializeLeaderboardFrame();
+			}
+
+			if (!this.isLeaderboardInitialized) return;
+
+			// Hide rating stats window
+			if (this.frameBackdrop) {
+				BlzFrameSetVisible(this.frameBackdrop, false);
+				BlzFrameSetEnable(this.frameBackdrop, false);
+			}
+
+			// Show leaderboard window
+			if (this.leaderboardFrame) {
+				BlzFrameSetVisible(this.leaderboardFrame, true);
+				BlzFrameSetEnable(this.leaderboardFrame, true);
+			}
+
+			// Reset to first page
+			this.currentPage = 0;
+
+			// Load and display leaderboard data
+			this.updateLeaderboardData();
+
+			this.isLeaderboardVisible = true;
 		}
-
-		if (!this.isTop10Initialized) return;
-
-		// Hide rating stats window
-		if (this.frameBackdrop) {
-			BlzFrameSetVisible(this.frameBackdrop, false);
-			BlzFrameSetEnable(this.frameBackdrop, false);
-		}
-
-		// Show top 10 window
-		if (this.top10Frame) {
-			BlzFrameSetVisible(this.top10Frame, true);
-			BlzFrameSetEnable(this.top10Frame, true);
-		}
-
-		// Reset to first page
-		this.currentPage = 0;
-
-		// Load and display top 10 data
-		this.updateTop10Data();
-
-		this.isTop10Visible = true;
 	}
 
-	private hideTop10(): void {
-		// Hide top 10 window
-		if (this.top10Frame) {
-			BlzFrameSetVisible(this.top10Frame, false);
-			BlzFrameSetEnable(this.top10Frame, false);
-		}
+	private hideLeaderboard(): void {
+		if (GetLocalPlayer() == this.player.getPlayer()) {
+			// Hide leaderboard window
+			if (this.leaderboardFrame) {
+				BlzFrameSetVisible(this.leaderboardFrame, false);
+				BlzFrameSetEnable(this.leaderboardFrame, false);
+			}
 
-		// Show rating stats window
-		if (this.frameBackdrop) {
-			BlzFrameSetVisible(this.frameBackdrop, true);
-			BlzFrameSetEnable(this.frameBackdrop, true);
-		}
+			// Show rating stats window
+			if (this.frameBackdrop) {
+				BlzFrameSetVisible(this.frameBackdrop, true);
+				BlzFrameSetEnable(this.frameBackdrop, true);
+			}
 
-		this.isTop10Visible = false;
+			this.isLeaderboardVisible = false;
+		}
 	}
 
-	private initializeTop10Frame(): void {
+	private initializeLeaderboardFrame(): void {
 		try {
-			// Create the top 10 frame from FDF definition
-			this.top10Frame = BlzCreateFrame('Top10LeaderboardFrame', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
+			// Create the leaderboard frame from FDF definition
+			this.leaderboardFrame = BlzCreateFrame('LeaderboardFrame', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 
-			if (!this.top10Frame) {
+			if (!this.leaderboardFrame) {
 				return;
 			}
 
 			// Get close button reference
-			this.top10CloseButton = BlzGetFrameByName('Top10CloseButton', 0);
+			this.leaderboardCloseButton = BlzGetFrameByName('LeaderboardCloseButton', 0);
 
 			// Register close button click event
-			if (this.top10CloseButton) {
-				const closeTop10Trigger = CreateTrigger();
-				BlzTriggerRegisterFrameEvent(closeTop10Trigger, this.top10CloseButton, FRAMEEVENT_CONTROL_CLICK);
-				TriggerAddAction(closeTop10Trigger, () => {
-					if (GetLocalPlayer() == this.player.getPlayer()) {
-						this.hideTop10();
+			if (this.leaderboardCloseButton) {
+				const closeLeaderboardTrigger = CreateTrigger();
+				BlzTriggerRegisterFrameEvent(closeLeaderboardTrigger, this.leaderboardCloseButton, FRAMEEVENT_CONTROL_CLICK);
+				TriggerAddAction(closeLeaderboardTrigger, () => {
+					// Only execute for the player who owns this UI instance
+					if (GetTriggerPlayer() == this.player.getPlayer()) {
+						this.hideLeaderboard();
 					}
 				});
 			}
 
 			// Get pagination button references
-			this.top10PrevButton = BlzGetFrameByName('Top10PrevButton', 0);
-			this.top10NextButton = BlzGetFrameByName('Top10NextButton', 0);
-			this.top10PageText = BlzGetFrameByName('Top10PageText', 0);
+			this.leaderboardPrevButton = BlzGetFrameByName('LeaderboardPrevButton', 0);
+			this.leaderboardNextButton = BlzGetFrameByName('LeaderboardNextButton', 0);
+			this.leaderboardMyPlaceButton = BlzGetFrameByName('LeaderboardMyPlaceButton', 0);
+			this.leaderboardPageText = BlzGetFrameByName('LeaderboardPageText', 0);
 
 			// Register pagination button click events
-			if (this.top10PrevButton) {
+			if (this.leaderboardPrevButton) {
 				const prevTrigger = CreateTrigger();
-				BlzTriggerRegisterFrameEvent(prevTrigger, this.top10PrevButton, FRAMEEVENT_CONTROL_CLICK);
+				BlzTriggerRegisterFrameEvent(prevTrigger, this.leaderboardPrevButton, FRAMEEVENT_CONTROL_CLICK);
 				TriggerAddAction(prevTrigger, () => {
-					if (GetLocalPlayer() == this.player.getPlayer()) {
+					// Only execute for the player who owns this UI instance
+					if (GetTriggerPlayer() == this.player.getPlayer()) {
 						this.previousPage();
 					}
 				});
 			}
 
-			if (this.top10NextButton) {
+			if (this.leaderboardNextButton) {
 				const nextTrigger = CreateTrigger();
-				BlzTriggerRegisterFrameEvent(nextTrigger, this.top10NextButton, FRAMEEVENT_CONTROL_CLICK);
+				BlzTriggerRegisterFrameEvent(nextTrigger, this.leaderboardNextButton, FRAMEEVENT_CONTROL_CLICK);
 				TriggerAddAction(nextTrigger, () => {
-					if (GetLocalPlayer() == this.player.getPlayer()) {
+					// Only execute for the player who owns this UI instance
+					if (GetTriggerPlayer() == this.player.getPlayer()) {
 						this.nextPage();
 					}
 				});
 			}
 
+			if (this.leaderboardMyPlaceButton) {
+				const myPlaceTrigger = CreateTrigger();
+				BlzTriggerRegisterFrameEvent(myPlaceTrigger, this.leaderboardMyPlaceButton, FRAMEEVENT_CONTROL_CLICK);
+				TriggerAddAction(myPlaceTrigger, () => {
+					// Only execute for the player who owns this UI instance
+					if (GetTriggerPlayer() == this.player.getPlayer()) {
+						this.jumpToMyPlace();
+					}
+				});
+			}
+
 			// Create 10 rows of column frames for player entries dynamically
-			let yOffset = -0.085;
+			let yOffset = -0.095;
 			for (let i = 0; i < 10; i++) {
 				// Rank column
-				const rankFrame = BlzCreateFrameByType('TEXT', `Top10PlayerRank${i}`, this.top10Frame, '', 0);
-				BlzFrameSetPoint(rankFrame, FRAMEPOINT_TOPLEFT, this.top10Frame, FRAMEPOINT_TOPLEFT, 0.01, yOffset);
+				const rankFrame = BlzCreateFrameByType('TEXT', `LeaderboardPlayerRank${i}`, this.leaderboardFrame, '', 0);
+				BlzFrameSetPoint(rankFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.02, yOffset);
 				BlzFrameSetSize(rankFrame, 0.023, 0.02);
 				BlzFrameSetText(rankFrame, '');
 				BlzFrameSetTextAlignment(rankFrame, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
-				this.top10RankFrames.push(rankFrame);
+				this.leaderboardRankFrames.push(rankFrame);
 
 
 				// Rank icon (before ELO)
-				const rankIconFrame = BlzCreateFrameByType('BACKDROP', `Top10PlayerRankIcon${i}`, this.top10Frame, '', 0);
-				BlzFrameSetPoint(rankIconFrame, FRAMEPOINT_TOPLEFT, this.top10Frame, FRAMEPOINT_TOPLEFT, 0.048, yOffset + 0.0025);
+				const rankIconFrame = BlzCreateFrameByType('BACKDROP', `LeaderboardPlayerRankIcon${i}`, this.leaderboardFrame, '', 0);
+				BlzFrameSetPoint(rankIconFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.058, yOffset + 0.0025);
 				BlzFrameSetSize(rankIconFrame, 0.015, 0.015);
-				this.top10RankIconFrames.push(rankIconFrame);
+				this.leaderboardRankIconFrames.push(rankIconFrame);
 
 				// ELO column
-				const eloFrame = BlzCreateFrameByType('TEXT', `Top10PlayerELO${i}`, this.top10Frame, '', 0);
-				BlzFrameSetPoint(eloFrame, FRAMEPOINT_TOPLEFT, this.top10Frame, FRAMEPOINT_TOPLEFT, 0.065, yOffset);
+				const eloFrame = BlzCreateFrameByType('TEXT', `LeaderboardPlayerELO${i}`, this.leaderboardFrame, '', 0);
+				BlzFrameSetPoint(eloFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.075, yOffset);
 				BlzFrameSetSize(eloFrame, 0.05, 0.02);
 				BlzFrameSetText(eloFrame, '');
 				BlzFrameSetTextAlignment(eloFrame, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
-				this.top10ELOFrames.push(eloFrame);
+				this.leaderboardELOFrames.push(eloFrame);
 
 				// Name column
-				const nameFrame = BlzCreateFrameByType('TEXT', `Top10PlayerName${i}`, this.top10Frame, '', 0);
-				BlzFrameSetPoint(nameFrame, FRAMEPOINT_TOPLEFT, this.top10Frame, FRAMEPOINT_TOPLEFT, 0.10, yOffset);
+				const nameFrame = BlzCreateFrameByType('TEXT', `LeaderboardPlayerName${i}`, this.leaderboardFrame, '', 0);
+				BlzFrameSetPoint(nameFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.11, yOffset);
 				BlzFrameSetSize(nameFrame, 0.15, 0.02);
 				BlzFrameSetText(nameFrame, '');
 				BlzFrameSetTextAlignment(nameFrame, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
-				this.top10NameFrames.push(nameFrame);
+				this.leaderboardNameFrames.push(nameFrame);
 
 				// Win Rate column
-				const winRateFrame = BlzCreateFrameByType('TEXT', `Top10PlayerWinRate${i}`, this.top10Frame, '', 0);
-				BlzFrameSetPoint(winRateFrame, FRAMEPOINT_TOPLEFT, this.top10Frame, FRAMEPOINT_TOPLEFT, 0.25, yOffset);
+				const winRateFrame = BlzCreateFrameByType('TEXT', `LeaderboardPlayerWinRate${i}`, this.leaderboardFrame, '', 0);
+				BlzFrameSetPoint(winRateFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.26, yOffset);
 				BlzFrameSetSize(winRateFrame, 0.07, 0.02);
 				BlzFrameSetText(winRateFrame, '');
 				BlzFrameSetTextAlignment(winRateFrame, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
-				this.top10WinRateFrames.push(winRateFrame);
+				this.leaderboardWinRateFrames.push(winRateFrame);
 
 				// Wins column
-				const winsFrame = BlzCreateFrameByType('TEXT', `Top10PlayerWins${i}`, this.top10Frame, '', 0);
-				BlzFrameSetPoint(winsFrame, FRAMEPOINT_TOPLEFT, this.top10Frame, FRAMEPOINT_TOPLEFT, 0.33, yOffset);
+				const winsFrame = BlzCreateFrameByType('TEXT', `LeaderboardPlayerWins${i}`, this.leaderboardFrame, '', 0);
+				BlzFrameSetPoint(winsFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.34, yOffset);
 				BlzFrameSetSize(winsFrame, 0.05, 0.02);
 				BlzFrameSetText(winsFrame, '');
 				BlzFrameSetTextAlignment(winsFrame, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
-				this.top10WinsFrames.push(winsFrame);
+				this.leaderboardWinsFrames.push(winsFrame);
 
 				// Losses column
-				const lossesFrame = BlzCreateFrameByType('TEXT', `Top10PlayerLosses${i}`, this.top10Frame, '', 0);
-				BlzFrameSetPoint(lossesFrame, FRAMEPOINT_TOPLEFT, this.top10Frame, FRAMEPOINT_TOPLEFT, 0.39, yOffset);
+				const lossesFrame = BlzCreateFrameByType('TEXT', `LeaderboardPlayerLosses${i}`, this.leaderboardFrame, '', 0);
+				BlzFrameSetPoint(lossesFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.40, yOffset);
 				BlzFrameSetSize(lossesFrame, 0.05, 0.02);
 				BlzFrameSetText(lossesFrame, '');
 				BlzFrameSetTextAlignment(lossesFrame, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
-				this.top10LossesFrames.push(lossesFrame);
+				this.leaderboardLossesFrames.push(lossesFrame);
 
 				// Games column
-				const gamesFrame = BlzCreateFrameByType('TEXT', `Top10PlayerGames${i}`, this.top10Frame, '', 0);
-				BlzFrameSetPoint(gamesFrame, FRAMEPOINT_TOPLEFT, this.top10Frame, FRAMEPOINT_TOPLEFT, 0.45, yOffset);
+				const gamesFrame = BlzCreateFrameByType('TEXT', `LeaderboardPlayerGames${i}`, this.leaderboardFrame, '', 0);
+				BlzFrameSetPoint(gamesFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.46, yOffset);
 				BlzFrameSetSize(gamesFrame, 0.05, 0.02);
 				BlzFrameSetText(gamesFrame, '');
 				BlzFrameSetTextAlignment(gamesFrame, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
-				this.top10GamesFrames.push(gamesFrame);
+				this.leaderboardGamesFrames.push(gamesFrame);
 
 				yOffset -= 0.022;
 			}
 
-			// Initially hide the top 10 frame
-			BlzFrameSetEnable(this.top10Frame, false);
-			BlzFrameSetVisible(this.top10Frame, false);
+			// Initially hide the leaderboard frame
+			BlzFrameSetEnable(this.leaderboardFrame, false);
+			BlzFrameSetVisible(this.leaderboardFrame, false);
 
-			this.isTop10Initialized = true;
+			this.isLeaderboardInitialized = true;
 		} catch (error) {
 			// Silent fail
 		}
 	}
 
-	private updateTop10Data(): void {
+	private updateLeaderboardData(): void {
 		const ratingManager = RatingManager.getInstance();
-		const isDeveloperMode = ratingManager.isDeveloperModeEnabled();
 
-		// Try to load global ratings database first
-		let globalData = readGlobalRatings(RANKED_SEASON_ID, isDeveloperMode);
+		// Get top 500 players only (strict filter by rating)
+		// Low-rated players (even if in current game) will not appear
+		const sortedPlayers = ratingManager.getTop500Players();
 
-		// If global data doesn't exist, fall back to loaded players from current session
-		if (!globalData || globalData.players.length === 0) {
-			const loadedPlayers = ratingManager.getAllLoadedPlayers();
-
-			if (loadedPlayers.length === 0) {
-				this.displayNoTop10Data();
-				return;
-			}
-
-			// Create a temporary global data structure from loaded players
-			globalData = {
-				version: 1,
-				seasonId: RANKED_SEASON_ID,
-				checksum: '',
-				players: loadedPlayers,
-				playerCount: loadedPlayers.length,
-			};
+		if (sortedPlayers.length === 0) {
+			this.displayNoLeaderboardData();
+			return;
 		}
-
-		// Sort players by rating descending
-		const sortedPlayers = globalData.players.slice().sort((a, b) => {
-			if (b.rating !== a.rating) {
-				return b.rating - a.rating;
-			}
-			// Tiebreaker: more games played wins
-			if (b.gamesPlayed !== a.gamesPlayed) {
-				return b.gamesPlayed - a.gamesPlayed;
-			}
-			// Final tiebreaker: alphabetical
-			if (a.btag < b.btag) return -1;
-			if (a.btag > b.btag) return 1;
-			return 0;
-		});
 
 		// Calculate total pages
 		this.totalPages = math.max(1, math.ceil(sortedPlayers.length / this.PLAYERS_PER_PAGE));
@@ -470,20 +802,31 @@ export class RatingStatsUI {
 		const endIndex = math.min(startIndex + this.PLAYERS_PER_PAGE, sortedPlayers.length);
 		const currentPagePlayers = sortedPlayers.slice(startIndex, endIndex);
 
+		// Get local player's btag for highlighting
+		const localBtag = NameManager.getInstance().getBtag(this.player.getPlayer());
+
 		// Update each row's column frames
 		for (let i = 0; i < 10; i++) {
 			if (i < currentPagePlayers.length) {
 				const player = currentPagePlayers[i];
 				const rank = startIndex + i + 1;
 
-				// Get rank color
-				let rankColor = HexColors.WHITE;
-				if (rank === 1) {
-					rankColor = HexColors.TANGERINE; // Gold
-				} else if (rank === 2) {
-					rankColor = HexColors.LIGHT_GRAY; // Silver
-				} else if (rank === 3) {
-					rankColor = HexColors.ORANGE; // Bronze
+				// Get rank color: prioritize local player, then rank-based colors, then gray
+				let rankColor = HexColors.LIGHT_GRAY; // Default gray for non-ranked players
+
+				// Check if this is the local player first (highest priority)
+				if (player.btag === localBtag) {
+					rankColor = HexColors.TANGERINE; // Local player always gets tangerine
+				} else {
+					// Otherwise, apply rank-based colors
+					if (rank === 1) {
+						rankColor = HexColors.YELLOW; // Gold
+					} else if (rank === 2) {
+						rankColor = HexColors.LAVENDER; // Silver
+					} else if (rank === 3) {
+						rankColor = HexColors.EMERALD; // Bronze
+					}
+					// All other ranks remain LIGHT_GRAY (set as default above)
 				}
 
 				// Format name (truncate if too long)
@@ -499,27 +842,27 @@ export class RatingStatsUI {
 
 				// Set rank icon
 				const rankIconPath = getRankIcon(rating);
-				BlzFrameSetTexture(this.top10RankIconFrames[i], rankIconPath, 0, true);
-				BlzFrameSetVisible(this.top10RankIconFrames[i], true);
+				BlzFrameSetTexture(this.leaderboardRankIconFrames[i], rankIconPath, 0, true);
+				BlzFrameSetVisible(this.leaderboardRankIconFrames[i], true);
 
 				// Set each column
-				BlzFrameSetText(this.top10RankFrames[i], `${rankColor}${rank}|r`);
-				BlzFrameSetText(this.top10ELOFrames[i], `${rankColor}${rating}|r`);
-				BlzFrameSetText(this.top10NameFrames[i], `${rankColor}${displayName}|r`);
-				BlzFrameSetText(this.top10WinRateFrames[i], `${rankColor}${winRate}%|r`);
-				BlzFrameSetText(this.top10WinsFrames[i], `${rankColor}${player.wins}|r`);
-				BlzFrameSetText(this.top10LossesFrames[i], `${rankColor}${player.losses}|r`);
-				BlzFrameSetText(this.top10GamesFrames[i], `${rankColor}${totalGames}|r`);
+				BlzFrameSetText(this.leaderboardRankFrames[i], `${rankColor}${rank}|r`);
+				BlzFrameSetText(this.leaderboardELOFrames[i], `${rankColor}${rating}|r`);
+				BlzFrameSetText(this.leaderboardNameFrames[i], `${rankColor}${displayName}|r`);
+				BlzFrameSetText(this.leaderboardWinRateFrames[i], `${rankColor}${winRate}%|r`);
+				BlzFrameSetText(this.leaderboardWinsFrames[i], `${rankColor}${player.wins}|r`);
+				BlzFrameSetText(this.leaderboardLossesFrames[i], `${rankColor}${player.losses}|r`);
+				BlzFrameSetText(this.leaderboardGamesFrames[i], `${rankColor}${totalGames}|r`);
 			} else {
 				// Empty slot - clear all columns and hide icon
-				BlzFrameSetVisible(this.top10RankIconFrames[i], false);
-				BlzFrameSetText(this.top10RankFrames[i], '');
-				BlzFrameSetText(this.top10ELOFrames[i], '');
-				BlzFrameSetText(this.top10NameFrames[i], '');
-				BlzFrameSetText(this.top10WinRateFrames[i], '');
-				BlzFrameSetText(this.top10WinsFrames[i], '');
-				BlzFrameSetText(this.top10LossesFrames[i], '');
-				BlzFrameSetText(this.top10GamesFrames[i], '');
+				BlzFrameSetVisible(this.leaderboardRankIconFrames[i], false);
+				BlzFrameSetText(this.leaderboardRankFrames[i], '');
+				BlzFrameSetText(this.leaderboardELOFrames[i], '');
+				BlzFrameSetText(this.leaderboardNameFrames[i], '');
+				BlzFrameSetText(this.leaderboardWinRateFrames[i], '');
+				BlzFrameSetText(this.leaderboardWinsFrames[i], '');
+				BlzFrameSetText(this.leaderboardLossesFrames[i], '');
+				BlzFrameSetText(this.leaderboardGamesFrames[i], '');
 			}
 		}
 
@@ -527,27 +870,27 @@ export class RatingStatsUI {
 		this.updatePaginationUI();
 	}
 
-	private displayNoTop10Data(): void {
+	private displayNoLeaderboardData(): void {
 		// Display "no data available" message in the middle row
 		for (let i = 0; i < 10; i++) {
 			if (i === 4) {
 				// Middle row - show message in name column (centered-ish)
-				BlzFrameSetText(this.top10RankFrames[i], '');
-				BlzFrameSetText(this.top10ELOFrames[i], '');
-				BlzFrameSetText(this.top10NameFrames[i], `${HexColors.DARK_GRAY}No data available|r`);
-				BlzFrameSetText(this.top10WinRateFrames[i], '');
-				BlzFrameSetText(this.top10WinsFrames[i], '');
-				BlzFrameSetText(this.top10LossesFrames[i], '');
-				BlzFrameSetText(this.top10GamesFrames[i], '');
+				BlzFrameSetText(this.leaderboardRankFrames[i], '');
+				BlzFrameSetText(this.leaderboardELOFrames[i], '');
+				BlzFrameSetText(this.leaderboardNameFrames[i], `${HexColors.DARK_GRAY}No data available|r`);
+				BlzFrameSetText(this.leaderboardWinRateFrames[i], '');
+				BlzFrameSetText(this.leaderboardWinsFrames[i], '');
+				BlzFrameSetText(this.leaderboardLossesFrames[i], '');
+				BlzFrameSetText(this.leaderboardGamesFrames[i], '');
 			} else {
 				// Empty rows - clear all columns
-				BlzFrameSetText(this.top10RankFrames[i], '');
-				BlzFrameSetText(this.top10ELOFrames[i], '');
-				BlzFrameSetText(this.top10NameFrames[i], '');
-				BlzFrameSetText(this.top10WinRateFrames[i], '');
-				BlzFrameSetText(this.top10WinsFrames[i], '');
-				BlzFrameSetText(this.top10LossesFrames[i], '');
-				BlzFrameSetText(this.top10GamesFrames[i], '');
+				BlzFrameSetText(this.leaderboardRankFrames[i], '');
+				BlzFrameSetText(this.leaderboardELOFrames[i], '');
+				BlzFrameSetText(this.leaderboardNameFrames[i], '');
+				BlzFrameSetText(this.leaderboardWinRateFrames[i], '');
+				BlzFrameSetText(this.leaderboardWinsFrames[i], '');
+				BlzFrameSetText(this.leaderboardLossesFrames[i], '');
+				BlzFrameSetText(this.leaderboardGamesFrames[i], '');
 			}
 		}
 
@@ -560,35 +903,103 @@ export class RatingStatsUI {
 	private previousPage(): void {
 		if (this.currentPage > 0) {
 			this.currentPage--;
-			this.updateTop10Data();
+			this.updateLeaderboardData();
 		}
 	}
 
 	private nextPage(): void {
 		if (this.currentPage < this.totalPages - 1) {
 			this.currentPage++;
-			this.updateTop10Data();
+			this.updateLeaderboardData();
 		}
+	}
+
+	private jumpToMyPlace(): void {
+		const ratingManager = RatingManager.getInstance();
+		const localBtag = NameManager.getInstance().getBtag(this.player.getPlayer());
+
+		// Get top 500 players only (same as leaderboard display)
+		const sortedPlayers = ratingManager.getTop500Players();
+
+		if (sortedPlayers.length === 0) {
+			return; // No data available
+		}
+
+		// Find local player's index in sorted list
+		let myIndex = -1;
+		for (let i = 0; i < sortedPlayers.length; i++) {
+			if (sortedPlayers[i].btag === localBtag) {
+				myIndex = i;
+				break;
+			}
+		}
+
+		// If player not found in leaderboard, do nothing
+		if (myIndex === -1) {
+			return;
+		}
+
+		// Calculate which page the player is on
+		const myPage = math.floor(myIndex / this.PLAYERS_PER_PAGE);
+
+		// Jump to that page
+		this.currentPage = myPage;
+		this.updateLeaderboardData();
 	}
 
 	private updatePaginationUI(): void {
 		// Update page text
-		if (this.top10PageText) {
-			BlzFrameSetText(this.top10PageText, `Page ${this.currentPage + 1} / ${this.totalPages}`);
+		if (this.leaderboardPageText) {
+			BlzFrameSetText(this.leaderboardPageText, `Page ${this.currentPage + 1} / ${this.totalPages}`);
 		}
 
 		// Enable/disable prev button
-		if (this.top10PrevButton) {
+		if (this.leaderboardPrevButton) {
 			const canGoPrev = this.currentPage > 0;
-			BlzFrameSetEnable(this.top10PrevButton, canGoPrev);
-			BlzFrameSetVisible(this.top10PrevButton, true);
+			BlzFrameSetEnable(this.leaderboardPrevButton, canGoPrev);
+			BlzFrameSetVisible(this.leaderboardPrevButton, true);
 		}
 
 		// Enable/disable next button
-		if (this.top10NextButton) {
+		if (this.leaderboardNextButton) {
 			const canGoNext = this.currentPage < this.totalPages - 1;
-			BlzFrameSetEnable(this.top10NextButton, canGoNext);
-			BlzFrameSetVisible(this.top10NextButton, true);
+			BlzFrameSetEnable(this.leaderboardNextButton, canGoNext);
+			BlzFrameSetVisible(this.leaderboardNextButton, true);
+		}
+
+		// Enable/disable "My Place" button
+		if (this.leaderboardMyPlaceButton) {
+			// Check if local player is in the top 500 leaderboard
+			const ratingManager = RatingManager.getInstance();
+			const localBtag = NameManager.getInstance().getBtag(this.player.getPlayer());
+			const sortedPlayers = ratingManager.getTop500Players();
+
+			let playerInLeaderboard = false;
+			let playerOnCurrentPage = false;
+
+			if (sortedPlayers.length > 0) {
+
+				// Find local player's index
+				let myIndex = -1;
+				for (let i = 0; i < sortedPlayers.length; i++) {
+					if (sortedPlayers[i].btag === localBtag) {
+						myIndex = i;
+						playerInLeaderboard = true;
+						break;
+					}
+				}
+
+				// Check if player is on current page
+				if (myIndex !== -1) {
+					const myPage = math.floor(myIndex / this.PLAYERS_PER_PAGE);
+					playerOnCurrentPage = (myPage === this.currentPage);
+				}
+			}
+
+			// Enable button only if player is in leaderboard AND not on current page
+			const shouldEnable = playerInLeaderboard && !playerOnCurrentPage;
+			BlzFrameSetEnable(this.leaderboardMyPlaceButton, shouldEnable);
+			BlzFrameSetVisible(this.leaderboardMyPlaceButton, true);
 		}
 	}
 

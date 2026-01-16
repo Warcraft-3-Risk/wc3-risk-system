@@ -1,5 +1,6 @@
-import { GameRatingResult, PlayerRatingData, RatingFileData } from './types';
+import { GameRatingResult, PlayerRatingData, RatingFileData, OthersRatingFileData } from './types';
 import { readRatings, validateChecksum, writeRatings } from './rating-file-handler';
+import { readOthersRatings, writeOthersRatings } from './global-rating-handler';
 import {
 	calculateExpectedPlacement,
 	calculatePerformanceMultiplier,
@@ -7,11 +8,10 @@ import {
 	calculateRatingAdvantageMultiplier,
 	calculateRatingChange,
 } from './rating-calculator';
-import { RANKED_MIN_PLAYERS, RANKED_MINIMUM_RATING, RANKED_SEASON_ID, RANKED_STARTING_RATING } from 'src/configs/game-settings';
+import { RANKED_MIN_PLAYERS, RANKED_MINIMUM_RATING, RANKED_SEASON_ID, RANKED_STARTING_RATING, DEVELOPER_MODE, RATING_SYNC_TOP_PLAYERS } from 'src/configs/game-settings';
 import { ActivePlayer } from '../player/types/active-player';
 import { NameManager } from '../managers/names/name-manager';
 import { HexColors } from '../utils/hex-colors';
-import { File } from 'w3ts';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { debugPrint } from '../utils/debug-print';
 
@@ -27,7 +27,6 @@ export class RatingManager {
 	private isRankedGameFlag: boolean;
 	private seasonId: number;
 	private loadedPlayers: Set<string>; // Track which players have been loaded
-	private isDeveloperMode: boolean;
 	private currentGameId: string;
 
 	/**
@@ -38,48 +37,52 @@ export class RatingManager {
 		this.gameResults = new Map();
 		this.loadedPlayers = new Set();
 		this.isRankedGameFlag = false;
-		this.isDeveloperMode = false;
 		this.seasonId = RANKED_SEASON_ID;
 	}
 
 	/**
-	 * Sanitize player name for use in file name
-	 * Combines safe characters with a hash to prevent collisions
-	 * @param name Player name
-	 * @returns Sanitized name with hash suffix
+	 * Generate a hash-only identifier for file naming
+	 * Uses only hash (no readable name) to:
+	 * 1. Prevent collisions when players have similar names
+	 * 2. Make file purpose less obvious to players
+	 * @param name Player's full btag (e.g., "PlayerName#1234")
+	 * @returns Hash string for file naming
 	 */
 	private sanitizePlayerName(name: string): string {
-		// Extract alphanumeric characters only
-		let sanitized = '';
+		// Generate two different hashes and combine them for uniqueness
+		// Hash 1: djb2 algorithm
+		let hash1 = 5381;
 		for (let i = 0; i < name.length; i++) {
-			const char = name.charAt(i);
-			if ((char >= 'a' && char <= 'z') || (char >= 'A' && char <= 'Z') || (char >= '0' && char <= '9') || char === '_' || char === '-') {
-				sanitized += char;
-			}
+			hash1 = ((hash1 << 5) + hash1) + name.charCodeAt(i);
+			hash1 = hash1 & hash1;
 		}
 
-		// Generate hash from original name to prevent collisions
-		let hash = 0;
+		// Hash 2: sdbm algorithm
+		let hash2 = 0;
 		for (let i = 0; i < name.length; i++) {
-			hash = (hash << 5) - hash + name.charCodeAt(i);
-			hash = hash & hash; // Convert to 32-bit integer
+			hash2 = name.charCodeAt(i) + (hash2 << 6) + (hash2 << 16) - hash2;
+			hash2 = hash2 & hash2;
 		}
-		const hashStr = Math.abs(hash).toString(16);
 
-		// Use first 12 chars of sanitized name + hash
-		const safeName = sanitized.length > 0 ? sanitized.substring(0, 12) : 'Player';
-		return `${safeName}_${hashStr}`;
+		// Combine both hashes into a single hex string
+		const hex1 = Math.abs(hash1).toString(16).padStart(8, '0');
+		const hex2 = Math.abs(hash2).toString(16).padStart(8, '0');
+
+		return `${hex1}${hex2}`;
 	}
 
 	/**
 	 * Get file path for a specific player
+	 * File naming is obscured to prevent easy identification
 	 * @param btag Player's BattleTag
 	 * @returns File path for this player's rating file
 	 */
 	private getPlayerFilePath(btag: string): string {
-		const sanitizedName = this.sanitizePlayerName(btag);
-		const prefix = this.isDeveloperMode ? 'dev_ratings' : 'ratings';
-		return `risk/${prefix}_${sanitizedName}_s${this.seasonId}.txt`;
+		const hash = this.sanitizePlayerName(btag);
+		// Use single-letter prefix: 'd' for dev, 'p' for prod
+		const prefix = DEVELOPER_MODE ? 'd' : 'p';
+		// Must use .txt extension - WC3 only supports .txt and .pld file extensions
+		return `risk/${prefix}${this.seasonId}_${hash}.txt`;
 	}
 
 	/**
@@ -94,22 +97,11 @@ export class RatingManager {
 	}
 
 	/**
-	 * Enable developer mode for singleplayer testing
-	 * Uses separate rating files to avoid polluting real ratings
-	 */
-	public enableDeveloperMode(): void {
-		this.isDeveloperMode = true;
-		// Clear loaded players to force reload with dev prefix
-		this.loadedPlayers.clear();
-		this.ratingData.clear();
-	}
-
-	/**
-	 * Check if developer mode is enabled
-	 * @returns True if in developer/singleplayer mode
+	 * Check if developer mode is enabled (from game-settings.ts config)
+	 * @returns True if RANKED_DEVELOPER_MODE is enabled
 	 */
 	public isDeveloperModeEnabled(): boolean {
-		return this.isDeveloperMode;
+		return DEVELOPER_MODE;
 	}
 
 	/**
@@ -134,26 +126,15 @@ export class RatingManager {
 
 		// Validate checksum
 		if (!validateChecksum(data)) {
-			// Corrupted file - create backup and reset
-			const timestamp = math.floor(os.time());
-			const corruptedPath = filePath.replace('.txt', `_corrupted_${timestamp}.txt`);
-
-			try {
-				const originalData = File.read(filePath);
-				if (originalData) {
-					File.write(corruptedPath, originalData);
-				}
-			} catch (error) {
-				// Ignore backup error
-			}
-
-			// Notify player
-			print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh.`);
+			// Corrupted file - player will start fresh and regenerate file at game end
+			print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
 			this.loadedPlayers.add(btag);
 			return false;
 		}
 
 		// Load valid data for this player
+		// Mark as synced since file-loaded data is authoritative
+		data.player._isSynced = true;
 		this.ratingData.set(data.player.btag, data.player);
 
 		// Finalize pending game if exists
@@ -164,6 +145,9 @@ export class RatingManager {
 				playerData.wins = playerData.pendingGame.wins;
 				playerData.losses = playerData.pendingGame.losses;
 				playerData.gamesPlayed = playerData.pendingGame.gamesPlayed;
+				playerData.totalKillValue = playerData.pendingGame.totalKillValue;
+				playerData.totalDeathValue = playerData.pendingGame.totalDeathValue;
+				playerData.totalPlacement = playerData.pendingGame.totalPlacement;
 				playerData.lastUpdated = playerData.pendingGame.timestamp;
 				delete playerData.pendingGame;
 
@@ -181,7 +165,7 @@ export class RatingManager {
 	 * @param btag Player's BattleTag
 	 * @returns True if save succeeded
 	 */
-	private savePlayerRating(btag: string): boolean {
+	public savePlayerRating(btag: string): boolean {
 		const playerData = this.ratingData.get(btag);
 		if (!playerData) {
 			return false;
@@ -201,16 +185,22 @@ export class RatingManager {
 	/**
 	 * Check if the current game qualifies as ranked
 	 * @param humanPlayerCount Number of human players in the game
-	 * @returns True if game has more than RANKED_MIN_PLAYERS human players (or in developer mode)
+	 * @param isFFA Whether the game is in FFA mode (pass from SettingsContext.isFFA())
+	 * @returns True if game is FFA mode and has more than RANKED_MIN_PLAYERS human players (or in developer mode)
 	 */
-	public checkRankedGameEligibility(humanPlayerCount: number): boolean {
+	public checkRankedGameEligibility(humanPlayerCount: number, isFFA: boolean): boolean {
 		// In developer mode, always enable ranked (for testing)
-		if (this.isDeveloperMode) {
+		if (DEVELOPER_MODE) {
 			this.isRankedGameFlag = true;
 			return true;
 		}
 
-		// Normal mode: require minimum player count
+		// Normal mode: require FFA mode AND minimum player count
+		if (!isFFA) {
+			this.isRankedGameFlag = false;
+			return false;
+		}
+
 		this.isRankedGameFlag = humanPlayerCount > RANKED_MIN_PLAYERS;
 		return this.isRankedGameFlag;
 	}
@@ -288,6 +278,123 @@ export class RatingManager {
 	}
 
 	/**
+	 * Get player's showRating preference (default: true)
+	 * Automatically loads player's rating file if not loaded yet
+	 * @param btag Player's BattleTag
+	 * @returns True if player wants to show rating, false to hide
+	 */
+	public getShowRatingPreference(btag: string): boolean {
+		// Load player's rating if not loaded yet
+		if (!this.loadedPlayers.has(btag)) {
+			this.loadPlayerRating(btag);
+		}
+
+		const data = this.ratingData.get(btag);
+		if (!data) {
+			return true; // Default to showing rating for new players
+		}
+		return data.showRating !== undefined ? data.showRating : true;
+	}
+
+	/**
+	 * Set player's showRating preference and save to file
+	 * @param btag Player's BattleTag
+	 * @param showRating True to show rating, false to hide
+	 * @returns True if preference was saved successfully
+	 */
+	public setShowRatingPreference(btag: string, showRating: boolean): boolean {
+		// Load player's rating if not loaded yet
+		if (!this.loadedPlayers.has(btag)) {
+			this.loadPlayerRating(btag);
+		}
+
+		// Get or create player data
+		let playerData = this.ratingData.get(btag);
+		if (!playerData) {
+			// Create new player data with default values
+			const timestamp = math.floor(os.time());
+			playerData = {
+				btag: btag,
+				rating: RANKED_STARTING_RATING,
+				gamesPlayed: 0,
+				lastUpdated: timestamp,
+				wins: 0,
+				losses: 0,
+				totalKillValue: 0,
+				totalDeathValue: 0,
+				totalPlacement: 0,
+				showRating: showRating,
+				_isSynced: false, // Default-initialized, not from sync
+			};
+			this.ratingData.set(btag, playerData);
+		} else {
+			// Update existing player data
+			playerData.showRating = showRating;
+		}
+
+		// Save to file immediately
+		return this.savePlayerRating(btag);
+	}
+
+	/**
+	 * Load multiple players into memory from sync data
+	 * @param players Array of player rating data to load
+	 */
+	public loadPlayersFromSync(players: PlayerRatingData[]): void {
+		for (let i = 0; i < players.length; i++) {
+			const player = players[i];
+
+			// Mark as loaded
+			if (!this.loadedPlayers.has(player.btag)) {
+				this.loadedPlayers.add(player.btag);
+			}
+
+			// Mark as synced (actually loaded from files, not default-initialized)
+			player._isSynced = true;
+
+			// Add or update in rating data map
+			this.ratingData.set(player.btag, player);
+		}
+	}
+
+	/**
+	 * Initialize all current game players with default rating data if they don't have any loaded yet
+	 * This ensures the leaderboard shows all players even in fresh games with no history
+	 * @param players Array of ActivePlayer objects in the current game
+	 */
+	public initializeCurrentGamePlayers(players: ActivePlayer[]): void {
+		const timestamp = math.floor(os.time());
+
+		for (let i = 0; i < players.length; i++) {
+			const player = players[i];
+			const btag = NameManager.getInstance().getBtag(player.getPlayer());
+
+			// Skip if this player already has data loaded
+			if (this.ratingData.has(btag)) {
+				continue;
+			}
+
+			// Create default rating data for new player
+			const defaultData: PlayerRatingData = {
+				btag: btag,
+				rating: RANKED_STARTING_RATING,
+				gamesPlayed: 0,
+				lastUpdated: timestamp,
+				wins: 0,
+				losses: 0,
+				totalKillValue: 0,
+				totalDeathValue: 0,
+				totalPlacement: 0,
+				showRating: true, // Default to showing rating
+				_isSynced: false, // Mark as NOT synced (default-initialized)
+			};
+
+			this.ratingData.set(btag, defaultData);
+			this.loadedPlayers.add(btag);
+		}
+	}
+
+	/**
 	 * Get all loaded players' rating data
 	 * @returns Array of all loaded player rating data
 	 */
@@ -297,6 +404,65 @@ export class RatingManager {
 			players.push(data);
 		});
 		return players;
+	}
+
+	/**
+	 * Get only synced players' rating data (excludes default-initialized players)
+	 * Used by leaderboard to show only players from top N synced database
+	 * @returns Array of synced player rating data
+	 */
+	public getSyncedPlayersOnly(): PlayerRatingData[] {
+		const players: PlayerRatingData[] = [];
+
+		this.ratingData.forEach((data) => {
+			// Only include players that were actually synced (not default-initialized)
+			if (data._isSynced === true) {
+				players.push(data);
+			}
+		});
+
+		return players;
+	}
+
+	/**
+	 * Get top 500 players by rating (strict filter)
+	 * Used by leaderboard to show only the highest-rated players
+	 * Excludes players with 0 games played (no meaningful data)
+	 * @returns Array of top 500 players sorted by rating descending
+	 */
+	public getTop500Players(): PlayerRatingData[] {
+		// Get all synced players
+		const syncedPlayers = this.getSyncedPlayersOnly();
+
+		// Filter out players who have never played a game
+		// These are new players with default data (rating 1000, games 0)
+		const playersWithGames = syncedPlayers.filter((player) => player.gamesPlayed > 0);
+
+		// Sort by rating descending, then by games played, then alphabetically
+		const sorted = playersWithGames.slice().sort((a, b) => {
+			if (b.rating !== a.rating) {
+				return b.rating - a.rating;
+			}
+			// Tiebreaker: more games played wins
+			if (b.gamesPlayed !== a.gamesPlayed) {
+				return b.gamesPlayed - a.gamesPlayed;
+			}
+			// Final tiebreaker: alphabetical
+			if (a.btag < b.btag) return -1;
+			if (a.btag > b.btag) return 1;
+			return 0;
+		});
+
+		// Return top 500 only
+		return sorted.slice(0, 500);
+	}
+
+	/**
+	 * Check if leaderboard has any meaningful data
+	 * @returns True if there are players with at least 1 game played
+	 */
+	public hasLeaderboardData(): boolean {
+		return this.getTop500Players().length > 0;
 	}
 
 	/**
@@ -313,6 +479,7 @@ export class RatingManager {
 
 		// Filter out players who left very early (during countdown before game started)
 		// These players likely had connection issues before the game actually started
+		// Also filter out computer players (unless in developer mode)
 		const eligiblePlayers = ranks.filter((player) => {
 			const turnDied = player.trackedData.turnDied;
 			const maxCities = player.trackedData.cities.max;
@@ -327,12 +494,18 @@ export class RatingManager {
 				return false;
 			}
 
+			// Exclude computer/AI players in normal mode (prevents cheating)
+			// Include them in developer mode (for testing purposes)
+			if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
+				return false;
+			}
+
 			return true;
 		});
 
 		// If too few eligible players remain, don't calculate ratings
 		// Skip this check in developer mode to allow singleplayer testing
-		if (eligiblePlayers.length < 2 && !this.isDeveloperMode) {
+		if (eligiblePlayers.length < 2 && !DEVELOPER_MODE) {
 			const host = Player(0);
 			DisplayTimedTextToPlayer(
 				host,
@@ -386,6 +559,10 @@ export class RatingManager {
 					lastUpdated: timestamp,
 					wins: 0,
 					losses: 0,
+					totalKillValue: 0,
+					totalDeathValue: 0,
+					totalPlacement: 0,
+					_isSynced: true, // Created during rating calculation, treat as synced
 				};
 				this.ratingData.set(btag, playerData);
 			}
@@ -405,9 +582,18 @@ export class RatingManager {
 				playerData.losses += 1;
 			}
 
-			debugPrint(
-				`Rating update for ${btag}: ${oldRating} -> ${newRating} (change: ${totalChange}, expected: ${expectedPlacement}, actual: ${placement})`
-			);
+			// Accumulate K/D values from current game
+			const killsDeaths = player.trackedData.killsDeaths.get(player.getPlayer());
+			const currentKillValue = killsDeaths ? killsDeaths.killValue : 0;
+			const currentDeathValue = killsDeaths ? killsDeaths.deathValue : 0;
+			playerData.totalKillValue = (playerData.totalKillValue || 0) + currentKillValue;
+			playerData.totalDeathValue = (playerData.totalDeathValue || 0) + currentDeathValue;
+
+			// Accumulate placement (1-based for human readability: 1st, 2nd, etc.)
+			playerData.totalPlacement = (playerData.totalPlacement || 0) + (placement + 1);
+
+			// Mark as synced - player now has real game data, not just default-initialized
+			playerData._isSynced = true;
 
 			// Store game result for display
 			this.gameResults.set(btag, {
@@ -424,7 +610,8 @@ export class RatingManager {
 			});
 		});
 
-		// Clear any pending games since this is the final result and save each player
+		// Clear any pending games since this is the final result and save each player's PERSONAL file
+		// Only save personal rating files for HUMAN players (not Computer/AI)
 		for (let i = 0; i < eligiblePlayers.length; i++) {
 			const player = eligiblePlayers[i];
 			const btag = NameManager.getInstance().getBtag(player.getPlayer());
@@ -433,12 +620,19 @@ export class RatingManager {
 				delete playerData.pendingGame;
 			}
 
-			// Save this player's rating to their personal file
-			const saved = this.savePlayerRating(btag);
-			if (!saved) {
-				print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
+			// Only save personal rating file for HUMAN players
+			// Computer/AI players will ONLY be stored in the "others" file, not individual files
+			const isHuman = GetPlayerController(player.getPlayer()) === MAP_CONTROL_USER;
+			if (isHuman) {
+				const saved = this.savePlayerRating(btag);
+				if (!saved) {
+					print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
+				}
 			}
 		}
+
+		// Update "others" ratings database with all OTHER players from this game
+		this.updateOthersDatabase();
 	}
 
 	/**
@@ -455,6 +649,7 @@ export class RatingManager {
 		const timestamp = math.floor(os.time());
 
 		// Filter out players who left very early (same logic as final calculation)
+		// Also filter out computer players (unless in developer mode)
 		const eligiblePlayers = ranks.filter((player) => {
 			const turnDied = player.trackedData.turnDied;
 			const maxCities = player.trackedData.cities.max;
@@ -467,12 +662,18 @@ export class RatingManager {
 				return false;
 			}
 
+			// Exclude computer/AI players in normal mode (prevents cheating)
+			// Include them in developer mode (for testing purposes)
+			if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
+				return false;
+			}
+
 			return true;
 		});
 
 		// Need at least 2 players to calculate ratings
 		// Skip this check in developer mode to allow singleplayer testing
-		if (eligiblePlayers.length < 2 && !this.isDeveloperMode) {
+		if (eligiblePlayers.length < 2 && !DEVELOPER_MODE) {
 			return;
 		}
 
@@ -512,6 +713,10 @@ export class RatingManager {
 					lastUpdated: timestamp,
 					wins: 0,
 					losses: 0,
+					totalKillValue: 0,
+					totalDeathValue: 0,
+					totalPlacement: 0,
+					_isSynced: true, // Created during in-progress save, treat as synced
 				};
 				this.ratingData.set(btag, playerData);
 			}
@@ -522,9 +727,15 @@ export class RatingManager {
 			const preliminaryLosses = playerData.losses + (placement === 0 ? 0 : 1);
 			const preliminaryGamesPlayed = playerData.gamesPlayed + 1;
 
-			debugPrint(
-				`saveRatingsInProgress: ${btag} - Turn ${currentTurn}, Placement: ${placement + 1}, Rating: ${currentRating} -> ${preliminaryRating} (${totalChange > 0 ? '+' : ''}${totalChange})`
-			);
+			// Get current game K/D values from player's tracked data
+			const killsDeaths = player.trackedData.killsDeaths.get(player.getPlayer());
+			const currentKillValue = killsDeaths ? killsDeaths.killValue : 0;
+			const currentDeathValue = killsDeaths ? killsDeaths.deathValue : 0;
+			const preliminaryTotalKillValue = (playerData.totalKillValue || 0) + currentKillValue;
+			const preliminaryTotalDeathValue = (playerData.totalDeathValue || 0) + currentDeathValue;
+
+			// Calculate preliminary total placement (1-based: 1st, 2nd, etc.)
+			const preliminaryTotalPlacement = (playerData.totalPlacement || 0) + (placement + 1);
 
 			// Store in pending game (overwrite if exists)
 			playerData.pendingGame = {
@@ -533,6 +744,9 @@ export class RatingManager {
 				wins: preliminaryWins,
 				losses: preliminaryLosses,
 				gamesPlayed: preliminaryGamesPlayed,
+				totalKillValue: preliminaryTotalKillValue,
+				totalDeathValue: preliminaryTotalDeathValue,
+				totalPlacement: preliminaryTotalPlacement,
 				turn: currentTurn,
 				timestamp: timestamp,
 			};
@@ -543,5 +757,104 @@ export class RatingManager {
 				debugPrint(`Failed to save pending rating for ${btag}`);
 			}
 		});
+	}
+
+	/**
+	 * Update "others" ratings database with all OTHER players from this game
+	 * (Your own stats are saved separately in your personal file)
+	 * Merges with existing "others" database, keeping newest data for each player
+	 */
+	private updateOthersDatabase(): void {
+		// Get local player's btag (to exclude from "others")
+		const localPlayer = GetLocalPlayer();
+		const localBtag = NameManager.getInstance().getBtag(localPlayer);
+		const sanitizedName = this.sanitizePlayerName(localBtag);
+
+		// Get all OTHER players from memory (exclude local player)
+		const otherPlayers: PlayerRatingData[] = [];
+		this.ratingData.forEach((playerData) => {
+			// Skip local player - their stats are in their personal file
+			if (playerData.btag === localBtag) {
+				return;
+			}
+
+			// Create a clean copy without pendingGame field
+			const cleanPlayerData: PlayerRatingData = {
+				btag: playerData.btag,
+				rating: playerData.rating,
+				gamesPlayed: playerData.gamesPlayed,
+				lastUpdated: playerData.lastUpdated,
+				wins: playerData.wins,
+				losses: playerData.losses,
+				totalKillValue: playerData.totalKillValue || 0,
+				totalDeathValue: playerData.totalDeathValue || 0,
+			};
+			otherPlayers.push(cleanPlayerData);
+		});
+
+		if (otherPlayers.length === 0) {
+			return;
+		}
+
+		// Load existing "others" database for this account
+		const existingData = readOthersRatings(sanitizedName, this.seasonId, DEVELOPER_MODE);
+
+		// Create map for efficient merging
+		const playerMap = new Map<string, PlayerRatingData>();
+
+		// Add existing players from others database
+		if (existingData) {
+			for (let i = 0; i < existingData.players.length; i++) {
+				const player = existingData.players[i];
+				playerMap.set(player.btag, player);
+			}
+		}
+
+		// Merge other players from current game (newer timestamp wins)
+		for (let i = 0; i < otherPlayers.length; i++) {
+			const newPlayer = otherPlayers[i];
+			const existing = playerMap.get(newPlayer.btag);
+
+			if (!existing || newPlayer.lastUpdated > existing.lastUpdated) {
+				playerMap.set(newPlayer.btag, newPlayer);
+			}
+		}
+
+		// Convert map back to array
+		const allMergedPlayers: PlayerRatingData[] = [];
+		playerMap.forEach((player) => {
+			allMergedPlayers.push(player);
+		});
+
+		// Sort by rating (descending) to keep the best players
+		allMergedPlayers.sort((a, b) => {
+			if (b.rating !== a.rating) {
+				return b.rating - a.rating;
+			}
+			// Tiebreaker: more games played wins
+			if (b.gamesPlayed !== a.gamesPlayed) {
+				return b.gamesPlayed - a.gamesPlayed;
+			}
+			// Final tiebreaker: alphabetical by btag
+			if (a.btag < b.btag) return -1;
+			if (a.btag > b.btag) return 1;
+			return 0;
+		});
+
+		// Limit to top N players (RATING_SYNC_TOP_PLAYERS)
+		// This ensures the "others" file doesn't grow unbounded
+		// When a new player enters the top N, they replace the lowest-rated player
+		const mergedPlayers = allMergedPlayers.slice(0, RATING_SYNC_TOP_PLAYERS);
+
+		// Save to others database for this account
+		const othersData: OthersRatingFileData = {
+			version: 1,
+			seasonId: this.seasonId,
+			checksum: '', // Will be generated by writeOthersRatings
+			players: mergedPlayers,
+			playerCount: mergedPlayers.length,
+		};
+
+		writeOthersRatings(othersData, sanitizedName, this.seasonId, DEVELOPER_MODE);
 	}
 }

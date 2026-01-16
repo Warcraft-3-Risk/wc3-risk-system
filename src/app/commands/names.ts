@@ -27,14 +27,16 @@ export function NamesCommand(chatManager: ChatManager, playerManager: PlayerMana
 			if (nameList.length > 0) {
 				const p = nameList.pop();
 				const btag = nameManager.getBtag(p);
-				const activePlayer = playerManager.players.get(player);
+				const ratingManager = RatingManager.getInstance();
 
-				// Check if requesting player has opted out
-				if (activePlayer && !activePlayer.options.showRating) {
+				// Check if requesting player has disabled rating display
+				const requestingPlayerBtag = nameManager.getBtag(player);
+				const showRating = ratingManager.getShowRatingPreference(requestingPlayerBtag);
+
+				if (!showRating) {
 					// Opted out - show no ratings
 					DisplayTimedTextToPlayer(player, 0, 0, 5, `${btag}`);
 				} else {
-					const ratingManager = RatingManager.getInstance();
 					if (ratingManager.isRankedGame()) {
 						const rating = ratingManager.getPlayerRating(btag);
 						DisplayTimedTextToPlayer(player, 0, 0, 5, `${btag} ${HexColors.TANGERINE}(${rating})|r`);

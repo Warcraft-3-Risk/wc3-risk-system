@@ -13,12 +13,8 @@ export function SpellEffectEvent() {
 	const tSpellCast: trigger = CreateTrigger();
 
 	for (let i = 0; i < PLAYER_SLOTS; i++) {
-		debugPrint(`Registering spell effect event for player ${i}`);
 		TriggerRegisterPlayerUnitEvent(tSpellEffect, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
-		debugPrint(`Registered spell effect event for player ${i}`);
-		debugPrint(`Registering spell cast event for player ${i}`);
 		TriggerRegisterPlayerUnitEvent(tSpellCast, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, null);
-		debugPrint(`Registered spell cast event for player ${i}`);
 	}
 
 	onSpellEffect(tSpellEffect);

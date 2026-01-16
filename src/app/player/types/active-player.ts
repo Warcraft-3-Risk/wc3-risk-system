@@ -29,7 +29,6 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 			labels: true,
-			showRating: true,
 		};
 		this._killedBy = null;
 		this._admin = false;
@@ -61,7 +60,6 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 			labels: true,
-			showRating: true,
 		};
 	}
 

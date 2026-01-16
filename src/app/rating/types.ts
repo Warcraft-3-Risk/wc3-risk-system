@@ -13,6 +13,12 @@ export interface PendingGameData {
 	losses: number;
 	/** Preliminary games played count */
 	gamesPlayed: number;
+	/** Preliminary total kill value */
+	totalKillValue: number;
+	/** Preliminary total death value */
+	totalDeathValue: number;
+	/** Preliminary total placement sum */
+	totalPlacement: number;
 	/** Last turn this was updated */
 	turn: number;
 	/** Timestamp of last update */
@@ -35,12 +41,18 @@ export interface PlayerRatingData {
 	wins: number;
 	/** Total number of losses */
 	losses: number;
-	/** @deprecated Total kill value across all games (no longer used in rating calculation) */
+	/** Total kill value across all games */
 	totalKillValue?: number;
-	/** @deprecated Total death value across all games (no longer used in rating calculation) */
+	/** Total death value across all games */
 	totalDeathValue?: number;
+	/** Total placement sum across all games (for calculating average rank) */
+	totalPlacement?: number;
 	/** Pending game data for crash recovery (optional) */
 	pendingGame?: PendingGameData;
+	/** Player preference: show rating in stats and messages (default: true) */
+	showRating?: boolean;
+	/** Internal flag: true if loaded from sync/file, false if default-initialized (not serialized to file) */
+	_isSynced?: boolean;
 }
 
 /**
@@ -85,47 +97,19 @@ export interface GameRatingResult {
 }
 
 /**
- * Global ratings database file structure
- * Contains aggregated rating data from all players encountered across games
+ * Others ratings database file structure
+ * Contains aggregated rating data from all OTHER players encountered across games
+ * (Your own stats are stored separately in your personal rating file)
  */
-export interface GlobalRatingFileData {
+export interface OthersRatingFileData {
 	/** File format version for future compatibility */
 	version: number;
 	/** Season identifier */
 	seasonId: number;
 	/** Checksum hash for tamper detection */
 	checksum: string;
-	/** Array of all player rating data */
+	/** Array of all OTHER players' rating data */
 	players: PlayerRatingData[];
 	/** Total number of players (for validation) */
 	playerCount: number;
-}
-
-/**
- * Sync protocol message for P2P transmission of rating data
- */
-export interface SyncMessage {
-	/** Message type identifier */
-	type: 'RATING_DATA' | 'SYNC_COMPLETE';
-	/** Sender's player ID (0-23) */
-	senderId: number;
-	/** Chunk index for multi-part messages (0-based) */
-	chunkIndex: number;
-	/** Total number of chunks in this transmission */
-	totalChunks: number;
-	/** Payload data (Base64 encoded rating data) */
-	payload: string;
-}
-
-/**
- * Temporary buffer for collecting sync data during P2P exchange
- * Used to reassemble multi-chunk messages from multiple players
- */
-export interface SyncBuffer {
-	/** Map of player ID to their received chunks (chunkIndex -> payload) */
-	chunks: Map<number, Map<number, string>>;
-	/** Set of player IDs that completed their transmission */
-	completedPlayers: Set<number>;
-	/** Expected number of human players participating in sync */
-	expectedPlayerCount: number;
 }

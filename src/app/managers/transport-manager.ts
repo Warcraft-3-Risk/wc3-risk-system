@@ -151,7 +151,6 @@ export class TransportManager {
 		const t: trigger = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`TransportManager: Registering onLoadFinish event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_LOADED, null);
 		}
 
@@ -181,7 +180,6 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`TransportManager: Registering onLoadStart event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
 		}
 
@@ -205,7 +203,6 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`TransportManager: Registering onUnloadAction event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CHANNEL, null);
 		}
 
@@ -261,7 +258,6 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`TransportManager: Registering onUnloadUnitStart event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
 		}
 
@@ -318,7 +314,6 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`TransportManager: Registering onUnloadStart event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, null);
 		}
 
@@ -343,7 +338,6 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`TransportManager: Registering onAutoLoadOn event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, null);
 		}
 
@@ -375,7 +369,6 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`TransportManager: Registering onLoadAction event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
 		}
 
@@ -412,7 +405,6 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			debugPrint(`TransportManager: Registering onUnloadFinish event for player ${i}`);
 			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_ENDCAST, null);
 		}
 

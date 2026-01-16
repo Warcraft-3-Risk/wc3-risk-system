@@ -1,115 +1,12 @@
 import { File } from 'w3ts';
-import { GlobalRatingFileData, PlayerRatingData } from './types';
+import { OthersRatingFileData, PlayerRatingData } from './types';
+import { DEVELOPER_MODE } from 'src/configs/game-settings';
+import { encryptData, decryptData } from './rating-encryption';
 
 /**
- * Handles file I/O operations for global ratings database
- * Manages aggregated rating data from all players
+ * Handles file I/O operations for "others" ratings database
+ * Manages aggregated rating data from all OTHER players (not yourself)
  */
-
-// Reuse encryption functions from rating-file-handler
-// (These would normally be imported, but tstl has limitations)
-
-const BASE64_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/';
-
-function base64Encode(data: string): string {
-	let result = '';
-	let i = 0;
-
-	while (i < data.length) {
-		const a = data.charCodeAt(i++);
-		const b = i < data.length ? data.charCodeAt(i++) : 0;
-		const c = i < data.length ? data.charCodeAt(i++) : 0;
-
-		const bitmap = (a << 16) | (b << 8) | c;
-
-		result += BASE64_CHARS.charAt((bitmap >>> 18) & 63);
-		result += BASE64_CHARS.charAt((bitmap >>> 12) & 63);
-		result += i - 2 < data.length ? BASE64_CHARS.charAt((bitmap >>> 6) & 63) : '=';
-		result += i - 1 < data.length ? BASE64_CHARS.charAt(bitmap & 63) : '=';
-	}
-
-	return result;
-}
-
-function base64Decode(encoded: string): string | null {
-	try {
-		let result = '';
-		let i = 0;
-
-		// Remove whitespace
-		let cleanedEncoded = '';
-		for (let j = 0; j < encoded.length; j++) {
-			const char = encoded.charAt(j);
-			if (char !== ' ' && char !== '\t' && char !== '\n' && char !== '\r') {
-				cleanedEncoded += char;
-			}
-		}
-		encoded = cleanedEncoded;
-
-		while (i < encoded.length) {
-			const a = BASE64_CHARS.indexOf(encoded.charAt(i++));
-			const b = BASE64_CHARS.indexOf(encoded.charAt(i++));
-			const c = BASE64_CHARS.indexOf(encoded.charAt(i++));
-			const d = BASE64_CHARS.indexOf(encoded.charAt(i++));
-
-			if (a === -1 || b === -1) return null;
-
-			const bitmap = (a << 18) | (b << 12) | ((c === -1 ? 0 : c) << 6) | (d === -1 ? 0 : d);
-
-			result += String.fromCharCode((bitmap >>> 16) & 255);
-			if (c !== -1) result += String.fromCharCode((bitmap >>> 8) & 255);
-			if (d !== -1) result += String.fromCharCode(bitmap & 255);
-		}
-
-		return result;
-	} catch (error) {
-		return null;
-	}
-}
-
-function getEncryptionKey(): string {
-	const parts = ['R1sK', 'W4r3', 'R4t1ng', 'Sy5t3m', '2026'];
-	const seed = parts.join('_');
-
-	let key = seed;
-	for (let i = 0; i < 8; i++) {
-		let hash = 0;
-		for (let j = 0; j < key.length; j++) {
-			hash = (hash << 5) - hash + key.charCodeAt(j);
-			hash = hash & hash;
-		}
-		key += Math.abs(hash).toString(36);
-	}
-
-	return key;
-}
-
-function xorCipher(data: string, key: string): string {
-	let result = '';
-	const keyLen = key.length;
-
-	for (let i = 0; i < data.length; i++) {
-		const dataChar = data.charCodeAt(i);
-		const keyChar = key.charCodeAt(i % keyLen);
-		result += String.fromCharCode(dataChar ^ keyChar);
-	}
-
-	return result;
-}
-
-function encryptData(data: string): string {
-	const key = getEncryptionKey();
-	const encrypted = xorCipher(data, key);
-	return base64Encode(encrypted);
-}
-
-function decryptData(encrypted: string): string | null {
-	const decoded = base64Decode(encrypted);
-	if (!decoded) return null;
-
-	const key = getEncryptionKey();
-	return xorCipher(decoded, key);
-}
 
 /**
  * Generate checksum hash for multiple players
@@ -117,7 +14,7 @@ function decryptData(encrypted: string): string | null {
  * @param players Array of player rating data
  * @returns Hex string checksum
  */
-export function generateGlobalChecksum(players: PlayerRatingData[]): string {
+export function generateOthersChecksum(players: PlayerRatingData[]): string {
 	// Sort players by btag for consistent ordering
 	const sorted = players.slice().sort((a, b) => {
 		if (a.btag < b.btag) return -1;
@@ -134,10 +31,11 @@ export function generateGlobalChecksum(players: PlayerRatingData[]): string {
 		const lastUpdated = math.floor(p.lastUpdated);
 		const wins = math.floor(p.wins);
 		const losses = math.floor(p.losses);
-		const totalKillValue = math.floor(p.totalKillValue);
-		const totalDeathValue = math.floor(p.totalDeathValue);
+		const totalKillValue = math.floor(p.totalKillValue || 0);
+		const totalDeathValue = math.floor(p.totalDeathValue || 0);
+		const totalPlacement = math.floor(p.totalPlacement || 0);
 
-		combinedData += `${p.btag}:${rating}:${gamesPlayed}:${lastUpdated}:${wins}:${losses}:${totalKillValue}:${totalDeathValue}|`;
+		combinedData += `${p.btag}:${rating}:${gamesPlayed}:${lastUpdated}:${wins}:${losses}:${totalKillValue}:${totalDeathValue}:${totalPlacement}|`;
 	}
 
 	// Generate hash
@@ -151,46 +49,61 @@ export function generateGlobalChecksum(players: PlayerRatingData[]): string {
 }
 
 /**
- * Validate checksum of global rating file data
- * @param data Global rating file data to validate
+ * Validate checksum of others rating file data
+ * @param data Others rating file data to validate
  * @returns True if checksum is valid
  */
-export function validateGlobalChecksum(data: GlobalRatingFileData): boolean {
-	const calculatedChecksum = generateGlobalChecksum(data.players);
+export function validateOthersChecksum(data: OthersRatingFileData): boolean {
+	const calculatedChecksum = generateOthersChecksum(data.players);
 	return calculatedChecksum === data.checksum;
 }
 
 /**
- * Get global ratings file path
+ * Get others ratings file path
+ * File naming is obscured to prevent easy identification
+ * @param hash Hash identifier for player (from sanitizePlayerName)
  * @param seasonId Season identifier
  * @param isDev Whether in developer mode
  * @returns File path
  */
-function getGlobalFilePath(seasonId: number, isDev: boolean): string {
-	const prefix = isDev ? 'dev_global_ratings' : 'global_ratings';
-	return `risk/${prefix}_s${seasonId}.txt`;
+function getOthersFilePath(hash: string, seasonId: number, isDev: boolean): string {
+	// Use single-letter prefix: 'e' for dev others, 'q' for prod others
+	const prefix = isDev ? 'e' : 'q';
+	// Must use .txt extension - WC3 only supports .txt and .pld file extensions
+	return `risk/${prefix}${seasonId}_${hash}.txt`;
 }
 
 /**
- * Read global ratings database from file
+ * Read others ratings database from file
+ * @param sanitizedName Sanitized player name (from sanitizePlayerName)
  * @param seasonId Season identifier
  * @param isDev Whether in developer mode
- * @returns Global rating data or null if file doesn't exist/is invalid
+ * @returns Others rating data or null if file doesn't exist/is invalid
  */
-export function readGlobalRatings(seasonId: number, isDev: boolean): GlobalRatingFileData | null {
+export function readOthersRatings(sanitizedName: string, seasonId: number, isDev: boolean): OthersRatingFileData | null {
 	try {
-		const filePath = getGlobalFilePath(seasonId, isDev);
-		const encryptedContents = File.read(filePath);
+		const filePath = getOthersFilePath(sanitizedName, seasonId, isDev);
+		const rawContents = File.read(filePath);
 
-		// File doesn't exist or is empty
-		if (!encryptedContents || encryptedContents.trim() === '') {
+		// File doesn't exist or is empty - this is OK, will be created later
+		if (!rawContents || rawContents.trim() === '') {
 			return null;
 		}
 
-		// Decrypt the file contents
-		const contents = decryptData(encryptedContents);
-		if (!contents) {
-			return null;
+		// Conditionally decrypt based on config setting
+		// Developer mode = no encryption, Production mode = encryption enabled
+		let contents: string | null;
+		if (!DEVELOPER_MODE) {
+			// Production mode: decrypt the file
+			contents = decryptData(rawContents);
+			if (!contents) {
+				// Decryption failed - file is corrupted, will be regenerated
+				print(`[OTHERS RATINGS] Decryption failed - file corrupted, will regenerate`);
+				return null;
+			}
+		} else {
+			// Developer mode: no encryption - use raw contents as-is
+			contents = rawContents;
 		}
 
 		// Parse custom format
@@ -225,6 +138,7 @@ export function readGlobalRatings(seasonId: number, isDev: boolean): GlobalRatin
 						losses: tonumber(parts[5]) || 0,
 						totalKillValue: tonumber(parts[6]) || 0,
 						totalDeathValue: tonumber(parts[7]) || 0,
+						totalPlacement: parts.length >= 9 ? (tonumber(parts[8]) || 0) : 0,
 					};
 					players.push(playerData);
 				}
@@ -237,11 +151,11 @@ export function readGlobalRatings(seasonId: number, isDev: boolean): GlobalRatin
 
 		// Validate player count matches
 		if (playerCount !== players.length) {
-			print(`[GLOBAL RATINGS] Player count mismatch: expected ${playerCount}, got ${players.length}`);
+			print(`[OTHERS RATINGS] Player count mismatch: expected ${playerCount}, got ${players.length}`);
 			return null;
 		}
 
-		const data: GlobalRatingFileData = {
+		const data: OthersRatingFileData = {
 			version: version,
 			seasonId: seasonIdParsed,
 			checksum: checksum,
@@ -250,32 +164,33 @@ export function readGlobalRatings(seasonId: number, isDev: boolean): GlobalRatin
 		};
 
 		// Validate checksum
-		if (!validateGlobalChecksum(data)) {
-			print(`[GLOBAL RATINGS] Checksum validation failed - file may be corrupted`);
+		if (!validateOthersChecksum(data)) {
+			print(`[OTHERS RATINGS] Checksum validation failed - file corrupted, will regenerate`);
 			return null;
 		}
 
 		return data;
 	} catch (error) {
-		print(`[GLOBAL RATINGS] Error reading global ratings: ${error}`);
+		print(`[OTHERS RATINGS] Error reading others ratings: ${error}`);
 		return null;
 	}
 }
 
 /**
- * Write global ratings database to file
- * @param data Global rating data to write
+ * Write others ratings database to file
+ * @param data Others rating data to write
+ * @param sanitizedName Sanitized player name (from sanitizePlayerName)
  * @param seasonId Season identifier
  * @param isDev Whether in developer mode
  * @returns True if write succeeded
  */
-export function writeGlobalRatings(data: GlobalRatingFileData, seasonId: number, isDev: boolean): boolean {
+export function writeOthersRatings(data: OthersRatingFileData, sanitizedName: string, seasonId: number, isDev: boolean): boolean {
 	try {
-		const filePath = getGlobalFilePath(seasonId, isDev);
+		const filePath = getOthersFilePath(sanitizedName, seasonId, isDev);
 
 		// Update metadata
 		data.playerCount = data.players.length;
-		data.checksum = generateGlobalChecksum(data.players);
+		data.checksum = generateOthersChecksum(data.players);
 
 		// Serialize to custom format
 		const lines: string[] = [];
@@ -287,7 +202,8 @@ export function writeGlobalRatings(data: GlobalRatingFileData, seasonId: number,
 		// Add each player
 		for (let i = 0; i < data.players.length; i++) {
 			const p = data.players[i];
-			lines.push(`player:${p.btag}:${p.rating}:${p.gamesPlayed}:${p.lastUpdated}:${p.wins}:${p.losses}:${p.totalKillValue}:${p.totalDeathValue}`);
+			const totalPlacement = math.floor(p.totalPlacement || 0);
+			lines.push(`player:${p.btag}:${p.rating}:${p.gamesPlayed}:${p.lastUpdated}:${p.wins}:${p.losses}:${p.totalKillValue || 0}:${p.totalDeathValue || 0}:${totalPlacement}`);
 		}
 
 		// Join lines
@@ -299,26 +215,23 @@ export function writeGlobalRatings(data: GlobalRatingFileData, seasonId: number,
 			plainContent += lines[i];
 		}
 
-		// Encrypt the content
-		const encryptedContent = encryptData(plainContent);
-
-		// Create backup of existing file
-		const backupPath = filePath.replace('.txt', '.bak');
-		const existingData = File.read(filePath);
-		if (existingData && existingData.trim() !== '') {
-			try {
-				File.write(backupPath, existingData);
-			} catch (backupError) {
-				// Backup failed but continue
-			}
+		// Conditionally encrypt based on config setting
+		// Developer mode = no encryption, Production mode = encryption enabled
+		let finalContent: string;
+		if (!DEVELOPER_MODE) {
+			// Production mode: encrypt the data
+			finalContent = encryptData(plainContent);
+		} else {
+			// Developer mode: no encryption - use plain text
+			finalContent = plainContent;
 		}
 
-		// Write encrypted data
-		File.write(filePath, encryptedContent);
+		// Write data (encrypted or plain based on mode)
+		File.write(filePath, finalContent);
 
 		return true;
 	} catch (error) {
-		print(`[GLOBAL RATINGS] Error writing global ratings: ${error}`);
+		print(`[OTHERS RATINGS] Error writing others ratings: ${error}`);
 		return false;
 	}
 }

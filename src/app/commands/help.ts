@@ -13,8 +13,8 @@ export function HelpCommand(chatManager: ChatManager) {
 			{ cmd: '-names', description: 'Lists the players still alive in game' },
 			{ cmd: '-allies', description: 'Shows your allies with their colors and real names' },
 			{
-				cmd: '-stfu playerName/color',
-				description: `Mutes a player for 300 seconds if they are dead.\n${HexColors.RED}Example: -stfu blue|r`,
+				cmd: '-mute playerName/color',
+				description: `Mutes a player for 300 seconds if they are dead.\n${HexColors.RED}Example: -mute blue|r`,
 			},
 			{ cmd: '-ng', description: 'Restarts the game if it is over' },
 			{ cmd: '-gold # playerName/color', description: `Sends gold to the specified ally.\n${HexColors.RED}Example: -gold red 5|r` },

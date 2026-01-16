@@ -1,12 +1,17 @@
 import { HexColors } from 'src/app/utils/hex-colors';
 import { StatisticsModel } from './statistics-model';
 import { StatisticsPage } from './statistics-page';
+import { PlayerManager } from '../player/player-manager';
+import { RatingManager } from '../rating/rating-manager';
+import { NameManager } from '../managers/names/name-manager';
+import { debugPrint } from '../utils/debug-print';
 
 export class StatisticsView {
 	private backdrop: framehandle;
 	private header: framehandle;
 	private footerBackdrop: framehandle;
 	private minimizeButton: framehandle;
+	private personalStatsButton: framehandle;
 	private columns: framehandle[];
 	private rows: Map<string, framehandle>;
 	private icons: Map<string, framehandle>;
@@ -37,6 +42,9 @@ export class StatisticsView {
 		this.columns = [];
 		this.rows = new Map<string, framehandle>();
 		this.icons = new Map<string, framehandle>();
+
+		// Create "My Rating" button to the left of the minimize button
+		this.setupPersonalStatsButton();
 
 		this.setupPaginationUI();
 		this.buildColumns();
@@ -86,12 +94,27 @@ export class StatisticsView {
 				const newText = columnData.textFunction(player);
 				BlzFrameSetText(frame, newText);
 
-				// Update icon if this column has one
+				// Update icon visibility and texture if this column has an icon function
 				if (columnData.iconFunction) {
 					const iconFrame = this.icons.get(key);
 					if (iconFrame) {
 						const iconPath = columnData.iconFunction(player);
-						BlzFrameSetTexture(iconFrame, iconPath, 0, true);
+						const iconSize = columnData.iconSize || 0.015;
+						const iconPadding = 0.002;
+						const yGap = -0.03 - rowIndex * StatisticsView.ROW_HEIGHT;
+
+						if (iconPath) {
+							BlzFrameSetTexture(iconFrame, iconPath, 0, true);
+							BlzFrameSetVisible(iconFrame, true);
+							// Reposition text to the right of icon
+							BlzFrameClearAllPoints(frame);
+							BlzFrameSetPoint(frame, FRAMEPOINT_TOPLEFT, BlzFrameGetParent(frame), FRAMEPOINT_TOPLEFT, iconSize + iconPadding, yGap);
+						} else {
+							// Hide icon and reposition text to start of column (like normal text column)
+							BlzFrameSetVisible(iconFrame, false);
+							BlzFrameClearAllPoints(frame);
+							BlzFrameSetPoint(frame, FRAMEPOINT_TOPLEFT, BlzFrameGetParent(frame), FRAMEPOINT_TOPLEFT, 0, yGap);
+						}
 					}
 				}
 			}
@@ -108,7 +131,7 @@ export class StatisticsView {
 		if (GetLocalPlayer() == player) {
 			BlzFrameSetSize(this.backdrop, 1, 0.64);
 			BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
-			BlzFrameSetText(this.minimizeButton, 'Hide Stats');
+			BlzFrameSetText(this.minimizeButton, 'Minimize');
 
 			this.updateColumnVisibility();
 			BlzFrameSetVisible(this.footerBackdrop, true);
@@ -119,7 +142,7 @@ export class StatisticsView {
 		if (GetLocalPlayer() == player) {
 			BlzFrameSetSize(this.backdrop, 1, 0.08);
 			BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26 + (0.64 - 0.08) / 2);
-			BlzFrameSetText(this.minimizeButton, 'Show Stats');
+			BlzFrameSetText(this.minimizeButton, 'Maximize');
 			this.columns.forEach((col) => {
 				BlzFrameSetVisible(col, false);
 			});
@@ -203,6 +226,32 @@ export class StatisticsView {
 		});
 	}
 
+	private setupPersonalStatsButton(): void {
+		// Create button to the left of the minimize button
+		this.personalStatsButton = BlzCreateFrameByType('GLUETEXTBUTTON', 'PersonalStatsButton', this.header, 'ScriptDialogButton', 0);
+		BlzFrameSetSize(this.personalStatsButton, 0.08, 0.03);
+		// Position to the left of minimize button (minimize button is at TOPRIGHT, width 0.08)
+		BlzFrameSetPoint(this.personalStatsButton, FRAMEPOINT_TOPRIGHT, this.minimizeButton, FRAMEPOINT_TOPLEFT, -0.002, 0);
+		BlzFrameSetText(this.personalStatsButton, 'Stats');
+		BlzFrameSetVisible(this.personalStatsButton, true);
+
+		// Register click event - toggle the stats window (open if closed, close if open)
+		const buttonTrigger = CreateTrigger();
+		BlzTriggerRegisterFrameEvent(buttonTrigger, this.personalStatsButton, FRAMEEVENT_CONTROL_CLICK);
+		TriggerAddCondition(
+			buttonTrigger,
+			Condition(() => {
+				const triggerPlayer = GetTriggerPlayer();
+				if (GetLocalPlayer() == triggerPlayer) {
+					const player = PlayerManager.getInstance().players.get(triggerPlayer);
+					if (player && player.ratingStatsUI) {
+						player.ratingStatsUI.toggle();
+					}
+				}
+			})
+		);
+	}
+
 	private buildColumns() {
 		const headerY: number = -0.06;
 		const rowHeight: number = StatisticsView.ROW_HEIGHT;
@@ -229,7 +278,7 @@ export class StatisticsView {
 				const columnData = this.model.getColumnData()[columnIndex];
 				const rowKey = `${columnIndex}_${rowIndex}`;
 
-				// Check if this column has an icon
+				// Check if this column has an icon function (always create icon frame if function exists)
 				if (columnData.iconFunction) {
 					const iconSize = columnData.iconSize || 0.015;
 					const iconPadding = 0.002;
@@ -240,22 +289,29 @@ export class StatisticsView {
 					BlzFrameSetSize(iconFrame, iconSize, iconSize);
 					BlzFrameSetPoint(iconFrame, FRAMEPOINT_TOPLEFT, headerFrame, FRAMEPOINT_TOPLEFT, 0, yGap + iconVerticalOffset);
 
-					// Set icon texture
+					// Get icon path - may be null if rating is disabled
 					const iconPath = columnData.iconFunction(player);
-					BlzFrameSetTexture(iconFrame, iconPath, 0, true);
+					if (iconPath) {
+						BlzFrameSetTexture(iconFrame, iconPath, 0, true);
+						BlzFrameSetVisible(iconFrame, true);
+					} else {
+						// Hide icon when iconFunction returns null (e.g., rating disabled)
+						BlzFrameSetVisible(iconFrame, false);
+					}
 
 					this.icons.set(rowKey, iconFrame);
 
-					// Create text frame positioned to the right of the icon
+					// Create text frame - position at x=0 when icon hidden, offset when icon shown
 					const dataFrame = BlzCreateFrame('ColumnDataText', headerFrame, 0, 0);
-					BlzFrameSetPoint(dataFrame, FRAMEPOINT_TOPLEFT, headerFrame, FRAMEPOINT_TOPLEFT, iconSize + iconPadding, yGap);
+					const textXOffset = iconPath ? iconSize + iconPadding : 0;
+					BlzFrameSetPoint(dataFrame, FRAMEPOINT_TOPLEFT, headerFrame, FRAMEPOINT_TOPLEFT, textXOffset, yGap);
 
 					const newText = columnData.textFunction(player);
 					BlzFrameSetText(dataFrame, newText);
 
 					this.rows.set(rowKey, dataFrame);
 				} else {
-					// No icon, create text frame normally
+					// No icon function, create text frame normally
 					const dataFrame = BlzCreateFrame('ColumnDataText', headerFrame, 0, 0);
 					BlzFrameSetPoint(dataFrame, FRAMEPOINT_TOPLEFT, headerFrame, FRAMEPOINT_TOPLEFT, 0, yGap);
 
