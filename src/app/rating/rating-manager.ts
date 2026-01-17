@@ -2,10 +2,9 @@ import { GameRatingResult, PlayerRatingData, RatingFileData, OthersRatingFileDat
 import { readRatings, validateChecksum, writeRatings } from './rating-file-handler';
 import { readOthersRatings, writeOthersRatings } from './global-rating-handler';
 import {
-	calculateExpectedPlacement,
-	calculatePerformanceMultiplier,
 	calculatePlacementPoints,
-	calculateRatingAdvantageMultiplier,
+	calculateLobbySizeMultiplier,
+	calculateOpponentStrengthModifier,
 	calculateRatingChange,
 } from './rating-calculator';
 import { RANKED_MIN_PLAYERS, RANKED_MINIMUM_RATING, RANKED_SEASON_ID, RANKED_STARTING_RATING, DEVELOPER_MODE, RATING_SYNC_TOP_PLAYERS } from 'src/configs/game-settings';
@@ -525,6 +524,8 @@ export class RatingManager {
 		});
 
 		// Calculate rating changes for each eligible player
+		const playerCount = eligiblePlayers.length;
+
 		eligiblePlayers.forEach((player, index) => {
 			const btag = NameManager.getInstance().getBtag(player.getPlayer());
 			const placement = index; // 0-based: 0 = 1st, 1 = 2nd, etc.
@@ -541,13 +542,12 @@ export class RatingManager {
 				}
 			});
 
-			// Calculate rating change components
+			// Calculate rating change components using simplified formula
 			const basePlacementPoints = calculatePlacementPoints(placement);
-			const expectedPlacement = calculateExpectedPlacement(currentRating, opponentRatings);
-			const performanceMultiplier = calculatePerformanceMultiplier(placement, expectedPlacement);
-			const ratingAdvantageMultiplier = calculateRatingAdvantageMultiplier(currentRating, opponentRatings);
-			const adjustedPlacementPoints = Math.floor(basePlacementPoints * performanceMultiplier * ratingAdvantageMultiplier);
-			const totalChange = calculateRatingChange(placement, currentRating, opponentRatings);
+			const lobbySizeMultiplier = calculateLobbySizeMultiplier(playerCount);
+			const isGain = basePlacementPoints >= 0;
+			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, opponentRatings, isGain);
+			const totalChange = calculateRatingChange(placement, currentRating, opponentRatings, playerCount);
 
 			// Get or create player rating data
 			let playerData = this.ratingData.get(btag);
@@ -599,13 +599,11 @@ export class RatingManager {
 			this.gameResults.set(btag, {
 				btag: btag,
 				basePlacementPoints: basePlacementPoints,
-				performanceMultiplier: performanceMultiplier,
-				ratingAdvantageMultiplier: ratingAdvantageMultiplier,
-				adjustedPlacementPoints: adjustedPlacementPoints,
+				lobbySizeMultiplier: lobbySizeMultiplier,
+				opponentStrengthModifier: opponentStrengthModifier,
 				totalChange: totalChange,
 				oldRating: oldRating,
 				newRating: newRating,
-				expectedPlacement: expectedPlacement,
 				actualPlacement: placement,
 			});
 		});
@@ -638,6 +636,7 @@ export class RatingManager {
 	/**
 	 * Save preliminary ratings during game for crash recovery
 	 * Called at the end of each turn to allow recovery from crashes
+	 * Also populates gameResults for eliminated players so the scoreboard can show their rating
 	 * @param ranks Array of players sorted by current rank
 	 * @param currentTurn Current turn number
 	 */
@@ -685,6 +684,8 @@ export class RatingManager {
 		});
 
 		// Calculate preliminary rating changes for each eligible player
+		const playerCount = eligiblePlayers.length;
+
 		eligiblePlayers.forEach((player, index) => {
 			const btag = NameManager.getInstance().getBtag(player.getPlayer());
 			const placement = index;
@@ -700,8 +701,12 @@ export class RatingManager {
 				}
 			});
 
-			// Calculate total rating change
-			const totalChange = calculateRatingChange(placement, currentRating, opponentRatings);
+			// Calculate rating change using simplified formula
+			const basePlacementPoints = calculatePlacementPoints(placement);
+			const lobbySizeMultiplier = calculateLobbySizeMultiplier(playerCount);
+			const isGain = basePlacementPoints >= 0;
+			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, opponentRatings, isGain);
+			const totalChange = calculateRatingChange(placement, currentRating, opponentRatings, playerCount);
 
 			// Get or create player rating data
 			let playerData = this.ratingData.get(btag);
@@ -755,6 +760,20 @@ export class RatingManager {
 			const saved = this.savePlayerRating(btag);
 			if (!saved) {
 				debugPrint(`Failed to save pending rating for ${btag}`);
+			}
+
+			// For eliminated players, store game result so scoreboard can display their rating
+			if (player.status.isEliminated()) {
+				this.gameResults.set(btag, {
+					btag: btag,
+					basePlacementPoints: basePlacementPoints,
+					lobbySizeMultiplier: lobbySizeMultiplier,
+					opponentStrengthModifier: opponentStrengthModifier,
+					totalChange: totalChange,
+					oldRating: currentRating,
+					newRating: preliminaryRating,
+					actualPlacement: placement,
+				});
 			}
 		});
 	}

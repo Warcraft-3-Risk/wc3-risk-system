@@ -113,7 +113,7 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 		},
 		xOffset: 0.069,
 		initialTooltipText: `Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
-		action: (context: number, textures: { primary: string; secondary: string }) => {
+		action: (context: number, textures: { primary: string; secondary: string }, button) => {
 			if (GetLocalPlayer() == player.getPlayer()) {
 				// Import RatingSyncManager at runtime to check sync status
 				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager');
@@ -132,6 +132,10 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 				}
 
 				player.ratingStatsUI.toggle();
+
+				// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+				BlzFrameSetEnable(button, false);
+				BlzFrameSetEnable(button, true);
 			}
 		},
 	});

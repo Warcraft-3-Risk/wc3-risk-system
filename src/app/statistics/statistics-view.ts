@@ -247,6 +247,10 @@ export class StatisticsView {
 					if (player && player.ratingStatsUI) {
 						player.ratingStatsUI.toggle();
 					}
+
+					// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+					BlzFrameSetEnable(this.personalStatsButton, false);
+					BlzFrameSetEnable(this.personalStatsButton, true);
 				}
 			})
 		);

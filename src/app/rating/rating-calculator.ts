@@ -1,8 +1,22 @@
 /**
- * Pure rating calculation logic for multi-player ELO system
+ * Simplified rating calculation logic for multi-player ELO system
+ *
+ * Formula: ratingChange = basePlacementPoints × lobbySizeMultiplier × opponentStrengthModifier
+ *
+ * 1. Base Placement Points: Lookup table based on final rank (1st gets most, last loses most)
+ * 2. Lobby Size Multiplier: More players = harder to win = more points (normalized to 18 players)
+ * 3. Opponent Strength Modifier: Adjusts based on your rating vs average opponent rating
+ *    - Beat weaker players = gain less points
+ *    - Beat stronger players = gain more points
+ *    - Lose to weaker players = lose more points
+ *    - Lose to stronger players = lose less points
  */
 
-import { RANKED_OVERPERFORMANCE_BONUS, RANKED_UNDERPERFORMANCE_PENALTY, RANKED_PLACEMENT_POINTS } from 'src/configs/game-settings';
+import {
+	RANKED_PLACEMENT_POINTS,
+	RANKED_LOBBY_SIZE_BASELINE,
+	RANKED_OPPONENT_STRENGTH_FACTOR,
+} from 'src/configs/game-settings';
 
 /**
  * Get the military rank icon path based on player's rating
@@ -39,7 +53,6 @@ export function getRankIcon(rating: number): string {
  * @returns Points earned from placement
  */
 export function calculatePlacementPoints(placement: number): number {
-	// Use lookup table from config
 	if (placement >= 0 && placement < RANKED_PLACEMENT_POINTS.length) {
 		return RANKED_PLACEMENT_POINTS[placement];
 	}
@@ -49,76 +62,39 @@ export function calculatePlacementPoints(placement: number): number {
 }
 
 /**
- * Calculate expected placement using ELO win probabilities
- * Uses the ELO formula to calculate the probability of beating each opponent,
- * then sums those probabilities to get expected placement.
+ * Calculate lobby size multiplier based on number of players
+ * Larger lobbies are harder to win, so they give more points
+ * Normalized around RANKED_LOBBY_SIZE_BASELINE (default 18 players)
  *
- * Example: If you have a 70% chance to beat 10 opponents, you're expected to beat 7 of them,
- * placing you in 4th place (3 opponents expected to beat you).
- *
- * @param playerRating Player's current rating
- * @param opponentRatings Array of all opponent ratings
- * @returns Expected placement (0-based: 0 = expected 1st, 1 = expected 2nd, etc.)
+ * @param playerCount Number of players in the game
+ * @returns Multiplier to apply (e.g., 22/18 = 1.22x for 22 players)
  */
-export function calculateExpectedPlacement(playerRating: number, opponentRatings: number[]): number {
-	if (opponentRatings.length === 0) {
-		return 0;
+export function calculateLobbySizeMultiplier(playerCount: number): number {
+	if (playerCount <= 0) {
+		return 1.0;
 	}
 
-	// Calculate how many opponents we expect to beat
-	let expectedBeats = 0;
-	for (let i = 0; i < opponentRatings.length; i++) {
-		const opponentRating = opponentRatings[i];
-		const ratingDiff = opponentRating - playerRating;
-
-		// ELO win probability formula: 1 / (1 + 10^(ratingDiff / 400))
-		const winProbability = 1.0 / (1.0 + Math.pow(10, ratingDiff / 400));
-		expectedBeats += winProbability;
-	}
-
-	// Expected placement = number of opponents - expected beats
-	// If we expect to beat 7 out of 10 opponents, we expect 3 to beat us, so we're 4th (index 3)
-	const expectedPlacement = opponentRatings.length - expectedBeats;
-
-	return Math.round(expectedPlacement);
+	return playerCount / RANKED_LOBBY_SIZE_BASELINE;
 }
 
 /**
- * Calculate performance multiplier based on actual vs expected placement
- * @param actualPlacement Actual placement (0-based: 0 = 1st, 1 = 2nd, etc.)
- * @param expectedPlacement Expected placement based on ratings
- * @returns Multiplier to apply to base points (0.5 to 2.0)
- */
-export function calculatePerformanceMultiplier(actualPlacement: number, expectedPlacement: number): number {
-	const placementDifference = expectedPlacement - actualPlacement;
-
-	// Overperformed (placed better than expected)
-	if (placementDifference > 0) {
-		const multiplier = 1.0 + placementDifference * RANKED_OVERPERFORMANCE_BONUS;
-		// Cap at 2.0x for extreme overperformance
-		return Math.min(multiplier, 2.0);
-	}
-
-	// Underperformed (placed worse than expected)
-	if (placementDifference < 0) {
-		const multiplier = 1.0 + placementDifference * RANKED_UNDERPERFORMANCE_PENALTY;
-		// Floor at 0.5x for extreme underperformance
-		return Math.max(multiplier, 0.5);
-	}
-
-	// Performed as expected
-	return 1.0;
-}
-
-/**
- * Calculate rating advantage multiplier based on player rating vs average opponent rating
- * Uses ELO-style expected win probability to dampen gains when playing against much weaker opponents
- * and boost gains when playing against much stronger opponents
+ * Calculate opponent strength modifier based on player rating vs average opponent rating
+ * This implements traditional ELO logic:
+ * - Beat stronger players = gain more points
+ * - Beat weaker players = gain less points
+ * - Lose to stronger players = lose less points
+ * - Lose to weaker players = lose more points
+ *
  * @param playerRating Player's current rating
  * @param opponentRatings Array of all opponent ratings
- * @returns Multiplier to apply based on rating difference (0.05 to 2.0)
+ * @param isGain True if calculating for a positive outcome (gain), false for loss
+ * @returns Multiplier to apply (range: 0.75x to 1.25x with default factor of 0.25)
  */
-export function calculateRatingAdvantageMultiplier(playerRating: number, opponentRatings: number[]): number {
+export function calculateOpponentStrengthModifier(
+	playerRating: number,
+	opponentRatings: number[],
+	isGain: boolean
+): number {
 	if (opponentRatings.length === 0) {
 		return 1.0;
 	}
@@ -130,50 +106,51 @@ export function calculateRatingAdvantageMultiplier(playerRating: number, opponen
 	}
 	const avgOpponentRating = totalOpponentRating / opponentRatings.length;
 
-	// Calculate rating difference (opponent - player, for ELO formula)
-	const ratingDiff = avgOpponentRating - playerRating;
+	// Calculate rating difference (positive if player is higher rated)
+	const ratingDiff = playerRating - avgOpponentRating;
 
-	// Calculate expected win probability using ELO formula
-	// expectedWinProb = 1 / (1 + 10^(ratingDiff / 400))
-	// If player is much stronger: expectedWinProb ≈ 1.0 (almost certain to win)
-	// If evenly matched: expectedWinProb = 0.5
-	// If player is much weaker: expectedWinProb ≈ 0.0 (almost certain to lose)
-	const expectedWinProb = 1.0 / (1.0 + Math.pow(10, ratingDiff / 400));
+	// Scale the difference: 400 points = full effect
+	// Clamp to [-1, +1] range before applying factor
+	const scaledDiff = Math.max(-1, Math.min(1, ratingDiff / 400)) * RANKED_OPPONENT_STRENGTH_FACTOR;
 
-	// Convert expected win probability to multiplier
-	// expectedWinProb 0.95 (heavily favored) -> multiplier 0.1 (only 10% of points)
-	// expectedWinProb 0.50 (evenly matched) -> multiplier 1.0 (100% of points)
-	// expectedWinProb 0.05 (heavy underdog) -> multiplier 1.9 (190% of points)
-	const multiplier = 2.0 - expectedWinProb * 2.0;
-
-	// Apply floor to ensure some points can still be gained/lost even in extreme cases
-	// Minimum 5% of normal points to prevent complete stagnation
-	return Math.max(0.05, multiplier);
+	// Apply modifier based on whether this is a gain or loss
+	// For gains: higher rated = less gain (1.0 - scaledDiff)
+	// For losses: higher rated = more loss (1.0 + scaledDiff)
+	if (isGain) {
+		return 1.0 - scaledDiff;
+	} else {
+		return 1.0 + scaledDiff;
+	}
 }
 
 /**
- * Calculate total rating change for a player using multi-player ELO system
+ * Calculate total rating change for a player using simplified multi-player system
+ *
  * @param placement Final rank (0-based index: 0 = 1st, 1 = 2nd, etc.)
  * @param playerRating Player's current rating
  * @param opponentRatings Array of all opponent ratings
+ * @param playerCount Total number of players in the game
  * @returns Total rating change to apply
  */
-export function calculateRatingChange(placement: number, playerRating: number, opponentRatings: number[]): number {
+export function calculateRatingChange(
+	placement: number,
+	playerRating: number,
+	opponentRatings: number[],
+	playerCount: number
+): number {
 	const basePlacementPoints = calculatePlacementPoints(placement);
 
-	// Calculate performance multiplier based on expected vs actual placement
-	const expectedPlacement = calculateExpectedPlacement(playerRating, opponentRatings);
-	const performanceMultiplier = calculatePerformanceMultiplier(placement, expectedPlacement);
+	// Calculate lobby size multiplier
+	const lobbySizeMultiplier = calculateLobbySizeMultiplier(playerCount);
 
-	// Calculate rating advantage multiplier to prevent unlimited rating growth
-	// A 2500 player vs 1200 opponents will get only ~5% of normal points
-	const ratingAdvantageMultiplier = calculateRatingAdvantageMultiplier(playerRating, opponentRatings);
+	// Determine if this is a gain or loss based on base points
+	const isGain = basePlacementPoints >= 0;
 
-	// Combine both multipliers - this ensures strong players get minimal points vs weak opponents
-	const combinedMultiplier = performanceMultiplier * ratingAdvantageMultiplier;
+	// Calculate opponent strength modifier
+	const opponentStrengthModifier = calculateOpponentStrengthModifier(playerRating, opponentRatings, isGain);
 
-	// Apply combined multiplier to placement points
-	const adjustedPlacementPoints = Math.floor(basePlacementPoints * combinedMultiplier);
+	// Apply all multipliers
+	const totalChange = Math.floor(basePlacementPoints * lobbySizeMultiplier * opponentStrengthModifier);
 
-	return adjustedPlacementPoints;
+	return totalChange;
 }

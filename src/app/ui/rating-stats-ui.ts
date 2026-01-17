@@ -3,7 +3,6 @@ import { HexColors } from '../utils/hex-colors';
 import { RatingManager } from '../rating/rating-manager';
 import { getRankIcon } from '../rating/rating-calculator';
 import { NameManager } from '../managers/names/name-manager';
-import { debugPrint } from '../utils/debug-print';
 import { RANKED_SEASON_ID } from 'src/configs/game-settings';
 
 export class RatingStatsUI {
@@ -193,6 +192,7 @@ export class RatingStatsUI {
 			if (this.frameBackdrop) {
 				BlzFrameSetEnable(this.frameBackdrop, true);
 				BlzFrameSetVisible(this.frameBackdrop, true);
+				BlzFrameSetFocus(this.frameBackdrop, false);
 			}
 
 			this.isVisible = true;
@@ -234,9 +234,8 @@ export class RatingStatsUI {
 			this.escTrigger = CreateTrigger();
 
 			// Register ESC key for this player only (use key DOWN = true for more reliable capture)
-			BlzTriggerRegisterPlayerKeyEvent(this.escTrigger, this.player.getPlayer(), OSKEY_ESCAPE, 0, true);
+			BlzTriggerRegisterPlayerKeyEvent(this.escTrigger, this.player.getPlayer(), OSKEY_ESCAPE, 0, false);
 
-			// Use TriggerAddCondition pattern (same as guard-button-factory) to avoid desync
 			TriggerAddCondition(
 				this.escTrigger,
 				Condition(() => {
@@ -275,13 +274,7 @@ export class RatingStatsUI {
 			DisplayTimedTextToPlayer(this.player.getPlayer(), 0, 0, 3, message);
 		} else {
 			// Show error message
-			DisplayTimedTextToPlayer(
-				this.player.getPlayer(),
-				0,
-				0,
-				3,
-				`${HexColors.RED}Failed to save rating preference|r`
-			);
+			DisplayTimedTextToPlayer(this.player.getPlayer(), 0, 0, 3, `${HexColors.RED}Failed to save rating preference|r`);
 		}
 	}
 
@@ -314,9 +307,7 @@ export class RatingStatsUI {
 		const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', buttonContext);
 
 		if (buttonTooltip) {
-			const preferenceText = showRating
-				? `${HexColors.GREEN}Enabled`
-				: `${HexColors.RED}Disabled`;
+			const preferenceText = showRating ? `${HexColors.GREEN}Enabled` : `${HexColors.RED}Disabled`;
 			BlzFrameSetText(
 				buttonTooltip,
 				`Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${preferenceText}`
@@ -347,7 +338,6 @@ export class RatingStatsUI {
 			}
 		}
 	}
-
 
 	private updateRankIcon(rating: number): void {
 		if (!this.rankIconBadge) return;
@@ -440,7 +430,8 @@ export class RatingStatsUI {
 		const totalPlacement = pending.totalPlacement || 0;
 		const avgRank = pending.gamesPlayed > 0 ? totalPlacement / pending.gamesPlayed : 0;
 		const avgRankText = pending.gamesPlayed > 0 ? `#${math.floor(avgRank + 0.5)}` : '-';
-		if (this.averageRankText) BlzFrameSetText(this.averageRankText, `${HexColors.TANGERINE}Average Rank:|r ${HexColors.WHITE}${avgRankText}|r`);
+		if (this.averageRankText)
+			BlzFrameSetText(this.averageRankText, `${HexColors.TANGERINE}Average Rank:|r ${HexColors.WHITE}${avgRankText}|r`);
 
 		// Games played (show pending games count)
 		if (this.gamesText) BlzFrameSetText(this.gamesText, `${HexColors.TANGERINE}Games Played:|r ${HexColors.WHITE}${pending.gamesPlayed}|r`);
@@ -458,8 +449,8 @@ export class RatingStatsUI {
 		const totalDeaths = pending.totalDeathValue || 0;
 
 		const kdRatio = totalDeaths > 0 ? totalKills / totalDeaths : totalKills;
-		const kdRatioText = string.format("%.2f", kdRatio);
-		const kdBarWidth = totalDeaths > 0 ? math.min((totalKills / totalDeaths) * 0.105, 0.21) : (totalKills > 0 ? 0.21 : 0);
+		const kdRatioText = string.format('%.2f', kdRatio);
+		const kdBarWidth = totalDeaths > 0 ? math.min((totalKills / totalDeaths) * 0.105, 0.21) : totalKills > 0 ? 0.21 : 0;
 
 		if (this.killPercentText) BlzFrameSetText(this.killPercentText, `${totalKills} K / ${totalDeaths} D (${kdRatioText})`);
 		if (this.killBarFill) BlzFrameSetSize(this.killBarFill, kdBarWidth, 0.02);
@@ -519,8 +510,9 @@ export class RatingStatsUI {
 			}
 
 			const kdRatio = currentGameDeaths > 0 ? currentGameKills / currentGameDeaths : currentGameKills;
-			const kdRatioText = string.format("%.2f", kdRatio);
-			const kdBarWidth = currentGameDeaths > 0 ? math.min((currentGameKills / currentGameDeaths) * 0.105, 0.21) : (currentGameKills > 0 ? 0.21 : 0);
+			const kdRatioText = string.format('%.2f', kdRatio);
+			const kdBarWidth =
+				currentGameDeaths > 0 ? math.min((currentGameKills / currentGameDeaths) * 0.105, 0.21) : currentGameKills > 0 ? 0.21 : 0;
 
 			if (this.killPercentText) BlzFrameSetText(this.killPercentText, `${currentGameKills} K / ${currentGameDeaths} D (${kdRatioText})`);
 			if (this.killBarFill) BlzFrameSetSize(this.killBarFill, kdBarWidth, 0.02);
@@ -538,10 +530,12 @@ export class RatingStatsUI {
 		const totalPlacement = playerData.totalPlacement || 0;
 		const avgRank = playerData.gamesPlayed > 0 ? totalPlacement / playerData.gamesPlayed : 0;
 		const avgRankText = playerData.gamesPlayed > 0 ? `#${math.floor(avgRank + 0.5)}` : '-';
-		if (this.averageRankText) BlzFrameSetText(this.averageRankText, `${HexColors.TANGERINE}Average Rank:|r ${HexColors.WHITE}${avgRankText}|r`);
+		if (this.averageRankText)
+			BlzFrameSetText(this.averageRankText, `${HexColors.TANGERINE}Average Rank:|r ${HexColors.WHITE}${avgRankText}|r`);
 
 		// Games played
-		if (this.gamesText) BlzFrameSetText(this.gamesText, `${HexColors.TANGERINE}Games Played:|r ${HexColors.WHITE}${playerData.gamesPlayed}|r`);
+		if (this.gamesText)
+			BlzFrameSetText(this.gamesText, `${HexColors.TANGERINE}Games Played:|r ${HexColors.WHITE}${playerData.gamesPlayed}|r`);
 
 		// Win/Loss
 		const totalGames = playerData.wins + playerData.losses;
@@ -558,8 +552,8 @@ export class RatingStatsUI {
 		const totalDeaths = playerData.totalDeathValue || 0;
 
 		const kdRatio = totalDeaths > 0 ? totalKills / totalDeaths : totalKills;
-		const kdRatioText = string.format("%.2f", kdRatio);
-		const kdBarWidth = totalDeaths > 0 ? math.min((totalKills / totalDeaths) * 0.105, 0.21) : (totalKills > 0 ? 0.21 : 0);
+		const kdRatioText = string.format('%.2f', kdRatio);
+		const kdBarWidth = totalDeaths > 0 ? math.min((totalKills / totalDeaths) * 0.105, 0.21) : totalKills > 0 ? 0.21 : 0;
 
 		if (this.killPercentText) BlzFrameSetText(this.killPercentText, `${totalKills} K / ${totalDeaths} D (${kdRatioText})`);
 		if (this.killBarFill) BlzFrameSetSize(this.killBarFill, kdBarWidth, 0.02);
@@ -706,7 +700,6 @@ export class RatingStatsUI {
 				BlzFrameSetTextAlignment(rankFrame, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
 				this.leaderboardRankFrames.push(rankFrame);
 
-
 				// Rank icon (before ELO)
 				const rankIconFrame = BlzCreateFrameByType('BACKDROP', `LeaderboardPlayerRankIcon${i}`, this.leaderboardFrame, '', 0);
 				BlzFrameSetPoint(rankIconFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.058, yOffset + 0.0025);
@@ -747,7 +740,7 @@ export class RatingStatsUI {
 
 				// Losses column
 				const lossesFrame = BlzCreateFrameByType('TEXT', `LeaderboardPlayerLosses${i}`, this.leaderboardFrame, '', 0);
-				BlzFrameSetPoint(lossesFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.40, yOffset);
+				BlzFrameSetPoint(lossesFrame, FRAMEPOINT_TOPLEFT, this.leaderboardFrame, FRAMEPOINT_TOPLEFT, 0.4, yOffset);
 				BlzFrameSetSize(lossesFrame, 0.05, 0.02);
 				BlzFrameSetText(lossesFrame, '');
 				BlzFrameSetTextAlignment(lossesFrame, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
@@ -978,7 +971,6 @@ export class RatingStatsUI {
 			let playerOnCurrentPage = false;
 
 			if (sortedPlayers.length > 0) {
-
 				// Find local player's index
 				let myIndex = -1;
 				for (let i = 0; i < sortedPlayers.length; i++) {
@@ -992,7 +984,7 @@ export class RatingStatsUI {
 				// Check if player is on current page
 				if (myIndex !== -1) {
 					const myPage = math.floor(myIndex / this.PLAYERS_PER_PAGE);
-					playerOnCurrentPage = (myPage === this.currentPage);
+					playerOnCurrentPage = myPage === this.currentPage;
 				}
 			}
 
@@ -1002,5 +994,4 @@ export class RatingStatsUI {
 			BlzFrameSetVisible(this.leaderboardMyPlaceButton, true);
 		}
 	}
-
 }

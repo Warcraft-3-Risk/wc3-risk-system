@@ -78,21 +78,17 @@ export interface GameRatingResult {
 	btag: string;
 	/** Base points from placement (before multipliers) */
 	basePlacementPoints: number;
-	/** Performance multiplier based on expected vs actual placement */
-	performanceMultiplier: number;
-	/** Rating advantage multiplier based on rating difference vs opponents */
-	ratingAdvantageMultiplier: number;
-	/** Adjusted placement points after multipliers */
-	adjustedPlacementPoints: number;
-	/** Total rating change (same as adjustedPlacementPoints) */
+	/** Lobby size multiplier (playerCount / 18) */
+	lobbySizeMultiplier: number;
+	/** Opponent strength modifier based on rating difference vs opponents */
+	opponentStrengthModifier: number;
+	/** Total rating change after all multipliers */
 	totalChange: number;
 	/** Rating before this game */
 	oldRating: number;
 	/** Rating after this game */
 	newRating: number;
-	/** Expected placement based on ELO probabilities */
-	expectedPlacement: number;
-	/** Actual placement */
+	/** Actual placement (0-based: 0 = 1st) */
 	actualPlacement: number;
 }
 
