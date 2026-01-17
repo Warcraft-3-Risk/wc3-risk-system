@@ -2,11 +2,15 @@ import { HexColors } from 'src/app/utils/hex-colors';
 import { StatisticsModel } from './statistics-model';
 import { StatisticsPage } from './statistics-page';
 import { PlayerManager } from '../player/player-manager';
-import { RatingManager } from '../rating/rating-manager';
-import { NameManager } from '../managers/names/name-manager';
-import { debugPrint } from '../utils/debug-print';
+import { IStatisticsView } from './base-statistics-view';
+import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
 
-export class StatisticsView {
+/**
+ * Statistics view for ranked games
+ * Includes the "Stats" button to access personal rating stats
+ * Includes the Rating column in the statistics board
+ */
+export class RankedStatisticsView implements IStatisticsView {
 	private backdrop: framehandle;
 	private header: framehandle;
 	private footerBackdrop: framehandle;
@@ -20,6 +24,7 @@ export class StatisticsView {
 	private pageIndicator: framehandle;
 	private page: StatisticsPage;
 	private model: StatisticsModel;
+	private columnData: ColumnConfig[];
 
 	private static readonly ROW_HEIGHT: number = 0.02;
 	private static readonly COLUMN_HEIGHT: number = 0.3;
@@ -28,6 +33,9 @@ export class StatisticsView {
 
 	constructor(model: StatisticsModel) {
 		this.model = model;
+		// Ranked view includes the Rating column
+		this.columnData = GetStatisticsColumns(model, true);
+
 		this.backdrop = BlzCreateFrame('StatisticsBoard', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
 		BlzFrameSetSize(this.backdrop, 1, 0.64);
@@ -48,7 +56,7 @@ export class StatisticsView {
 
 		this.setupPaginationUI();
 		this.buildColumns();
-		this.page = new StatisticsPage(this.model, this.pageIndicator, StatisticsView.COLUMNS_PER_PAGE, StatisticsView.PINNED_COLUMNS, () =>
+		this.page = new StatisticsPage(this.columnData.length, this.pageIndicator, RankedStatisticsView.COLUMNS_PER_PAGE, RankedStatisticsView.PINNED_COLUMNS, () =>
 			this.updateColumnVisibility()
 		);
 
@@ -60,6 +68,12 @@ export class StatisticsView {
 
 	public setVisibility(isVisible: boolean) {
 		BlzFrameSetVisible(this.backdrop, isVisible);
+	}
+
+	public setVisibilityForPlayer(isVisible: boolean, player: player): void {
+		if (GetLocalPlayer() == player) {
+			BlzFrameSetVisible(this.backdrop, isVisible);
+		}
 	}
 
 	public setPlayedTimeText(time: string) {
@@ -89,7 +103,7 @@ export class StatisticsView {
 			const rowIndex = parseInt(parts[1], 10);
 
 			if (this.page.isPinnedColumn(columnIndex) || this.page.isColumnOnCurrentPage(columnIndex)) {
-				const columnData = this.model.getColumnData()[columnIndex];
+				const columnData = this.columnData[columnIndex];
 				const player = this.model.getRanks()[rowIndex];
 				const newText = columnData.textFunction(player);
 				BlzFrameSetText(frame, newText);
@@ -101,7 +115,7 @@ export class StatisticsView {
 						const iconPath = columnData.iconFunction(player);
 						const iconSize = columnData.iconSize || 0.015;
 						const iconPadding = 0.002;
-						const yGap = -0.03 - rowIndex * StatisticsView.ROW_HEIGHT;
+						const yGap = -0.03 - rowIndex * RankedStatisticsView.ROW_HEIGHT;
 
 						if (iconPath) {
 							BlzFrameSetTexture(iconFrame, iconPath, 0, true);
@@ -135,6 +149,9 @@ export class StatisticsView {
 
 			this.updateColumnVisibility();
 			BlzFrameSetVisible(this.footerBackdrop, true);
+
+			BlzFrameSetEnable(this.minimizeButton, false);
+			BlzFrameSetEnable(this.minimizeButton, true);
 		}
 	}
 
@@ -148,6 +165,8 @@ export class StatisticsView {
 			});
 
 			BlzFrameSetVisible(this.footerBackdrop, false);
+			BlzFrameSetEnable(this.minimizeButton, false);
+			BlzFrameSetEnable(this.minimizeButton, true);
 		}
 	}
 
@@ -204,7 +223,7 @@ export class StatisticsView {
 
 	private setupPaginationUI(): void {
 		this.footerBackdrop = BlzCreateFrameByType('FRAME', 'FooterFrame', this.backdrop, '', 0);
-		BlzFrameSetSize(this.footerBackdrop, 0.8, StatisticsView.ROW_HEIGHT);
+		BlzFrameSetSize(this.footerBackdrop, 0.8, RankedStatisticsView.ROW_HEIGHT);
 		BlzFrameSetPoint(this.footerBackdrop, FRAMEPOINT_TOP, this.backdrop, FRAMEPOINT_BOTTOM, 0, 0.03);
 		BlzFrameSetVisible(this.footerBackdrop, true);
 
@@ -258,15 +277,15 @@ export class StatisticsView {
 
 	private buildColumns() {
 		const headerY: number = -0.06;
-		const rowHeight: number = StatisticsView.ROW_HEIGHT;
+		const rowHeight: number = RankedStatisticsView.ROW_HEIGHT;
 		let headerX: number = 0.01;
 
-		this.model.getColumnData().forEach((entry, columnIndex) => {
+		this.columnData.forEach((entry, columnIndex) => {
 			const { size, header } = entry;
 
 			const container: framehandle = BlzCreateFrameByType('FRAME', `Column`, this.backdrop, '', 0);
 			BlzFrameSetPoint(container, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, headerX, headerY);
-			BlzFrameSetSize(container, size, StatisticsView.COLUMN_HEIGHT);
+			BlzFrameSetSize(container, size, RankedStatisticsView.COLUMN_HEIGHT);
 
 			this.columns.push(container);
 
@@ -279,7 +298,7 @@ export class StatisticsView {
 			let rowIndex = 0;
 
 			this.model.getRanks().forEach((player) => {
-				const columnData = this.model.getColumnData()[columnIndex];
+				const columnData = this.columnData[columnIndex];
 				const rowKey = `${columnIndex}_${rowIndex}`;
 
 				// Check if this column has an icon function (always create icon frame if function exists)

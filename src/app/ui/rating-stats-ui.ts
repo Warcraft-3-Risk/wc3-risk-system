@@ -151,6 +151,10 @@ export class RatingStatsUI {
 					// Only execute for the player who owns this UI instance
 					if (GetTriggerPlayer() == this.player.getPlayer()) {
 						this.toggleShowRatingPreference();
+
+						// Reset frame to global context so hotkeys work
+						BlzFrameSetEnable(this.enableDisableButton, false);
+						BlzFrameSetEnable(this.enableDisableButton, true);
 					}
 				});
 			}

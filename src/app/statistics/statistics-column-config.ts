@@ -20,7 +20,13 @@ export interface ColumnConfig {
 	iconSize?: number;
 }
 
-export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
+/**
+ * Get statistics columns for the end-game leaderboard
+ * @param model The statistics model
+ * @param includeRatingColumn Whether to include the Rating column (true for ranked view, false for unranked)
+ * @returns Array of column configurations
+ */
+export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn: boolean = true): ColumnConfig[] {
 	const highlightIfOwnPlayer = (p: ActivePlayer, value: string | number) => {
 		if (p.getPlayer() === GetLocalPlayer()) {
 			return `${HexColors.TANGERINE}${value}|r`;
@@ -29,13 +35,21 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 		}
 	};
 
-	const localPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());
-	const localBtag = NameManager.getInstance().getBtag(localPlayer.getPlayer());
 	const ratingManager = RatingManager.getInstance();
+
+	// Use larger column sizes for unranked view (no Rating column = more space)
+	const nameSize = includeRatingColumn ? 0.1 : 0.11;
+	const rivalSize = includeRatingColumn ? 0.1 : 0.11;
+	const rankSize = includeRatingColumn ? 0.04 : 0.05;
+	const lastTurnSize = includeRatingColumn ? 0.06 : 0.07;
+	const citiesMaxEndSize = includeRatingColumn ? 0.06 : 0.07;
+	const incomeSize = includeRatingColumn ? 0.06 : 0.07;
+	const killsSize = includeRatingColumn ? 0.06 : 0.07;
+	const deathSize = includeRatingColumn ? 0.06 : 0.07;
 
 	const columns: ColumnConfig[] = [
 		{
-			size: 0.11,
+			size: nameSize,
 			header: 'Player Name',
 			textFunction: (player) => {
 				let name = ParticipantEntityManager.getParticipantNamePrefixedWithOptionalTeamNumber(player.getPlayer());
@@ -48,55 +62,46 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 			},
 		},
 		{
-			size: 0.04,
+			size: rankSize,
 			header: 'Rank',
 			textFunction: (player) => `${highlightIfOwnPlayer(player, model.getRanks().indexOf(player) + 1)}`,
 		},
 	];
 
-	columns.push({
-		size: 0.09,
-		header: 'Rating',
-		iconSize: 0.015,
-		iconFunction: (player) => {
-			const showRating = ratingManager.getShowRatingPreference(localBtag);
-			// Check if local player has disabled rating display
-			if (!showRating) {
-				return null; // No icon if rating is hidden
-			}
+	// Only include Rating column for ranked view
+	if (includeRatingColumn) {
+		columns.push({
+			size: 0.09,
+			header: 'Rating',
+			iconSize: 0.015,
+			iconFunction: (player) => {
+				const btag = NameManager.getInstance().getBtag(player.getPlayer());
+				const result = ratingManager.getRatingResults().get(btag);
 
-			const btag = NameManager.getInstance().getBtag(player.getPlayer());
-			const result = ratingManager.getRatingResults().get(btag);
+				// Use new rating if available (just finished game), otherwise use current rating
+				const rating = result ? result.newRating : ratingManager.getPlayerRating(btag);
 
-			// Use new rating if available (just finished game), otherwise use current rating
-			const rating = result ? result.newRating : ratingManager.getPlayerRating(btag);
+				return getRankIcon(rating);
+			},
+			textFunction: (player) => {
+				const btag = NameManager.getInstance().getBtag(player.getPlayer());
+				const result = ratingManager.getRatingResults().get(btag);
 
-			return getRankIcon(rating);
-		},
-		textFunction: (player) => {
-			const showRating = ratingManager.getShowRatingPreference(localBtag);
-			// Check if local player has disabled rating display
-			if (!showRating) {
-				return `${highlightIfOwnPlayer(player, 'N/A')}`;
-			}
+				if (result) {
+					const change = result.totalChange;
+					const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
+					const sign = change >= 0 ? '+' : '';
+					return `${highlightIfOwnPlayer(player, result.newRating)} (${color}${sign}${change}|r)`;
+				}
 
-			const btag = NameManager.getInstance().getBtag(player.getPlayer());
-			const result = ratingManager.getRatingResults().get(btag);
-
-			if (result) {
-				const change = result.totalChange;
-				const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
-				const sign = change >= 0 ? '+' : '';
-				return `${highlightIfOwnPlayer(player, result.newRating)} (${color}${sign}${change}|r)`;
-			}
-
-			return `${highlightIfOwnPlayer(player, ratingManager.getPlayerRating(btag))}`;
-		},
-	});
+				return `${highlightIfOwnPlayer(player, ratingManager.getPlayerRating(btag))}`;
+			},
+		});
+	}
 
 	columns.push(
 		{
-			size: 0.1,
+			size: rivalSize,
 			header: 'Biggest Rival',
 			textFunction: (player) => {
 				const rival = model.getRival(player);
@@ -114,17 +119,17 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 			},
 		},
 		{
-			size: 0.06,
+			size: lastTurnSize,
 			header: 'Last Turn',
 			textFunction: (player) => `${highlightIfOwnPlayer(player, player.trackedData.turnDied)}`,
 		},
 		{
-			size: 0.06,
+			size: citiesMaxEndSize,
 			header: 'Cities\nMax/End',
 			textFunction: (player) => `${highlightIfOwnPlayer(player, player.trackedData.cities.max + '/' + player.trackedData.cities.end)}`,
 		},
 		{
-			size: 0.06,
+			size: incomeSize,
 			header: 'Income\nMax/End',
 			textFunction: (player) => `${highlightIfOwnPlayer(player, player.trackedData.income.max + '/' + player.trackedData.income.end)}`,
 		},
@@ -135,12 +140,12 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 				`${highlightIfOwnPlayer(player, player.trackedData.gold.earned + '/' + player.trackedData.gold.max + '/' + player.trackedData.gold.end)}`,
 		},
 		{
-			size: 0.06,
+			size: killsSize,
 			header: 'Kills\n(Value)',
 			textFunction: (player) => `${highlightIfOwnPlayer(player, player.trackedData.killsDeaths.get(player.getPlayer()).killValue)}`,
 		},
 		{
-			size: 0.06,
+			size: deathSize,
 			header: 'Deaths\n(Value)',
 			textFunction: (player) => `${highlightIfOwnPlayer(player, player.trackedData.killsDeaths.get(player.getPlayer()).deathValue)}`,
 		},
@@ -158,8 +163,8 @@ export function GetStatisticsColumns(model: StatisticsModel): ColumnConfig[] {
 		},
 		{
 			size: 0.07,
-			header: 'SS Kills\n(Raw)',
-			textFunction: (player) => `${highlightIfOwnPlayer(player, player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`).kills)}`,
+			header: '',
+			textFunction: (_player) => ``,
 		},
 		{
 			size: 0.07,

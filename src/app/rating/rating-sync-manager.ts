@@ -3,7 +3,7 @@ import { readRatings } from './rating-file-handler';
 import { readOthersRatings, writeOthersRatings } from './global-rating-handler';
 import { NameManager } from '../managers/names/name-manager';
 import { ActivePlayer } from '../player/types/active-player';
-import { RANKED_SEASON_ID, RATING_SYNC_ENABLED, RATING_SYNC_TIMEOUT, DEVELOPER_MODE, RATING_SYNC_TOP_PLAYERS } from 'src/configs/game-settings';
+import { RANKED_SEASON_ID, RATING_SYNC_TIMEOUT, DEVELOPER_MODE, RATING_SYNC_TOP_PLAYERS } from 'src/configs/game-settings';
 import { debugPrint } from '../utils/debug-print';
 import { RatingManager } from './rating-manager';
 import { PlayerManager } from '../player/player-manager';
@@ -79,16 +79,8 @@ export class RatingSyncManager {
 	 * @param humanPlayers Array of human players (excludes AI)
 	 */
 	public startSync(humanPlayers: ActivePlayer[]): void {
-		// Check if sync is enabled
-		if (!RATING_SYNC_ENABLED) {
-			debugPrint('[RATING SYNC] P2P sync is disabled');
-			this.loadLocalDataOnly();
-			return;
-		}
-
 		// If single player (no other humans to sync with), just load local data
 		if (humanPlayers.length < 2) {
-			debugPrint('[RATING SYNC] Single player - loading local data only');
 			this.loadLocalDataOnly();
 			return;
 		}
@@ -291,14 +283,12 @@ export class RatingSyncManager {
 	 * Used for single player games or when sync is disabled
 	 */
 	private loadLocalDataOnly(): void {
-		debugPrint('[RATING SYNC] loadLocalDataOnly() called');
 		const receivedPlayers: PlayerRatingData[] = [];
 
 		// Add local player's own data (most accurate)
 		const localPlayer = GetLocalPlayer();
 		const nameManager = NameManager.getInstance();
 		const btag = nameManager.getBtag(localPlayer);
-		debugPrint(`[RATING SYNC] Local player btag: ${btag || 'NULL'}`);
 
 		if (btag) {
 			const hash = this.sanitizePlayerName(btag);
