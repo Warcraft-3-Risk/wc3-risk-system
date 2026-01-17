@@ -11,6 +11,7 @@ import { GlobalMessage } from 'src/app/utils/messages';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
+import { updateRatingStatsButtonForRankedStatus } from 'src/app/ui/player-preference-buttons';
 
 export class CountdownState<T extends StateData> extends BaseState<T> {
 	private initialDuration: number;
@@ -30,7 +31,6 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 			const humanPlayerCount = PlayerManager.getInstance().getHumanPlayersCount();
 			const isFFA = SettingsContext.getInstance().isFFA();
 			const isRanked = ratingManager.checkRankedGameEligibility(humanPlayerCount, isFFA);
-			print(`[COUNTDOWN] Ranked eligibility check: humanPlayerCount=${humanPlayerCount}, isFFA=${isFFA}, isRanked=${isRanked}`);
 			if (isRanked) {
 				// Generate unique game ID for crash recovery
 				ratingManager.generateGameId();
@@ -54,7 +54,6 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 				// Get human players only (excludes AI/Computer)
 				const humanPlayers = PlayerManager.getInstance().getHumanPlayersOnly();
-				print(`[COUNTDOWN] Starting sync with ${humanPlayers.length} human players`);
 				syncManager.startSync(humanPlayers);
 			} else {
 				const message = `${HexColors.TANGERINE}This is an unranked game!|r.`;
@@ -81,6 +80,8 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 					if (player.ratingStatsUI && player.ratingStatsUI.preInitialize) {
 						player.ratingStatsUI.preInitialize();
 					}
+					// Update F4 button appearance based on ranked status
+					updateRatingStatsButtonForRankedStatus(player, isRanked);
 				});
 			});
 

@@ -102,6 +102,63 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 		},
 	});
 }
+/**
+ * Update the F4 rating stats button appearance based on ranked game status
+ * Should be called after ranked status is determined in countdown phase
+ * @param player The player whose button to update
+ * @param isRanked Whether the game is ranked
+ */
+export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isRanked: boolean): void {
+	if (GetLocalPlayer() != player.getPlayer()) {
+		return;
+	}
+
+	const buttonContext = GetPlayerId(player.getPlayer()) + 300;
+	const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', buttonContext);
+	const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', buttonContext);
+
+	if (!buttonBackdrop) {
+		return;
+	}
+
+	if (isRanked) {
+		// For ranked games, show icon based on player's preference
+		const { RatingManager } = require('src/app/rating/rating-manager');
+		const { NameManager } = require('src/app/managers/names/name-manager');
+		const ratingManager = RatingManager.getInstance();
+		const btag = NameManager.getInstance().getBtag(player.getPlayer());
+		const showRating = ratingManager.getShowRatingPreference(btag);
+
+		const texture = showRating
+			? 'ReplaceableTextures\\CommandButtons\\BTNMedalHeroism.blp'
+			: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp';
+		BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+		if (buttonTooltip) {
+			const preferenceText = showRating ? `${HexColors.GREEN}Enabled` : `${HexColors.RED}Disabled`;
+			BlzFrameSetText(
+				buttonTooltip,
+				`Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${preferenceText}`
+			);
+		}
+	} else {
+		// For unranked games, always show disabled icon
+		BlzFrameSetTexture(
+			buttonBackdrop,
+			'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
+			0,
+			false
+		);
+
+		if (buttonTooltip) {
+			BlzFrameSetText(
+				buttonTooltip,
+				`Rating Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`
+			);
+		}
+	}
+}
+
 export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
 		player: player,
@@ -115,6 +172,22 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 		initialTooltipText: `Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
 		action: (context: number, textures: { primary: string; secondary: string }, button) => {
 			if (GetLocalPlayer() == player.getPlayer()) {
+				// Import RatingManager at runtime to check ranked status
+				const { RatingManager } = require('src/app/rating/rating-manager');
+				const ratingManager = RatingManager.getInstance();
+
+				// Check if this is a ranked game - if not, show message and do nothing
+				if (!ratingManager.isRankedGame()) {
+					DisplayTimedTextToPlayer(
+						player.getPlayer(),
+						0,
+						0,
+						3,
+						`${HexColors.TANGERINE}Rating stats are unavailable in unranked games.|r`
+					);
+					return;
+				}
+
 				// Import RatingSyncManager at runtime to check sync status
 				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager');
 
