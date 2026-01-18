@@ -367,14 +367,9 @@ export class RatingStatsUI {
 			// Update leaderboard button state based on data availability
 			this.updateLeaderboardButtonState();
 
-			// If there's a pending game (ranked game in progress), display those values
-			if (playerData && playerData.pendingGame) {
-				this.updateStatsFromPendingGame(playerData);
-			}
-			// Otherwise, show current stats
-			else {
-				this.updateStats(playerData);
-			}
+			// Always show CONFIRMED stats (not pending entry values)
+			// Pending entries are for crash recovery only, not for display
+			this.updateStats(playerData);
 		} catch (error) {
 			// Silent fail
 		}
@@ -394,70 +389,6 @@ export class RatingStatsUI {
 			// Set tooltip or visual indication (optional)
 			BlzFrameSetTooltip(this.toggleButton, BlzCreateFrame('BoxedText', this.toggleButton, 0, 0));
 		}
-	}
-
-	private updateStatsFromPendingGame(playerData: any): void {
-		if (!this.isInitialized || !playerData || !playerData.pendingGame) return;
-
-		const pending = playerData.pendingGame;
-
-		// Update title with player name (colored, without hashtag, max 10 chars)
-		try {
-			const nameManager = NameManager.getInstance();
-			let playerAcct = nameManager.getAcct(this.player.getPlayer());
-			// Truncate to 10 characters
-			if (playerAcct.length > 10) {
-				playerAcct = playerAcct.substring(0, 10);
-			}
-			const colorCode = nameManager.getColorCode(this.player.getPlayer());
-			const coloredName = `${colorCode}${playerAcct}|r`;
-			if (this.titleText) BlzFrameSetText(this.titleText, coloredName);
-		} catch (error) {
-			// Fallback to display name if acct/color fails
-			if (this.titleText) {
-				let fallbackName = NameManager.getInstance().getDisplayName(this.player.getPlayer());
-				if (fallbackName.length > 10) {
-					fallbackName = fallbackName.substring(0, 10);
-				}
-				BlzFrameSetText(this.titleText, fallbackName);
-			}
-		}
-
-		// Rating (show pending rating)
-		this.updateRankIcon(pending.rating);
-		if (this.ratingText) BlzFrameSetText(this.ratingText, `${HexColors.TANGERINE}Rating:|r ${HexColors.WHITE}${pending.rating}|r`);
-
-		// Season
-		if (this.seasonText) BlzFrameSetText(this.seasonText, `${HexColors.TANGERINE}Season:|r ${HexColors.WHITE}${RANKED_SEASON_ID}|r`);
-
-		// Average Rank (calculated from pending total placement / pending games)
-		const totalPlacement = pending.totalPlacement || 0;
-		const avgRank = pending.gamesPlayed > 0 ? totalPlacement / pending.gamesPlayed : 0;
-		const avgRankText = pending.gamesPlayed > 0 ? `#${math.floor(avgRank + 0.5)}` : '-';
-		if (this.averageRankText)
-			BlzFrameSetText(this.averageRankText, `${HexColors.TANGERINE}Average Rank:|r ${HexColors.WHITE}${avgRankText}|r`);
-
-		// Games played (show pending games count)
-		if (this.gamesText) BlzFrameSetText(this.gamesText, `${HexColors.TANGERINE}Games Played:|r ${HexColors.WHITE}${pending.gamesPlayed}|r`);
-
-		// Win/Loss (show pending stats)
-		const totalGames = pending.wins + pending.losses;
-		const winPercent = totalGames > 0 ? math.floor((pending.wins / totalGames) * 100) : 0;
-		const winBarWidth = totalGames > 0 ? (pending.wins / totalGames) * 0.21 : 0;
-
-		if (this.winPercentText) BlzFrameSetText(this.winPercentText, `${pending.wins}W / ${pending.losses}L (${winPercent}%)`);
-		if (this.winBarFill) BlzFrameSetSize(this.winBarFill, winBarWidth, 0.02);
-
-		// Kill/Death (show pending K/D stats)
-		const totalKills = pending.totalKillValue || 0;
-		const totalDeaths = pending.totalDeathValue || 0;
-
-		const kdRatio = totalDeaths > 0 ? totalKills / totalDeaths : totalKills;
-		const kdRatioText = string.format('%.2f', kdRatio);
-		const kdBarWidth = totalDeaths > 0 ? math.min((totalKills / totalDeaths) * 0.105, 0.21) : totalKills > 0 ? 0.21 : 0;
-
-		if (this.killPercentText) BlzFrameSetText(this.killPercentText, `${totalKills} K / ${totalDeaths} D (${kdRatioText})`);
-		if (this.killBarFill) BlzFrameSetSize(this.killBarFill, kdBarWidth, 0.02);
 	}
 
 	private updateStats(playerData: any): void {
@@ -594,6 +525,7 @@ export class RatingStatsUI {
 				BlzFrameSetVisible(this.frameBackdrop, false);
 				BlzFrameSetEnable(this.frameBackdrop, false);
 			}
+			this.isVisible = false;
 
 			// Show leaderboard window
 			if (this.leaderboardFrame) {
@@ -613,16 +545,10 @@ export class RatingStatsUI {
 
 	private hideLeaderboard(): void {
 		if (GetLocalPlayer() == this.player.getPlayer()) {
-			// Hide leaderboard window
+			// Hide leaderboard window only (rating stats window is already hidden)
 			if (this.leaderboardFrame) {
 				BlzFrameSetVisible(this.leaderboardFrame, false);
 				BlzFrameSetEnable(this.leaderboardFrame, false);
-			}
-
-			// Show rating stats window
-			if (this.frameBackdrop) {
-				BlzFrameSetVisible(this.frameBackdrop, true);
-				BlzFrameSetEnable(this.frameBackdrop, true);
 			}
 
 			this.isLeaderboardVisible = false;

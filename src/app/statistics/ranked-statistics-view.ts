@@ -16,6 +16,7 @@ export class RankedStatisticsView implements IStatisticsView {
 	private footerBackdrop: framehandle;
 	private minimizeButton: framehandle;
 	private personalStatsButton: framehandle;
+	private leaderboardButton: framehandle;
 	private columns: framehandle[];
 	private rows: Map<string, framehandle>;
 	private icons: Map<string, framehandle>;
@@ -51,7 +52,8 @@ export class RankedStatisticsView implements IStatisticsView {
 		this.rows = new Map<string, framehandle>();
 		this.icons = new Map<string, framehandle>();
 
-		// Create "My Rating" button to the left of the minimize button
+		this.setupLeaderboardButton();
+
 		this.setupPersonalStatsButton();
 
 		this.setupPaginationUI();
@@ -245,12 +247,42 @@ export class RankedStatisticsView implements IStatisticsView {
 		});
 	}
 
+	private setupLeaderboardButton(): void {
+		// Create button to the left of the minimize button
+		this.leaderboardButton = BlzCreateFrameByType('GLUETEXTBUTTON', 'LeaderboardButton', this.header, 'ScriptDialogButton', 0);
+		BlzFrameSetSize(this.leaderboardButton, 0.1, 0.03);
+		// Position to the left of minimize button (minimize button is at TOPRIGHT, width 0.08)
+		BlzFrameSetPoint(this.leaderboardButton, FRAMEPOINT_TOPRIGHT, this.minimizeButton, FRAMEPOINT_TOPLEFT, -0.002, 0);
+		BlzFrameSetText(this.leaderboardButton, 'Leaderboard');
+		BlzFrameSetVisible(this.leaderboardButton, true);
+
+		// Register click event - toggle the stats window (open if closed, close if open)
+		const buttonTrigger = CreateTrigger();
+		BlzTriggerRegisterFrameEvent(buttonTrigger, this.leaderboardButton, FRAMEEVENT_CONTROL_CLICK);
+		TriggerAddCondition(
+			buttonTrigger,
+			Condition(() => {
+				const triggerPlayer = GetTriggerPlayer();
+				if (GetLocalPlayer() == triggerPlayer) {
+					const player = PlayerManager.getInstance().players.get(triggerPlayer);
+					if (player && player.ratingStatsUI) {
+						player.ratingStatsUI.showLeaderboard();
+					}
+
+					// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+					BlzFrameSetEnable(this.leaderboardButton, false);
+					BlzFrameSetEnable(this.leaderboardButton, true);
+				}
+			})
+		);
+	}
+
 	private setupPersonalStatsButton(): void {
 		// Create button to the left of the minimize button
 		this.personalStatsButton = BlzCreateFrameByType('GLUETEXTBUTTON', 'PersonalStatsButton', this.header, 'ScriptDialogButton', 0);
 		BlzFrameSetSize(this.personalStatsButton, 0.08, 0.03);
 		// Position to the left of minimize button (minimize button is at TOPRIGHT, width 0.08)
-		BlzFrameSetPoint(this.personalStatsButton, FRAMEPOINT_TOPRIGHT, this.minimizeButton, FRAMEPOINT_TOPLEFT, -0.002, 0);
+		BlzFrameSetPoint(this.personalStatsButton, FRAMEPOINT_TOPRIGHT, this.leaderboardButton, FRAMEPOINT_TOPLEFT, -0.002, 0);
 		BlzFrameSetText(this.personalStatsButton, 'Stats');
 		BlzFrameSetVisible(this.personalStatsButton, true);
 

@@ -132,10 +132,26 @@ export class RatingManager {
 
 		// Validate checksum
 		if (!validateChecksum(data)) {
-			// Corrupted file - player will start fresh and regenerate file at game end
+			// Corrupted file - create fresh data and overwrite immediately
 			print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
+			const timestamp = math.floor(os.time());
+			const freshData: PlayerRatingData = {
+				btag: btag,
+				rating: RANKED_STARTING_RATING,
+				gamesPlayed: 0,
+				lastUpdated: timestamp,
+				wins: 0,
+				losses: 0,
+				totalKillValue: 0,
+				totalDeathValue: 0,
+				totalPlacement: 0,
+				showRating: true,
+				_isSynced: false,
+			};
+			this.ratingData.set(btag, freshData);
 			this.loadedPlayers.add(btag);
-			return false;
+			this.savePlayerRating(btag); // Overwrite corrupted file immediately
+			return true;
 		}
 
 		// Load valid data for this player
@@ -485,10 +501,11 @@ export class RatingManager {
 	}
 
 	/**
-	 * Get top 500 players by rating (strict filter)
+	 * Get top N players by rating (strict filter)
 	 * Used by leaderboard to show only the highest-rated players
 	 * Excludes players with 0 games played (no meaningful data)
-	 * @returns Array of top 500 players sorted by rating descending
+	 * Limited by RATING_SYNC_TOP_PLAYERS config (default: 100)
+	 * @returns Array of top N players sorted by rating descending
 	 */
 	public getTop500Players(): PlayerRatingData[] {
 		// Get all synced players
@@ -513,8 +530,8 @@ export class RatingManager {
 			return 0;
 		});
 
-		// Return top 500 only
-		return sorted.slice(0, 500);
+		// Return top N only (limited by RATING_SYNC_TOP_PLAYERS config)
+		return sorted.slice(0, RATING_SYNC_TOP_PLAYERS);
 	}
 
 	/**
@@ -676,10 +693,9 @@ export class RatingManager {
 				return false;
 			}
 
-			const turnDied = player.trackedData.turnDied;
-
-			// Exclude if left before game started
-			if (turnDied < 0) {
+			// Exclude if player left the game (no longer in playing state)
+			// Note: turnDied = -1 means "hasn't died yet" (alive), not "left before game"
+			if (GetPlayerSlotState(player.getPlayer()) !== PLAYER_SLOT_STATE_PLAYING) {
 				return false;
 			}
 
@@ -820,7 +836,10 @@ export class RatingManager {
 	 * @param currentTurn Current turn number
 	 */
 	public saveRatingsInProgress(ranks: ActivePlayer[], currentTurn: number): void {
+		debugPrint(`[RatingManager] saveRatingsInProgress called: turn=${currentTurn}, isRanked=${this.isRankedGameFlag}, gameId=${this.currentGameId || 'EMPTY'}, ranksCount=${ranks.length}`);
+
 		if (!this.isRankedGameFlag || !this.currentGameId) {
+			debugPrint(`[RatingManager] saveRatingsInProgress exiting early: isRankedGameFlag=${this.isRankedGameFlag}, currentGameId=${this.currentGameId || 'EMPTY'}`);
 			return;
 		}
 
@@ -833,33 +852,41 @@ export class RatingManager {
 
 			// Skip already finalized players
 			if (this.finalizedPlayers.has(btag)) {
+				debugPrint(`[RatingManager] Filter: ${btag} excluded - already finalized`);
 				return false;
 			}
 
-			const turnDied = player.trackedData.turnDied;
-
-			// Exclude if left before game started
-			if (turnDied < 0) {
+			// Exclude if player left the game (no longer in playing state)
+			// Note: turnDied = -1 means "hasn't died yet" (alive), not "left before game started"
+			// We check slot state to detect players who actually disconnected/left
+			if (GetPlayerSlotState(player.getPlayer()) !== PLAYER_SLOT_STATE_PLAYING) {
+				debugPrint(`[RatingManager] Filter: ${btag} excluded - player left the game (slot state != PLAYING)`);
 				return false;
 			}
 
 			// Exclude dead players - they should be finalized via finalizePlayerRating
 			if (player.status.isEliminated()) {
+				debugPrint(`[RatingManager] Filter: ${btag} excluded - isEliminated=true`);
 				return false;
 			}
 
 			// Exclude computer/AI players in normal mode
 			if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
+				debugPrint(`[RatingManager] Filter: ${btag} excluded - AI player in non-dev mode`);
 				return false;
 			}
 
+			debugPrint(`[RatingManager] Filter: ${btag} INCLUDED - alive and not finalized`);
 			return true;
 		});
 
 		// No alive players to save pending entries for
 		if (alivePlayers.length === 0) {
+			debugPrint(`[RatingManager] saveRatingsInProgress: No alive players after filtering (total ranks: ${ranks.length})`);
 			return;
 		}
+
+		debugPrint(`[RatingManager] saveRatingsInProgress: ${alivePlayers.length} alive players to save pending entries for`);
 
 		// Build INITIAL opponent ratings array
 		const opponentRatings: number[] = [];
@@ -868,10 +895,14 @@ export class RatingManager {
 		});
 
 		// Calculate and save pending entries for each alive player
-		// Their "preliminary" placement is based on current position (0 = would be 1st if game ended now)
+		// Pending entry simulates "what if this player disconnects NOW" - they'd be the NEXT eliminated
+		// All alive players get the same placement: they'd be last place among remaining players
+		// Formula: placement = initialPlayerCount - (eliminatedCount + 1)
+		const disconnectPlacement = this.initialPlayerCount - (this.eliminatedCount + 1);
+
 		alivePlayers.forEach((player, index) => {
 			const btag = NameManager.getInstance().getBtag(player.getPlayer());
-			const preliminaryPlacement = index; // If game crashed now, they'd be in this position
+			const preliminaryPlacement = disconnectPlacement; // If player disconnects now, they're next eliminated
 
 			// Get INITIAL rating for this player
 			const currentRating = this.getInitialPlayerRating(btag);
@@ -941,7 +972,9 @@ export class RatingManager {
 			// Save this player's rating with pending game
 			const saved = this.savePlayerRating(btag);
 			if (!saved) {
-				debugPrint(`Failed to save pending rating for ${btag}`);
+				debugPrint(`[RatingManager] Failed to save pending rating for ${btag}`);
+			} else {
+				debugPrint(`[RatingManager] Saved pending entry for ${btag}: turn=${currentTurn}, preliminaryPlacement=${preliminaryPlacement + 1}, preliminaryRating=${preliminaryRating}`);
 			}
 		});
 	}

@@ -11,7 +11,7 @@ export function Advanced(chatManager: ChatManager) {
 		${HexColors.GREEN}South Advantage|r Since guard towers are always on the north side of cities, players attacking from the south have a combat advantage. 
 		${HexColors.GREEN}Knight Rush|r The Knight is the fastest unit in the game and is often used to quickly capture the remaining cities needed to win.
 		${HexColors.GREEN}Denying|r If you attack and kill your own units (e.g., an SS Ship or a Tank), the enemy will not receive a fight bonus.
-		${HexColors.GREEN}Pirate Buffering|r In some situations, using pirates as a buffer between you and a potential backstabber can be a good choice.`
+		${HexColors.GREEN}Pirate Buffering|r In some situations, using smaller players that you keep alive as a buffer between you and a potential backstabber can be a good choice.`
 
 		DisplayTimedTextToPlayer(player, 0, 0, 8, description);
 	});

@@ -1,6 +1,7 @@
 import { PlayerRatingData } from './types';
-import { readRatings } from './rating-file-handler';
+import { readRatings, validateChecksum } from './rating-file-handler';
 import { readOthersRatings, writeOthersRatings } from './global-rating-handler';
+import { HexColors } from '../utils/hex-colors';
 import { NameManager } from '../managers/names/name-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { RANKED_SEASON_ID, RATING_SYNC_TIMEOUT, DEVELOPER_MODE, RATING_SYNC_TOP_PLAYERS } from 'src/configs/game-settings';
@@ -157,7 +158,13 @@ export class RatingSyncManager {
 		const filePath = `risk/${prefix}${this.seasonId}_${hash}.txt`;
 		const ratingFile = readRatings(filePath);
 
-		if (ratingFile) {
+		// Validate checksum if file exists
+		const isValidFile = ratingFile && validateChecksum(ratingFile);
+		if (ratingFile && !isValidFile) {
+			print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
+		}
+
+		if (isValidFile) {
 			// Finalize pending game if exists (crash recovery)
 			// This ensures other players receive the correct updated values
 			if (ratingFile.player.pendingGame) {
@@ -175,7 +182,7 @@ export class RatingSyncManager {
 			}
 			playersToSync.push(ratingFile.player);
 		} else {
-			// New player - add default starting data
+			// New player or corrupted file - add default starting data
 			const timestamp = math.floor(os.time());
 			playersToSync.push({
 				btag: btag,
@@ -312,7 +319,13 @@ export class RatingSyncManager {
 			const filePath = `risk/${prefix}${this.seasonId}_${hash}.txt`;
 			const ratingFile = readRatings(filePath);
 
-			if (ratingFile) {
+			// Validate checksum if file exists
+			const isValidFile = ratingFile && validateChecksum(ratingFile);
+			if (ratingFile && !isValidFile) {
+				print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
+			}
+
+			if (isValidFile) {
 				// Finalize pending game if exists (crash recovery)
 				// This applies the pending game values to the base player data
 				if (ratingFile.player.pendingGame) {
@@ -330,7 +343,7 @@ export class RatingSyncManager {
 				}
 				receivedPlayers.push(ratingFile.player);
 			} else {
-				// New player - add default starting data (same as P2P sync does)
+				// New player or corrupted file - add default starting data (same as P2P sync does)
 				const timestamp = math.floor(os.time());
 				receivedPlayers.push({
 					btag: btag,
@@ -350,11 +363,26 @@ export class RatingSyncManager {
 		// This includes computer players from previous games (in dev mode)
 		this.loadOthersDatabase(receivedPlayers);
 
-		// Load all data into RatingManager's memory
+		// Sort all players by rating and take top N for consistent leaderboard
+		const sortedPlayers = receivedPlayers.slice().sort((a, b) => {
+			if (b.rating !== a.rating) {
+				return b.rating - a.rating;
+			}
+			if (b.gamesPlayed !== a.gamesPlayed) {
+				return b.gamesPlayed - a.gamesPlayed;
+			}
+			if (a.btag < b.btag) return -1;
+			if (a.btag > b.btag) return 1;
+			return 0;
+		});
+		const topPlayers = sortedPlayers.slice(0, RATING_SYNC_TOP_PLAYERS);
+
+		// Load only top N players into memory
 		const ratingManager = RatingManager.getInstance();
-		ratingManager.loadPlayersFromSync(receivedPlayers);
+		ratingManager.loadPlayersFromSync(topPlayers);
 
 		// Initialize all current game players with default data (if they don't have any)
+		// If not in top N, they'll have _isSynced = false and won't appear in leaderboard
 		const currentPlayers: ActivePlayer[] = [];
 		PlayerManager.getInstance().players.forEach((player) => {
 			currentPlayers.push(player);
@@ -368,10 +396,8 @@ export class RatingSyncManager {
 			debugPrint(`[RATING SYNC] Save result: ${saved ? 'SUCCESS' : 'FAILED'}`);
 		}
 
-		// Regenerate "others" file with ALL loaded players (including newly initialized ones)
-		// This ensures computer players (in dev mode) get saved to the "others" file
-		const allLoadedPlayers = ratingManager.getAllLoadedPlayers();
-		this.saveOthersFile(allLoadedPlayers);
+		// Save "others" file with top N players
+		this.saveOthersFile(topPlayers);
 
 		// Mark sync as complete
 		this.syncFullyCompleted = true;
@@ -514,9 +540,29 @@ export class RatingSyncManager {
 			const filePath = `risk/${prefix}${this.seasonId}_${hash}.txt`;
 			const ratingFile = readRatings(filePath);
 
-			if (ratingFile) {
+			// Validate checksum if file exists
+			const isValidFile = ratingFile && validateChecksum(ratingFile);
+			if (ratingFile && !isValidFile) {
+				print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
+			}
+
+			if (isValidFile) {
 				// Force override with local data (always most accurate for yourself)
 				allPlayersMap.set(ratingFile.player.btag, ratingFile.player);
+			} else if (!allPlayersMap.has(btag)) {
+				// No valid local file and not in sync data - add fresh default data
+				const timestamp = math.floor(os.time());
+				allPlayersMap.set(btag, {
+					btag: btag,
+					rating: 1000,
+					gamesPlayed: 0,
+					lastUpdated: timestamp,
+					wins: 0,
+					losses: 0,
+					totalKillValue: 0,
+					totalDeathValue: 0,
+					totalPlacement: 0,
+				});
 			}
 		}
 
@@ -606,15 +652,38 @@ export class RatingSyncManager {
 	/**
 	 * Merge all received player data and save to local "others" database
 	 * Also loads data into RatingManager's memory for use during the game
+	 * Filters to top N players by rating to ensure consistent leaderboard across all players
 	 * @param allPlayers Array of all player data (from sync + local "others" + Computer players)
 	 */
 	private mergeAndSave(allPlayers: PlayerRatingData[]): void {
-		// Load all players into RatingManager's memory for use during the game
 		const ratingManager = RatingManager.getInstance();
-		ratingManager.loadPlayersFromSync(allPlayers);
 
-		// Initialize all current game players with default data (if they don't have any)
-		// This ensures the leaderboard shows all players even in fresh games
+		// Sort all merged players by rating (descending) to find the global top N
+		const sortedPlayers = allPlayers.slice().sort((a, b) => {
+			if (b.rating !== a.rating) {
+				return b.rating - a.rating;
+			}
+			// Tiebreaker: more games played wins
+			if (b.gamesPlayed !== a.gamesPlayed) {
+				return b.gamesPlayed - a.gamesPlayed;
+			}
+			// Final tiebreaker: alphabetical by btag
+			if (a.btag < b.btag) return -1;
+			if (a.btag > b.btag) return 1;
+			return 0;
+		});
+
+		// Take only top N players - this ensures everyone's leaderboard shows the same players
+		// RATING_SYNC_TOP_PLAYERS defines the leaderboard size (e.g., 100)
+		const topPlayers = sortedPlayers.slice(0, RATING_SYNC_TOP_PLAYERS);
+
+		// Load only top N players into memory (marked as synced)
+		// This ensures leaderboard shows exactly top N players
+		ratingManager.loadPlayersFromSync(topPlayers);
+
+		// Initialize current game players with default data if they're not in top N
+		// These will have _isSynced = false, so they won't appear in leaderboard
+		// but their data is still available for in-game display
 		const currentPlayers: ActivePlayer[] = [];
 		PlayerManager.getInstance().players.forEach((player) => {
 			currentPlayers.push(player);
@@ -629,10 +698,9 @@ export class RatingSyncManager {
 			ratingManager.savePlayerRating(localBtag);
 		}
 
-		// Save "others" file with ALL loaded players (including newly initialized ones)
-		// This ensures computer players (in dev mode) get saved to the "others" file
-		const allLoadedPlayers = ratingManager.getAllLoadedPlayers();
-		this.saveOthersFile(allLoadedPlayers);
+		// Save "others" file with top N players (excluding local player)
+		// Use the same topPlayers list to ensure consistency
+		this.saveOthersFile(topPlayers);
 
 		// Mark sync as fully complete - safe for UI to access now
 		this.syncFullyCompleted = true;

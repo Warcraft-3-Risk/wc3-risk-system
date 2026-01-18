@@ -4,8 +4,9 @@
  * Formula: ratingChange = basePlacementPoints × opponentStrengthModifier
  *
  * 1. Base Placement Points: Dynamically calculated based on percentile position
- *    - Ensures consistent ~36 net inflation per game regardless of player count (16-23)
- *    - Top ~40% gain points, bottom ~60% lose points
+ *    - Inflationary system with ~200 net points per game (10 pts/player average)
+ *    - Top ~55% gain points, bottom ~45% lose points
+ *    - Softer loss curve (max -30) to reduce frustration for casual players
  * 2. Opponent Strength Modifier: Adjusts based on your rating vs average opponent rating
  *    - Beat weaker players = gain less points
  *    - Beat stronger players = gain more points
@@ -16,14 +17,17 @@
 import { RANKED_OPPONENT_STRENGTH_FACTOR } from 'src/configs/game-settings';
 
 // Target net inflation per game (distributed across all players)
-const TARGET_INFLATION_PER_GAME = 36;
+// Higher values make the system more inflationary, helping average players climb
+// With BREAKEVEN at 0.55, raw sum is ~295 for 20 players, so 200 gives moderate adjustment
+const TARGET_INFLATION_PER_GAME = 200;
 
 // Maximum points for 1st place and last place (before inflation adjustment)
-const MAX_WIN_POINTS = 48;
-const MAX_LOSS_POINTS = 40;
+const MAX_WIN_POINTS = 50;
+const MAX_LOSS_POINTS = 30;
 
-// Breakeven percentile (top 40% gain, bottom 60% lose)
-const BREAKEVEN_PERCENTILE = 0.40;
+// Breakeven percentile (top 55% gain, bottom 45% lose)
+// This means more players gain points each game, reducing frustration
+const BREAKEVEN_PERCENTILE = 0.55;
 
 /**
  * Get the military rank icon path based on player's rating

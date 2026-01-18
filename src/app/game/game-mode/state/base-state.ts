@@ -47,6 +47,11 @@ export abstract class BaseState<T extends StateData> {
 	onPlayerLeft(player: ActivePlayer): void {
 		onPlayerLeftHandle(player);
 		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
+
+		// Finalize rating for player who left/disconnected
+		// This ensures their rating change is calculated and shown on scoreboard
+		// Note: finalizePlayerRating safely handles already-finalized players
+		RatingManager.getInstance().finalizePlayerRating(player);
 	}
 
 	onPlayerSTFU(player: ActivePlayer): void {

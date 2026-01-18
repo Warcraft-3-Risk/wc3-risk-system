@@ -6,7 +6,7 @@
 export const CITIES_TO_WIN_RATIO: number = 0.1;
 
 //This is the starting gold for each player. 4 gold by default.
-export const STARTING_INCOME: number = 400;
+export const STARTING_INCOME: number = 4;
 
 //This is the starting countdown for the game. 10 by default
 export const STARTING_COUNTDOWN: number = 2;
@@ -76,7 +76,7 @@ export const RANKED_MIN_PLAYERS: number = 16;
 export const RANKED_STARTING_RATING: number = 1000;
 
 // Minimum rating floor - players cannot go below this rating
-export const RANKED_MINIMUM_RATING: number = 100;
+export const RANKED_MINIMUM_RATING: number = 500;
 
 // Opponent strength modifier scale factor (0.32 gives range 0.68x to 1.32x)
 // Higher values make rating differences matter more, creating stronger ceiling effects
@@ -97,15 +97,16 @@ export const RANKED_OPPONENT_STRENGTH_FACTOR: number = 0.32;
 //   - Uses normal "ratings_" file prefix
 //   - Requires minimum player count (RANKED_MIN_PLAYERS) for ranked games
 //   - Computer/AI players are EXCLUDED from rating calculations (prevents cheating)
-//   - Rating file encryption is ENABLED (XOR + Base64 to prevent tampering)
-export const DEVELOPER_MODE: boolean = true;
+//   - Rating file encryption is ENABLED
+export const DEVELOPER_MODE: boolean = false;
 
 // ============================================
 // P2P Rating Sync Settings
 // ============================================
 
 // Timeout for P2P rating sync in seconds. After this time, sync completes with whatever data was received.
-export const RATING_SYNC_TIMEOUT: number = 6.0;
+// 10 seconds allows sufficient time for staggered SyncRequest creation (~2s) plus P2P transmission
+export const RATING_SYNC_TIMEOUT: number = 10.0;
 
 // Maximum number of top players to sync from "others" database.
 // This limits sync payload size and leaderboard storage.
