@@ -98,7 +98,7 @@ export const RANKED_OPPONENT_STRENGTH_FACTOR: number = 0.32;
 //   - Requires minimum player count (RANKED_MIN_PLAYERS) for ranked games
 //   - Computer/AI players are EXCLUDED from rating calculations (prevents cheating)
 //   - Rating file encryption is ENABLED
-export const DEVELOPER_MODE: boolean = true;
+export const DEVELOPER_MODE: boolean = false;
 
 // ============================================
 // P2P Rating Sync Settings
