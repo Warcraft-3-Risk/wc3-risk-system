@@ -13,6 +13,7 @@ import { HowTo } from './tutorial';
 import { UICommand } from './ui';
 import { W3CDrawCommand } from './w3c-draw';
 import { W3CGGCommand } from './w3c-gg';
+import { Advanced } from './advanced';
 
 export function SetCommands() {
 	const chatManager: ChatManager = ChatManager.getInstance();
@@ -29,6 +30,7 @@ export function SetCommands() {
 	HelpCommand(chatManager);
 	UICommand(chatManager);
 	HowTo(chatManager);
+	Advanced(chatManager);
 	W3CDrawCommand(chatManager);
 	W3CGGCommand(chatManager);
 }

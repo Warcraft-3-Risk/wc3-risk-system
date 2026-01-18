@@ -16,8 +16,12 @@ export class PlayerNames {
 	constructor(name: string, colorCode: string) {
 		const splitName = name.split(' ')[0];
 
-		if (splitName === 'Computer' || splitName === 'Local') {
+		if (splitName === 'Computer') {
 			const uniqueId = '#' + Math.floor(Math.random() * 10000);
+
+			this._btag = `${splitName}${uniqueId}`;
+		} else if(splitName === 'Local') {
+			const uniqueId = 'Local#' + 1234;
 
 			this._btag = `${splitName}${uniqueId}`;
 		} else {

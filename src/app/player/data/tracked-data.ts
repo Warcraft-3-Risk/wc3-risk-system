@@ -17,6 +17,8 @@ export class TrackedData {
 	private _countries: Map<Country, number>;
 	private _killsDeaths: Map<string | player, KillsDeaths>;
 	private _denies: number;
+	private _roarCasts: number;
+	private _dispelCasts: number;
 	private _lastCombat: number;
 
 	private _lastUnitKilledBy: player;
@@ -47,6 +49,8 @@ export class TrackedData {
 		this._countries = new Map<Country, number>();
 		this._killsDeaths = new Map<string | player, KillsDeaths>();
 		this._denies = 0;
+		this._roarCasts = 0;
+		this._dispelCasts = 0;
 		this._units = new Set<unit>();
 		this._trainedUnits = new Map<number, number>();
 		this._turnDied = -1;
@@ -69,6 +73,8 @@ export class TrackedData {
 		this.countries.clear();
 		this.killsDeaths.clear();
 		this.denies = 0;
+		this.roarCasts = 0;
+		this.dispelCasts = 0;
 		this.units.clear();
 		this._trainedUnits.clear();
 		this.turnDied = 0;
@@ -150,6 +156,22 @@ export class TrackedData {
 
 	public set denies(value: number) {
 		this._denies = value;
+	}
+
+	public get roarCasts(): number {
+		return this._roarCasts;
+	}
+
+	public set roarCasts(value: number) {
+		this._roarCasts = value;
+	}
+
+	public get dispelCasts(): number {
+		return this._dispelCasts;
+	}
+
+	public set dispelCasts(value: number) {
+		this._dispelCasts = value;
 	}
 
 	public get turnDied(): number {

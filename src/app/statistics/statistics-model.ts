@@ -119,8 +119,13 @@ export class StatisticsModel {
 			if (playerA === winner) return -1;
 			if (playerB === winner) return 1;
 
-			if (playerA.trackedData.turnDied !== playerB.trackedData.turnDied) {
-				return playerB.trackedData.turnDied - playerA.trackedData.turnDied;
+			// Alive players (turnDied = 0) should rank higher than dead players
+			// Treat alive players as having turnDied = Infinity (use a large number)
+			const turnDiedA = playerA.trackedData.turnDied === 0 ? 999999 : playerA.trackedData.turnDied;
+			const turnDiedB = playerB.trackedData.turnDied === 0 ? 999999 : playerB.trackedData.turnDied;
+
+			if (turnDiedA !== turnDiedB) {
+				return turnDiedB - turnDiedA;
 			}
 
 			return playerB.trackedData.cities.cities.length - playerA.trackedData.cities.cities.length;
@@ -137,11 +142,12 @@ export class StatisticsModel {
 			}
 
 			// Sort teams by who has members that have lived the longest
+			// Alive players (turnDied = 0) should count as having lived the longest
 			const teamAPlayers = teamA.getMembers();
 			const teamBPlayers = teamB.getMembers();
 
-			const teamALongestLife = Math.max(...teamAPlayers.map((player) => player.trackedData.turnDied));
-			const teamBLongestLife = Math.max(...teamBPlayers.map((player) => player.trackedData.turnDied));
+			const teamALongestLife = Math.max(...teamAPlayers.map((player) => player.trackedData.turnDied === 0 ? 999999 : player.trackedData.turnDied));
+			const teamBLongestLife = Math.max(...teamBPlayers.map((player) => player.trackedData.turnDied === 0 ? 999999 : player.trackedData.turnDied));
 
 			if (teamALongestLife !== teamBLongestLife) {
 				return teamBLongestLife - teamALongestLife;

@@ -7,7 +7,6 @@ import { PLAYER_SLOTS } from '../utils/utils';
 export function SetConsoleUI() {
 	// Disable Resource Tooltips
 	const resourceFrame: framehandle = BlzGetFrameByName('ResourceBarFrame', 0);
-	BlzFrameSetVisible(BlzFrameGetChild(resourceFrame, 0), false); // gold tooltip
 	BlzFrameSetVisible(BlzFrameGetChild(resourceFrame, 1), false); // lumber tooltip
 	BlzFrameSetVisible(BlzFrameGetChild(resourceFrame, 2), false); // upkeep tooltip
 	BlzFrameSetVisible(BlzFrameGetChild(resourceFrame, 3), false); // supply tooltip
@@ -17,55 +16,9 @@ export function SetConsoleUI() {
 	BlzFrameSetAbsPoint(upkeepFrame, FRAMEPOINT_TOPRIGHT, 0.6485, 0.5972);
 	BlzFrameSetText(upkeepFrame, '');
 
-	const goldFrame: framehandle = BlzGetFrameByName('ResourceBarGoldText', 0);
-	BlzFrameSetText(goldFrame, '');
-	BlzFrameSetSize(goldFrame, 0.0000001, 0.0000001);
-
 	const lumberFrame: framehandle = BlzGetFrameByName('ResourceBarLumberText', 0);
 	BlzFrameSetText(lumberFrame, '');
 	BlzFrameSetSize(lumberFrame, 0.0000001, 0.0000001);
-
-	/**
-	 * CUSTOM GOLD DISPLAY IMPLEMENTATION (New Frame Approach)
-	 *
-	 * Problem: The default ResourceBarGoldText is constrained by its parent ResourceBarFrame,
-	 * causing truncation when displaying values like "1042/350" (shows as "1042/35").
-	 *
-	 * Solution: Disable the original frame and create a brand new TEXT frame:
-	 * 1. Hide the original ResourceBarGoldText (it's unusable due to parent constraints)
-	 * 2. Create a new TEXT frame parented to ConsoleUI (safe root container)
-	 * 3. Position it absolutely in the same location as the original
-	 * 4. Size it generously to fit "XXXX/YYYY" format
-	 */
-
-	// Create a new TEXT frame parented to GAME_UI (like the mapInfo frame above)
-	const customGoldText: framehandle = BlzCreateFrameByType('TEXT', 'CustomGoldText', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), '', 0);
-
-	// CRITICAL: Set font immediately after creating TEXT frame to avoid crashes
-	// TEXT frames require a font to be set before other operations
-	// MasterFont controls resource bar text - typically maps to Arialn.ttf in WC3
-	BlzFrameSetFont(customGoldText, 'Fonts\\Arialn.ttf', 0.011, 0);
-
-	// Set generous size for "XXXX/YYYY" format
-	BlzFrameSetSize(customGoldText, 0.09, 0.017);
-
-	// Position it to the left of the supply counter in the resource bar area
-	BlzFrameSetAbsPoint(customGoldText, FRAMEPOINT_TOPRIGHT, 0.534, 0.5975);
-
-	// Configure text display properties
-	BlzFrameSetTextAlignment(customGoldText, TEXT_JUSTIFY_MIDDLE, TEXT_JUSTIFY_RIGHT);
-
-	// Use gold/yellow color to match the original resource bar text
-	BlzFrameSetTextColor(customGoldText, BlzConvertColor(255, 255, 255, 0));
-
-	// Ensure the frame is visible
-	BlzFrameSetVisible(customGoldText, true);
-
-	// Set a higher level to ensure it's on top
-	BlzFrameSetLevel(customGoldText, 10);
-
-	BlzFrameSetText(customGoldText, ''); // Default text
-	BlzFrameSetEnable(customGoldText, false); // Don't capture mouse events
 
 	const mapInfo: framehandle = BlzCreateFrameByType(
 		'TEXT',
@@ -95,11 +48,6 @@ export function SetConsoleUI() {
 		BlzFrameSetVisible(BlzGetFrameByName('LumberText', i), false);
 		BlzFrameSetVisible(BlzGetFrameByName('VisionCheckBox', i), false);
 	}
-
-	// for (let i = 0; i < 23; i++) {
-	// 	BlzFrameSetVisible(BlzGetFrameByName('GoldBackdrop', i), false);
-	// 	BlzFrameSetVisible(BlzGetFrameByName('GoldText', i), false);
-	// }
 
 	if (GetHandleId(BlzGetFrameByName('ChatPlayerLabel', 0)) == 0) {
 		Location(0, 0);
@@ -182,16 +130,18 @@ export function AllyMenuFFASetup() {
 	let tempText: string = 'discord.me/risk';
 	tempText += '|n|n|cffffcc00Commands:|r';
 	tempText += '|n|cffffffff-help - Display full command list';
-	tempText += '|n|cffffffff-howto - Quick tutorial on how to play';
+	tempText += '|n|cffffffff-tutorial - Quick tutorial on how to play';
+	tempText += '|n|cffffffff-advanced - Advanced gameplay tips and tricks';
 	tempText += '|n|cffffffff-cam #### - Set camera distance (1000 min, 8500 max)';
 	tempText += '|n|cffffffff-ff - Forfeit the game without leaving it';
 	tempText += '|n|cffffffff-ng - Restart the game when it is over';
 	tempText += '|n|cffffffff-names - Display a list of alive/nomad players';
 	tempText += '|n|cffffffff-allies - Show your allies (team modes only)';
 	tempText += '|n|cffffffff-gold <player> <amount> - Send gold to allies (team modes)';
-	tempText += '|n|cffffffff-stfu <player> - Mute a dead player for 300 seconds';
+	tempText += '|n|cffffffff-mute <player> - Mute a dead player for 300 seconds';
 	tempText += '|n|cffffffff-ui - Toggle UI buttons visibility';
 	tempText += '|n|n|cffffcc00Hotkeys:|r';
+	tempText += '|n|cffffffff F4 - Toggle rating stats window';
 	tempText += '|n|cffffffff F6 - Toggle guard health preference';
 	tempText += '|n|cffffffff F7 - Toggle guard value preference';
 	tempText += '|n|cffffffff F8 - Toggle country labels';

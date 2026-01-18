@@ -7,6 +7,8 @@ import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { GlobalGameData } from '../game/state/global-game-state';
+import { RatingManager } from '../rating/rating-manager';
+import { debugPrint } from '../utils/debug-print';
 
 export class StandardBoard extends Scoreboard {
 	private players: ActivePlayer[];
@@ -79,7 +81,7 @@ export class StandardBoard extends Scoreboard {
 			let textColor: string = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 
 			if(player.status.isEliminated()) {
-				this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, 2);
+				this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, this.INCOME_COL);
 			} else {
 				this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
 			}
@@ -131,7 +133,26 @@ export class StandardBoard extends Scoreboard {
 
 		// --- Eliminated Player Formatting ---
 		if (player.status.isEliminated()) {
-			this.setItemValue(`${grey}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
+			// Show rating change after player name if available (ranked game + local player has rating display enabled)
+			const ratingManager = RatingManager.getInstance();
+			const btag = NameManager.getInstance().getBtag(player.getPlayer());
+			const ratingResult = ratingManager.getRatingResults().get(btag);
+			const playerName = NameManager.getInstance().getDisplayName(player.getPlayer());
+
+			// Check if the LOCAL (viewing) player has rating display enabled
+			const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
+			const localShowRating = ratingManager.getShowRatingPreference(localBtag);
+
+			if (ratingResult && ratingManager.isRankedGame() && localShowRating) {
+				const change = ratingResult.totalChange;
+				const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
+				const sign = change >= 0 ? '+' : '';
+				const truncatedName = playerName.length > 18 ? playerName.slice(0, 18) : playerName;
+				this.setItemValue(`${grey}${truncatedName}${color}(${sign}${change})|r`, row, this.PLAYER_COL);
+			} else {
+				const truncatedName = playerName.length > 20 ? playerName.slice(0, 20) : playerName;
+				this.setItemValue(`${grey}${truncatedName}`, row, this.PLAYER_COL);
+			}
 
 			// Cities
 			this.setItemValue(`${grey}${data.cities.cities.length}`, row, this.CITIES_COL);

@@ -225,7 +225,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		}
 
 		Frame "POPUPMENU" "PromodePopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
-		SetPoint TOP,"PopupMenus",TOP,0.0,-0.17,
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.16,
 		PopupMenuFrame "PromodePopupMenu",
 			Frame "MENU" "PromodePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
 				MenuItem "Off",     -2,
@@ -285,7 +285,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		}
 
 		Frame "TEXT" "PromodeLabel" {
-			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.17,
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.16,
 			DecorateFileNames,
 			FrameFont "MasterFont", 0.012,"",
 			FontColor 1.0 0.8 0.0 1.0,
@@ -346,7 +346,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 		}
 
 		Frame "TEXT" "PromodeOption" {
-			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.17,
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.16,
 			DecorateFileNames,
 			FrameFont "MasterFont", 0.012,"",
 			FontColor 1.0 0.8 0.0 1.0,
@@ -541,5 +541,318 @@ Frame "BACKDROP" "TeamOptionsBackdrop" INHERITS "BackdropTemplate" {
             Height 0.025,
             Text "Team Color:"
         }
+    }
+}
+
+Frame "BACKDROP" "RatingStatsFrame" INHERITS "QuestButtonBaseTemplate" {
+    Width 0.25,
+    Height 0.26,
+    SetPoint TOPLEFT, "ConsoleUI", TOPLEFT, 0.44, -0.025,
+
+    Frame "TEXT" "RatingStatsTitle" {
+        SetPoint TOP, "RatingStatsFrame", TOP, 0, -0.01,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.014, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYCENTER,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.23,
+        Height 0.02,
+        Text "Rating Stats",
+    }
+
+    Frame "GLUETEXTBUTTON" "RatingCloseButton" INHERITS WITHCHILDREN "EscMenuButtonTemplate" {
+        SetPoint TOPRIGHT, "RatingStatsFrame", TOPRIGHT, -0.005, -0.005,
+        Width 0.025,
+        Height 0.025,
+        UseActiveContext,
+        ButtonText "RatingCloseButtonText",
+
+        Frame "TEXT" "RatingCloseButtonText" INHERITS "EscMenuButtonTextTemplate" {
+            Text "X",
+        }
+    }
+
+    Frame "BACKDROP" "RankIconBadge" {
+        SetPoint TOP, "RatingStatsTitle", BOTTOM, 0, -0.005,
+        Width 0.06,
+        Height 0.06,
+        BackdropBackground "Assets\\Ranks\\UserInterface\\private.blp",
+        BackdropBlendAll,
+    }
+
+    Frame "TEXT" "RatingValueText" {
+        SetPoint TOPLEFT, "RankIconBadge", BOTTOMLEFT, -0.075, -0.005,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.011, "",
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.12,
+        Height 0.02,
+        Text "Rating: 1000",
+    }
+
+    Frame "GLUETEXTBUTTON" "RatingToggleButton" INHERITS WITHCHILDREN "EscMenuButtonTemplate" {
+        SetPoint TOPRIGHT, "RankIconBadge", BOTTOMRIGHT, 0.075, -0.005,
+        Width 0.09,
+        Height 0.022,
+        UseActiveContext,
+        ButtonText "RatingToggleButtonText",
+
+        Frame "TEXT" "RatingToggleButtonText" INHERITS "EscMenuButtonTextTemplate" {
+            Text "Top 10",
+        }
+    }
+
+    Frame "TEXT" "GamesPlayedText" {
+        SetPoint TOPLEFT, "RatingValueText", BOTTOMLEFT, 0, -0.005,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.011, "",
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.12,
+        Height 0.02,
+        Text "Games Played: 0",
+    }
+
+    Frame "TEXT" "WinLossLabel" {
+        SetPoint TOPLEFT, "GamesPlayedText", BOTTOMLEFT, 0, -0.01,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.010, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.23,
+        Height 0.015,
+        Text "Win/Loss:",
+    }
+
+    Frame "BACKDROP" "WinBarBackground" {
+        SetPoint TOPLEFT, "WinLossLabel", BOTTOMLEFT, 0, -0.003,
+        Width 0.23,
+        Height 0.02,
+        BackdropBackground "Replaceabletextures\\Teamcolor\\Teamcolor27.blp",
+        BackdropBlendAll,
+
+        Frame "BACKDROP" "WinBarFill" {
+            SetPoint LEFT, "WinBarBackground", LEFT, 0, 0,
+            Width 0.23,
+            Height 0.02,
+            BackdropBackground "Replaceabletextures\\Teamcolor\\Teamcolor00.blp",
+            BackdropBlendAll,
+        }
+
+        Frame "TEXT" "WinPercentText" {
+            SetAllPoints,
+            DecorateFileNames,
+            FrameFont "MasterFont", 0.009, "",
+            LayerStyle "IGNORETRACKEVENTS",
+            FontJustificationH JUSTIFYCENTER,
+            FontJustificationV JUSTIFYMIDDLE,
+            Text "0 W / 0 L (0%)",
+        }
+    }
+
+    Frame "TEXT" "KillDeathLabel" {
+        SetPoint TOPLEFT, "WinBarBackground", BOTTOMLEFT, 0, -0.01,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.010, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.23,
+        Height 0.015,
+        Text "Kill/Death Value:",
+    }
+
+    Frame "BACKDROP" "KillBarBackground" {
+        SetPoint TOPLEFT, "KillDeathLabel", BOTTOMLEFT, 0, -0.003,
+        Width 0.23,
+        Height 0.02,
+        BackdropBackground "Replaceabletextures\\Teamcolor\\Teamcolor27.blp",
+        BackdropBlendAll,
+
+        Frame "BACKDROP" "KillBarFill" {
+            SetPoint LEFT, "KillBarBackground", LEFT, 0, 0,
+            Width 0.23,
+            Height 0.02,
+            BackdropBackground "Replaceabletextures\\Teamcolor\\Teamcolor00.blp",
+            BackdropBlendAll,
+        }
+
+        Frame "TEXT" "KillPercentText" {
+            SetAllPoints,
+            DecorateFileNames,
+            FrameFont "MasterFont", 0.009, "",
+            LayerStyle "IGNORETRACKEVENTS",
+            FontJustificationH JUSTIFYCENTER,
+            FontJustificationV JUSTIFYMIDDLE,
+            Text "0 K / 0 D (0%)",
+        }
+    }
+
+}
+
+Frame "BACKDROP" "Top10LeaderboardFrame" INHERITS "QuestButtonBaseTemplate" {
+    Width 0.52,
+    Height 0.28,
+    SetPoint TOPLEFT, "ConsoleUI", TOPLEFT, 0.30, -0.025,
+
+    Frame "TEXT" "Top10Title" {
+        SetPoint TOP, "Top10LeaderboardFrame", TOP, 0, -0.01,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.014, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYCENTER,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.5,
+        Height 0.02,
+        Text "Leaderboard",
+    }
+
+    // Column headers
+    Frame "TEXT" "Top10HeaderRank" {
+        SetPoint TOPLEFT, "Top10LeaderboardFrame", TOPLEFT, 0.01, -0.035,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.009, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.04,
+        Height 0.015,
+        Text "Rank",
+    }
+
+    Frame "TEXT" "Top10HeaderELO" {
+        SetPoint TOPLEFT, "Top10LeaderboardFrame", TOPLEFT, 0.05, -0.035,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.009, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.05,
+        Height 0.015,
+        Text "Rating",
+    }
+
+    Frame "TEXT" "Top10HeaderName" {
+        SetPoint TOPLEFT, "Top10LeaderboardFrame", TOPLEFT, 0.10, -0.035,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.009, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.15,
+        Height 0.015,
+        Text "Name",
+    }
+
+    Frame "TEXT" "Top10HeaderWinRate" {
+        SetPoint TOPLEFT, "Top10LeaderboardFrame", TOPLEFT, 0.25, -0.035,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.009, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.07,
+        Height 0.015,
+        Text "Win Rate",
+    }
+
+    Frame "TEXT" "Top10HeaderWins" {
+        SetPoint TOPLEFT, "Top10LeaderboardFrame", TOPLEFT, 0.33, -0.035,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.009, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.05,
+        Height 0.015,
+        Text "Wins",
+    }
+
+    Frame "TEXT" "Top10HeaderLosses" {
+        SetPoint TOPLEFT, "Top10LeaderboardFrame", TOPLEFT, 0.39, -0.035,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.009, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.05,
+        Height 0.015,
+        Text "Losses",
+    }
+
+    Frame "TEXT" "Top10HeaderGames" {
+        SetPoint TOPLEFT, "Top10LeaderboardFrame", TOPLEFT, 0.45, -0.035,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.009, "",
+        FontColor 0.99 0.827 0.0705 1.0,
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYLEFT,
+        FontJustificationV JUSTIFYTOP,
+        Width 0.05,
+        Height 0.015,
+        Text "Games",
+    }
+
+    Frame "GLUETEXTBUTTON" "Top10CloseButton" INHERITS WITHCHILDREN "EscMenuButtonTemplate" {
+        SetPoint TOPRIGHT, "Top10LeaderboardFrame", TOPRIGHT, -0.005, -0.005,
+        Width 0.025,
+        Height 0.025,
+        UseActiveContext,
+        ButtonText "Top10CloseButtonText",
+
+        Frame "TEXT" "Top10CloseButtonText" INHERITS "EscMenuButtonTextTemplate" {
+            Text "X",
+        }
+    }
+
+    Frame "GLUETEXTBUTTON" "Top10PrevButton" INHERITS WITHCHILDREN "EscMenuButtonTemplate" {
+        SetPoint BOTTOMLEFT, "Top10LeaderboardFrame", BOTTOMLEFT, 0.01, 0.01,
+        Width 0.08,
+        Height 0.025,
+        UseActiveContext,
+        ButtonText "Top10PrevButtonText",
+
+        Frame "TEXT" "Top10PrevButtonText" INHERITS "EscMenuButtonTextTemplate" {
+            Text "< Prev",
+        }
+    }
+
+    Frame "GLUETEXTBUTTON" "Top10NextButton" INHERITS WITHCHILDREN "EscMenuButtonTemplate" {
+        SetPoint BOTTOMRIGHT, "Top10LeaderboardFrame", BOTTOMRIGHT, -0.01, 0.01,
+        Width 0.08,
+        Height 0.025,
+        UseActiveContext,
+        ButtonText "Top10NextButtonText",
+
+        Frame "TEXT" "Top10NextButtonText" INHERITS "EscMenuButtonTextTemplate" {
+            Text "Next >",
+        }
+    }
+
+    Frame "TEXT" "Top10PageText" {
+        SetPoint BOTTOM, "Top10LeaderboardFrame", BOTTOM, 0, 0.02,
+        DecorateFileNames,
+        FrameFont "MasterFont", 0.010, "",
+        LayerStyle "IGNORETRACKEVENTS",
+        FontJustificationH JUSTIFYCENTER,
+        FontJustificationV JUSTIFYBOTTOM,
+        Width 0.1,
+        Height 0.02,
+        Text "Page 1 / 1",
     }
 }

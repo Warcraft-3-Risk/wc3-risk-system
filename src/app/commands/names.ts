@@ -3,6 +3,8 @@ import { ChatManager } from '../managers/chat-manager';
 import { NameManager } from '../managers/names/name-manager';
 import { PlayerManager } from '../player/player-manager';
 import { ShuffleArray } from '../utils/utils';
+import { RatingManager } from '../rating/rating-manager';
+import { HexColors } from '../utils/hex-colors';
 
 export function NamesCommand(chatManager: ChatManager, playerManager: PlayerManager, nameManager: NameManager) {
 	chatManager.addCmd(['-names', '-players'], () => {
@@ -23,7 +25,25 @@ export function NamesCommand(chatManager: ChatManager, playerManager: PlayerMana
 
 		TimerStart(namesTimer, 0.75, true, () => {
 			if (nameList.length > 0) {
-				DisplayTimedTextToPlayer(player, 0, 0, 5, `${nameManager.getBtag(nameList.pop())}`);
+				const p = nameList.pop();
+				const btag = nameManager.getBtag(p);
+				const ratingManager = RatingManager.getInstance();
+
+				// Check if requesting player has disabled rating display
+				const requestingPlayerBtag = nameManager.getBtag(player);
+				const showRating = ratingManager.getShowRatingPreference(requestingPlayerBtag);
+
+				if (!showRating) {
+					// Opted out - show no ratings
+					DisplayTimedTextToPlayer(player, 0, 0, 5, `${btag}`);
+				} else {
+					if (ratingManager.isRankedGame()) {
+						const rating = ratingManager.getPlayerRating(btag);
+						DisplayTimedTextToPlayer(player, 0, 0, 5, `${btag} ${HexColors.TANGERINE}(${rating})|r`);
+					} else {
+						DisplayTimedTextToPlayer(player, 0, 0, 5, `${btag}`);
+					}
+				}
 			} else {
 				PauseTimer(namesTimer);
 				DestroyTimer(namesTimer);

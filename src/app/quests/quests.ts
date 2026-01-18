@@ -168,11 +168,10 @@ export class Quests {
 	}
 
 	private Commands() {
-		const description = `Available commands you can use in-game:
-
-			${HexColors.YELLOW}General Commands:|r
+		const description = `${HexColors.YELLOW}General Commands:|r
 			-help / -commands - Display the command list in chat
-			-howto / -tut / -tutorial - Quick tutorial on how to play
+			-tutorial / -tut - Quick tutorial on how to play
+			-advanced / -adv - Advanced gameplay tips and tricks
 			-cam / -zoom <distance> <rotation> <AoA> - Adjust camera settings
 			-ui - Toggle visibility of UI buttons (guard health, value, labels)
 
@@ -188,10 +187,11 @@ export class Quests {
 			  Example: -g blue (sends all your gold to blue player)
 
 			${HexColors.YELLOW}Social Commands:|r
-			-stfu <player name/color> - Mute a dead player for 300 seconds
-			  Example: -stfu blue
+			-mute <player name/color> - Mute a dead player for 300 seconds
+			  Example: -mute blue
 
 			${HexColors.YELLOW}Hotkeys:|r
+			F4 - Toggle rating stats window
 			F6 - Toggle guard health bar preference
 			F7 - Toggle guard value display preference
 			F8 - Toggle country label visibility
@@ -216,8 +216,7 @@ export class Quests {
 	}
 
 	public AddSettingsQuest(settings: SettingsContext): void {
-		let description = `Game Settings:
-			Host: ${NameManager.getInstance().getBtag(PlayerManager.getInstance().getHost().getPlayer())}
+		let description = `Host: ${NameManager.getInstance().getBtag(PlayerManager.getInstance().getHost().getPlayer())}
 			Diplomacy: ${DiplomacyStringsColorFormatted[settings.getSettings().Diplomacy.option]}
 			Fog: ${FogOptionsColorFormatted[settings.getSettings().Fog]}
 			Game Type: ${GameTypeOptionsColorFormatted[settings.getSettings().GameType]}

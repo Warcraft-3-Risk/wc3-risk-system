@@ -19,9 +19,7 @@ export function UnitDeathEvent() {
 	const t: trigger = CreateTrigger();
 
 	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
-		debugPrint(`Registering unit death event for player ${i}`);
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_DEATH, null);
-		debugPrint(`Registered unit death event for player ${i}`);
 	}
 
 	TriggerAddCondition(

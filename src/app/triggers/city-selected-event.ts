@@ -9,9 +9,7 @@ import { debugPrint } from '../utils/debug-print';
 export function CitySelectedEvent() {
 	const t: trigger = CreateTrigger();
 	for (let i = 0; i < PLAYER_SLOTS; i++) {
-		debugPrint(`Registering city selected event for player ${i}`);
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SELECTED);
-		debugPrint(`Registered city selected event for player ${i}`);
 	}
 
 	TriggerAddCondition(

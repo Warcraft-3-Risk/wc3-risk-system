@@ -10,6 +10,8 @@ import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import { GlobalGameData } from './state/global-game-state';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 import { LocalMessage } from '../utils/messages';
+import { RatingSyncManager } from 'src/app/rating/rating-sync-manager';
+import { PlayerManager } from 'src/app/player/player-manager';
 
 export class ModeSelection {
 	private ui: SettingsView;
@@ -33,6 +35,24 @@ export class ModeSelection {
 	}
 
 	public run(): void {
+		// Start P2P rating synchronization early (during settings selection)
+		// This allows sync to complete while host is configuring the game
+		const syncManager = RatingSyncManager.getInstance();
+		const humanPlayers = PlayerManager.getInstance().getHumanPlayersOnly();
+		syncManager.startSync(humanPlayers);
+
+		// Consuming pauses to maintain continous gameplay
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			const player = Player(i);
+
+			if (player == GetLocalPlayer()) {
+				for (let index = 0; index < 3; index++) {
+					PauseGame(true);
+					PauseGame(false);
+				}
+			}
+		}
+
 		if (W3C_MODE_ENABLED) {
 			LocalMessage(
 				GetLocalPlayer(),
