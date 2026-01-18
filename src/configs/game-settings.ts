@@ -72,7 +72,7 @@ export const BAN_LIST_ACTIVE: boolean = true;
 //   - No rating data is stored or loaded
 //   - Statistics always uses the unranked leaderboard (without rating column)
 //   - Rating sync is skipped entirely
-export const RATING_SYSTEM_ENABLED: boolean = false;
+export const RATING_SYSTEM_ENABLED: boolean = true;
 
 // This represents the current ranked season ID. Change this to start a new season.
 export const RANKED_SEASON_ID: number = 0;
