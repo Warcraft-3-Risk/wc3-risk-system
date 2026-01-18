@@ -49,7 +49,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 				// Note: P2P rating sync already started in ModeSelection.run() during settings phase
 			} else {
-				const message = `${HexColors.TANGERINE}This is an unranked game!|r.`;
+				const message = `${HexColors.TANGERINE}This is an unranked game.|r`;
 
 				// Send message only to players who have rating display enabled
 				PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
