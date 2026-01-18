@@ -3,7 +3,6 @@ import { readRatings, validateChecksum, writeRatings } from './rating-file-handl
 import { readOthersRatings, writeOthersRatings } from './global-rating-handler';
 import {
 	calculatePlacementPoints,
-	calculateLobbySizeMultiplier,
 	calculateOpponentStrengthModifier,
 	calculateRatingChange,
 } from './rating-calculator';
@@ -28,6 +27,12 @@ export class RatingManager {
 	private loadedPlayers: Set<string>; // Track which players have been loaded
 	private currentGameId: string;
 
+	// Initial game state - captured at game start, never changes during the game
+	private initialPlayerCount: number = 0;
+	private initialPlayerRatings: Map<string, number> = new Map();
+	private eliminatedCount: number = 0;
+	private finalizedPlayers: Set<string> = new Set();
+
 	/**
 	 * Private constructor to ensure singleton pattern
 	 */
@@ -37,6 +42,8 @@ export class RatingManager {
 		this.loadedPlayers = new Set();
 		this.isRankedGameFlag = false;
 		this.seasonId = RANKED_SEASON_ID;
+		this.initialPlayerRatings = new Map();
+		this.finalizedPlayers = new Set();
 	}
 
 	/**
@@ -228,6 +235,60 @@ export class RatingManager {
 	 */
 	public getCurrentGameId(): string {
 		return this.currentGameId || '';
+	}
+
+	/**
+	 * Capture initial game data at game start
+	 * This locks in the player count and ratings used for ALL calculations during the game
+	 * Must be called after countdown ends, when the actual game begins
+	 * @param players Array of players participating in the game
+	 */
+	public captureInitialGameData(players: ActivePlayer[]): void {
+		// Filter to eligible players (human players only in production, all in dev mode)
+		const eligiblePlayers = players.filter((player) => {
+			if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
+				return false;
+			}
+			return true;
+		});
+
+		this.initialPlayerCount = eligiblePlayers.length;
+		this.eliminatedCount = 0;
+		this.finalizedPlayers.clear();
+		this.initialPlayerRatings.clear();
+
+		// Capture each player's rating at game start
+		eligiblePlayers.forEach((player) => {
+			const btag = NameManager.getInstance().getBtag(player.getPlayer());
+			const rating = this.getPlayerRating(btag);
+			this.initialPlayerRatings.set(btag, rating);
+		});
+
+		debugPrint(`[RatingManager] Captured initial game data: ${this.initialPlayerCount} players`);
+	}
+
+	/**
+	 * Get the initial player count (locked at game start)
+	 */
+	public getInitialPlayerCount(): number {
+		return this.initialPlayerCount;
+	}
+
+	/**
+	 * Get a player's initial rating (from game start)
+	 * @param btag Player's BattleTag
+	 * @returns Rating at game start, or current rating if not captured
+	 */
+	public getInitialPlayerRating(btag: string): number {
+		return this.initialPlayerRatings.get(btag) || this.getPlayerRating(btag);
+	}
+
+	/**
+	 * Check if a player's rating has been finalized (they died/forfeited)
+	 * @param btag Player's BattleTag
+	 */
+	public isPlayerFinalized(btag: string): boolean {
+		return this.finalizedPlayers.has(btag);
 	}
 
 	/**
@@ -465,7 +526,137 @@ export class RatingManager {
 	}
 
 	/**
-	 * Calculate and save ratings for all players at game end
+	 * Finalize a player's rating immediately when they die or forfeit
+	 * Uses INITIAL player count and ratings from game start for consistent calculation
+	 * Writes a REAL entry (not pending) so the rating never changes
+	 * @param player The player who died/forfeited
+	 */
+	public finalizePlayerRating(player: ActivePlayer): void {
+		if (!this.isRankedGameFlag) {
+			return;
+		}
+
+		const btag = NameManager.getInstance().getBtag(player.getPlayer());
+
+		// Skip if already finalized
+		if (this.finalizedPlayers.has(btag)) {
+			debugPrint(`[RatingManager] Player ${btag} already finalized, skipping`);
+			return;
+		}
+
+		// Skip computer/AI players in normal mode
+		if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
+			return;
+		}
+
+		// Increment eliminated count and calculate placement
+		// First to die = last place (initialPlayerCount - 1), etc.
+		this.eliminatedCount++;
+		const placement = this.initialPlayerCount - this.eliminatedCount;
+
+		debugPrint(`[RatingManager] Finalizing ${btag}: eliminated #${this.eliminatedCount}, placement ${placement + 1} of ${this.initialPlayerCount}`);
+
+		const timestamp = math.floor(os.time());
+
+		// Get INITIAL rating for this player (from game start)
+		const currentRating = this.getInitialPlayerRating(btag);
+
+		// Build array of INITIAL opponent ratings (all other players from game start)
+		const opponentRatings: number[] = [];
+		this.initialPlayerRatings.forEach((rating, opponentBtag) => {
+			if (opponentBtag !== btag) {
+				opponentRatings.push(rating);
+			}
+		});
+
+		// Calculate rating change using INITIAL player count
+		const basePlacementPoints = calculatePlacementPoints(placement, this.initialPlayerCount);
+		const isGain = basePlacementPoints >= 0;
+		const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, opponentRatings, isGain);
+		const totalChange = calculateRatingChange(placement, currentRating, opponentRatings, this.initialPlayerCount);
+
+		// Get or create player rating data
+		let playerData = this.ratingData.get(btag);
+		if (!playerData) {
+			playerData = {
+				btag: btag,
+				rating: RANKED_STARTING_RATING,
+				gamesPlayed: 0,
+				lastUpdated: timestamp,
+				wins: 0,
+				losses: 0,
+				totalKillValue: 0,
+				totalDeathValue: 0,
+				totalPlacement: 0,
+				_isSynced: true,
+			};
+			this.ratingData.set(btag, playerData);
+		}
+
+		// Apply rating change with floor
+		const oldRating = playerData.rating;
+		const newRating = Math.max(RANKED_MINIMUM_RATING, oldRating + totalChange);
+
+		playerData.rating = newRating;
+		playerData.gamesPlayed += 1;
+		playerData.lastUpdated = timestamp;
+
+		// Track win/loss (1st place = win, everything else = loss)
+		if (placement === 0) {
+			playerData.wins += 1;
+		} else {
+			playerData.losses += 1;
+		}
+
+		// Accumulate K/D values from current game
+		const killsDeaths = player.trackedData.killsDeaths.get(player.getPlayer());
+		const currentKillValue = killsDeaths ? killsDeaths.killValue : 0;
+		const currentDeathValue = killsDeaths ? killsDeaths.deathValue : 0;
+		playerData.totalKillValue = (playerData.totalKillValue || 0) + currentKillValue;
+		playerData.totalDeathValue = (playerData.totalDeathValue || 0) + currentDeathValue;
+
+		// Accumulate placement (1-based for human readability: 1st, 2nd, etc.)
+		playerData.totalPlacement = (playerData.totalPlacement || 0) + (placement + 1);
+
+		// Mark as synced - player now has real game data
+		playerData._isSynced = true;
+
+		// Clear any pending game since this is now finalized
+		if (playerData.pendingGame) {
+			delete playerData.pendingGame;
+		}
+
+		// Store game result for scoreboard display
+		this.gameResults.set(btag, {
+			btag: btag,
+			basePlacementPoints: basePlacementPoints,
+			lobbySizeMultiplier: 1.0, // No longer used - dynamic placement handles lobby size
+			opponentStrengthModifier: opponentStrengthModifier,
+			totalChange: totalChange,
+			oldRating: oldRating,
+			newRating: newRating,
+			actualPlacement: placement,
+		});
+
+		// Mark as finalized
+		this.finalizedPlayers.add(btag);
+
+		// Save to file immediately (REAL entry, not pending)
+		const isHuman = GetPlayerController(player.getPlayer()) === MAP_CONTROL_USER;
+		if (isHuman) {
+			const saved = this.savePlayerRating(btag);
+			if (!saved) {
+				print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
+			} else {
+				debugPrint(`[RatingManager] Saved finalized rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`);
+			}
+		}
+	}
+
+	/**
+	 * Calculate and save ratings for remaining survivors at game end
+	 * Only processes players who haven't been finalized yet (died/forfeited players are already done)
+	 * Uses INITIAL player count and ratings for consistent calculation
 	 * @param ranks Array of players sorted by rank (1st place = index 0)
 	 */
 	public calculateAndSaveRatings(ranks: ActivePlayer[]): void {
@@ -473,28 +664,26 @@ export class RatingManager {
 			return;
 		}
 
-		this.gameResults.clear();
+		// DON'T clear gameResults - finalized players already added their results
 		const timestamp = math.floor(os.time());
 
-		// Filter out players who left very early (during countdown before game started)
-		// These players likely had connection issues before the game actually started
-		// Also filter out computer players (unless in developer mode)
-		const eligiblePlayers = ranks.filter((player) => {
-			const turnDied = player.trackedData.turnDied;
-			const maxCities = player.trackedData.cities.max;
+		// Filter to only unfinalized survivors (exclude already-finalized, early leavers, AI in prod)
+		const survivors = ranks.filter((player) => {
+			const btag = NameManager.getInstance().getBtag(player.getPlayer());
 
-			// Exclude if left before game started (turnDied = -1 means left during countdown)
+			// Skip already finalized players
+			if (this.finalizedPlayers.has(btag)) {
+				return false;
+			}
+
+			const turnDied = player.trackedData.turnDied;
+
+			// Exclude if left before game started
 			if (turnDied < 0) {
 				return false;
 			}
 
-			// Exclude if never owned any cities (didn't participate)
-			if (maxCities === 0) {
-				return false;
-			}
-
-			// Exclude computer/AI players in normal mode (prevents cheating)
-			// Include them in developer mode (for testing purposes)
+			// Exclude computer/AI players in normal mode
 			if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
 				return false;
 			}
@@ -502,52 +691,43 @@ export class RatingManager {
 			return true;
 		});
 
-		// If too few eligible players remain, don't calculate ratings
-		// Skip this check in developer mode to allow singleplayer testing
-		if (eligiblePlayers.length < 2 && !DEVELOPER_MODE) {
-			const host = Player(0);
-			DisplayTimedTextToPlayer(
-				host,
-				0,
-				0,
-				15,
-				`${HexColors.WARNING}Rating calculation skipped:|r Too few eligible players (early crashes/leaves).`
-			);
-			return;
-		}
+		debugPrint(`[RatingManager] calculateAndSaveRatings: ${survivors.length} survivors to finalize, ${this.finalizedPlayers.size} already finalized`);
 
-		// First pass: Get all current ratings for eligible players
-		const playerRatings: Map<string, number> = new Map();
-		eligiblePlayers.forEach((player) => {
-			const btag = NameManager.getInstance().getBtag(player.getPlayer());
-			playerRatings.set(btag, this.getPlayerRating(btag));
+		// Build array of INITIAL opponent ratings (all players from game start)
+		const opponentRatings: number[] = [];
+		this.initialPlayerRatings.forEach((rating) => {
+			opponentRatings.push(rating);
 		});
 
-		// Calculate rating changes for each eligible player
-		const playerCount = eligiblePlayers.length;
-
-		eligiblePlayers.forEach((player, index) => {
+		// Finalize each survivor - they get placements 0, 1, 2... (1st, 2nd, 3rd...)
+		// Since ranks is sorted, first survivor = winner
+		survivors.forEach((player, index) => {
 			const btag = NameManager.getInstance().getBtag(player.getPlayer());
-			const placement = index; // 0-based: 0 = 1st, 1 = 2nd, etc.
+			const placement = index; // 0 = 1st place (winner), 1 = 2nd place, etc.
 
-			// Get current rating
-			const currentRating = playerRatings.get(btag) || RANKED_STARTING_RATING;
+			// Get INITIAL rating for this player
+			const currentRating = this.getInitialPlayerRating(btag);
 
-			// Build array of opponent ratings (all eligible players except this player)
-			const opponentRatings: number[] = [];
-			eligiblePlayers.forEach((opponent) => {
-				const opponentBtag = NameManager.getInstance().getBtag(opponent.getPlayer());
+			// Build opponent ratings excluding this player
+			const playerOpponentRatings = opponentRatings.filter((_, i) => {
+				// This is a bit hacky - we need to exclude this player's rating from opponents
+				// Since we can't easily map index to btag here, we'll rebuild it properly
+				return true;
+			});
+
+			// Properly build opponent ratings (excluding this player)
+			const properOpponentRatings: number[] = [];
+			this.initialPlayerRatings.forEach((rating, opponentBtag) => {
 				if (opponentBtag !== btag) {
-					opponentRatings.push(playerRatings.get(opponentBtag) || RANKED_STARTING_RATING);
+					properOpponentRatings.push(rating);
 				}
 			});
 
-			// Calculate rating change components using simplified formula
-			const basePlacementPoints = calculatePlacementPoints(placement);
-			const lobbySizeMultiplier = calculateLobbySizeMultiplier(playerCount);
+			// Calculate rating change using INITIAL player count
+			const basePlacementPoints = calculatePlacementPoints(placement, this.initialPlayerCount);
 			const isGain = basePlacementPoints >= 0;
-			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, opponentRatings, isGain);
-			const totalChange = calculateRatingChange(placement, currentRating, opponentRatings, playerCount);
+			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, properOpponentRatings, isGain);
+			const totalChange = calculateRatingChange(placement, currentRating, properOpponentRatings, this.initialPlayerCount);
 
 			// Get or create player rating data
 			let playerData = this.ratingData.get(btag);
@@ -562,7 +742,7 @@ export class RatingManager {
 					totalKillValue: 0,
 					totalDeathValue: 0,
 					totalPlacement: 0,
-					_isSynced: true, // Created during rating calculation, treat as synced
+					_isSynced: true,
 				};
 				this.ratingData.set(btag, playerData);
 			}
@@ -589,45 +769,43 @@ export class RatingManager {
 			playerData.totalKillValue = (playerData.totalKillValue || 0) + currentKillValue;
 			playerData.totalDeathValue = (playerData.totalDeathValue || 0) + currentDeathValue;
 
-			// Accumulate placement (1-based for human readability: 1st, 2nd, etc.)
+			// Accumulate placement (1-based for human readability)
 			playerData.totalPlacement = (playerData.totalPlacement || 0) + (placement + 1);
 
-			// Mark as synced - player now has real game data, not just default-initialized
+			// Mark as synced
 			playerData._isSynced = true;
+
+			// Clear any pending game
+			if (playerData.pendingGame) {
+				delete playerData.pendingGame;
+			}
 
 			// Store game result for display
 			this.gameResults.set(btag, {
 				btag: btag,
 				basePlacementPoints: basePlacementPoints,
-				lobbySizeMultiplier: lobbySizeMultiplier,
+				lobbySizeMultiplier: 1.0, // No longer used - dynamic placement handles lobby size
 				opponentStrengthModifier: opponentStrengthModifier,
 				totalChange: totalChange,
 				oldRating: oldRating,
 				newRating: newRating,
 				actualPlacement: placement,
 			});
-		});
 
-		// Clear any pending games since this is the final result and save each player's PERSONAL file
-		// Only save personal rating files for HUMAN players (not Computer/AI)
-		for (let i = 0; i < eligiblePlayers.length; i++) {
-			const player = eligiblePlayers[i];
-			const btag = NameManager.getInstance().getBtag(player.getPlayer());
-			const playerData = this.ratingData.get(btag);
-			if (playerData && playerData.pendingGame) {
-				delete playerData.pendingGame;
-			}
+			// Mark as finalized
+			this.finalizedPlayers.add(btag);
 
-			// Only save personal rating file for HUMAN players
-			// Computer/AI players will ONLY be stored in the "others" file, not individual files
+			// Save to file immediately
 			const isHuman = GetPlayerController(player.getPlayer()) === MAP_CONTROL_USER;
 			if (isHuman) {
 				const saved = this.savePlayerRating(btag);
 				if (!saved) {
 					print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
+				} else {
+					debugPrint(`[RatingManager] Saved survivor rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`);
 				}
 			}
-		}
+		});
 
 		// Update "others" ratings database with all OTHER players from this game
 		this.updateOthersDatabase();
@@ -636,7 +814,8 @@ export class RatingManager {
 	/**
 	 * Save preliminary ratings during game for crash recovery
 	 * Called at the end of each turn to allow recovery from crashes
-	 * Also populates gameResults for eliminated players so the scoreboard can show their rating
+	 * Only saves pending entries for ALIVE players who haven't been finalized
+	 * Uses INITIAL player count and ratings for consistent calculation
 	 * @param ranks Array of players sorted by current rank
 	 * @param currentTurn Current turn number
 	 */
@@ -647,22 +826,29 @@ export class RatingManager {
 
 		const timestamp = math.floor(os.time());
 
-		// Filter out players who left very early (same logic as final calculation)
-		// Also filter out computer players (unless in developer mode)
-		const eligiblePlayers = ranks.filter((player) => {
-			const turnDied = player.trackedData.turnDied;
-			const maxCities = player.trackedData.cities.max;
+		// Filter to only ALIVE, unfinalized players (for pending crash recovery entries)
+		// Finalized players already have real entries, don't need pending
+		const alivePlayers = ranks.filter((player) => {
+			const btag = NameManager.getInstance().getBtag(player.getPlayer());
 
+			// Skip already finalized players
+			if (this.finalizedPlayers.has(btag)) {
+				return false;
+			}
+
+			const turnDied = player.trackedData.turnDied;
+
+			// Exclude if left before game started
 			if (turnDied < 0) {
 				return false;
 			}
 
-			if (maxCities === 0) {
+			// Exclude dead players - they should be finalized via finalizePlayerRating
+			if (player.status.isEliminated()) {
 				return false;
 			}
 
-			// Exclude computer/AI players in normal mode (prevents cheating)
-			// Include them in developer mode (for testing purposes)
+			// Exclude computer/AI players in normal mode
 			if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
 				return false;
 			}
@@ -670,43 +856,39 @@ export class RatingManager {
 			return true;
 		});
 
-		// Need at least 2 players to calculate ratings
-		// Skip this check in developer mode to allow singleplayer testing
-		if (eligiblePlayers.length < 2 && !DEVELOPER_MODE) {
+		// No alive players to save pending entries for
+		if (alivePlayers.length === 0) {
 			return;
 		}
 
-		// First pass: Get all current ratings for eligible players
-		const playerRatings: Map<string, number> = new Map();
-		eligiblePlayers.forEach((player) => {
-			const btag = NameManager.getInstance().getBtag(player.getPlayer());
-			playerRatings.set(btag, this.getPlayerRating(btag));
+		// Build INITIAL opponent ratings array
+		const opponentRatings: number[] = [];
+		this.initialPlayerRatings.forEach((rating) => {
+			opponentRatings.push(rating);
 		});
 
-		// Calculate preliminary rating changes for each eligible player
-		const playerCount = eligiblePlayers.length;
-
-		eligiblePlayers.forEach((player, index) => {
+		// Calculate and save pending entries for each alive player
+		// Their "preliminary" placement is based on current position (0 = would be 1st if game ended now)
+		alivePlayers.forEach((player, index) => {
 			const btag = NameManager.getInstance().getBtag(player.getPlayer());
-			const placement = index;
+			const preliminaryPlacement = index; // If game crashed now, they'd be in this position
 
-			const currentRating = playerRatings.get(btag) || RANKED_STARTING_RATING;
+			// Get INITIAL rating for this player
+			const currentRating = this.getInitialPlayerRating(btag);
 
-			// Build array of opponent ratings
-			const opponentRatings: number[] = [];
-			eligiblePlayers.forEach((opponent) => {
-				const opponentBtag = NameManager.getInstance().getBtag(opponent.getPlayer());
+			// Build opponent ratings excluding this player
+			const properOpponentRatings: number[] = [];
+			this.initialPlayerRatings.forEach((rating, opponentBtag) => {
 				if (opponentBtag !== btag) {
-					opponentRatings.push(playerRatings.get(opponentBtag) || RANKED_STARTING_RATING);
+					properOpponentRatings.push(rating);
 				}
 			});
 
-			// Calculate rating change using simplified formula
-			const basePlacementPoints = calculatePlacementPoints(placement);
-			const lobbySizeMultiplier = calculateLobbySizeMultiplier(playerCount);
+			// Calculate rating change using INITIAL player count
+			const basePlacementPoints = calculatePlacementPoints(preliminaryPlacement, this.initialPlayerCount);
 			const isGain = basePlacementPoints >= 0;
-			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, opponentRatings, isGain);
-			const totalChange = calculateRatingChange(placement, currentRating, opponentRatings, playerCount);
+			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, properOpponentRatings, isGain);
+			const totalChange = calculateRatingChange(preliminaryPlacement, currentRating, properOpponentRatings, this.initialPlayerCount);
 
 			// Get or create player rating data
 			let playerData = this.ratingData.get(btag);
@@ -721,26 +903,26 @@ export class RatingManager {
 					totalKillValue: 0,
 					totalDeathValue: 0,
 					totalPlacement: 0,
-					_isSynced: true, // Created during in-progress save, treat as synced
+					_isSynced: true,
 				};
 				this.ratingData.set(btag, playerData);
 			}
 
 			// Calculate preliminary stats with floor
 			const preliminaryRating = Math.max(RANKED_MINIMUM_RATING, currentRating + totalChange);
-			const preliminaryWins = playerData.wins + (placement === 0 ? 1 : 0);
-			const preliminaryLosses = playerData.losses + (placement === 0 ? 0 : 1);
+			const preliminaryWins = playerData.wins + (preliminaryPlacement === 0 ? 1 : 0);
+			const preliminaryLosses = playerData.losses + (preliminaryPlacement === 0 ? 0 : 1);
 			const preliminaryGamesPlayed = playerData.gamesPlayed + 1;
 
-			// Get current game K/D values from player's tracked data
+			// Get current game K/D values
 			const killsDeaths = player.trackedData.killsDeaths.get(player.getPlayer());
 			const currentKillValue = killsDeaths ? killsDeaths.killValue : 0;
 			const currentDeathValue = killsDeaths ? killsDeaths.deathValue : 0;
 			const preliminaryTotalKillValue = (playerData.totalKillValue || 0) + currentKillValue;
 			const preliminaryTotalDeathValue = (playerData.totalDeathValue || 0) + currentDeathValue;
 
-			// Calculate preliminary total placement (1-based: 1st, 2nd, etc.)
-			const preliminaryTotalPlacement = (playerData.totalPlacement || 0) + (placement + 1);
+			// Calculate preliminary total placement (1-based)
+			const preliminaryTotalPlacement = (playerData.totalPlacement || 0) + (preliminaryPlacement + 1);
 
 			// Store in pending game (overwrite if exists)
 			playerData.pendingGame = {
@@ -760,20 +942,6 @@ export class RatingManager {
 			const saved = this.savePlayerRating(btag);
 			if (!saved) {
 				debugPrint(`Failed to save pending rating for ${btag}`);
-			}
-
-			// For eliminated players, store game result so scoreboard can display their rating
-			if (player.status.isEliminated()) {
-				this.gameResults.set(btag, {
-					btag: btag,
-					basePlacementPoints: basePlacementPoints,
-					lobbySizeMultiplier: lobbySizeMultiplier,
-					opponentStrengthModifier: opponentStrengthModifier,
-					totalChange: totalChange,
-					oldRating: currentRating,
-					newRating: preliminaryRating,
-					actualPlacement: placement,
-				});
 			}
 		});
 	}

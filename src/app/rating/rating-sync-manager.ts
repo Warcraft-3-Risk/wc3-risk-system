@@ -76,6 +76,7 @@ export class RatingSyncManager {
 	/**
 	 * Start P2P rating synchronization
 	 * Main entry point - call this at game start (countdown phase)
+	 * Uses staggered SyncRequest creation to prevent frame lag with many players
 	 * @param humanPlayers Array of human players (excludes AI)
 	 */
 	public startSync(humanPlayers: ActivePlayer[]): void {
@@ -88,9 +89,21 @@ export class RatingSyncManager {
 		this.expectedPlayerCount = humanPlayers.length;
 		this.completedSyncs = 0;
 
-		// Create SyncRequest for each player's data
-		for (let i = 0; i < humanPlayers.length; i++) {
-			const activePlayer = humanPlayers[i];
+		// Stagger SyncRequest creation to prevent frame lag
+		// Create one SyncRequest every 0.1 seconds for smoother performance
+		const SYNC_STAGGER_DELAY = 0.1;
+		let currentIndex = 0;
+
+		const staggerTimer = CreateTimer();
+		TimerStart(staggerTimer, SYNC_STAGGER_DELAY, true, () => {
+			if (currentIndex >= humanPlayers.length) {
+				// All SyncRequests created, stop the timer
+				PauseTimer(staggerTimer);
+				DestroyTimer(staggerTimer);
+				return;
+			}
+
+			const activePlayer = humanPlayers[currentIndex];
 			const player = activePlayer.getPlayer();
 			const playerId = GetPlayerId(player);
 
@@ -108,7 +121,9 @@ export class RatingSyncManager {
 					debugPrint(`[RATING SYNC] Sync failed for player ${playerId}: timeout`);
 					this.handleSyncComplete(playerId, '');
 				});
-		}
+
+			currentIndex++;
+		});
 
 		// Start timeout timer as backup
 		this.startTimeoutTimer();
@@ -412,6 +427,7 @@ export class RatingSyncManager {
 	/**
 	 * Complete sync process - merge all received player databases
 	 * Implements distributed rating system with deduplication (keeping newest data)
+	 * Uses batched processing to prevent frame lag with many players
 	 */
 	private completeSync(): void {
 		if (this.isComplete) {
@@ -419,6 +435,16 @@ export class RatingSyncManager {
 		}
 
 		this.isComplete = true;
+
+		// Flatten all received player data into a single array for batched processing
+		const allReceivedPlayers: PlayerRatingData[] = [];
+		this.receivedPlayerData.forEach((playersData, playerId) => {
+			if (playersData && playersData.length > 0) {
+				for (let i = 0; i < playersData.length; i++) {
+					allReceivedPlayers.push(playersData[i]);
+				}
+			}
+		});
 
 		// Map to track all players (btag -> PlayerRatingData)
 		// When duplicates exist, keep the one with newest lastUpdated timestamp
@@ -428,30 +454,55 @@ export class RatingSyncManager {
 		const addOrMergePlayer = (player: PlayerRatingData) => {
 			const existing = allPlayersMap.get(player.btag);
 			if (!existing) {
-				// New player - add it
 				allPlayersMap.set(player.btag, player);
 			} else {
-				// Duplicate - keep the one with newest lastUpdated timestamp
 				if (player.lastUpdated > existing.lastUpdated) {
 					allPlayersMap.set(player.btag, player);
 				}
 			}
 		};
 
-		// 1. Process all received player databases from P2P sync
-		let totalPlayersReceived = 0;
-		this.receivedPlayerData.forEach((playersData, playerId) => {
-			if (playersData && playersData.length > 0) {
-				totalPlayersReceived += playersData.length;
+		// Batch processing configuration - use conservative values for smoother performance
+		const BATCH_SIZE = 50; // Process 50 players per frame
+		const BATCH_DELAY = 0.05; // Spread work across more frames
+		let currentIndex = 0;
 
-				// Merge each player with deduplication
-				for (let i = 0; i < playersData.length; i++) {
-					addOrMergePlayer(playersData[i]);
-				}
+		const processBatch = () => {
+			// Process a batch of players
+			const endIndex = Math.min(currentIndex + BATCH_SIZE, allReceivedPlayers.length);
+			for (let i = currentIndex; i < endIndex; i++) {
+				addOrMergePlayer(allReceivedPlayers[i]);
 			}
-		});
+			currentIndex = endIndex;
 
-		// 2. Add local player's own data (highest priority - most accurate)
+			if (currentIndex < allReceivedPlayers.length) {
+				// More players to process, schedule next batch
+				const batchTimer = CreateTimer();
+				TimerStart(batchTimer, BATCH_DELAY, false, () => {
+					DestroyTimer(batchTimer);
+					processBatch();
+				});
+			} else {
+				// All players processed, finalize sync
+				this.finalizeSyncAfterBatching(allPlayersMap, allReceivedPlayers.length);
+			}
+		};
+
+		// Start batch processing (or finalize immediately if no data)
+		if (allReceivedPlayers.length > 0) {
+			processBatch();
+		} else {
+			this.finalizeSyncAfterBatching(allPlayersMap, 0);
+		}
+	}
+
+	/**
+	 * Finalize sync after batched processing is complete
+	 * @param allPlayersMap Map of merged player data
+	 * @param totalPlayersReceived Total count of players received from sync
+	 */
+	private finalizeSyncAfterBatching(allPlayersMap: Map<string, PlayerRatingData>, totalPlayersReceived: number): void {
+		// Add local player's own data (highest priority - most accurate)
 		const localPlayer = GetLocalPlayer();
 		const nameManager = NameManager.getInstance();
 		const btag = nameManager.getBtag(localPlayer);

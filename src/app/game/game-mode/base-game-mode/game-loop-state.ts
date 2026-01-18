@@ -30,6 +30,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
 		GlobalGameData.matchState = 'inProgress';
 
+		// Capture initial game data for rating calculations
+		// This locks in player count and ratings at game start - never changes during game
+		const ratingManager = RatingManager.getInstance();
+		if (ratingManager.isRankedGame()) {
+			ratingManager.captureInitialGameData(GlobalGameData.matchPlayers);
+		}
+
 		ReplayManager.getInstance().onRoundStart();
 
 		this.onStartTurn(GlobalGameData.turnCount);

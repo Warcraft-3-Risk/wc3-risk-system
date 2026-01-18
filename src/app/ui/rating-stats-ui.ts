@@ -667,6 +667,9 @@ export class RatingStatsUI {
 					// Only execute for the player who owns this UI instance
 					if (GetTriggerPlayer() == this.player.getPlayer()) {
 						this.previousPage();
+
+						BlzFrameSetEnable(this.leaderboardPrevButton, false);
+						BlzFrameSetEnable(this.leaderboardPrevButton, true);
 					}
 				});
 			}
@@ -678,6 +681,9 @@ export class RatingStatsUI {
 					// Only execute for the player who owns this UI instance
 					if (GetTriggerPlayer() == this.player.getPlayer()) {
 						this.nextPage();
+
+						BlzFrameSetEnable(this.leaderboardNextButton, false);
+						BlzFrameSetEnable(this.leaderboardNextButton, true);
 					}
 				});
 			}

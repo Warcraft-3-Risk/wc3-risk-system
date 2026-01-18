@@ -6,8 +6,6 @@ import { STARTING_COUNTDOWN } from '../../../../configs/game-settings';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { RatingManager } from 'src/app/rating/rating-manager';
-import { RatingSyncManager } from 'src/app/rating/rating-sync-manager';
-import { GlobalMessage } from 'src/app/utils/messages';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
@@ -45,16 +43,11 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 					// Only show message if player has rating display enabled
 					if (showRating) {
-						DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 8, message);
+						DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 5, message);
 					}
 				});
 
-				// Start P2P rating synchronization
-				const syncManager = RatingSyncManager.getInstance();
-
-				// Get human players only (excludes AI/Computer)
-				const humanPlayers = PlayerManager.getInstance().getHumanPlayersOnly();
-				syncManager.startSync(humanPlayers);
+				// Note: P2P rating sync already started in ModeSelection.run() during settings phase
 			} else {
 				const message = `${HexColors.TANGERINE}This is an unranked game!|r.`;
 

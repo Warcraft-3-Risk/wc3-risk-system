@@ -11,6 +11,7 @@ import {
 	onPlayerNomadHandle,
 	onPlayerSTFUHandle,
 } from '../utillity/on-player-status';
+import { RatingManager } from 'src/app/rating/rating-manager';
 
 export abstract class BaseState<T extends StateData> {
 	get stateData(): T {
@@ -33,6 +34,10 @@ export abstract class BaseState<T extends StateData> {
 
 	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
 		onPlayerDeadHandle(player, forfeit);
+
+		// Immediately finalize rating for dead/forfeited player
+		// This writes a REAL entry (not pending) so rating never changes after death
+		RatingManager.getInstance().finalizePlayerRating(player);
 	}
 
 	onPlayerNomad(player: ActivePlayer): void {
