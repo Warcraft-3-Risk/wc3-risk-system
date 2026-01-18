@@ -66,6 +66,14 @@ export const CLIENT_ALLOCATION_ENABLED = false;
 export const BAN_LIST_ACTIVE: boolean = true;
 
 // Rating system settings
+// Master toggle for the entire rating system. When disabled:
+//   - No rating stats button (F4) is shown
+//   - No "ranked/unranked game" messages are displayed
+//   - No rating data is stored or loaded
+//   - Statistics always uses the unranked leaderboard (without rating column)
+//   - Rating sync is skipped entirely
+export const RATING_SYSTEM_ENABLED: boolean = false;
+
 // This represents the current ranked season ID. Change this to start a new season.
 export const RANKED_SEASON_ID: number = 0;
 

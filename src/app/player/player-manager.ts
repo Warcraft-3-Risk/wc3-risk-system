@@ -12,7 +12,7 @@ import { Status } from './status/status';
 import { debugPrint } from '../utils/debug-print';
 import { NameManager } from '../managers/names/name-manager';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
-import { BAN_LIST_ACTIVE } from 'src/configs/game-settings';
+import { BAN_LIST_ACTIVE, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
 import { RatingStatsUI } from '../ui/rating-stats-ui';
 
 const banList: string[] = ['inbreeder#2416', 'remy#22303', 'overthrow#21522', 'vixen#22381'];
@@ -59,13 +59,16 @@ export class PlayerManager {
 				this._playerFromHandle.set(player, humanPlayer);
 				this._playerControllerHandle.set(player, MAP_CONTROL_USER);
 
-				// Create and inject RatingStatsUI after player creation
-				humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
+				// Create and inject RatingStatsUI after player creation (only if rating system is enabled)
+				if (RATING_SYSTEM_ENABLED) {
+					humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
+				}
 
 				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
 				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
 				const labelButton = buildLabelToggleButton(this._playerFromHandle.get(player));
-				const ratingButton = buildRatingStatsButton(this._playerFromHandle.get(player));
+				// Only create rating stats button if rating system is enabled
+				const ratingButton = RATING_SYSTEM_ENABLED ? buildRatingStatsButton(this._playerFromHandle.get(player)) : null;
 				let contents: string = '';
 
 				if (player == GetLocalPlayer()) {
@@ -75,7 +78,9 @@ export class PlayerManager {
 						BlzFrameSetVisible(healthButton, false);
 						BlzFrameSetVisible(valueButton, false);
 						BlzFrameSetVisible(labelButton, false);
-						BlzFrameSetVisible(ratingButton, false);
+						if (ratingButton) {
+							BlzFrameSetVisible(ratingButton, false);
+						}
 					}
 
 					// Note: Rating preference is now stored in the rating file itself

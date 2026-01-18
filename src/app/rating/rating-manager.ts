@@ -6,7 +6,7 @@ import {
 	calculateOpponentStrengthModifier,
 	calculateRatingChange,
 } from './rating-calculator';
-import { RANKED_MIN_PLAYERS, RANKED_MINIMUM_RATING, RANKED_SEASON_ID, RANKED_STARTING_RATING, DEVELOPER_MODE, RATING_SYNC_TOP_PLAYERS } from 'src/configs/game-settings';
+import { RANKED_MIN_PLAYERS, RANKED_MINIMUM_RATING, RANKED_SEASON_ID, RANKED_STARTING_RATING, DEVELOPER_MODE, RATING_SYNC_TOP_PLAYERS, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
 import { ActivePlayer } from '../player/types/active-player';
 import { NameManager } from '../managers/names/name-manager';
 import { HexColors } from '../utils/hex-colors';
@@ -111,6 +111,16 @@ export class RatingManager {
 	}
 
 	/**
+	 * Check if the rating system is enabled globally (from game-settings.ts config)
+	 * When disabled, no rating data is stored/loaded, no rating UI is shown,
+	 * and all games are considered unranked.
+	 * @returns True if RATING_SYSTEM_ENABLED is true
+	 */
+	public isRatingSystemEnabled(): boolean {
+		return RATING_SYSTEM_ENABLED;
+	}
+
+	/**
 	 * Load rating for a specific player from their personal file
 	 * @param btag Player's BattleTag
 	 * @returns True if rating loaded successfully
@@ -211,6 +221,12 @@ export class RatingManager {
 	 * @returns True if game is FFA mode and has more than RANKED_MIN_PLAYERS human players (or in developer mode)
 	 */
 	public checkRankedGameEligibility(humanPlayerCount: number, isFFA: boolean): boolean {
+		// If rating system is disabled globally, no game can be ranked
+		if (!RATING_SYSTEM_ENABLED) {
+			this.isRankedGameFlag = false;
+			return false;
+		}
+
 		// In developer mode, always enable ranked (for testing)
 		if (DEVELOPER_MODE) {
 			this.isRankedGameFlag = true;
