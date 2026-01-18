@@ -3,16 +3,16 @@
 
 //Used to control how many of total cities you need.
 //This is a percentage of the total cities .6 = 60%
-export const CITIES_TO_WIN_RATIO: number = 0.1;
+export const CITIES_TO_WIN_RATIO: number = 0.6;
 
 //This is the starting gold for each player. 4 gold by default.
 export const STARTING_INCOME: number = 4;
 
 //This is the starting countdown for the game. 10 by default
-export const STARTING_COUNTDOWN: number = 2;
+export const STARTING_COUNTDOWN: number = 10;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
-export const TURN_DURATION_IN_SECONDS: number = 10;
+export const TURN_DURATION_IN_SECONDS: number = 60;
 
 //This is the duration of a tick in seconds. 1 second by default.
 export const TICK_DURATION_IN_SECONDS: number = 1;
@@ -98,7 +98,7 @@ export const RANKED_OPPONENT_STRENGTH_FACTOR: number = 0.32;
 //   - Requires minimum player count (RANKED_MIN_PLAYERS) for ranked games
 //   - Computer/AI players are EXCLUDED from rating calculations (prevents cheating)
 //   - Rating file encryption is ENABLED
-export const DEVELOPER_MODE: boolean = false;
+export const DEVELOPER_MODE: boolean = true;
 
 // ============================================
 // P2P Rating Sync Settings

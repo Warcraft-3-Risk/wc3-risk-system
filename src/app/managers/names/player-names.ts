@@ -21,7 +21,7 @@ export class PlayerNames {
 
 			this._btag = `${splitName}${uniqueId}`;
 		} else if(splitName === 'Local') {
-			const uniqueId = 'GungFuBanda#' + 1234;
+			const uniqueId = 'Local#' + 1234;
 
 			this._btag = `${splitName}${uniqueId}`;
 		} else {
