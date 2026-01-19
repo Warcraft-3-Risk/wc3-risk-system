@@ -173,7 +173,7 @@ export class UnrankedStatisticsView implements IStatisticsView {
 		}
 	}
 
-	private CreateFooterButton(parent: framehandle, name: string, text: string, xOffset: number, onClick: (c: boolean) => void): framehandle {
+	private CreateFooterButton(parent: framehandle, name: string, text: string, xOffset: number, onClick: (executeAction: boolean) => void): framehandle {
 		const button: framehandle = BlzCreateFrameByType('GLUETEXTBUTTON', name, parent, 'ScriptDialogButton', 0);
 		BlzFrameSetSize(button, 0.13, 0.03);
 		BlzFrameSetPoint(button, FRAMEPOINT_CENTER, parent, FRAMEPOINT_CENTER, xOffset, 0);

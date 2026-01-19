@@ -46,7 +46,12 @@ export class PlayerManager {
 			}
 
 			if (IsPlayerObserver(player)) {
-				this._observerFromHandle.set(player, new HumanPlayer(player));
+				const humanPlayer = new HumanPlayer(player);
+				this._observerFromHandle.set(player, humanPlayer);
+
+				if (RATING_SYSTEM_ENABLED) {
+					humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
+				}
 				continue;
 			}
 
