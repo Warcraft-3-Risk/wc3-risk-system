@@ -5,10 +5,7 @@ import { HexColors } from '../utils/hex-colors';
 import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
-import { ParticipantEntityManager } from '../utils/participant-entity';
-import { GlobalGameData } from '../game/state/global-game-state';
 import { RatingManager } from '../rating/rating-manager';
-import { debugPrint } from '../utils/debug-print';
 
 export class StandardBoard extends Scoreboard {
 	private players: ActivePlayer[];
@@ -80,7 +77,7 @@ export class StandardBoard extends Scoreboard {
 
 			let textColor: string = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 
-			if(player.status.isEliminated()) {
+			if (player.status.isEliminated()) {
 				this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, this.INCOME_COL);
 			} else {
 				this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
@@ -143,7 +140,7 @@ export class StandardBoard extends Scoreboard {
 			const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
 			const localShowRating = ratingManager.getShowRatingPreference(localBtag);
 
-			if (ratingResult && ratingManager.isRankedGame() && localShowRating) {
+			if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && localShowRating) {
 				const change = ratingResult.totalChange;
 				const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
 				const sign = change >= 0 ? '+' : '';
@@ -185,7 +182,7 @@ export class StandardBoard extends Scoreboard {
 			this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
 
 			// Status
-			if(player.status.isNomad()) {
+			if (player.status.isNomad()) {
 				this.setItemValue(`${HexColors.ORANGE}${player.status.statusDuration}`, row, this.STATUS_COL);
 			} else {
 				this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);

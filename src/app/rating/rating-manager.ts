@@ -1,17 +1,27 @@
-import { GameRatingResult, PlayerRatingData, RatingFileData, OthersRatingFileData } from './types';
+import { GameRatingResult, OthersRatingFileData, PlayerRatingData, RatingFileData } from './types';
 import { readRatings, validateChecksum, writeRatings } from './rating-file-handler';
 import { readOthersRatings, writeOthersRatings } from './global-rating-handler';
 import {
-	calculatePlacementPoints,
 	calculateOpponentStrengthModifier,
-	calculateRatingChange,
+	calculatePlacementPoints,
+	calculateRatingChange
 } from './rating-calculator';
-import { RANKED_MIN_PLAYERS, RANKED_MINIMUM_RATING, RANKED_SEASON_ID, RANKED_STARTING_RATING, DEVELOPER_MODE, RATING_SYNC_TOP_PLAYERS, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
+import {
+	DEVELOPER_MODE,
+	RANKED_MIN_PLAYERS,
+	RANKED_MINIMUM_RATING,
+	RANKED_SEASON_ID,
+	RANKED_STARTING_RATING,
+	RATING_SYNC_TOP_PLAYERS,
+	RATING_SYSTEM_ENABLED,
+} from 'src/configs/game-settings';
 import { ActivePlayer } from '../player/types/active-player';
 import { NameManager } from '../managers/names/name-manager';
 import { HexColors } from '../utils/hex-colors';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { debugPrint } from '../utils/debug-print';
+import { EventEmitter } from '../utils/events/event-emitter';
+import { EVENT_QUEST_UPDATE_PLAYER_STATUS } from '../utils/events/event-constants';
 
 /**
  * Singleton manager for the rating system
@@ -59,7 +69,7 @@ export class RatingManager {
 		// Hash 1: djb2 algorithm
 		let hash1 = 5381;
 		for (let i = 0; i < name.length; i++) {
-			hash1 = ((hash1 << 5) + hash1) + name.charCodeAt(i);
+			hash1 = (hash1 << 5) + hash1 + name.charCodeAt(i);
 			hash1 = hash1 & hash1;
 		}
 
@@ -424,6 +434,9 @@ export class RatingManager {
 			playerData.showRating = showRating;
 		}
 
+		// Update quests
+		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
+
 		// Save to file immediately
 		return this.savePlayerRating(btag);
 	}
@@ -587,7 +600,9 @@ export class RatingManager {
 		this.eliminatedCount++;
 		const placement = this.initialPlayerCount - this.eliminatedCount;
 
-		debugPrint(`[RatingManager] Finalizing ${btag}: eliminated #${this.eliminatedCount}, placement ${placement + 1} of ${this.initialPlayerCount}`);
+		debugPrint(
+			`[RatingManager] Finalizing ${btag}: eliminated #${this.eliminatedCount}, placement ${placement + 1} of ${this.initialPlayerCount}`
+		);
 
 		const timestamp = math.floor(os.time());
 
@@ -681,7 +696,9 @@ export class RatingManager {
 			if (!saved) {
 				print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
 			} else {
-				debugPrint(`[RatingManager] Saved finalized rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`);
+				debugPrint(
+					`[RatingManager] Saved finalized rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`
+				);
 			}
 		}
 
@@ -727,7 +744,9 @@ export class RatingManager {
 			return true;
 		});
 
-		debugPrint(`[RatingManager] calculateAndSaveRatings: ${survivors.length} survivors to finalize, ${this.finalizedPlayers.size} already finalized`);
+		debugPrint(
+			`[RatingManager] calculateAndSaveRatings: ${survivors.length} survivors to finalize, ${this.finalizedPlayers.size} already finalized`
+		);
 
 		// Build array of INITIAL opponent ratings (all players from game start)
 		const opponentRatings: number[] = [];
@@ -838,7 +857,9 @@ export class RatingManager {
 				if (!saved) {
 					print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
 				} else {
-					debugPrint(`[RatingManager] Saved survivor rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`);
+					debugPrint(
+						`[RatingManager] Saved survivor rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`
+					);
 				}
 			}
 		});
@@ -856,10 +877,14 @@ export class RatingManager {
 	 * @param currentTurn Current turn number
 	 */
 	public saveRatingsInProgress(ranks: ActivePlayer[], currentTurn: number): void {
-		debugPrint(`[RatingManager] saveRatingsInProgress called: turn=${currentTurn}, isRanked=${this.isRankedGameFlag}, gameId=${this.currentGameId || 'EMPTY'}, ranksCount=${ranks.length}`);
+		debugPrint(
+			`[RatingManager] saveRatingsInProgress called: turn=${currentTurn}, isRanked=${this.isRankedGameFlag}, gameId=${this.currentGameId || 'EMPTY'}, ranksCount=${ranks.length}`
+		);
 
 		if (!this.isRankedGameFlag || !this.currentGameId) {
-			debugPrint(`[RatingManager] saveRatingsInProgress exiting early: isRankedGameFlag=${this.isRankedGameFlag}, currentGameId=${this.currentGameId || 'EMPTY'}`);
+			debugPrint(
+				`[RatingManager] saveRatingsInProgress exiting early: isRankedGameFlag=${this.isRankedGameFlag}, currentGameId=${this.currentGameId || 'EMPTY'}`
+			);
 			return;
 		}
 
@@ -994,7 +1019,9 @@ export class RatingManager {
 			if (!saved) {
 				debugPrint(`[RatingManager] Failed to save pending rating for ${btag}`);
 			} else {
-				debugPrint(`[RatingManager] Saved pending entry for ${btag}: turn=${currentTurn}, preliminaryPlacement=${preliminaryPlacement + 1}, preliminaryRating=${preliminaryRating}`);
+				debugPrint(
+					`[RatingManager] Saved pending entry for ${btag}: turn=${currentTurn}, preliminaryPlacement=${preliminaryPlacement + 1}, preliminaryRating=${preliminaryRating}`
+				);
 			}
 		});
 	}
@@ -1084,7 +1111,9 @@ export class RatingManager {
 		};
 
 		writeOthersRatings(othersData, sanitizedName, this.seasonId, DEVELOPER_MODE);
-		debugPrint(`[RatingManager] Broadcast finalized player ${cleanPlayerData.btag} (rating: ${cleanPlayerData.rating}) to ${localBtag}'s others database`);
+		debugPrint(
+			`[RatingManager] Broadcast finalized player ${cleanPlayerData.btag} (rating: ${cleanPlayerData.rating}) to ${localBtag}'s others database`
+		);
 	}
 
 	/**

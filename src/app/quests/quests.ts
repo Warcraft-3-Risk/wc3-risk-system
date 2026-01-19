@@ -10,6 +10,8 @@ import { PromodeOptionsColorFormatted } from '../settings/strategies/promode-str
 import { HexColors } from '../utils/hex-colors';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { ShuffleArray } from '../utils/utils';
+import { RatingManager } from '../rating/rating-manager';
+import { debugPrint } from '../utils/debug-print';
 
 /**
  * Responsible for creating in-game quests.
@@ -142,7 +144,13 @@ export class Quests {
 			- Bounty provides immediate income, while Fight Bonus provides larger periodic rewards
 		`;
 
-		this.BuildQuest('QUEST_FIGHT_BONUS', 'Fight Bonus & Bounty', description, 'ReplaceableTextures\\CommandButtons\\BTNChestOfGold.blp', true);
+		this.BuildQuest(
+			'QUEST_FIGHT_BONUS',
+			'Fight Bonus & Bounty',
+			description,
+			'ReplaceableTextures\\CommandButtons\\BTNChestOfGold.blp',
+			true
+		);
 	}
 
 	private Camera() {
@@ -228,53 +236,86 @@ export class Quests {
 	}
 
 	public addPlayersQuest(): void {
-		let description: string = `${HexColors.YELLOW}Initial Players|r`;
-		let nameList: ActivePlayer[] = [];
 		const playerManager = PlayerManager.getInstance();
 		const nameManager = NameManager.getInstance();
-		playerManager.players.forEach((activePlayer) => {
-			nameList.push(activePlayer);
-		});
-		ShuffleArray(nameList);
+		const ratingManager = RatingManager.getInstance();
+		playerManager.playersAndObservers.forEach((activePlayer) => {
+			if (activePlayer.getPlayer() == GetLocalPlayer()) {
+				const showRating = ratingManager.getShowRatingPreference(nameManager.getBtag(GetLocalPlayer()));
 
-		// Save the shuffled list for future reference - in order to keep the list order consistent
-		this.shuffledPlayerList = Array.from(nameList);
+				let description: string = `${HexColors.YELLOW}Initial Players|r`;
+				let nameList: ActivePlayer[] = [];
+				playerManager.players.forEach((activePlayer) => {
+					nameList.push(activePlayer);
+				});
+				ShuffleArray(nameList);
 
-		nameList.forEach((player) => {
-			description += `\n${nameManager.getBtag(player.getPlayer())}`;
+				// Save the shuffled list for future reference - in order to keep the list order consistent
+				this.shuffledPlayerList = Array.from(nameList);
+
+				nameList.forEach((player) => {
+					const btag = nameManager.getBtag(player.getPlayer());
+
+					description += `\n${btag}`;
+
+					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
+						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
+					}
+				});
+				this.BuildQuest('QUEST_PLAYERS', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
+			}
 		});
-		this.BuildQuest('QUEST_PLAYERS', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 
 	public updatePlayersQuest(): void {
+		const playerManager = PlayerManager.getInstance();
+		const nameManager = NameManager.getInstance();
+		const ratingManager = RatingManager.getInstance();
+
 		if (!this.quests.has('QUEST_PLAYERS')) this.addPlayersQuest();
 
-		let description: string = `${HexColors.YELLOW}Active Players|r`;
+		playerManager.playersAndObservers.forEach((activePlayer) => {
+			if (activePlayer.getPlayer() == GetLocalPlayer()) {
+				const showRating = ratingManager.getShowRatingPreference(nameManager.getBtag(GetLocalPlayer()));
 
-		const activePlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isAlive() : false));
-		activePlayers.forEach((player) => {
-			description += `\n${NameManager.getInstance().getBtag(player.getPlayer())} (${HexColors.GREEN + 'Active|r'})`;
-		});
+				let description: string = `${HexColors.YELLOW}Active Players|r`;
 
-		description += `\n\n${HexColors.YELLOW}Eliminated Players|r`;
-		const eliminatedPlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isEliminated() : false));
-		eliminatedPlayers.forEach((player) => {
-			description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())} (${player.status ? player.status.status : 'Unknown'})`;
+				const activePlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isAlive() : false));
+				activePlayers.forEach((player) => {
+					const btag = nameManager.getBtag(player.getPlayer());
+					description += `\n${btag}`;
+					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
+						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
+					}
+					description += ` (${HexColors.GREEN + 'Active|r'})`;
+				});
 
-			if (player.killedBy) {
-				const killedByActivePlayer = PlayerManager.getInstance().players.get(player.killedBy);
+				description += `\n\n${HexColors.YELLOW}Eliminated Players|r`;
+				const eliminatedPlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isEliminated() : false));
+				eliminatedPlayers.forEach((player) => {
+					const btag = nameManager.getBtag(player.getPlayer());
+					description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())}`;
+					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
+						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
+					}
+					description += ` (${player.status ? player.status.status : 'Unknown'})`;
 
-				// Dependent on whether the killer is still alive or not we have to be careful to not leak his player name
-				if (killedByActivePlayer.status.isActive()) {
-					description += ' killed by ' + NameManager.getInstance().getDisplayName(player.killedBy);
-				} else {
-					description += ' killed by ' + ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.killedBy);
-				}
+					if (player.killedBy) {
+						const killedByActivePlayer = PlayerManager.getInstance().players.get(player.killedBy);
 
-				description += ' (' + (killedByActivePlayer.status ? killedByActivePlayer.status.status : 'Unknown') + ')';
+						// Dependent on whether the killer is still alive or not we have to be careful to not leak his player name
+						if (killedByActivePlayer.status.isActive()) {
+							description += ' killed by ' + NameManager.getInstance().getDisplayName(player.killedBy);
+						} else {
+							description += ' killed by ' + ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.killedBy);
+						}
+
+						description += ' (' + (killedByActivePlayer.status ? killedByActivePlayer.status.status : 'Unknown') + ')';
+					}
+				});
+
+				this.BuildQuest('QUEST_PLAYERS', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 			}
 		});
-
-		this.BuildQuest('QUEST_PLAYERS', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 }

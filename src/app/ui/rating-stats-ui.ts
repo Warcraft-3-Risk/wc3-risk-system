@@ -4,6 +4,8 @@ import { RatingManager } from '../rating/rating-manager';
 import { getRankIcon } from '../rating/rating-calculator';
 import { NameManager } from '../managers/names/name-manager';
 import { RANKED_SEASON_ID } from 'src/configs/game-settings';
+import { EventEmitter } from '../utils/events/event-emitter';
+import { EVENT_QUEST_UPDATE_PLAYER_STATUS } from '../utils/events/event-constants';
 
 export class RatingStatsUI {
 	private player: ActivePlayer;
@@ -161,6 +163,9 @@ export class RatingStatsUI {
 
 			// Set initial button text based on preference
 			this.updateEnableDisableButtonText();
+
+			// Update quests
+			EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 
 			// Register ESC key to close windows
 			this.registerEscapeKey();

@@ -52,7 +52,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 					// Note: P2P rating sync already started in ModeSelection.run() during settings phase
 				} else {
-					const message = `${HexColors.TANGERINE}This is an unranked game.|r`;
+					const message = `${HexColors.TANGERINE}This is an unranked game!|r Ranked play requires at least ${HexColors.TANGERINE}16 eligible players|r.`;
 
 					// Send message only to players who have rating display enabled
 					PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
@@ -61,24 +61,18 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 						// Only show message if player has rating display enabled
 						if (showRating) {
-							DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 8, message);
+							DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 5, message);
 						}
 					});
 				}
 
 				// Pre-initialize rating stats UI frames for all players during countdown
-				// This prevents desync issues from frame creation during button clicks
-				// Use a small delay to ensure player setup is complete
-				const frameInitTimer = CreateTimer();
-				TimerStart(frameInitTimer, 0.5, false, () => {
-					DestroyTimer(frameInitTimer);
-					PlayerManager.getInstance().players.forEach((player) => {
-						if (player.ratingStatsUI && player.ratingStatsUI.preInitialize) {
-							player.ratingStatsUI.preInitialize();
-						}
-						// Update F4 button appearance based on ranked status
-						updateRatingStatsButtonForRankedStatus(player, isRanked);
-					});
+				PlayerManager.getInstance().players.forEach((player) => {
+					if (player.ratingStatsUI && player.ratingStatsUI.preInitialize) {
+						player.ratingStatsUI.preInitialize();
+					}
+					// Update F4 button appearance based on ranked status
+					updateRatingStatsButtonForRankedStatus(player, isRanked);
 				});
 			}
 

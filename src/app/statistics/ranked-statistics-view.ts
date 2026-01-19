@@ -91,7 +91,7 @@ export class RankedStatisticsView implements IStatisticsView {
 	public getMinimizeButtonText(): string {
 		let buttonText: string = '';
 
-		if (GetLocalPlayer() == GetTriggerPlayer()) {
+		if (GetLocalPlayer() == GetLocalPlayer()) {
 			buttonText = BlzFrameGetText(this.minimizeButton);
 		}
 

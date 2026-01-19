@@ -41,7 +41,7 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 	const ratingManager = RatingManager.getInstance();
 	const localPlayer = GetLocalPlayer();
 	const localBtag = NameManager.getInstance().getBtag(localPlayer);
-	const showRatings = ratingManager.isRankedGame() && ratingManager.getShowRatingPreference(localBtag);
+	const showRatings = ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && ratingManager.getShowRatingPreference(localBtag);
 
 	let playerDisplayName = NameManager.getInstance().getDisplayName(player.getPlayer());
 	if (showRatings) {
@@ -131,7 +131,7 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 	const ratingManager = RatingManager.getInstance();
 	const localPlayer = GetLocalPlayer();
 	const localBtag = NameManager.getInstance().getBtag(localPlayer);
-	const showRatings = ratingManager.isRankedGame() && ratingManager.getShowRatingPreference(localBtag);
+	const showRatings = ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && ratingManager.getShowRatingPreference(localBtag);
 
 	let playerDisplayName = NameManager.getInstance().getDisplayName(player.getPlayer());
 	if (showRatings) {
