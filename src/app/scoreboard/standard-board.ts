@@ -144,7 +144,7 @@ export class StandardBoard extends Scoreboard {
 				const change = ratingResult.totalChange;
 				const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
 				const sign = change >= 0 ? '+' : '';
-				const truncatedName = playerName.length > 18 ? playerName.slice(0, 18) : playerName;
+				const truncatedName = playerName.length > 17 ? playerName.slice(0, 17) : playerName;
 				this.setItemValue(`${grey}${truncatedName}${color}(${sign}${change})|r`, row, this.PLAYER_COL);
 			} else {
 				const truncatedName = playerName.length > 20 ? playerName.slice(0, 20) : playerName;

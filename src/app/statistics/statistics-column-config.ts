@@ -54,8 +54,8 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 			textFunction: (player) => {
 				let name = ParticipantEntityManager.getParticipantNamePrefixedWithOptionalTeamNumber(player.getPlayer());
 
-				if (name && name.length > 25) {
-					name = name.slice(0, 25);
+				if (name && name.length > 24) {
+					name = name.slice(0, 24);
 				}
 
 				return name;
@@ -111,8 +111,8 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					rivalName = NameManager.getInstance().getDisplayName(rival.getPlayer());
 				}
 
-				if (rivalName && rivalName.length > 25) {
-					rivalName = rivalName.slice(0, 25);
+				if (rivalName && rivalName.length > 24) {
+					rivalName = rivalName.slice(0, 24);
 				}
 
 				return rival ? rivalName : `${highlightIfOwnPlayer(player, 'N/A')}`;
