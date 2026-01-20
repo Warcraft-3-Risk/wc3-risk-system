@@ -237,16 +237,16 @@ export class RatingManager {
 			return false;
 		}
 
-		// In developer mode, always enable ranked (for testing)
-		if (DEVELOPER_MODE) {
-			this.isRankedGameFlag = true;
-			return true;
-		}
-
 		// Normal mode: require FFA mode AND minimum player count
 		if (!isFFA) {
 			this.isRankedGameFlag = false;
 			return false;
+		}
+
+		// In developer mode, always enable ranked (for testing)
+		if (DEVELOPER_MODE) {
+			this.isRankedGameFlag = true;
+			return true;
 		}
 
 		this.isRankedGameFlag = humanPlayerCount > RANKED_MIN_PLAYERS;
