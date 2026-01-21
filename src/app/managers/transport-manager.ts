@@ -8,6 +8,13 @@ import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { ORDER_ID } from '../../configs/order-id';
 
+enum PatrolState {
+	LOADING,
+	MOVING,
+	UNLOADING,
+	RETURNING,
+}
+
 type Transport = {
 	unit: unit;
 	cargo: unit[];
@@ -20,6 +27,15 @@ type Transport = {
 	event: TimedEvent | null;
 	floatingTextCargo: texttag | null;
 	floatingTextCapacity: texttag | null;
+	patrolEnabled: boolean;
+	patrolState: PatrolState;
+	patrolDestX: number;
+	patrolDestY: number;
+	patrolOriginX: number;
+	patrolOriginY: number;
+	patrolLoadTimer: number;
+	patrolEvent: TimedEvent | null;
+	isScriptOrdering: boolean;
 };
 
 const AUTO_LOAD_DISTANCE: number = 450;
@@ -83,6 +99,10 @@ export class TransportManager {
 
 		// Autoload management
 		this.onAutoLoadOn();
+
+		// Patrol management
+		this.onPatrolStart();
+		this.onPatrolOrder();
 	}
 
 	/**
@@ -102,6 +122,15 @@ export class TransportManager {
 			unloadTargetY: null,
 			floatingTextCargo: null,
 			floatingTextCapacity: null,
+			patrolEnabled: false,
+			patrolState: PatrolState.LOADING,
+			patrolDestX: 0,
+			patrolDestY: 0,
+			patrolOriginX: 0,
+			patrolOriginY: 0,
+			patrolLoadTimer: 0,
+			patrolEvent: null,
+			isScriptOrdering: false,
 		};
 
 		this.transports.set(unit, transport);
@@ -140,6 +169,12 @@ export class TransportManager {
 		}
 
 		transportData.autoloadEnabled = false;
+		transportData.patrolEnabled = false;
+
+		if (transportData.patrolEvent != null) {
+			TimedEventManager.getInstance().removeTimedEvent(transportData.patrolEvent);
+			transportData.patrolEvent = null;
+		}
 
 		this.transports.delete(unit);
 	}
@@ -362,6 +397,98 @@ export class TransportManager {
 		);
 	}
 
+	private onPatrolStart() {
+		const t = CreateTrigger();
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
+		}
+
+		TriggerAddCondition(
+			t,
+			Condition(() => {
+				debugPrint('Transport Patrol Casted');
+				const transport: Transport = this.transports.get(GetTriggerUnit());
+
+				if (!transport || GetSpellAbilityId() !== ABILITY_ID.TRANSPORT_PATROL) {
+					return false;
+				}
+
+				debugPrint('Transport Patrol Valid');
+
+				if (transport.patrolEnabled) {
+					debugPrint('Transport Patrol Already Enabled - Stopping Previous Patrol');
+					this.stopPatrol(transport);
+				}
+
+				debugPrint('Transport Patrol Starting');
+
+				transport.patrolEnabled = true;
+				transport.patrolState = PatrolState.LOADING;
+				transport.patrolDestX = GetSpellTargetX();
+				transport.patrolDestY = GetSpellTargetY();
+				const u = transport.unit;
+				transport.patrolOriginX = GetUnitX(u);
+				transport.patrolOriginY = GetUnitY(u);
+				transport.patrolLoadTimer = 0;
+
+				debugPrint(`Patrol Origin: (${transport.patrolOriginX}, ${transport.patrolOriginY})`);
+				debugPrint(`Patrol Destination: (${transport.patrolDestX}, ${transport.patrolDestY})`);
+
+				transport.effect = AddSpecialEffectTarget(
+					'Abilities\\Spells\\NightElf\\Rejuvenation\\RejuvenationTarget.mdl',
+					transport.unit,
+					'overhead'
+				);
+
+				const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
+
+				debugPrint('Registering Patrol Timed Event');
+				transport.patrolEvent = timedEventManager.registerTimedEvent(1000000, () => {
+					debugPrint('Transport Patrol Tick');
+					this.handlePatrol(transport);
+				});
+
+				return false;
+			})
+		);
+	}
+
+	private onPatrolOrder() {
+		const t = CreateTrigger();
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_ORDER, null);
+		}
+
+		TriggerAddCondition(
+			t,
+			Condition(() => {
+				const transport: Transport = this.transports.get(GetTriggerUnit());
+
+				if (!transport || !transport.patrolEnabled) {
+					return false;
+				}
+
+				if (!transport.isScriptOrdering) {
+					// Check if order is LOAD (allow manual loading without cancelling patrol)
+					if (GetIssuedOrderId() == ORDER_ID.LOAD) return false;
+					// Check if order is UNLOAD (allow manual unloading without cancelling patrol)
+					if (GetIssuedOrderId() == ORDER_ID.UNLOAD_UNIT) return false;
+					// Check if order is UNLOAD ALL (allow manual unloading without cancelling patrol)
+					if (GetIssuedOrderId() == ORDER_ID.UNLOAD_ALL) return false;
+
+					// Player issued order, cancel patrol
+					this.stopPatrol(transport);
+				}
+
+				return false;
+			})
+		);
+	}
+
 	/**
 	 * Initializes the trigger for spell effects on transports.
 	 */
@@ -450,6 +577,29 @@ export class TransportManager {
 		return terrainType != FourCC('Vcbp');
 	}
 
+	private castAutoLoad(transport: Transport) {
+		let group: group = CreateGroup();
+
+		GroupEnumUnitsInRange(
+			group,
+			GetUnitX(transport.unit),
+			GetUnitY(transport.unit),
+			AUTO_LOAD_DISTANCE,
+			Filter(() => {
+				let unit: unit = GetFilterUnit();
+
+				if (IsUnitType(unit, UNIT_TYPE.SHIP)) return;
+				if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
+				if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
+
+				IssueTargetOrder(unit, 'smart', transport.unit);
+			})
+		);
+
+		DestroyGroup(group);
+		group = null;
+	}
+
 	/**
 	 * Handles the activation of the Auto-Load ability.
 	 */
@@ -469,26 +619,7 @@ export class TransportManager {
 		const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
 
 		transport.event = timedEventManager.registerTimedEvent(AUTO_LOAD_DURATION, () => {
-			let group: group = CreateGroup();
-
-			GroupEnumUnitsInRange(
-				group,
-				GetUnitX(transport.unit),
-				GetUnitY(transport.unit),
-				AUTO_LOAD_DISTANCE,
-				Filter(() => {
-					let unit: unit = GetFilterUnit();
-
-					if (IsUnitType(unit, UNIT_TYPE.SHIP)) return;
-					if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
-					if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
-
-					IssueTargetOrder(unit, 'smart', transport.unit);
-				})
-			);
-
-			DestroyGroup(group);
-			group = null;
+			this.castAutoLoad(transport);
 
 			if (transport.cargo.length >= 10 || !transport.autoloadEnabled || this.isTerrainInvalid(transport.unit)) {
 				this.handleAutoLoadOff(transport);
@@ -510,6 +641,94 @@ export class TransportManager {
 		if (transport.event != null) {
 			TimedEventManager.getInstance().removeTimedEvent(transport.event);
 			transport.event = null;
+		}
+	}
+
+	/**
+	 * Stops the patrol and cleans up resources.
+	 */
+	private stopPatrol(transport: Transport) {
+		transport.patrolEnabled = false;
+
+		if (transport.effect) {
+			DestroyEffect(transport.effect);
+			transport.effect = null;
+		}
+
+		if (transport.patrolEvent) {
+			TimedEventManager.getInstance().removeTimedEvent(transport.patrolEvent);
+			transport.patrolEvent = null;
+		}
+	}
+
+	private handlePatrol(transport: Transport) {
+		if (!transport.patrolEnabled) return;
+		// If transport is dead, onDeath should have handled it, but safety check:
+		if (!UnitAlive(transport.unit)) {
+			this.stopPatrol(transport);
+			return;
+		}
+
+		switch (transport.patrolState) {
+			case PatrolState.LOADING:
+				this.castAutoLoad(transport);
+				transport.patrolLoadTimer++;
+
+				if (transport.cargo.length >= 10 || transport.patrolLoadTimer >= 10) {
+					transport.patrolState = PatrolState.MOVING;
+					transport.patrolLoadTimer = 0;
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'move', transport.patrolDestX, transport.patrolDestY);
+					transport.isScriptOrdering = false;
+				}
+				break;
+
+			case PatrolState.MOVING:
+				const dx = GetUnitX(transport.unit) - transport.patrolDestX;
+				const dy = GetUnitY(transport.unit) - transport.patrolDestY;
+				const dist = SquareRoot(dx * dx + dy * dy);
+
+				if (dist < 300) {
+					transport.patrolState = PatrolState.UNLOADING;
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'unloadall', transport.patrolDestX, transport.patrolDestY);
+					transport.isScriptOrdering = false;
+				} else if (GetUnitCurrentOrder(transport.unit) != 851986) {
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'move', transport.patrolDestX, transport.patrolDestY);
+					transport.isScriptOrdering = false;
+				}
+				break;
+
+			case PatrolState.UNLOADING:
+				if (transport.cargo.length == 0) {
+					transport.patrolState = PatrolState.RETURNING;
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'move', transport.patrolOriginX, transport.patrolOriginY);
+					transport.isScriptOrdering = false;
+				} else if (GetUnitCurrentOrder(transport.unit) != 852048) {
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'unloadall', transport.patrolDestX, transport.patrolDestY);
+					transport.isScriptOrdering = false;
+				}
+				break;
+
+			case PatrolState.RETURNING:
+				const rdx = GetUnitX(transport.unit) - transport.patrolOriginX;
+				const rdy = GetUnitY(transport.unit) - transport.patrolOriginY;
+				const rdist = SquareRoot(rdx * rdx + rdy * rdy);
+
+				if (rdist < 300) {
+					transport.patrolState = PatrolState.LOADING;
+					transport.isScriptOrdering = true;
+					IssueImmediateOrder(transport.unit, 'stop');
+					transport.isScriptOrdering = false;
+				} else if (GetUnitCurrentOrder(transport.unit) != 851986) {
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'move', transport.patrolOriginX, transport.patrolOriginY);
+					transport.isScriptOrdering = false;
+				}
+				break;
 		}
 	}
 }
