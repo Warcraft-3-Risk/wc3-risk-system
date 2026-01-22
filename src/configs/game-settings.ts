@@ -33,7 +33,7 @@ export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 export const STFU_DURATION: number = 300;
 
 //This represents whether debug messages should be printed. Default is false.
-export const SHOW_DEBUG_PRINTS = true;
+export const SHOW_DEBUG_PRINTS = false;
 
 // This represents whether debug logs should be saved to a file. Default is true.
 export const SAVE_DEBUG_LOGS_TO_FILE = false;
