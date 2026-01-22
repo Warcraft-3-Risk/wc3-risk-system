@@ -24,7 +24,6 @@ type Transport = {
 	loadTarget: unit;
 	unloadTargetX: number;
 	unloadTargetY: number;
-	event: TimedEvent | null;
 	floatingTextCargo: texttag | null;
 	floatingTextCapacity: texttag | null;
 	patrolEnabled: boolean;
@@ -36,6 +35,7 @@ type Transport = {
 	patrolLoadTimer: number;
 	patrolEvent: TimedEvent | null;
 	isScriptOrdering: boolean;
+	pathingDisableDuration: number;
 };
 
 const AUTO_LOAD_DISTANCE: number = 450;
@@ -60,6 +60,8 @@ export class TransportManager {
 	private static delayedTrackTimerRunning: boolean = false;
 	private static instance: TransportManager;
 	private transports: Map<unit, Transport>;
+	private autoLoadingTransports: Transport[] = [];
+	private autoLoadTimer: timer = CreateTimer();
 
 	/**
 	 * Gets the singleton instance of the TransportManager.
@@ -78,6 +80,8 @@ export class TransportManager {
 	 */
 	private constructor() {
 		this.transports = new Map<unit, Transport>();
+
+		TimerStart(this.autoLoadTimer, 1.0, true, () => this.onAutoLoadTick());
 
 		// Unit load management
 		// Handler for order queued for the load ability start
@@ -116,7 +120,6 @@ export class TransportManager {
 			effect: null,
 			duration: 0,
 			autoloadEnabled: false,
-			event: null,
 			loadTarget: null,
 			unloadTargetX: null,
 			unloadTargetY: null,
@@ -131,6 +134,7 @@ export class TransportManager {
 			patrolLoadTimer: 0,
 			patrolEvent: null,
 			isScriptOrdering: false,
+			pathingDisableDuration: 0,
 		};
 
 		this.transports.set(unit, transport);
@@ -169,6 +173,12 @@ export class TransportManager {
 		}
 
 		transportData.autoloadEnabled = false;
+		// Remove from autoLoadingTransports
+		const index = this.autoLoadingTransports.indexOf(transportData);
+		if (index > -1) {
+			this.autoLoadingTransports.splice(index, 1);
+		}
+
 		transportData.patrolEnabled = false;
 
 		if (transportData.patrolEvent != null) {
@@ -577,6 +587,19 @@ export class TransportManager {
 		return terrainType != FourCC('Vcbp');
 	}
 
+	private onAutoLoadTick() {
+		for (let i = this.autoLoadingTransports.length - 1; i >= 0; i--) {
+			const transport = this.autoLoadingTransports[i];
+
+			this.castAutoLoad(transport);
+			transport.duration--;
+
+			if (transport.cargo.length >= 10 || !transport.autoloadEnabled || this.isTerrainInvalid(transport.unit) || transport.duration <= 0) {
+				this.handleAutoLoadOff(transport);
+			}
+		}
+	}
+
 	private castAutoLoad(transport: Transport) {
 		let group: group = CreateGroup();
 
@@ -609,6 +632,7 @@ export class TransportManager {
 		}
 
 		transport.autoloadEnabled = true;
+		transport.duration = AUTO_LOAD_DURATION;
 
 		transport.effect = AddSpecialEffectTarget(
 			'Abilities\\Spells\\NightElf\\Rejuvenation\\RejuvenationTarget.mdl',
@@ -616,18 +640,7 @@ export class TransportManager {
 			'overhead'
 		);
 
-		const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
-
-		transport.event = timedEventManager.registerTimedEvent(AUTO_LOAD_DURATION, () => {
-			this.castAutoLoad(transport);
-
-			if (transport.cargo.length >= 10 || !transport.autoloadEnabled || this.isTerrainInvalid(transport.unit)) {
-				this.handleAutoLoadOff(transport);
-			} else if (transport.event.duration <= 1) {
-				// Timer is about to expire naturally - cleanup before auto-removal
-				this.handleAutoLoadOff(transport);
-			}
-		});
+		this.autoLoadingTransports.push(transport);
 	}
 
 	/**
@@ -636,11 +649,15 @@ export class TransportManager {
 	 */
 	private handleAutoLoadOff(transport: Transport) {
 		transport.autoloadEnabled = false;
-		DestroyEffect(transport.effect);
 
-		if (transport.event != null) {
-			TimedEventManager.getInstance().removeTimedEvent(transport.event);
-			transport.event = null;
+		if (transport.effect) {
+			DestroyEffect(transport.effect);
+			transport.effect = null;
+		}
+
+		const index = this.autoLoadingTransports.indexOf(transport);
+		if (index > -1) {
+			this.autoLoadingTransports.splice(index, 1);
 		}
 	}
 
@@ -659,6 +676,11 @@ export class TransportManager {
 			TimedEventManager.getInstance().removeTimedEvent(transport.patrolEvent);
 			transport.patrolEvent = null;
 		}
+
+		if (transport.pathingDisableDuration > 0) {
+			SetUnitPathing(transport.unit, true);
+			transport.pathingDisableDuration = 0;
+		}
 	}
 
 	private handlePatrol(transport: Transport) {
@@ -667,6 +689,13 @@ export class TransportManager {
 		if (!UnitAlive(transport.unit)) {
 			this.stopPatrol(transport);
 			return;
+		}
+
+		if (transport.pathingDisableDuration > 0) {
+			transport.pathingDisableDuration--;
+			if (transport.pathingDisableDuration <= 0) {
+				SetUnitPathing(transport.unit, true);
+			}
 		}
 
 		switch (transport.patrolState) {
@@ -691,6 +720,10 @@ export class TransportManager {
 				if (dist < 300) {
 					transport.patrolState = PatrolState.UNLOADING;
 					transport.isScriptOrdering = true;
+
+					SetUnitPathing(transport.unit, false);
+					transport.pathingDisableDuration = 5;
+
 					IssuePointOrder(transport.unit, 'unloadall', transport.patrolDestX, transport.patrolDestY);
 					transport.isScriptOrdering = false;
 				} else if (GetUnitCurrentOrder(transport.unit) != 851986) {
