@@ -1,6 +1,6 @@
 import { File } from 'w3ts';
 import { OthersRatingFileData, PlayerRatingData } from './types';
-import { DEVELOPER_MODE } from 'src/configs/game-settings';
+import { DEVELOPER_MODE, RANKED_SEASON_RESET_KEY } from 'src/configs/game-settings';
 import { encryptData, decryptData } from './rating-encryption';
 
 /**
@@ -69,8 +69,10 @@ export function validateOthersChecksum(data: OthersRatingFileData): boolean {
 function getOthersFilePath(hash: string, seasonId: number, isDev: boolean): string {
 	// Use single-letter prefix: 'e' for dev others, 'q' for prod others
 	const prefix = isDev ? 'e' : 'q';
+	// Include reset key if configured (allows resetting data without changing season ID)
+	const resetKey = RANKED_SEASON_RESET_KEY || '';
 	// Must use .txt extension - WC3 only supports .txt and .pld file extensions
-	return `risk/${prefix}${seasonId}_${hash}.txt`;
+	return `risk/${prefix}${seasonId}${resetKey}_${hash}.txt`;
 }
 
 /**

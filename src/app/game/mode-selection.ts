@@ -5,7 +5,7 @@ import { Quests } from 'src/app/quests/quests';
 import { ExportGameSettings } from 'src/app/utils/export-statistics/export-game-settings';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { EVENT_MODE_SELECTION, EVENT_SET_GAME_MODE } from 'src/app/utils/events/event-constants';
-import { ENABLE_EXPORT_GAME_SETTINGS } from 'src/configs/game-settings';
+import { ENABLE_EXPORT_GAME_SETTINGS, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
 import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import { GlobalGameData } from './state/global-game-state';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
@@ -37,9 +37,15 @@ export class ModeSelection {
 	public run(): void {
 		// Start P2P rating synchronization early (during settings selection)
 		// This allows sync to complete while host is configuring the game
-		const syncManager = RatingSyncManager.getInstance();
-		const humanPlayers = PlayerManager.getInstance().getHumanPlayersOnly();
-		syncManager.startSync(humanPlayers);
+		// Only start sync if rating system is enabled
+		if (RATING_SYSTEM_ENABLED) {
+			const syncManager = RatingSyncManager.getInstance();
+			// Only human players can participate in P2P sync
+			const allHumans = Array.from(PlayerManager.getInstance().playersAndObservers.values()).filter(
+				(p) => GetPlayerController(p.getPlayer()) === MAP_CONTROL_USER
+			);
+			syncManager.startSync(allHumans);
+		}
 
 		// Consuming pauses to maintain continous gameplay
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {

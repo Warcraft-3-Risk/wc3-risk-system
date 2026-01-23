@@ -4,6 +4,11 @@ import { RatingManager } from '../rating/rating-manager';
 import { getRankIcon } from '../rating/rating-calculator';
 import { NameManager } from '../managers/names/name-manager';
 import { RANKED_SEASON_ID } from 'src/configs/game-settings';
+import { EventEmitter } from '../utils/events/event-emitter';
+import { EVENT_QUEST_UPDATE_PLAYER_STATUS } from '../utils/events/event-constants';
+import { CreateObserverButton } from '../utils/observer-helper';
+import { PlayerManager } from '../player/player-manager';
+import { truncateWithColorCode } from '../utils/utils';
 
 export class RatingStatsUI {
 	private player: ActivePlayer;
@@ -161,6 +166,9 @@ export class RatingStatsUI {
 
 			// Set initial button text based on preference
 			this.updateEnableDisableButtonText();
+
+			// Update quests
+			EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 
 			// Register ESC key to close windows
 			this.registerEscapeKey();
@@ -412,10 +420,10 @@ export class RatingStatsUI {
 		} catch (error) {
 			// Fallback to display name if acct/color fails
 			if (this.titleText) {
-				let fallbackName = NameManager.getInstance().getDisplayName(this.player.getPlayer());
-				if (fallbackName.length > 10) {
-					fallbackName = fallbackName.substring(0, 10);
-				}
+				const fallbackName = truncateWithColorCode(
+					NameManager.getInstance().getDisplayName(this.player.getPlayer()),
+					10
+				);
 				BlzFrameSetText(this.titleText, fallbackName);
 			}
 		}
@@ -577,6 +585,10 @@ export class RatingStatsUI {
 						this.hideLeaderboard();
 					}
 				});
+
+				CreateObserverButton(this.leaderboardCloseButton, IsPlayerObserver(GetLocalPlayer()), () => {
+					this.hideLeaderboard();
+				});
 			}
 
 			// Get pagination button references
@@ -598,6 +610,14 @@ export class RatingStatsUI {
 						BlzFrameSetEnable(this.leaderboardPrevButton, true);
 					}
 				});
+
+				CreateObserverButton(this.leaderboardPrevButton, IsPlayerObserver(GetLocalPlayer()), () => {
+					this.previousPage();
+
+					// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+					BlzFrameSetEnable(this.leaderboardPrevButton, false);
+					BlzFrameSetEnable(this.leaderboardPrevButton, true);
+				});
 			}
 
 			if (this.leaderboardNextButton) {
@@ -612,6 +632,14 @@ export class RatingStatsUI {
 						BlzFrameSetEnable(this.leaderboardNextButton, true);
 					}
 				});
+
+				CreateObserverButton(this.leaderboardNextButton, IsPlayerObserver(GetLocalPlayer()), () => {
+					this.nextPage();
+
+					// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+					BlzFrameSetEnable(this.leaderboardNextButton, false);
+					BlzFrameSetEnable(this.leaderboardNextButton, true);
+				});
 			}
 
 			if (this.leaderboardMyPlaceButton) {
@@ -622,6 +650,10 @@ export class RatingStatsUI {
 					if (GetTriggerPlayer() == this.player.getPlayer()) {
 						this.jumpToMyPlace();
 					}
+				});
+
+				CreateObserverButton(this.leaderboardMyPlaceButton, IsPlayerObserver(GetLocalPlayer()), () => {
+					this.jumpToMyPlace();
 				});
 			}
 

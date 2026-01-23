@@ -4,6 +4,7 @@ import { StatisticsPage } from './statistics-page';
 import { PlayerManager } from '../player/player-manager';
 import { IStatisticsView } from './base-statistics-view';
 import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
+import { CreateObserverButton } from '../utils/observer-helper';
 
 /**
  * Statistics view for ranked games
@@ -41,19 +42,14 @@ export class RankedStatisticsView implements IStatisticsView {
 		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
 		BlzFrameSetSize(this.backdrop, 1, 0.64);
 
-		if (IsPlayerObserver(GetLocalPlayer())) {
-			BlzFrameSetAlpha(this.backdrop, 254);
-		}
-
 		this.footerBackdrop = BlzCreateFrameByType('BACKDROP', 'FooterBackdrop', this.backdrop, '', 0);
 		this.header = BlzFrameGetChild(this.backdrop, 0);
-		this.minimizeButton = BlzFrameGetChild(this.header, 3);
 		this.columns = [];
 		this.rows = new Map<string, framehandle>();
 		this.icons = new Map<string, framehandle>();
 
+		this.setupMinimizeButton();
 		this.setupLeaderboardButton();
-
 		this.setupPersonalStatsButton();
 
 		this.setupPaginationUI();
@@ -91,7 +87,7 @@ export class RankedStatisticsView implements IStatisticsView {
 	public getMinimizeButtonText(): string {
 		let buttonText: string = '';
 
-		if (GetLocalPlayer() == GetTriggerPlayer()) {
+		if (GetLocalPlayer() == GetLocalPlayer()) {
 			buttonText = BlzFrameGetText(this.minimizeButton);
 		}
 
@@ -172,7 +168,7 @@ export class RankedStatisticsView implements IStatisticsView {
 		}
 	}
 
-	private CreateFooterButton(parent: framehandle, name: string, text: string, xOffset: number, onClick: () => void): framehandle {
+	private CreateFooterButton(parent: framehandle, name: string, text: string, xOffset: number, onClick: (executeAction: boolean) => void): framehandle {
 		const button: framehandle = BlzCreateFrameByType('GLUETEXTBUTTON', name, parent, 'ScriptDialogButton', 0);
 		BlzFrameSetSize(button, 0.13, 0.03);
 		BlzFrameSetPoint(button, FRAMEPOINT_CENTER, parent, FRAMEPOINT_CENTER, xOffset, 0);
@@ -183,9 +179,19 @@ export class RankedStatisticsView implements IStatisticsView {
 		BlzTriggerRegisterFrameEvent(buttonTrigger, button, FRAMEEVENT_CONTROL_CLICK);
 		TriggerAddAction(buttonTrigger, () => {
 			if (GetLocalPlayer() == GetTriggerPlayer()) {
-				onClick();
+				onClick(true);
 			}
 		});
+
+		// Hotfix for observers to be able to use buttons
+		if (GetLocalPlayer() === GetLocalPlayer()) {
+			const t = CreateTimer();
+			TimerStart(t, 1, true, () => {
+				if (BlzFrameIsVisible(BlzFrameGetChild(button, 5))) {
+					onClick(IsPlayerObserver(GetLocalPlayer()));
+				}
+			});
+		}
 
 		return button;
 	}
@@ -223,6 +229,19 @@ export class RankedStatisticsView implements IStatisticsView {
 		}
 	}
 
+	private setupMinimizeButton(): void {
+		this.minimizeButton = BlzFrameGetChild(this.header, 3);
+
+		// Hotfix for observers to be able to use buttons
+		CreateObserverButton(this.minimizeButton, IsPlayerObserver(GetLocalPlayer()), () => {
+			if (this.getMinimizeButtonText() === 'Minimize') {
+				this.hideStats(GetLocalPlayer());
+			} else if (this.getMinimizeButtonText() === 'Maximize') {
+				this.showStats(GetLocalPlayer());
+			}
+		});
+	}
+
 	private setupPaginationUI(): void {
 		this.footerBackdrop = BlzCreateFrameByType('FRAME', 'FooterFrame', this.backdrop, '', 0);
 		BlzFrameSetSize(this.footerBackdrop, 0.8, RankedStatisticsView.ROW_HEIGHT);
@@ -232,15 +251,15 @@ export class RankedStatisticsView implements IStatisticsView {
 		this.pageIndicator = BlzCreateFrameByType('TEXT', 'PageIndicator', this.footerBackdrop, '', 0);
 		BlzFrameSetPoint(this.pageIndicator, FRAMEPOINT_CENTER, this.footerBackdrop, FRAMEPOINT_CENTER, 0, 0);
 
-		this.leftButton = this.CreateFooterButton(this.footerBackdrop, 'LeftFooterButton', 'Previous', -0.1, () => {
-			if (GetLocalPlayer() == GetLocalPlayer()) {
+		this.leftButton = this.CreateFooterButton(this.footerBackdrop, 'LeftFooterButton', 'Previous', -0.1, (executeAction) => {
+			if (GetLocalPlayer() == GetLocalPlayer() && executeAction) {
 				this.page.previousPage();
 				this.updatePaginationButtons();
 			}
 		});
 
-		this.rightButton = this.CreateFooterButton(this.footerBackdrop, 'RightFooterButton', 'Next', 0.1, () => {
-			if (GetLocalPlayer() == GetLocalPlayer()) {
+		this.rightButton = this.CreateFooterButton(this.footerBackdrop, 'RightFooterButton', 'Next', 0.1, (executeAction) => {
+			if (GetLocalPlayer() == GetLocalPlayer() && executeAction) {
 				this.page.nextPage();
 				this.updatePaginationButtons();
 			}
@@ -266,7 +285,7 @@ export class RankedStatisticsView implements IStatisticsView {
 				if (GetLocalPlayer() == triggerPlayer) {
 					const player = PlayerManager.getInstance().players.get(triggerPlayer);
 					if (player && player.ratingStatsUI) {
-						player.ratingStatsUI.showLeaderboard();
+						player.ratingStatsUI.toggleLeaderboardDisplay();
 					}
 
 					// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
@@ -275,6 +294,17 @@ export class RankedStatisticsView implements IStatisticsView {
 				}
 			})
 		);
+
+		CreateObserverButton(this.leaderboardButton, IsPlayerObserver(GetLocalPlayer()), () => {
+			const player = PlayerManager.getInstance().observers.get(GetLocalPlayer());
+			if (player && player.ratingStatsUI) {
+				player.ratingStatsUI.toggleLeaderboardDisplay();
+			}
+
+			// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+			BlzFrameSetEnable(this.leaderboardButton, false);
+			BlzFrameSetEnable(this.leaderboardButton, true);
+		});
 	}
 
 	private setupPersonalStatsButton(): void {
@@ -305,6 +335,11 @@ export class RankedStatisticsView implements IStatisticsView {
 				}
 			})
 		);
+
+		// Hide the Stats button for observers (they have no personal stats to view)
+		if (IsPlayerObserver(GetLocalPlayer())) {
+			BlzFrameSetVisible(this.personalStatsButton, false);
+		}
 	}
 
 	private buildColumns() {

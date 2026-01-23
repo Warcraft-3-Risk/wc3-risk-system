@@ -72,7 +72,10 @@ export class StatisticsModel {
 			.forEach((p) => {
 				if (p === player) return;
 
-				const killsOnPlayer = p.trackedData.killsDeaths.get(player.getPlayer()).kills;
+				const kdTrack = p.trackedData.killsDeaths.get(player.getPlayer());
+				if (!kdTrack) return; // Skip if no KD data (e.g., observer)
+
+				const killsOnPlayer = kdTrack.kills;
 
 				if (killsOnPlayer > maxKills) {
 					maxKills = killsOnPlayer;

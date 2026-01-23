@@ -3,6 +3,7 @@ import { StatisticsModel } from './statistics-model';
 import { StatisticsPage } from './statistics-page';
 import { IStatisticsView } from './base-statistics-view';
 import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
+import { CreateObserverButton } from '../utils/observer-helper';
 
 /**
  * Statistics view for unranked games or players who disabled rating stats
@@ -39,23 +40,22 @@ export class UnrankedStatisticsView implements IStatisticsView {
 		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
 		BlzFrameSetSize(this.backdrop, 1, 0.64);
 
-		if (IsPlayerObserver(GetLocalPlayer())) {
-			BlzFrameSetAlpha(this.backdrop, 254);
-		}
-
 		this.footerBackdrop = BlzCreateFrameByType('BACKDROP', 'UnrankedFooterBackdrop', this.backdrop, '', 0);
 		this.header = BlzFrameGetChild(this.backdrop, 0);
-		this.minimizeButton = BlzFrameGetChild(this.header, 3);
+
 		this.columns = [];
 		this.rows = new Map<string, framehandle>();
 		this.icons = new Map<string, framehandle>();
 
-		// No personal stats button for unranked view
-
+		this.setupMinimizeButton();
 		this.setupPaginationUI();
 		this.buildColumns();
-		this.page = new StatisticsPage(this.columnData.length, this.pageIndicator, UnrankedStatisticsView.COLUMNS_PER_PAGE, UnrankedStatisticsView.PINNED_COLUMNS, () =>
-			this.updateColumnVisibility()
+		this.page = new StatisticsPage(
+			this.columnData.length,
+			this.pageIndicator,
+			UnrankedStatisticsView.COLUMNS_PER_PAGE,
+			UnrankedStatisticsView.PINNED_COLUMNS,
+			() => this.updateColumnVisibility()
 		);
 
 		this.updateColumnVisibility();
@@ -87,7 +87,7 @@ export class UnrankedStatisticsView implements IStatisticsView {
 	public getMinimizeButtonText(): string {
 		let buttonText: string = '';
 
-		if (GetLocalPlayer() == GetTriggerPlayer()) {
+		if (GetLocalPlayer() == GetLocalPlayer()) {
 			buttonText = BlzFrameGetText(this.minimizeButton);
 		}
 
@@ -169,7 +169,7 @@ export class UnrankedStatisticsView implements IStatisticsView {
 		}
 	}
 
-	private CreateFooterButton(parent: framehandle, name: string, text: string, xOffset: number, onClick: () => void): framehandle {
+	private CreateFooterButton(parent: framehandle, name: string, text: string, xOffset: number, onClick: (executeAction: boolean) => void): framehandle {
 		const button: framehandle = BlzCreateFrameByType('GLUETEXTBUTTON', name, parent, 'ScriptDialogButton', 0);
 		BlzFrameSetSize(button, 0.13, 0.03);
 		BlzFrameSetPoint(button, FRAMEPOINT_CENTER, parent, FRAMEPOINT_CENTER, xOffset, 0);
@@ -180,9 +180,19 @@ export class UnrankedStatisticsView implements IStatisticsView {
 		BlzTriggerRegisterFrameEvent(buttonTrigger, button, FRAMEEVENT_CONTROL_CLICK);
 		TriggerAddAction(buttonTrigger, () => {
 			if (GetLocalPlayer() == GetTriggerPlayer()) {
-				onClick();
+				onClick(true);
 			}
 		});
+
+		// Hotfix for observers to be able to use buttons
+		if (GetLocalPlayer() === GetLocalPlayer()) {
+			const t = CreateTimer();
+			TimerStart(t, 1, true, () => {
+				if (BlzFrameIsVisible(BlzFrameGetChild(button, 5))) {
+					onClick(IsPlayerObserver(GetLocalPlayer()));
+				}
+			});
+		}
 
 		return button;
 	}
@@ -220,6 +230,19 @@ export class UnrankedStatisticsView implements IStatisticsView {
 		}
 	}
 
+	private setupMinimizeButton(): void {
+		this.minimizeButton = BlzFrameGetChild(this.header, 3);
+
+		// Hotfix for observers to be able to use buttons
+		CreateObserverButton(this.minimizeButton, IsPlayerObserver(GetLocalPlayer()), () => {
+			if (this.getMinimizeButtonText() === 'Minimize') {
+				this.hideStats(GetLocalPlayer());
+			} else if (this.getMinimizeButtonText() === 'Maximize') {
+				this.showStats(GetLocalPlayer());
+			}
+		});
+	}
+
 	private setupPaginationUI(): void {
 		this.footerBackdrop = BlzCreateFrameByType('FRAME', 'UnrankedFooterFrame', this.backdrop, '', 0);
 		BlzFrameSetSize(this.footerBackdrop, 0.8, UnrankedStatisticsView.ROW_HEIGHT);
@@ -229,15 +252,15 @@ export class UnrankedStatisticsView implements IStatisticsView {
 		this.pageIndicator = BlzCreateFrameByType('TEXT', 'UnrankedPageIndicator', this.footerBackdrop, '', 0);
 		BlzFrameSetPoint(this.pageIndicator, FRAMEPOINT_CENTER, this.footerBackdrop, FRAMEPOINT_CENTER, 0, 0);
 
-		this.leftButton = this.CreateFooterButton(this.footerBackdrop, 'UnrankedLeftFooterButton', 'Previous', -0.1, () => {
-			if (GetLocalPlayer() == GetLocalPlayer()) {
+		this.leftButton = this.CreateFooterButton(this.footerBackdrop, 'UnrankedLeftFooterButton', 'Previous', -0.1, (executeAction) => {
+			if (GetLocalPlayer() == GetLocalPlayer() && executeAction) {
 				this.page.previousPage();
 				this.updatePaginationButtons();
 			}
 		});
 
-		this.rightButton = this.CreateFooterButton(this.footerBackdrop, 'UnrankedRightFooterButton', 'Next', 0.1, () => {
-			if (GetLocalPlayer() == GetLocalPlayer()) {
+		this.rightButton = this.CreateFooterButton(this.footerBackdrop, 'UnrankedRightFooterButton', 'Next', 0.1, (executeAction) => {
+			if (GetLocalPlayer() == GetLocalPlayer() && executeAction) {
 				this.page.nextPage();
 				this.updatePaginationButtons();
 			}

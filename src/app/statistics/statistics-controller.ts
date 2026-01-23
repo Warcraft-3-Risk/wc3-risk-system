@@ -76,11 +76,16 @@ export class StatisticsController {
 	 * @returns True if player should see ranked view, false for unranked view
 	 */
 	private shouldShowRankedView(playerHandle: player): boolean {
+		const playerManager = PlayerManager.getInstance();
 		const ratingManager = RatingManager.getInstance();
 
 		// If game is not ranked, everyone sees unranked view
-		if (!ratingManager.isRankedGame()) {
+		if (!ratingManager.isRatingSystemEnabled() || !ratingManager.isRankedGame()) {
 			return false;
+		}
+
+		if(playerManager.isObserver(playerHandle)) {
+			return ratingManager.isRankedGame();
 		}
 
 		// If game is ranked, check player's preference
@@ -108,7 +113,7 @@ export class StatisticsController {
 		// Iterate through all players and show the appropriate view to each
 		const playerManager = PlayerManager.getInstance();
 
-		playerManager.players.forEach((activePlayer, playerHandle) => {
+		playerManager.playersAndObservers.forEach((activePlayer, playerHandle) => {
 			if (isVisible) {
 				// Determine which view this player should see
 				const shouldSeeRanked = this.shouldShowRankedView(playerHandle);

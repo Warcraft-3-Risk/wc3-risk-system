@@ -66,17 +66,28 @@ export const CLIENT_ALLOCATION_ENABLED = false;
 export const BAN_LIST_ACTIVE: boolean = true;
 
 // Rating system settings
+// Master toggle for the entire rating system. When disabled:
+//   - No rating stats button (F4) is shown
+//   - No "ranked/unranked game" messages are displayed
+//   - No rating data is stored or loaded
+//   - Statistics always uses the unranked leaderboard (without rating column)
+//   - Rating sync is skipped entirely
+export const RATING_SYSTEM_ENABLED: boolean = true;
+
 // This represents the current ranked season ID. Change this to start a new season.
-export const RANKED_SEASON_ID: number = 0;
+export const RANKED_SEASON_ID: number = 1;
+
+// Season reset key - change this to reset all rating data WITHOUT changing the season ID.
+// This allows you to "soft reset" the season by using new file paths.
+// Use 1-4 lowercase letters (e.g., "a", "ab", "abc", "abcd").
+// Leave empty string "" to disable (files will be named without a reset key).
+export const RANKED_SEASON_RESET_KEY: string = 'test';
 
 // This represents the minimum number of human players required for a ranked game.
 export const RANKED_MIN_PLAYERS: number = 16;
 
 // This represents the starting rating for new players.
 export const RANKED_STARTING_RATING: number = 1000;
-
-// Minimum rating floor - players cannot go below this rating
-export const RANKED_MINIMUM_RATING: number = 500;
 
 // Opponent strength modifier scale factor (0.32 gives range 0.68x to 1.32x)
 // Higher values make rating differences matter more, creating stronger ceiling effects

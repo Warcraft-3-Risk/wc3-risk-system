@@ -2,13 +2,14 @@ import { NameManager } from '../managers/names/name-manager';
 import { TrackedData } from '../player/data/tracked-data';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { ShuffleArray } from '../utils/utils';
+import { ShuffleArray, truncateWithColorCode } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
 import { TeamManager } from '../teams/team-manager';
 import { SettingsContext } from '../settings/settings-context';
+import { RatingManager } from '../rating/rating-manager';
 
 export class ObserverBoard extends Scoreboard {
 	private players: ActivePlayer[];
@@ -31,9 +32,9 @@ export class ObserverBoard extends Scoreboard {
 
 		for (let i = 1; i <= this.size; i++) {
 			MultiboardSetRowCount(this.board, MultiboardGetRowCount(this.board) + 1);
-			this.setItemWidth(6.2, i, this.PLAYER_COL);
+			this.setItemWidth(8.3, i, this.PLAYER_COL);
 			this.setItemWidth(3.9, i, this.INCOME_COL);
-			this.setItemWidth(3.0, i, this.GOLD_COL);
+			this.setItemWidth(3.3, i, this.GOLD_COL);
 			this.setItemWidth(2.6, i, this.CITIES_COL);
 			this.setItemWidth(3.9, i, this.KILLS_COL);
 			this.setItemWidth(3.9, i, this.DEATHS_COL);
@@ -126,7 +127,22 @@ export class ObserverBoard extends Scoreboard {
 		const teamPrefix = this.getTeamPrefix(player.getPlayer());
 
 		// Name
-		this.setItemValue(`${grey}${teamPrefix}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
+		const ratingManager = RatingManager.getInstance();
+		const btag = NameManager.getInstance().getBtag(player.getPlayer());
+		const ratingResult = ratingManager.getRatingResults().get(btag);
+		const playerName = NameManager.getInstance().getDisplayName(player.getPlayer());
+
+		if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled()) {
+			const change = ratingResult.totalChange;
+			const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
+			const sign = change >= 0 ? '+' : '';
+			const truncatedName = truncateWithColorCode(playerName, 17);
+			this.setItemValue(`${grey}${teamPrefix}${truncatedName}${color}(${sign}${change})|r`, row, this.PLAYER_COL);
+		} else {
+			const truncatedName = truncateWithColorCode(playerName, 20);
+			this.setItemValue(`${grey}${teamPrefix}${truncatedName}`, row, this.PLAYER_COL);
+		}
+
 
 		// Income
 		this.setItemValue(`${grey}-`, row, this.INCOME_COL);
