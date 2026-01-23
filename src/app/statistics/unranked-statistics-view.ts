@@ -40,10 +40,6 @@ export class UnrankedStatisticsView implements IStatisticsView {
 		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
 		BlzFrameSetSize(this.backdrop, 1, 0.64);
 
-		if (IsPlayerObserver(GetLocalPlayer())) {
-			BlzFrameSetAlpha(this.backdrop, 254);
-		}
-
 		this.footerBackdrop = BlzCreateFrameByType('BACKDROP', 'UnrankedFooterBackdrop', this.backdrop, '', 0);
 		this.header = BlzFrameGetChild(this.backdrop, 0);
 

@@ -42,10 +42,6 @@ export class RankedStatisticsView implements IStatisticsView {
 		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
 		BlzFrameSetSize(this.backdrop, 1, 0.64);
 
-		if (IsPlayerObserver(GetLocalPlayer())) {
-			BlzFrameSetAlpha(this.backdrop, 254);
-		}
-
 		this.footerBackdrop = BlzCreateFrameByType('BACKDROP', 'FooterBackdrop', this.backdrop, '', 0);
 		this.header = BlzFrameGetChild(this.backdrop, 0);
 		this.columns = [];
@@ -289,7 +285,7 @@ export class RankedStatisticsView implements IStatisticsView {
 				if (GetLocalPlayer() == triggerPlayer) {
 					const player = PlayerManager.getInstance().players.get(triggerPlayer);
 					if (player && player.ratingStatsUI) {
-						player.ratingStatsUI.showLeaderboard();
+						player.ratingStatsUI.toggleLeaderboardDisplay();
 					}
 
 					// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
@@ -302,7 +298,7 @@ export class RankedStatisticsView implements IStatisticsView {
 		CreateObserverButton(this.leaderboardButton, IsPlayerObserver(GetLocalPlayer()), () => {
 			const player = PlayerManager.getInstance().observers.get(GetLocalPlayer());
 			if (player && player.ratingStatsUI) {
-				player.ratingStatsUI.showLeaderboard();
+				player.ratingStatsUI.toggleLeaderboardDisplay();
 			}
 
 			// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
@@ -339,6 +335,11 @@ export class RankedStatisticsView implements IStatisticsView {
 				}
 			})
 		);
+
+		// Hide the Stats button for observers (they have no personal stats to view)
+		if (IsPlayerObserver(GetLocalPlayer())) {
+			BlzFrameSetVisible(this.personalStatsButton, false);
+		}
 	}
 
 	private buildColumns() {

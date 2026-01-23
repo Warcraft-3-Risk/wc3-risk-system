@@ -40,8 +40,11 @@ export class ModeSelection {
 		// Only start sync if rating system is enabled
 		if (RATING_SYSTEM_ENABLED) {
 			const syncManager = RatingSyncManager.getInstance();
-			const humanPlayers = PlayerManager.getInstance().getHumanPlayersOnly();
-			syncManager.startSync(humanPlayers);
+			// Only human players can participate in P2P sync
+			const allHumans = Array.from(PlayerManager.getInstance().playersAndObservers.values()).filter(
+				(p) => GetPlayerController(p.getPlayer()) === MAP_CONTROL_USER
+			);
+			syncManager.startSync(allHumans);
 		}
 
 		// Consuming pauses to maintain continous gameplay
