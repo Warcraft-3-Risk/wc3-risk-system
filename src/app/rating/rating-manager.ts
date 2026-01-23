@@ -10,6 +10,7 @@ import {
 	DEVELOPER_MODE,
 	RANKED_MIN_PLAYERS,
 	RANKED_SEASON_ID,
+	RANKED_SEASON_RESET_KEY,
 	RANKED_STARTING_RATING,
 	RATING_SYNC_TOP_PLAYERS,
 	RATING_SYSTEM_ENABLED,
@@ -96,8 +97,10 @@ export class RatingManager {
 		const hash = this.sanitizePlayerName(btag);
 		// Use single-letter prefix: 'd' for dev, 'p' for prod
 		const prefix = DEVELOPER_MODE ? 'd' : 'p';
+		// Include reset key if configured (allows resetting data without changing season ID)
+		const resetKey = RANKED_SEASON_RESET_KEY || '';
 		// Must use .txt extension - WC3 only supports .txt and .pld file extensions
-		return `risk/${prefix}${this.seasonId}_${hash}.txt`;
+		return `risk/${prefix}${this.seasonId}${resetKey}_${hash}.txt`;
 	}
 
 	/**

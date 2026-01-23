@@ -75,7 +75,13 @@ export const BAN_LIST_ACTIVE: boolean = true;
 export const RATING_SYSTEM_ENABLED: boolean = true;
 
 // This represents the current ranked season ID. Change this to start a new season.
-export const RANKED_SEASON_ID: number = 0;
+export const RANKED_SEASON_ID: number = 1;
+
+// Season reset key - change this to reset all rating data WITHOUT changing the season ID.
+// This allows you to "soft reset" the season by using new file paths.
+// Use 1-4 lowercase letters (e.g., "a", "ab", "abc", "abcd").
+// Leave empty string "" to disable (files will be named without a reset key).
+export const RANKED_SEASON_RESET_KEY: string = 'test';
 
 // This represents the minimum number of human players required for a ranked game.
 export const RANKED_MIN_PLAYERS: number = 16;
