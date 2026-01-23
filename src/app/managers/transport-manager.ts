@@ -840,7 +840,7 @@ export class TransportManager {
 				const rdy = GetUnitY(transport.unit) - transport.patrolOriginY;
 				const rdist = SquareRoot(rdx * rdx + rdy * rdy);
 
-				if (rdist < 300) {
+				if (rdist < 50) {
 					transport.patrolState = PatrolState.LOADING;
 					transport.isScriptOrdering = true;
 					IssueImmediateOrder(transport.unit, 'stop');
