@@ -8,6 +8,7 @@ import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_QUEST_UPDATE_PLAYER_STATUS } from '../utils/events/event-constants';
 import { CreateObserverButton } from '../utils/observer-helper';
 import { PlayerManager } from '../player/player-manager';
+import { truncateWithColorCode } from '../utils/utils';
 
 export class RatingStatsUI {
 	private player: ActivePlayer;
@@ -419,10 +420,10 @@ export class RatingStatsUI {
 		} catch (error) {
 			// Fallback to display name if acct/color fails
 			if (this.titleText) {
-				let fallbackName = NameManager.getInstance().getDisplayName(this.player.getPlayer());
-				if (fallbackName.length > 10) {
-					fallbackName = fallbackName.substring(0, 10);
-				}
+				const fallbackName = truncateWithColorCode(
+					NameManager.getInstance().getDisplayName(this.player.getPlayer()),
+					10
+				);
 				BlzFrameSetText(this.titleText, fallbackName);
 			}
 		}

@@ -2,7 +2,7 @@ import { NameManager } from '../managers/names/name-manager';
 import { TrackedData } from '../player/data/tracked-data';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { ShuffleArray } from '../utils/utils';
+import { ShuffleArray, truncateWithColorCode } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { RatingManager } from '../rating/rating-manager';
@@ -144,10 +144,10 @@ export class StandardBoard extends Scoreboard {
 				const change = ratingResult.totalChange;
 				const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
 				const sign = change >= 0 ? '+' : '';
-				const truncatedName = playerName.length > 17 ? playerName.slice(0, 17) : playerName;
+				const truncatedName = truncateWithColorCode(playerName, 17);
 				this.setItemValue(`${grey}${truncatedName}${color}(${sign}${change})|r`, row, this.PLAYER_COL);
 			} else {
-				const truncatedName = playerName.length > 20 ? playerName.slice(0, 20) : playerName;
+				const truncatedName = truncateWithColorCode(playerName, 20);
 				this.setItemValue(`${grey}${truncatedName}`, row, this.PLAYER_COL);
 			}
 

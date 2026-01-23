@@ -1,7 +1,7 @@
 import { NameManager } from '../managers/names/name-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { ParticipantEntityManager } from '../utils/participant-entity';
-import { ComputeRatio } from '../utils/utils';
+import { ComputeRatio, truncateWithColorCode } from '../utils/utils';
 import { StatisticsModel } from './statistics-model';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { RatingManager } from '../rating/rating-manager';
@@ -62,11 +62,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return 'N/A';
 				}
 
-				if (name.length > 24) {
-					name = name.slice(0, 24);
-				}
-
-				return name;
+				return truncateWithColorCode(name, 24);
 			},
 		},
 		{
@@ -152,11 +148,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return highlightIfOwnPlayer(player, 'N/A');
 				}
 
-				if (rivalName.length > 24) {
-					rivalName = rivalName.slice(0, 24);
-				}
-
-				return rivalName;
+				return truncateWithColorCode(rivalName, 24);
 			},
 		},
 		{
