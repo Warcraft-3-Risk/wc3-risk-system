@@ -4,7 +4,12 @@ import { readOthersRatings, writeOthersRatings } from './global-rating-handler';
 import { HexColors } from '../utils/hex-colors';
 import { NameManager } from '../managers/names/name-manager';
 import { ActivePlayer } from '../player/types/active-player';
-import { RANKED_SEASON_ID, RATING_SYNC_TIMEOUT, DEVELOPER_MODE, RATING_SYNC_TOP_PLAYERS } from 'src/configs/game-settings';
+import {
+	DEVELOPER_MODE,
+	RANKED_SEASON_ID,
+	RATING_SYNC_TIMEOUT,
+	RATING_SYNC_TOP_PLAYERS
+} from 'src/configs/game-settings';
 import { debugPrint } from '../utils/debug-print';
 import { RatingManager } from './rating-manager';
 import { PlayerManager } from '../player/player-manager';
@@ -231,7 +236,9 @@ export class RatingSyncManager {
 		const lines: string[] = [];
 		for (let i = 0; i < players.length; i++) {
 			const p = players[i];
-			lines.push(`${p.btag}:${math.floor(p.rating || 0)}:${math.floor(p.gamesPlayed || 0)}:${math.floor(p.lastUpdated || 0)}:${math.floor(p.wins || 0)}:${math.floor(p.losses || 0)}:${math.floor(p.totalKillValue || 0)}:${math.floor(p.totalDeathValue || 0)}:${math.floor(p.totalPlacement || 0)}`);
+			lines.push(
+				`${p.btag}:${math.floor(p.rating || 0)}:${math.floor(p.gamesPlayed || 0)}:${math.floor(p.lastUpdated || 0)}:${math.floor(p.wins || 0)}:${math.floor(p.losses || 0)}:${math.floor(p.totalKillValue || 0)}:${math.floor(p.totalDeathValue || 0)}:${math.floor(p.totalPlacement || 0)}`
+			);
 		}
 		return lines.join('\n');
 	}
@@ -261,7 +268,7 @@ export class RatingSyncManager {
 					losses: tonumber(parts[5]) || 0,
 					totalKillValue: tonumber(parts[6]) || 0,
 					totalDeathValue: tonumber(parts[7]) || 0,
-					totalPlacement: parts.length >= 9 ? (tonumber(parts[8]) || 0) : 0,
+					totalPlacement: parts.length >= 9 ? tonumber(parts[8]) || 0 : 0,
 				});
 			}
 		}
@@ -402,8 +409,6 @@ export class RatingSyncManager {
 		// Mark sync as complete
 		this.syncFullyCompleted = true;
 	}
-
-
 
 	/**
 	 * Load local "others" database (historical data about other players)
@@ -719,7 +724,7 @@ export class RatingSyncManager {
 		// Hash 1: djb2 algorithm
 		let hash1 = 5381;
 		for (let i = 0; i < name.length; i++) {
-			hash1 = ((hash1 << 5) + hash1) + name.charCodeAt(i);
+			hash1 = (hash1 << 5) + hash1 + name.charCodeAt(i);
 			hash1 = hash1 & hash1;
 		}
 

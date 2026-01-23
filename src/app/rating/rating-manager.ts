@@ -1,17 +1,27 @@
-import { GameRatingResult, PlayerRatingData, RatingFileData, OthersRatingFileData } from './types';
+import { GameRatingResult, OthersRatingFileData, PlayerRatingData, RatingFileData } from './types';
 import { readRatings, validateChecksum, writeRatings } from './rating-file-handler';
 import { readOthersRatings, writeOthersRatings } from './global-rating-handler';
 import {
-	calculatePlacementPoints,
 	calculateOpponentStrengthModifier,
-	calculateRatingChange,
+	calculatePlacementPoints,
+	calculateRatingChange
 } from './rating-calculator';
-import { RANKED_MIN_PLAYERS, RANKED_MINIMUM_RATING, RANKED_SEASON_ID, RANKED_STARTING_RATING, DEVELOPER_MODE, RATING_SYNC_TOP_PLAYERS } from 'src/configs/game-settings';
+import {
+	DEVELOPER_MODE,
+	RANKED_MIN_PLAYERS,
+	RANKED_SEASON_ID,
+	RANKED_SEASON_RESET_KEY,
+	RANKED_STARTING_RATING,
+	RATING_SYNC_TOP_PLAYERS,
+	RATING_SYSTEM_ENABLED,
+} from 'src/configs/game-settings';
 import { ActivePlayer } from '../player/types/active-player';
 import { NameManager } from '../managers/names/name-manager';
 import { HexColors } from '../utils/hex-colors';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { debugPrint } from '../utils/debug-print';
+import { EventEmitter } from '../utils/events/event-emitter';
+import { EVENT_QUEST_UPDATE_PLAYER_STATUS } from '../utils/events/event-constants';
 
 /**
  * Singleton manager for the rating system
@@ -59,7 +69,7 @@ export class RatingManager {
 		// Hash 1: djb2 algorithm
 		let hash1 = 5381;
 		for (let i = 0; i < name.length; i++) {
-			hash1 = ((hash1 << 5) + hash1) + name.charCodeAt(i);
+			hash1 = (hash1 << 5) + hash1 + name.charCodeAt(i);
 			hash1 = hash1 & hash1;
 		}
 
@@ -87,8 +97,10 @@ export class RatingManager {
 		const hash = this.sanitizePlayerName(btag);
 		// Use single-letter prefix: 'd' for dev, 'p' for prod
 		const prefix = DEVELOPER_MODE ? 'd' : 'p';
+		// Include reset key if configured (allows resetting data without changing season ID)
+		const resetKey = RANKED_SEASON_RESET_KEY || '';
 		// Must use .txt extension - WC3 only supports .txt and .pld file extensions
-		return `risk/${prefix}${this.seasonId}_${hash}.txt`;
+		return `risk/${prefix}${this.seasonId}${resetKey}_${hash}.txt`;
 	}
 
 	/**
@@ -108,6 +120,16 @@ export class RatingManager {
 	 */
 	public isDeveloperModeEnabled(): boolean {
 		return DEVELOPER_MODE;
+	}
+
+	/**
+	 * Check if the rating system is enabled globally (from game-settings.ts config)
+	 * When disabled, no rating data is stored/loaded, no rating UI is shown,
+	 * and all games are considered unranked.
+	 * @returns True if RATING_SYSTEM_ENABLED is true
+	 */
+	public isRatingSystemEnabled(): boolean {
+		return RATING_SYSTEM_ENABLED;
 	}
 
 	/**
@@ -211,10 +233,10 @@ export class RatingManager {
 	 * @returns True if game is FFA mode and has more than RANKED_MIN_PLAYERS human players (or in developer mode)
 	 */
 	public checkRankedGameEligibility(humanPlayerCount: number, isFFA: boolean): boolean {
-		// In developer mode, always enable ranked (for testing)
-		if (DEVELOPER_MODE) {
-			this.isRankedGameFlag = true;
-			return true;
+		// If rating system is disabled globally, no game can be ranked
+		if (!RATING_SYSTEM_ENABLED) {
+			this.isRankedGameFlag = false;
+			return false;
 		}
 
 		// Normal mode: require FFA mode AND minimum player count
@@ -223,7 +245,13 @@ export class RatingManager {
 			return false;
 		}
 
-		this.isRankedGameFlag = humanPlayerCount > RANKED_MIN_PLAYERS;
+		// In developer mode, always enable ranked (for testing)
+		if (DEVELOPER_MODE) {
+			this.isRankedGameFlag = true;
+			return true;
+		}
+
+		this.isRankedGameFlag = humanPlayerCount >= RANKED_MIN_PLAYERS;
 		return this.isRankedGameFlag;
 	}
 
@@ -408,6 +436,9 @@ export class RatingManager {
 			playerData.showRating = showRating;
 		}
 
+		// Update quests
+		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
+
 		// Save to file immediately
 		return this.savePlayerRating(btag);
 	}
@@ -571,7 +602,9 @@ export class RatingManager {
 		this.eliminatedCount++;
 		const placement = this.initialPlayerCount - this.eliminatedCount;
 
-		debugPrint(`[RatingManager] Finalizing ${btag}: eliminated #${this.eliminatedCount}, placement ${placement + 1} of ${this.initialPlayerCount}`);
+		debugPrint(
+			`[RatingManager] Finalizing ${btag}: eliminated #${this.eliminatedCount}, placement ${placement + 1} of ${this.initialPlayerCount}`
+		);
 
 		const timestamp = math.floor(os.time());
 
@@ -610,9 +643,9 @@ export class RatingManager {
 			this.ratingData.set(btag, playerData);
 		}
 
-		// Apply rating change with floor
+		// Apply rating change with floor at starting rating (players can never go below where they started)
 		const oldRating = playerData.rating;
-		const newRating = Math.max(RANKED_MINIMUM_RATING, oldRating + totalChange);
+		const newRating = Math.max(RANKED_STARTING_RATING, oldRating + totalChange);
 
 		playerData.rating = newRating;
 		playerData.gamesPlayed += 1;
@@ -665,9 +698,15 @@ export class RatingManager {
 			if (!saved) {
 				print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
 			} else {
-				debugPrint(`[RatingManager] Saved finalized rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`);
+				debugPrint(
+					`[RatingManager] Saved finalized rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`
+				);
 			}
 		}
+
+		// Broadcast finalized rating to all other players' "others" databases immediately
+		// This ensures players who leave early still have this player's updated data to share in future games
+		this.broadcastFinalizedPlayerToOthers(playerData);
 	}
 
 	/**
@@ -707,7 +746,9 @@ export class RatingManager {
 			return true;
 		});
 
-		debugPrint(`[RatingManager] calculateAndSaveRatings: ${survivors.length} survivors to finalize, ${this.finalizedPlayers.size} already finalized`);
+		debugPrint(
+			`[RatingManager] calculateAndSaveRatings: ${survivors.length} survivors to finalize, ${this.finalizedPlayers.size} already finalized`
+		);
 
 		// Build array of INITIAL opponent ratings (all players from game start)
 		const opponentRatings: number[] = [];
@@ -723,13 +764,6 @@ export class RatingManager {
 
 			// Get INITIAL rating for this player
 			const currentRating = this.getInitialPlayerRating(btag);
-
-			// Build opponent ratings excluding this player
-			const playerOpponentRatings = opponentRatings.filter((_, i) => {
-				// This is a bit hacky - we need to exclude this player's rating from opponents
-				// Since we can't easily map index to btag here, we'll rebuild it properly
-				return true;
-			});
 
 			// Properly build opponent ratings (excluding this player)
 			const properOpponentRatings: number[] = [];
@@ -763,9 +797,9 @@ export class RatingManager {
 				this.ratingData.set(btag, playerData);
 			}
 
-			// Apply rating change with floor
+			// Apply rating change with floor at starting rating (players can never go below where they started)
 			const oldRating = playerData.rating;
-			const newRating = Math.max(RANKED_MINIMUM_RATING, oldRating + totalChange);
+			const newRating = Math.max(RANKED_STARTING_RATING, oldRating + totalChange);
 
 			playerData.rating = newRating;
 			playerData.gamesPlayed += 1;
@@ -818,7 +852,9 @@ export class RatingManager {
 				if (!saved) {
 					print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
 				} else {
-					debugPrint(`[RatingManager] Saved survivor rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`);
+					debugPrint(
+						`[RatingManager] Saved survivor rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`
+					);
 				}
 			}
 		});
@@ -836,10 +872,14 @@ export class RatingManager {
 	 * @param currentTurn Current turn number
 	 */
 	public saveRatingsInProgress(ranks: ActivePlayer[], currentTurn: number): void {
-		debugPrint(`[RatingManager] saveRatingsInProgress called: turn=${currentTurn}, isRanked=${this.isRankedGameFlag}, gameId=${this.currentGameId || 'EMPTY'}, ranksCount=${ranks.length}`);
+		debugPrint(
+			`[RatingManager] saveRatingsInProgress called: turn=${currentTurn}, isRanked=${this.isRankedGameFlag}, gameId=${this.currentGameId || 'EMPTY'}, ranksCount=${ranks.length}`
+		);
 
 		if (!this.isRankedGameFlag || !this.currentGameId) {
-			debugPrint(`[RatingManager] saveRatingsInProgress exiting early: isRankedGameFlag=${this.isRankedGameFlag}, currentGameId=${this.currentGameId || 'EMPTY'}`);
+			debugPrint(
+				`[RatingManager] saveRatingsInProgress exiting early: isRankedGameFlag=${this.isRankedGameFlag}, currentGameId=${this.currentGameId || 'EMPTY'}`
+			);
 			return;
 		}
 
@@ -939,8 +979,8 @@ export class RatingManager {
 				this.ratingData.set(btag, playerData);
 			}
 
-			// Calculate preliminary stats with floor
-			const preliminaryRating = Math.max(RANKED_MINIMUM_RATING, currentRating + totalChange);
+			// Calculate preliminary stats with floor at starting rating
+			const preliminaryRating = Math.max(RANKED_STARTING_RATING, currentRating + totalChange);
 			const preliminaryWins = playerData.wins + (preliminaryPlacement === 0 ? 1 : 0);
 			const preliminaryLosses = playerData.losses + (preliminaryPlacement === 0 ? 0 : 1);
 			const preliminaryGamesPlayed = playerData.gamesPlayed + 1;
@@ -974,9 +1014,101 @@ export class RatingManager {
 			if (!saved) {
 				debugPrint(`[RatingManager] Failed to save pending rating for ${btag}`);
 			} else {
-				debugPrint(`[RatingManager] Saved pending entry for ${btag}: turn=${currentTurn}, preliminaryPlacement=${preliminaryPlacement + 1}, preliminaryRating=${preliminaryRating}`);
+				debugPrint(
+					`[RatingManager] Saved pending entry for ${btag}: turn=${currentTurn}, preliminaryPlacement=${preliminaryPlacement + 1}, preliminaryRating=${preliminaryRating}`
+				);
 			}
 		});
+	}
+
+	/**
+	 * Immediately broadcast a finalized player's rating to all players' "others" databases
+	 * Called when a player dies/forfeits so their final rating propagates immediately
+	 * This ensures players who leave early still have updated data to share in future games
+	 * @param finalizedPlayerData The finalized player's rating data to broadcast
+	 */
+	private broadcastFinalizedPlayerToOthers(finalizedPlayerData: PlayerRatingData): void {
+		// Get local player's btag
+		const localPlayer = GetLocalPlayer();
+		const localBtag = NameManager.getInstance().getBtag(localPlayer);
+
+		// Skip if the finalized player IS the local player (they have their own personal file)
+		if (finalizedPlayerData.btag === localBtag) {
+			debugPrint(`[RatingManager] broadcastFinalizedPlayerToOthers: Skipping self (${localBtag})`);
+			return;
+		}
+
+		const sanitizedName = this.sanitizePlayerName(localBtag);
+
+		// Create a clean copy of the finalized player data (without internal fields)
+		const cleanPlayerData: PlayerRatingData = {
+			btag: finalizedPlayerData.btag,
+			rating: finalizedPlayerData.rating,
+			gamesPlayed: finalizedPlayerData.gamesPlayed,
+			lastUpdated: finalizedPlayerData.lastUpdated,
+			wins: finalizedPlayerData.wins,
+			losses: finalizedPlayerData.losses,
+			totalKillValue: finalizedPlayerData.totalKillValue || 0,
+			totalDeathValue: finalizedPlayerData.totalDeathValue || 0,
+		};
+
+		// Load existing "others" database for this account
+		const existingData = readOthersRatings(sanitizedName, this.seasonId, DEVELOPER_MODE);
+
+		// Create map for efficient merging
+		const playerMap = new Map<string, PlayerRatingData>();
+
+		// Add existing players from others database
+		if (existingData) {
+			for (let i = 0; i < existingData.players.length; i++) {
+				const player = existingData.players[i];
+				playerMap.set(player.btag, player);
+			}
+		}
+
+		// Add/update the finalized player (newer timestamp wins)
+		const existing = playerMap.get(cleanPlayerData.btag);
+		if (!existing || cleanPlayerData.lastUpdated > existing.lastUpdated) {
+			playerMap.set(cleanPlayerData.btag, cleanPlayerData);
+		}
+
+		// Convert map back to array
+		const allMergedPlayers: PlayerRatingData[] = [];
+		playerMap.forEach((player) => {
+			allMergedPlayers.push(player);
+		});
+
+		// Sort by rating (descending) to keep the best players
+		allMergedPlayers.sort((a, b) => {
+			if (b.rating !== a.rating) {
+				return b.rating - a.rating;
+			}
+			// Tiebreaker: more games played wins
+			if (b.gamesPlayed !== a.gamesPlayed) {
+				return b.gamesPlayed - a.gamesPlayed;
+			}
+			// Final tiebreaker: alphabetical by btag
+			if (a.btag < b.btag) return -1;
+			if (a.btag > b.btag) return 1;
+			return 0;
+		});
+
+		// Limit to top N players (RATING_SYNC_TOP_PLAYERS)
+		const mergedPlayers = allMergedPlayers.slice(0, RATING_SYNC_TOP_PLAYERS);
+
+		// Save to others database for this account
+		const othersData: OthersRatingFileData = {
+			version: 1,
+			seasonId: this.seasonId,
+			checksum: '', // Will be generated by writeOthersRatings
+			players: mergedPlayers,
+			playerCount: mergedPlayers.length,
+		};
+
+		writeOthersRatings(othersData, sanitizedName, this.seasonId, DEVELOPER_MODE);
+		debugPrint(
+			`[RatingManager] Broadcast finalized player ${cleanPlayerData.btag} (rating: ${cleanPlayerData.rating}) to ${localBtag}'s others database`
+		);
 	}
 
 	/**

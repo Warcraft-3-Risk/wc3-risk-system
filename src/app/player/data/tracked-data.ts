@@ -6,7 +6,7 @@ import { Bounty } from '../bonus/bounty';
 import { FightBonus } from '../bonus/fight-bonus';
 import { KillsDeaths } from './kills-death';
 import { TRACKED_UNITS } from 'src/configs/tracked-units';
-import { NEUTRAL_HOSTILE, PLAYER_SLOTS } from 'src/app/utils/utils';
+import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 
 export class TrackedData {
 	private _income: Income;
@@ -82,7 +82,7 @@ export class TrackedData {
 	}
 
 	public setKDMaps() {
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player: player = Player(i);
 
 			if (IsPlayerObserver(player)) continue;

@@ -448,7 +448,7 @@ Frame "BACKDROP" "TeamOptionsBackdrop" INHERITS "BackdropTemplate" {
             SetPoint TOPLEFT, "TeamOptionsBackdrop", TOPLEFT, 0.01, -0.0135,
             Width 0.11,
             Height 0.025,
-            Text "Team Name:"
+            Text "Team Name:",
         }
 
         Frame "EDITBOX" "TeamOptionsEditBox" {
@@ -509,7 +509,7 @@ Frame "BACKDROP" "TeamOptionsBackdrop" INHERITS "BackdropTemplate" {
             SetPoint TOPLEFT, "TeamOptionsBackdrop", TOPLEFT, 0.01, -0.04,
             Width 0.11,
             Height 0.025,
-            Text "Shared Control:"
+            Text "Shared Control:",
         }
 
         Frame "POPUPMENU" "TeamControlPopup" INHERITS WITHCHILDREN "PopupMenuTemplate" {
@@ -539,7 +539,7 @@ Frame "BACKDROP" "TeamOptionsBackdrop" INHERITS "BackdropTemplate" {
             SetPoint TOP, "TeamOptionsBackdrop", TOP, 0.034,  -0.065,
             Width 0.11,
             Height 0.025,
-            Text "Team Color:"
+            Text "Team Color:",
         }
     }
 }
