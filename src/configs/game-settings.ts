@@ -83,9 +83,6 @@ export const RANKED_MIN_PLAYERS: number = 16;
 // This represents the starting rating for new players.
 export const RANKED_STARTING_RATING: number = 1000;
 
-// Minimum rating floor - players cannot go below this rating
-export const RANKED_MINIMUM_RATING: number = 500;
-
 // Opponent strength modifier scale factor (0.32 gives range 0.68x to 1.32x)
 // Higher values make rating differences matter more, creating stronger ceiling effects
 // Formula: modifier ranges from (1 - factor) to (1 + factor) based on rating difference

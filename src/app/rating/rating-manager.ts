@@ -9,7 +9,6 @@ import {
 import {
 	DEVELOPER_MODE,
 	RANKED_MIN_PLAYERS,
-	RANKED_MINIMUM_RATING,
 	RANKED_SEASON_ID,
 	RANKED_STARTING_RATING,
 	RATING_SYNC_TOP_PLAYERS,
@@ -641,9 +640,9 @@ export class RatingManager {
 			this.ratingData.set(btag, playerData);
 		}
 
-		// Apply rating change with floor
+		// Apply rating change with floor at starting rating (players can never go below where they started)
 		const oldRating = playerData.rating;
-		const newRating = Math.max(RANKED_MINIMUM_RATING, oldRating + totalChange);
+		const newRating = Math.max(RANKED_STARTING_RATING, oldRating + totalChange);
 
 		playerData.rating = newRating;
 		playerData.gamesPlayed += 1;
@@ -795,9 +794,9 @@ export class RatingManager {
 				this.ratingData.set(btag, playerData);
 			}
 
-			// Apply rating change with floor
+			// Apply rating change with floor at starting rating (players can never go below where they started)
 			const oldRating = playerData.rating;
-			const newRating = Math.max(RANKED_MINIMUM_RATING, oldRating + totalChange);
+			const newRating = Math.max(RANKED_STARTING_RATING, oldRating + totalChange);
 
 			playerData.rating = newRating;
 			playerData.gamesPlayed += 1;
@@ -977,8 +976,8 @@ export class RatingManager {
 				this.ratingData.set(btag, playerData);
 			}
 
-			// Calculate preliminary stats with floor
-			const preliminaryRating = Math.max(RANKED_MINIMUM_RATING, currentRating + totalChange);
+			// Calculate preliminary stats with floor at starting rating
+			const preliminaryRating = Math.max(RANKED_STARTING_RATING, currentRating + totalChange);
 			const preliminaryWins = playerData.wins + (preliminaryPlacement === 0 ? 1 : 0);
 			const preliminaryLosses = playerData.losses + (preliminaryPlacement === 0 ? 0 : 1);
 			const preliminaryGamesPlayed = playerData.gamesPlayed + 1;
