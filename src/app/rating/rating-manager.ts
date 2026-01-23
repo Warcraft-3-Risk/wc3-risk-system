@@ -249,7 +249,7 @@ export class RatingManager {
 			return true;
 		}
 
-		this.isRankedGameFlag = humanPlayerCount > RANKED_MIN_PLAYERS;
+		this.isRankedGameFlag = humanPlayerCount >= RANKED_MIN_PLAYERS;
 		return this.isRankedGameFlag;
 	}
 
@@ -762,13 +762,6 @@ export class RatingManager {
 
 			// Get INITIAL rating for this player
 			const currentRating = this.getInitialPlayerRating(btag);
-
-			// Build opponent ratings excluding this player
-			const playerOpponentRatings = opponentRatings.filter((_, i) => {
-				// This is a bit hacky - we need to exclude this player's rating from opponents
-				// Since we can't easily map index to btag here, we'll rebuild it properly
-				return true;
-			});
 
 			// Properly build opponent ratings (excluding this player)
 			const properOpponentRatings: number[] = [];
