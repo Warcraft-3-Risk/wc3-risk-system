@@ -20,6 +20,7 @@ export const ABILITY_ID = {
 	UNLOAD: FourCC('a011'),
 	AUTOLOAD_ON: FourCC('a013'),
 	AUTOLOAD_OFF: FourCC('a014'),
+	TRANSPORT_PATROL: FourCC('A008'),
 	//Player Tools Abilities
 	LOW_HEALTH_DEFENDER: FourCC('a051'),
 	HIGH_HEALTH_DEFENDER: FourCC('a052'),

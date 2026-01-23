@@ -8,6 +8,13 @@ import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { ORDER_ID } from '../../configs/order-id';
 
+enum PatrolState {
+	LOADING,
+	MOVING,
+	UNLOADING,
+	RETURNING,
+}
+
 type Transport = {
 	unit: unit;
 	cargo: unit[];
@@ -17,9 +24,19 @@ type Transport = {
 	loadTarget: unit;
 	unloadTargetX: number;
 	unloadTargetY: number;
-	event: TimedEvent | null;
 	floatingTextCargo: texttag | null;
 	floatingTextCapacity: texttag | null;
+	patrolEnabled: boolean;
+	patrolState: PatrolState;
+	patrolDestX: number;
+	patrolDestY: number;
+	patrolOriginX: number;
+	patrolOriginY: number;
+	patrolLoadTimer: number;
+	patrolEvent: TimedEvent | null;
+	isScriptOrdering: boolean;
+	pathingDisableDuration: number;
+	orderedUnits: unit[];
 };
 
 const AUTO_LOAD_DISTANCE: number = 450;
@@ -44,6 +61,9 @@ export class TransportManager {
 	private static delayedTrackTimerRunning: boolean = false;
 	private static instance: TransportManager;
 	private transports: Map<unit, Transport>;
+	private autoLoadingTransports: Transport[] = [];
+	private autoLoadTimer: timer = CreateTimer();
+	private allOrderedUnits: Set<unit> = new Set<unit>();
 
 	/**
 	 * Gets the singleton instance of the TransportManager.
@@ -62,6 +82,8 @@ export class TransportManager {
 	 */
 	private constructor() {
 		this.transports = new Map<unit, Transport>();
+
+		TimerStart(this.autoLoadTimer, 1.0, true, () => this.onAutoLoadTick());
 
 		// Unit load management
 		// Handler for order queued for the load ability start
@@ -83,6 +105,10 @@ export class TransportManager {
 
 		// Autoload management
 		this.onAutoLoadOn();
+
+		// Patrol management
+		this.onPatrolStart();
+		this.onPatrolOrder();
 	}
 
 	/**
@@ -96,12 +122,22 @@ export class TransportManager {
 			effect: null,
 			duration: 0,
 			autoloadEnabled: false,
-			event: null,
 			loadTarget: null,
 			unloadTargetX: null,
 			unloadTargetY: null,
 			floatingTextCargo: null,
 			floatingTextCapacity: null,
+			patrolEnabled: false,
+			patrolState: PatrolState.LOADING,
+			patrolDestX: 0,
+			patrolDestY: 0,
+			patrolOriginX: 0,
+			patrolOriginY: 0,
+			patrolLoadTimer: 0,
+			patrolEvent: null,
+			isScriptOrdering: false,
+			pathingDisableDuration: 0,
+			orderedUnits: [],
 		};
 
 		this.transports.set(unit, transport);
@@ -128,18 +164,32 @@ export class TransportManager {
 
 		const transportData: Transport = this.transports.get(unit);
 
-		// Track all cargo units (clients) again since the transport is dead
-		transportData.cargo.forEach((unit) => {
-			UnitLagManager.getInstance().trackUnit(unit);
-		});
+		if (transportData.cargo) {
+			// Track all cargo units (clients) again since the transport is dead
+			transportData.cargo.forEach((unit) => {
+				UnitLagManager.getInstance().trackUnit(unit);
+			});
+		}
 
 		transportData.cargo = null;
 
-		if (transportData.effect != null) {
-			DestroyEffect(transportData.effect);
-		}
+		this.removeAutoLoadEffect(transportData);
 
 		transportData.autoloadEnabled = false;
+		// Remove from autoLoadingTransports
+		const index = this.autoLoadingTransports.indexOf(transportData);
+		if (index > -1) {
+			this.autoLoadingTransports.splice(index, 1);
+		}
+
+		this.cancelLoadingOrders(transportData);
+
+		transportData.patrolEnabled = false;
+
+		if (transportData.patrolEvent != null) {
+			TimedEventManager.getInstance().removeTimedEvent(transportData.patrolEvent);
+			transportData.patrolEvent = null;
+		}
 
 		this.transports.delete(unit);
 	}
@@ -167,6 +217,16 @@ export class TransportManager {
 
 				const transportData = this.transports.get(transport);
 				transportData.cargo.push(loadedUnit);
+				transportData.patrolLoadTimer = 0;
+
+				// Remove the loaded unit from any transport's orderedUnits list
+				// This handles the case where multiple transports might have tried to claim the unit
+				// or if the unit loaded into a different transport than the one that ordered it
+				for (const t of this.autoLoadingTransports) {
+					if (t.orderedUnits.includes(loadedUnit)) {
+						this.unregisterOrder(t, loadedUnit);
+					}
+				}
 
 				transport = null;
 				loadedUnit = null;
@@ -346,16 +406,115 @@ export class TransportManager {
 			Condition(() => {
 				const transport: Transport = this.transports.get(GetTriggerUnit());
 
-				if (
-					GetSpellAbilityId() !== ABILITY_ID.AUTOLOAD_ON ||
-					!transport ||
-					this.isTerrainInvalid(transport.unit) ||
-					transport.autoloadEnabled
-				) {
+				if (GetSpellAbilityId() !== ABILITY_ID.AUTOLOAD_ON || !transport) {
+					return false;
+				}
+
+				if (this.isTerrainInvalid(transport.unit)) {
+					IssueImmediateOrder(transport.unit, 'stop');
+					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					return false;
+				}
+
+				if (transport.autoloadEnabled) {
 					return false;
 				}
 
 				this.handleAutoLoadOn(transport);
+
+				return false;
+			})
+		);
+	}
+
+	private onPatrolStart() {
+		const t = CreateTrigger();
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
+		}
+
+		TriggerAddCondition(
+			t,
+			Condition(() => {
+				debugPrint('Transport Patrol Casted');
+				const transport: Transport = this.transports.get(GetTriggerUnit());
+
+				if (!transport || GetSpellAbilityId() !== ABILITY_ID.TRANSPORT_PATROL) {
+					return false;
+				}
+
+				if (this.isTerrainInvalid(transport.unit)) {
+					IssueImmediateOrder(transport.unit, 'stop');
+					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					return false;
+				}
+
+				debugPrint('Transport Patrol Valid');
+
+				if (transport.patrolEnabled) {
+					debugPrint('Transport Patrol Already Enabled - Stopping Previous Patrol');
+					this.stopPatrol(transport);
+				}
+
+				debugPrint('Transport Patrol Starting');
+
+				transport.patrolEnabled = true;
+				transport.patrolState = PatrolState.LOADING;
+				transport.patrolDestX = GetSpellTargetX();
+				transport.patrolDestY = GetSpellTargetY();
+				const u = transport.unit;
+				transport.patrolOriginX = GetUnitX(u);
+				transport.patrolOriginY = GetUnitY(u);
+				transport.patrolLoadTimer = 0;
+
+				debugPrint(`Patrol Origin: (${transport.patrolOriginX}, ${transport.patrolOriginY})`);
+				debugPrint(`Patrol Destination: (${transport.patrolDestX}, ${transport.patrolDestY})`);
+
+				this.addAutoLoadEffect(transport);
+
+				const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
+
+				debugPrint('Registering Patrol Timed Event');
+				transport.patrolEvent = timedEventManager.registerTimedEvent(1000000, () => {
+					debugPrint('Transport Patrol Tick');
+					this.handlePatrol(transport);
+				});
+
+				return false;
+			})
+		);
+	}
+
+	private onPatrolOrder() {
+		const t = CreateTrigger();
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_ORDER, null);
+		}
+
+		TriggerAddCondition(
+			t,
+			Condition(() => {
+				const transport: Transport = this.transports.get(GetTriggerUnit());
+
+				if (!transport || !transport.patrolEnabled) {
+					return false;
+				}
+
+				if (!transport.isScriptOrdering) {
+					// Check if order is LOAD (allow manual loading without cancelling patrol)
+					if (GetIssuedOrderId() == ORDER_ID.LOAD) return false;
+					// Check if order is UNLOAD (allow manual unloading without cancelling patrol)
+					if (GetIssuedOrderId() == ORDER_ID.UNLOAD_UNIT) return false;
+					// Check if order is UNLOAD ALL (allow manual unloading without cancelling patrol)
+					if (GetIssuedOrderId() == ORDER_ID.UNLOAD_ALL) return false;
+
+					// Player issued order, cancel patrol
+					this.stopPatrol(transport);
+				}
 
 				return false;
 			})
@@ -422,10 +581,24 @@ export class TransportManager {
 				transport.cargo = transport.cargo.filter((unit) => IsUnitInTransport(unit, transport.unit));
 				unloadedUnits.forEach((unit) => {
 					UnitLagManager.getInstance().trackUnit(unit);
+					const index = transport.orderedUnits.indexOf(unit);
+					if (index > -1) {
+						this.unregisterOrder(transport, unit);
+					}
 				});
 
 				// Disable autoload
 				this.handleAutoLoadOff(transport);
+
+				if (transport.patrolEnabled && transport.patrolState === PatrolState.UNLOADING && transport.cargo.length === 0) {
+					transport.patrolState = PatrolState.RETURNING;
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'move', transport.patrolOriginX, transport.patrolOriginY);
+					transport.isScriptOrdering = false;
+
+					SetUnitPathing(transport.unit, false);
+					transport.pathingDisableDuration = 5;
+				}
 
 				return false;
 			})
@@ -450,6 +623,99 @@ export class TransportManager {
 		return terrainType != FourCC('Vcbp');
 	}
 
+	private addAutoLoadEffect(transport: Transport) {
+		if (!transport.effect) {
+			transport.effect = AddSpecialEffectTarget(
+				'Abilities\\Spells\\NightElf\\Rejuvenation\\RejuvenationTarget.mdl',
+				transport.unit,
+				'overhead'
+			);
+		}
+	}
+
+	private removeAutoLoadEffect(transport: Transport) {
+		if (transport.effect) {
+			DestroyEffect(transport.effect);
+			transport.effect = null;
+		}
+	}
+
+	private onAutoLoadTick() {
+		for (let i = this.autoLoadingTransports.length - 1; i >= 0; i--) {
+			const transport = this.autoLoadingTransports[i];
+
+			this.castAutoLoad(transport);
+			transport.duration--;
+
+			if (transport.cargo.length >= 10 || !transport.autoloadEnabled || this.isTerrainInvalid(transport.unit) || transport.duration <= 0) {
+				this.handleAutoLoadOff(transport);
+			}
+		}
+	}
+
+	private cancelLoadingOrders(transport: Transport) {
+		transport.orderedUnits.forEach((u) => {
+			if (UnitAlive(u) && !IsUnitInTransport(u, transport.unit)) {
+				IssueImmediateOrder(u, 'stop');
+			}
+			this.allOrderedUnits.delete(u);
+		});
+		transport.orderedUnits = [];
+	}
+
+	private registerOrder(transport: Transport, unit: unit) {
+		transport.orderedUnits.push(unit);
+		this.allOrderedUnits.add(unit);
+	}
+
+	private unregisterOrder(transport: Transport, unit: unit) {
+		const index = transport.orderedUnits.indexOf(unit);
+		if (index > -1) {
+			transport.orderedUnits.splice(index, 1);
+		}
+		this.allOrderedUnits.delete(unit);
+	}
+
+	private castAutoLoad(transport: Transport) {
+		// Cleanup units that are invalid / loaded / dead
+		for (let i = transport.orderedUnits.length - 1; i >= 0; i--) {
+			const u = transport.orderedUnits[i];
+			if (!UnitAlive(u) || IsUnitInTransport(u, transport.unit)) {
+				this.unregisterOrder(transport, u);
+			}
+		}
+
+		if (transport.cargo.length + transport.orderedUnits.length >= 10) return;
+
+		let group: group = CreateGroup();
+
+		GroupEnumUnitsInRange(
+			group,
+			GetUnitX(transport.unit),
+			GetUnitY(transport.unit),
+			AUTO_LOAD_DISTANCE,
+			Filter(() => {
+				let unit: unit = GetFilterUnit();
+
+				if (IsUnitType(unit, UNIT_TYPE.SHIP)) return;
+				if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
+				if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
+				if (GetOwningPlayer(unit) != GetOwningPlayer(transport.unit)) return;
+				
+				// Global check for already ordered units
+				if (this.allOrderedUnits.has(unit)) return;
+
+				if (transport.cargo.length + transport.orderedUnits.length < 10) {
+					IssueTargetOrder(unit, 'smart', transport.unit);
+					this.registerOrder(transport, unit);
+				}
+			})
+		);
+
+		DestroyGroup(group);
+		group = null;
+	}
+
 	/**
 	 * Handles the activation of the Auto-Load ability.
 	 */
@@ -459,44 +725,11 @@ export class TransportManager {
 		}
 
 		transport.autoloadEnabled = true;
+		transport.duration = AUTO_LOAD_DURATION;
 
-		transport.effect = AddSpecialEffectTarget(
-			'Abilities\\Spells\\NightElf\\Rejuvenation\\RejuvenationTarget.mdl',
-			transport.unit,
-			'overhead'
-		);
+		this.addAutoLoadEffect(transport);
 
-		const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
-
-		transport.event = timedEventManager.registerTimedEvent(AUTO_LOAD_DURATION, () => {
-			let group: group = CreateGroup();
-
-			GroupEnumUnitsInRange(
-				group,
-				GetUnitX(transport.unit),
-				GetUnitY(transport.unit),
-				AUTO_LOAD_DISTANCE,
-				Filter(() => {
-					let unit: unit = GetFilterUnit();
-
-					if (IsUnitType(unit, UNIT_TYPE.SHIP)) return;
-					if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
-					if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
-
-					IssueTargetOrder(unit, 'smart', transport.unit);
-				})
-			);
-
-			DestroyGroup(group);
-			group = null;
-
-			if (transport.cargo.length >= 10 || !transport.autoloadEnabled || this.isTerrainInvalid(transport.unit)) {
-				this.handleAutoLoadOff(transport);
-			} else if (transport.event.duration <= 1) {
-				// Timer is about to expire naturally - cleanup before auto-removal
-				this.handleAutoLoadOff(transport);
-			}
-		});
+		this.autoLoadingTransports.push(transport);
 	}
 
 	/**
@@ -505,11 +738,121 @@ export class TransportManager {
 	 */
 	private handleAutoLoadOff(transport: Transport) {
 		transport.autoloadEnabled = false;
-		DestroyEffect(transport.effect);
 
-		if (transport.event != null) {
-			TimedEventManager.getInstance().removeTimedEvent(transport.event);
-			transport.event = null;
+		this.removeAutoLoadEffect(transport);
+
+		this.cancelLoadingOrders(transport);
+
+		const index = this.autoLoadingTransports.indexOf(transport);
+		if (index > -1) {
+			this.autoLoadingTransports.splice(index, 1);
+		}
+	}
+
+	/**
+	 * Stops the patrol and cleans up resources.
+	 */
+	private stopPatrol(transport: Transport) {
+		transport.patrolEnabled = false;
+
+		this.removeAutoLoadEffect(transport);
+
+		if (transport.patrolEvent) {
+			TimedEventManager.getInstance().removeTimedEvent(transport.patrolEvent);
+			transport.patrolEvent = null;
+		}
+
+		this.cancelLoadingOrders(transport);
+
+		if (transport.pathingDisableDuration > 0) {
+			SetUnitPathing(transport.unit, true);
+			transport.pathingDisableDuration = 0;
+		}
+	}
+
+	private handlePatrol(transport: Transport) {
+		if (!transport.patrolEnabled) return;
+		// If transport is dead, onDeath should have handled it, but safety check:
+		if (!UnitAlive(transport.unit)) {
+			this.stopPatrol(transport);
+			return;
+		}
+
+		if (transport.pathingDisableDuration > 0) {
+			transport.pathingDisableDuration--;
+			if (transport.pathingDisableDuration <= 0) {
+				SetUnitPathing(transport.unit, true);
+			}
+		}
+
+		switch (transport.patrolState) {
+			case PatrolState.LOADING:
+				this.castAutoLoad(transport);
+				transport.patrolLoadTimer++;
+
+				if (transport.cargo.length >= 10 || (transport.patrolLoadTimer >= 5 && transport.cargo.length > 0)) {
+					transport.patrolState = PatrolState.MOVING;
+					this.removeAutoLoadEffect(transport);
+					transport.patrolLoadTimer = 0;
+					this.cancelLoadingOrders(transport);
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'move', transport.patrolDestX, transport.patrolDestY);
+					transport.isScriptOrdering = false;
+				}
+				break;
+
+			case PatrolState.MOVING:
+				const dx = GetUnitX(transport.unit) - transport.patrolDestX;
+				const dy = GetUnitY(transport.unit) - transport.patrolDestY;
+				const dist = SquareRoot(dx * dx + dy * dy);
+
+				if (dist < 500) {
+					transport.patrolState = PatrolState.UNLOADING;
+					transport.isScriptOrdering = true;
+
+					IssuePointOrder(transport.unit, 'unloadall', transport.patrolDestX, transport.patrolDestY);
+					transport.isScriptOrdering = false;
+				} else if (GetUnitCurrentOrder(transport.unit) != 851986) {
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'move', transport.patrolDestX, transport.patrolDestY);
+					transport.isScriptOrdering = false;
+				}
+				break;
+
+			case PatrolState.UNLOADING:
+				if (transport.cargo.length == 0) {
+					transport.patrolState = PatrolState.RETURNING;
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'move', transport.patrolOriginX, transport.patrolOriginY);
+					transport.isScriptOrdering = false;
+
+					SetUnitPathing(transport.unit, false);
+					transport.pathingDisableDuration = 5;
+				} else if (GetUnitCurrentOrder(transport.unit) != 852048) {
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'unloadall', transport.patrolDestX, transport.patrolDestY);
+					transport.isScriptOrdering = false;
+				}
+				break;
+
+			case PatrolState.RETURNING:
+				const rdx = GetUnitX(transport.unit) - transport.patrolOriginX;
+				const rdy = GetUnitY(transport.unit) - transport.patrolOriginY;
+				const rdist = SquareRoot(rdx * rdx + rdy * rdy);
+
+				if (rdist < 50) {
+					transport.patrolState = PatrolState.LOADING;
+					transport.isScriptOrdering = true;
+					IssueImmediateOrder(transport.unit, 'stop');
+					transport.isScriptOrdering = false;
+
+					this.addAutoLoadEffect(transport);
+				} else if (GetUnitCurrentOrder(transport.unit) != 851986) {
+					transport.isScriptOrdering = true;
+					IssuePointOrder(transport.unit, 'move', transport.patrolOriginX, transport.patrolOriginY);
+					transport.isScriptOrdering = false;
+				}
+				break;
 		}
 	}
 }

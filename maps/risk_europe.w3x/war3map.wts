@@ -1499,3 +1499,27 @@ STRING 7541
 Removes all buffs from enemy units in a target area.
 }
 
+STRING 7543
+// Abilities: A008 (Auto Transport), Name (Name)
+{
+Auto Transport
+}
+
+STRING 7544
+// Abilities: A008 (Auto Transport), Ubertip (Tooltip - Normal - Extended)
+{
+Establish an automated ferry route between the current position and a target destination.
+
+The ship will wait at the starting location and automatically load nearby units. It departs when full (10 units) or 5 seconds after the last unit is loaded.
+
+Upon reaching the destination, the ship unloads all cargo and returns to the starting point to repeat the cycle.
+
+Note: Only functions on valid coastal terrain. Issuing other orders will cancel the route.
+}
+
+STRING 7545
+// Abilities: A008 (Auto Transport), Tip (Tooltip - Normal)
+{
+Auto Transport
+}
+
