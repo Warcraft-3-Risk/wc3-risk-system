@@ -61,7 +61,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return 'N/A';
 				}
 
-				return truncateWithColorCode(name, 12);
+				return truncateWithColorCode(name, 14);
 			},
 		},
 		{
@@ -147,7 +147,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return highlightIfOwnPlayer(player, 'N/A');
 				}
 
-				return truncateWithColorCode(rivalName, 12);
+				return truncateWithColorCode(rivalName, 14);
 			},
 		},
 		{
