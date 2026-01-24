@@ -1,6 +1,5 @@
 import { GlobalGameData } from '../game/state/global-game-state';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
-import { PLAYER_SLOTS } from '../utils/utils';
 import { Dialog, MapPlayer, Trigger } from 'w3ts';
 import { PlayerManager } from '../player/player-manager';
 import { EventEmitter } from '../utils/events/event-emitter';
@@ -62,7 +61,7 @@ export const AntiSpam = () => {
 
 	const t: trigger = CreateTrigger();
 
-	for (let i = 0; i < PLAYER_SLOTS; i++) {
+	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 		TriggerRegisterPlayerChatEvent(t, Player(i), '', false);
 	}
 

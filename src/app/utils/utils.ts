@@ -1,8 +1,6 @@
 /** The player object for neutral hostile units. */
 export const NEUTRAL_HOSTILE: player = Player(PLAYER_NEUTRAL_AGGRESSIVE);
 
-/** The number of player slots in the game, excluding neutral players. */
-export const PLAYER_SLOTS: number = bj_MAX_PLAYERS - 1;
 
 export const CUSTOM_MAP_DATA_MINE_TYPE_TXT: string = 'txt';
 

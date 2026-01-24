@@ -67,7 +67,8 @@ export class StandardBoard extends Scoreboard {
 			if (playerAIncome < playerBIncome) return 1;
 			if (playerAIncome > playerBIncome) return -1;
 
-			return 0;
+			// Secondary sort by player ID for deterministic ordering across all clients
+			return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
 		});
 
 		let row: number = 2;

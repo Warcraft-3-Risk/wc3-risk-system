@@ -1,11 +1,10 @@
-import { PLAYER_SLOTS } from '../utils/utils';
 import { AnnounceOnLocationObserverOnly } from '../game/announcer/announce';
 import { debugPrint } from '../utils/debug-print';
 
 export function UnitIssueOrderEvent() {
 	const t: trigger = CreateTrigger();
 
-	for (let i = 0; i < PLAYER_SLOTS; i++) {
+	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, null);
 	}
 

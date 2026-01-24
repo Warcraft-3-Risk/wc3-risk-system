@@ -3,12 +3,11 @@ import { UnitToCity } from '../city/city-map';
 import { EVENT_ON_CITY_SELECTED } from '../utils/events/event-constants';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { UNIT_TYPE } from '../utils/unit-types';
-import { PLAYER_SLOTS } from '../utils/utils';
 import { debugPrint } from '../utils/debug-print';
 
 export function CitySelectedEvent() {
 	const t: trigger = CreateTrigger();
-	for (let i = 0; i < PLAYER_SLOTS; i++) {
+	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SELECTED);
 	}
 

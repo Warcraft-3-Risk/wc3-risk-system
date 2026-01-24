@@ -1,6 +1,5 @@
 import { HexColors } from '../utils/hex-colors';
 import { MAP_NAME } from '../utils/map-info';
-import { PLAYER_SLOTS } from '../utils/utils';
 import { SettingsContext } from './settings-context';
 import { DiplomacyStringsColorFormatted } from './strategies/diplomacy-strategy';
 import { FogOptionsColorFormatted } from './strategies/fog-strategy';
@@ -34,7 +33,7 @@ export class SettingsView {
 
 	private disablePromodeIfMoreThanTwoTeams() {
 		const uniqueTeams = new Set<number>();
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p = Player(i);
 			if (IsPlayerSlotState(p, PLAYER_SLOT_STATE_PLAYING) && !IsPlayerObserver(p)) {
 				uniqueTeams.add(GetPlayerTeam(p));

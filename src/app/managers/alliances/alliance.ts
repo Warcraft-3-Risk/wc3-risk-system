@@ -1,4 +1,3 @@
-import { PLAYER_SLOTS } from 'src/app/utils/utils';
 
 export class Alliance {
 	private readonly _number: number;
@@ -55,11 +54,11 @@ export class Alliance {
 
 	public disband(): void {
 		for (let i = 0; i < this._players.length; i++) {
-			const playerA: player = Player(i);
+			const playerA: player = this._players[i];
 
 			SetPlayerTeam(playerA, GetPlayerId(playerA));
 
-			for (let j = 0; j < PLAYER_SLOTS; j++) {
+			for (let j = 0; j < bj_MAX_PLAYERS; j++) {
 				this.setAllianceState(playerA, Player(j), false);
 			}
 		}

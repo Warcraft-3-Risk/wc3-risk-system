@@ -1,11 +1,9 @@
-
 import { UNIT_ID } from 'src/configs/unit-id';
 import { City } from '../city/city';
 import { UnitToCity } from '../city/city-map';
 import { countryTracker } from '../game/services/country-creator';
 import { Coordinates } from '../interfaces/coordinates';
 import { UNIT_TYPE } from '../utils/unit-types';
-import { PLAYER_SLOTS } from '../utils/utils';
 import { File } from 'w3ts';
 
 export function CountryCreatorCountryEvent() {
@@ -54,7 +52,7 @@ export function CountryCreatorSaveEvent() {
 
 export function CountryCreatorCoordinatesEvent() {
     const t: trigger = CreateTrigger();
-    for (let i = 0; i < PLAYER_SLOTS; i++) {
+    for (let i = 0; i < bj_MAX_PLAYERS; i++) {
         TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SELECTED);
     }
 

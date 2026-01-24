@@ -1,6 +1,5 @@
 import { File } from 'w3ts';
 import { NameManager } from '../managers/names/name-manager';
-import { PLAYER_SLOTS } from '../utils/utils';
 
 type Multis = {
 	player: player;
@@ -15,8 +14,10 @@ export class AntiCheat {
 		const path: string = 'check.pld';
 		const nameManager: NameManager = NameManager.getInstance();
 
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player: player = Player(i);
+
+			if (IsPlayerObserver(player)) continue;
 
 			if (GetPlayerController(player) == MAP_CONTROL_USER && GetPlayerSlotState(player) == PLAYER_SLOT_STATE_PLAYING) {
 				const name: string = nameManager.getBtag(player);
@@ -30,8 +31,10 @@ export class AntiCheat {
 		const waitTimer: timer = CreateTimer();
 
 		TimerStart(waitTimer, 1, false, () => {
-			for (let i = 0; i < PLAYER_SLOTS; i++) {
+			for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 				const player: player = Player(i);
+
+				if (IsPlayerObserver(player)) continue;
 
 				if (GetPlayerController(player) == MAP_CONTROL_USER && GetPlayerSlotState(player) == PLAYER_SLOT_STATE_PLAYING) {
 					const name: string = nameManager.getBtag(player);

@@ -1,5 +1,4 @@
 import { MAP_VERSION, W3C_MODE_ENABLED } from '../utils/map-info';
-import { PLAYER_SLOTS } from '../utils/utils';
 
 /**
  * Sets up the console UI for the game.
@@ -43,7 +42,7 @@ export function SetConsoleUI() {
 	BlzFrameSetVisible(BlzGetFrameByName('AlliedVictoryLabel', 0), false);
 	BlzFrameSetVisible(BlzGetFrameByName('AlliedVictoryCheckBox', 0), false);
 
-	for (let i = 0; i < 23; i++) {
+	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 		BlzFrameSetVisible(BlzGetFrameByName('LumberBackdrop', i), false);
 		BlzFrameSetVisible(BlzGetFrameByName('LumberText', i), false);
 		BlzFrameSetVisible(BlzGetFrameByName('VisionCheckBox', i), false);
@@ -70,8 +69,10 @@ export function SetConsoleUI() {
 	BlzCreateFrame('GlobalMessageFrame', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 	BlzCreateFrame('CountdownFrame', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 
-	for (let i = 0; i < PLAYER_SLOTS; i++) {
+	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 		const player = Player(i);
+
+		if (IsPlayerObserver(player)) continue;
 
 		if (GetPlayerController(player) == MAP_CONTROL_USER) {
 			const errorFrame: framehandle = BlzCreateFrame(
