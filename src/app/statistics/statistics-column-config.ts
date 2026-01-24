@@ -6,7 +6,6 @@ import { StatisticsModel } from './statistics-model';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { RatingManager } from '../rating/rating-manager';
 import { getRankIcon } from '../rating/rating-calculator';
-import { PlayerManager } from '../player/player-manager';
 import { HexColors } from '../utils/hex-colors';
 
 type TextFunction = (player: ActivePlayer) => string;
@@ -62,7 +61,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return 'N/A';
 				}
 
-				return truncateWithColorCode(name, 24);
+				return truncateWithColorCode(name, 12);
 			},
 		},
 		{
@@ -148,7 +147,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return highlightIfOwnPlayer(player, 'N/A');
 				}
 
-				return truncateWithColorCode(rivalName, 24);
+				return truncateWithColorCode(rivalName, 12);
 			},
 		},
 		{
@@ -220,7 +219,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				const max = gold.max != undefined ? gold.max : 0;
 				const end = gold.end != undefined ? gold.end : 0;
 				return highlightIfOwnPlayer(player, earned + '/' + max + '/' + end);
-			}
+			},
 		},
 		{
 			size: killsSize,
@@ -240,7 +239,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				return highlightIfOwnPlayer(player, killsDeaths.killValue);
-			}
+			},
 		},
 		{
 			size: deathSize,
@@ -260,7 +259,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				return highlightIfOwnPlayer(player, killsDeaths.deathValue);
-			}
+			},
 		},
 		{
 			size: 0.08,
