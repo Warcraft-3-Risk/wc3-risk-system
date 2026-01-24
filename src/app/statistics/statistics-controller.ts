@@ -1,6 +1,6 @@
 import { ENABLE_EXPORT_END_GAME_SCORE } from 'src/configs/game-settings';
 import { NameManager } from '../managers/names/name-manager';
-import { ExportEndGameScore } from '../utils/export-statistics/export-end-game-score';
+import { ExportEndGameScore, EndGameScoreData } from '../utils/export-statistics/export-end-game-score';
 import { ComputeRatio } from '../utils/utils';
 import { StatisticsModel } from './statistics-model';
 import { RankedStatisticsView } from './ranked-statistics-view';
@@ -10,6 +10,7 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { RatingManager } from '../rating/rating-manager';
 import { PlayerManager } from '../player/player-manager';
+import { UNIT_ID } from 'src/configs/unit-id';
 
 export class StatisticsController {
 	private static instance: StatisticsController;
@@ -177,28 +178,58 @@ export class StatisticsController {
 			this.unrankedView.refreshRows();
 		}
 
-		const data = ranks.map((player) => {
+		const data: EndGameScoreData[] = ranks.map((player) => {
+			const btag = NameManager.getInstance().getBtag(player.getPlayer());
 			const rivalPlayer = this.model.getRival(player);
 			const rivalBtag = rivalPlayer ? NameManager.getInstance().getBtag(rivalPlayer.getPlayer()) : 'null';
 
+			// Get rating data
+			const ratingResults = ratingManager.getRatingResults();
+			const ratingResult = ratingResults ? ratingResults.get(btag) : undefined;
+			const rating = ratingResult?.newRating ?? ratingManager.getPlayerRating(btag);
+			const ratingChange = ratingResult?.totalChange ?? 0;
+
+			// Get player KD stats
+			const playerKD = player.trackedData.killsDeaths.get(player.getPlayer());
+
+			// Get SS stats
+			const ssKD = player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`);
+			const ssKills = ssKD?.kills ?? 0;
+			const ssDeaths = ssKD?.deaths ?? 0;
+
+			// Get Tank stats
+			const tankKD = player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`);
+			const tankKills = tankKD?.kills ?? 0;
+			const tankDeaths = tankKD?.deaths ?? 0;
+
 			return {
-				Player: NameManager.getInstance().getBtag(player.getPlayer()),
+				Player: btag,
 				Rank: (ranks.indexOf(player) + 1).toString(),
+				Rating: rating.toString(),
+				RatingChange: ratingChange.toString(),
+				BiggestRival: rivalBtag,
 				LastTurn: player.trackedData.turnDied.toString(),
-				CitiesEnd: player.trackedData.cities.end.toString(),
 				CitiesMax: player.trackedData.cities.max.toString(),
-				BountyEarned: player.trackedData.bounty.earned.toString(),
-				BonusEarned: player.trackedData.bonus.earned.toString(),
+				CitiesEnd: player.trackedData.cities.end.toString(),
+				IncomeMax: player.trackedData.income.max.toString(),
+				IncomeEnd: player.trackedData.income.end.toString(),
 				GoldEarned: player.trackedData.gold.earned.toString(),
 				GoldMax: player.trackedData.gold.max.toString(),
 				GoldEnd: player.trackedData.gold.end.toString(),
-				Kills: player.trackedData.killsDeaths.get(player.getPlayer()).killValue.toString(),
-				Deaths: player.trackedData.killsDeaths.get(player.getPlayer()).deathValue.toString(),
-				KD: ComputeRatio(
-					player.trackedData.killsDeaths.get(player.getPlayer()).killValue,
-					player.trackedData.killsDeaths.get(player.getPlayer()).deathValue
-				).toString(),
-				BiggestRival: rivalBtag,
+				Kills: playerKD.killValue.toString(),
+				Deaths: playerKD.deathValue.toString(),
+				KD: ComputeRatio(playerKD.killValue, playerKD.deathValue).toString(),
+				BountyEarned: player.trackedData.bounty.earned.toString(),
+				BonusEarned: player.trackedData.bonus.earned.toString(),
+				SSKills: ssKills.toString(),
+				SSDeaths: ssDeaths.toString(),
+				SSKD: ComputeRatio(ssKills, ssDeaths).toString(),
+				TankKills: tankKills.toString(),
+				TankDeaths: tankDeaths.toString(),
+				TankKD: ComputeRatio(tankKills, tankDeaths).toString(),
+				Denies: player.trackedData.denies.toString(),
+				RoarCasts: player.trackedData.roarCasts.toString(),
+				DispelCasts: player.trackedData.dispelCasts.toString(),
 			};
 		});
 
