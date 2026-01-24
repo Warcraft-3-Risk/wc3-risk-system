@@ -97,19 +97,15 @@ export const RANKED_STARTING_RATING: number = 1000;
 // This helps prevent runaway ratings at the top while protecting lower-rated players
 export const RANKED_OPPONENT_STRENGTH_FACTOR: number = 0.32;
 
-// Enable/disable developer mode. Default is false.
-// When enabled:
-//   - Uses separate "dev_ratings_" file prefix to avoid polluting real ratings
-//   - Allows ranked games with any player count (including singleplayer)
-//   - Computer/AI players are INCLUDED in rating calculations (for testing)
-//   - Rating file encryption is DISABLED (plain text for debugging)
-//   - Will enable
-// When disabled:
-//   - Uses normal "ratings_" file prefix
-//   - Requires minimum player count (RANKED_MIN_PLAYERS) for ranked games
-//   - Computer/AI players are EXCLUDED from rating calculations (prevents cheating)
-//   - Rating file encryption is ENABLED
-export const DEVELOPER_MODE: boolean = false;
+// Enable/disable editor developer mode. Default is false.
+// When enabled: Enables country creator commands for map editing (singleplayer only)
+// When disabled: Country creator commands are disabled
+export const EDITOR_DEVELOPER_MODE: boolean = false;
+
+// Enable/disable rating file encryption. Default is true.
+// When enabled: Rating files are encrypted with XOR+Base64 (production use)
+// When disabled: Rating files are stored as plain text (useful for debugging)
+export const RATING_FILE_ENCRYPTION_ENABLED: boolean = false;
 
 // ============================================
 // P2P Rating Sync Settings

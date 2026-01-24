@@ -30,7 +30,7 @@ import { EventEmitter } from './app/utils/events/event-emitter';
 import { EVENT_MODE_SELECTION } from './app/utils/events/event-constants';
 import { CitySelectedEvent } from './app/triggers/city-selected-event';
 import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
-import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST, DEVELOPER_MODE } from './configs/game-settings';
+import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST, EDITOR_DEVELOPER_MODE } from './configs/game-settings';
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
 import { FogManager } from './app/managers/fog-manager';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
@@ -111,7 +111,7 @@ function tsMain() {
 		CitySelectedEvent();
 
 		//if singleplayer
-		if (DEVELOPER_MODE && ReloadGameCachesFromDisk()) {
+		if (EDITOR_DEVELOPER_MODE && ReloadGameCachesFromDisk()) {
 			CountryCreatorSaveEvent();
 			CountryCreatorCountryEvent();
 			CountryCreatorCoordinatesEvent();

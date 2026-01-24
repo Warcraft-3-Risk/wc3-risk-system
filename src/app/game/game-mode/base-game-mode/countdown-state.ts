@@ -35,9 +35,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 				if (isRanked) {
 					// Generate unique game ID for crash recovery
 					ratingManager.generateGameId();
-					const message = ratingManager.isDeveloperModeEnabled()
-						? `${HexColors.TANGERINE}This is a ranked game!|r Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats. Using developer mode settings.`
-						: `${HexColors.TANGERINE}This is a ranked game!|r Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats.`;
+					const message = `${HexColors.TANGERINE}This is a ranked game!|r Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats.`;
 
 					// Send message only to players who have rating display enabled
 					PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {

@@ -1,6 +1,6 @@
 import { File } from 'w3ts';
 import { OthersRatingFileData, PlayerRatingData } from './types';
-import { DEVELOPER_MODE, RANKED_SEASON_RESET_KEY } from 'src/configs/game-settings';
+import { RANKED_SEASON_RESET_KEY, RATING_FILE_ENCRYPTION_ENABLED } from 'src/configs/game-settings';
 import { encryptData, decryptData } from './rating-encryption';
 
 /**
@@ -63,28 +63,24 @@ export function validateOthersChecksum(data: OthersRatingFileData): boolean {
  * File naming is obscured to prevent easy identification
  * @param hash Hash identifier for player (from sanitizePlayerName)
  * @param seasonId Season identifier
- * @param isDev Whether in developer mode
  * @returns File path
  */
-function getOthersFilePath(hash: string, seasonId: number, isDev: boolean): string {
-	// Use single-letter prefix: 'e' for dev others, 'q' for prod others
-	const prefix = isDev ? 'e' : 'q';
+function getOthersFilePath(hash: string, seasonId: number): string {
 	// Include reset key if configured (allows resetting data without changing season ID)
 	const resetKey = RANKED_SEASON_RESET_KEY || '';
 	// Must use .txt extension - WC3 only supports .txt and .pld file extensions
-	return `risk/${prefix}${seasonId}${resetKey}_${hash}.txt`;
+	return `risk/q${seasonId}${resetKey}_${hash}.txt`;
 }
 
 /**
  * Read others ratings database from file
  * @param sanitizedName Sanitized player name (from sanitizePlayerName)
  * @param seasonId Season identifier
- * @param isDev Whether in developer mode
  * @returns Others rating data or null if file doesn't exist/is invalid
  */
-export function readOthersRatings(sanitizedName: string, seasonId: number, isDev: boolean): OthersRatingFileData | null {
+export function readOthersRatings(sanitizedName: string, seasonId: number): OthersRatingFileData | null {
 	try {
-		const filePath = getOthersFilePath(sanitizedName, seasonId, isDev);
+		const filePath = getOthersFilePath(sanitizedName, seasonId);
 		const rawContents = File.read(filePath);
 
 		// File doesn't exist or is empty - this is OK, will be created later
@@ -93,10 +89,9 @@ export function readOthersRatings(sanitizedName: string, seasonId: number, isDev
 		}
 
 		// Conditionally decrypt based on config setting
-		// Developer mode = no encryption, Production mode = encryption enabled
 		let contents: string | null;
-		if (!DEVELOPER_MODE) {
-			// Production mode: decrypt the file
+		if (RATING_FILE_ENCRYPTION_ENABLED) {
+			// Encryption enabled: decrypt the file
 			contents = decryptData(rawContents);
 			if (!contents) {
 				// Decryption failed - file is corrupted, will be regenerated
@@ -104,7 +99,7 @@ export function readOthersRatings(sanitizedName: string, seasonId: number, isDev
 				return null;
 			}
 		} else {
-			// Developer mode: no encryption - use raw contents as-is
+			// Encryption disabled: use raw contents as-is (plain text)
 			contents = rawContents;
 		}
 
@@ -183,12 +178,11 @@ export function readOthersRatings(sanitizedName: string, seasonId: number, isDev
  * @param data Others rating data to write
  * @param sanitizedName Sanitized player name (from sanitizePlayerName)
  * @param seasonId Season identifier
- * @param isDev Whether in developer mode
  * @returns True if write succeeded
  */
-export function writeOthersRatings(data: OthersRatingFileData, sanitizedName: string, seasonId: number, isDev: boolean): boolean {
+export function writeOthersRatings(data: OthersRatingFileData, sanitizedName: string, seasonId: number): boolean {
 	try {
-		const filePath = getOthersFilePath(sanitizedName, seasonId, isDev);
+		const filePath = getOthersFilePath(sanitizedName, seasonId);
 
 		// Update metadata
 		data.playerCount = data.players.length;
@@ -218,13 +212,12 @@ export function writeOthersRatings(data: OthersRatingFileData, sanitizedName: st
 		}
 
 		// Conditionally encrypt based on config setting
-		// Developer mode = no encryption, Production mode = encryption enabled
 		let finalContent: string;
-		if (!DEVELOPER_MODE) {
-			// Production mode: encrypt the data
+		if (RATING_FILE_ENCRYPTION_ENABLED) {
+			// Encryption enabled: encrypt the data
 			finalContent = encryptData(plainContent);
 		} else {
-			// Developer mode: no encryption - use plain text
+			// Encryption disabled: use plain text
 			finalContent = plainContent;
 		}
 

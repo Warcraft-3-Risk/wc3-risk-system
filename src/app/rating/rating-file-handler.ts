@@ -1,6 +1,6 @@
 import { File } from 'w3ts';
 import { PlayerRatingData, RatingFileData } from './types';
-import { DEVELOPER_MODE } from 'src/configs/game-settings';
+import { RATING_FILE_ENCRYPTION_ENABLED } from 'src/configs/game-settings';
 import { encryptData, decryptData } from './rating-encryption';
 
 /**
@@ -60,10 +60,9 @@ export function readRatings(filePath: string): RatingFileData | null {
 		}
 
 		// Conditionally decrypt based on config setting
-		// Developer mode = no encryption, Production mode = encryption enabled
 		let contents: string | null;
-		if (!DEVELOPER_MODE) {
-			// Production mode: decrypt the file
+		if (RATING_FILE_ENCRYPTION_ENABLED) {
+			// Encryption enabled: decrypt the file
 			contents = decryptData(rawContents);
 			if (!contents) {
 				// Decryption failed - file is corrupted, will regenerate with starting rating
@@ -71,7 +70,7 @@ export function readRatings(filePath: string): RatingFileData | null {
 				return null;
 			}
 		} else {
-			// Developer mode: no encryption - use raw contents as-is
+			// Encryption disabled: use raw contents as-is (plain text)
 			contents = rawContents;
 		}
 
@@ -199,8 +198,7 @@ export function writeRatings(filePath: string, data: RatingFileData): boolean {
 		}
 
 		// Conditionally encrypt based on config setting
-		// Developer mode = no encryption, Production mode = encryption enabled
-		const finalContent = !DEVELOPER_MODE ? encryptData(plainContent) : plainContent;
+		const finalContent = RATING_FILE_ENCRYPTION_ENABLED ? encryptData(plainContent) : plainContent;
 
 		// Write data (encrypted or plain text based on config)
 		File.write(filePath, finalContent);

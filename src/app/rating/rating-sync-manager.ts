@@ -5,8 +5,8 @@ import { HexColors } from '../utils/hex-colors';
 import { NameManager } from '../managers/names/name-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import {
-	DEVELOPER_MODE,
 	RANKED_SEASON_ID,
+	RANKED_SEASON_RESET_KEY,
 	RATING_SYNC_TIMEOUT,
 	RATING_SYNC_TOP_PLAYERS
 } from 'src/configs/game-settings';
@@ -51,14 +51,6 @@ export class RatingSyncManager {
 			this.instance = new RatingSyncManager();
 		}
 		return this.instance;
-	}
-
-	/**
-	 * Check if developer mode is enabled (from game-settings.ts config)
-	 * @returns True if DEVELOPER_MODE is enabled
-	 */
-	public isDeveloperModeEnabled(): boolean {
-		return DEVELOPER_MODE;
 	}
 
 	/**
@@ -158,9 +150,9 @@ export class RatingSyncManager {
 
 		// 1. Add personal rating data
 		const hash = this.sanitizePlayerName(btag);
-		const prefix = DEVELOPER_MODE ? 'd' : 'p';
+		const resetKey = RANKED_SEASON_RESET_KEY || '';
 		// Must use .txt extension - WC3 only supports .txt and .pld file extensions
-		const filePath = `risk/${prefix}${this.seasonId}_${hash}.txt`;
+		const filePath = `risk/p${this.seasonId}${resetKey}_${hash}.txt`;
 		const ratingFile = readRatings(filePath);
 
 		// Validate checksum if file exists
@@ -203,7 +195,7 @@ export class RatingSyncManager {
 		}
 
 		// 2. Add top N players from "others" database
-		const othersData = readOthersRatings(hash, this.seasonId, DEVELOPER_MODE);
+		const othersData = readOthersRatings(hash, this.seasonId);
 		if (othersData && othersData.players.length > 0) {
 			// Sort by rating descending
 			const sortedPlayers = othersData.players.sort((a, b) => {
@@ -321,9 +313,9 @@ export class RatingSyncManager {
 
 		if (btag) {
 			const hash = this.sanitizePlayerName(btag);
-			const prefix = DEVELOPER_MODE ? 'd' : 'p';
+			const resetKey = RANKED_SEASON_RESET_KEY || '';
 			// Must use .txt extension - WC3 only supports .txt and .pld file extensions
-			const filePath = `risk/${prefix}${this.seasonId}_${hash}.txt`;
+			const filePath = `risk/p${this.seasonId}${resetKey}_${hash}.txt`;
 			const ratingFile = readRatings(filePath);
 
 			// Validate checksum if file exists
@@ -367,7 +359,6 @@ export class RatingSyncManager {
 		}
 
 		// Load local "others" database (historical data about other players)
-		// This includes computer players from previous games (in dev mode)
 		this.loadOthersDatabase(receivedPlayers);
 
 		// Sort all players by rating and take top N for consistent leaderboard
@@ -417,7 +408,7 @@ export class RatingSyncManager {
 	 */
 	private loadOthersDatabase(receivedPlayers: PlayerRatingData[]): void {
 		const sanitizedName = this.getSanitizedLocalPlayerName();
-		const othersData = readOthersRatings(sanitizedName, this.seasonId, DEVELOPER_MODE);
+		const othersData = readOthersRatings(sanitizedName, this.seasonId);
 
 		if (!othersData || othersData.players.length === 0) {
 			return;
@@ -540,9 +531,9 @@ export class RatingSyncManager {
 
 		if (btag) {
 			const hash = this.sanitizePlayerName(btag);
-			const prefix = DEVELOPER_MODE ? 'd' : 'p';
+			const resetKey = RANKED_SEASON_RESET_KEY || '';
 			// Must use .txt extension - WC3 only supports .txt and .pld file extensions
-			const filePath = `risk/${prefix}${this.seasonId}_${hash}.txt`;
+			const filePath = `risk/p${this.seasonId}${resetKey}_${hash}.txt`;
 			const ratingFile = readRatings(filePath);
 
 			// Validate checksum if file exists
@@ -651,14 +642,14 @@ export class RatingSyncManager {
 			playerCount: topPlayers.length,
 		};
 
-		writeOthersRatings(othersData, sanitizedName, this.seasonId, DEVELOPER_MODE);
+		writeOthersRatings(othersData, sanitizedName, this.seasonId);
 	}
 
 	/**
 	 * Merge all received player data and save to local "others" database
 	 * Also loads data into RatingManager's memory for use during the game
 	 * Filters to top N players by rating to ensure consistent leaderboard across all players
-	 * @param allPlayers Array of all player data (from sync + local "others" + Computer players)
+	 * @param allPlayers Array of all player data (from sync + local "others" database)
 	 */
 	private mergeAndSave(allPlayers: PlayerRatingData[]): void {
 		const ratingManager = RatingManager.getInstance();

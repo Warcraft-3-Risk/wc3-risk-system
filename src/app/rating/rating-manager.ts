@@ -7,7 +7,6 @@ import {
 	calculateRatingChange
 } from './rating-calculator';
 import {
-	DEVELOPER_MODE,
 	RANKED_MIN_PLAYERS,
 	RANKED_SEASON_ID,
 	RANKED_SEASON_RESET_KEY,
@@ -95,12 +94,10 @@ export class RatingManager {
 	 */
 	private getPlayerFilePath(btag: string): string {
 		const hash = this.sanitizePlayerName(btag);
-		// Use single-letter prefix: 'd' for dev, 'p' for prod
-		const prefix = DEVELOPER_MODE ? 'd' : 'p';
 		// Include reset key if configured (allows resetting data without changing season ID)
 		const resetKey = RANKED_SEASON_RESET_KEY || '';
 		// Must use .txt extension - WC3 only supports .txt and .pld file extensions
-		return `risk/${prefix}${this.seasonId}${resetKey}_${hash}.txt`;
+		return `risk/p${this.seasonId}${resetKey}_${hash}.txt`;
 	}
 
 	/**
@@ -112,14 +109,6 @@ export class RatingManager {
 		}
 
 		return this.instance;
-	}
-
-	/**
-	 * Check if developer mode is enabled (from game-settings.ts config)
-	 * @returns True if RANKED_DEVELOPER_MODE is enabled
-	 */
-	public isDeveloperModeEnabled(): boolean {
-		return DEVELOPER_MODE;
 	}
 
 	/**
@@ -239,16 +228,10 @@ export class RatingManager {
 			return false;
 		}
 
-		// Normal mode: require FFA mode AND minimum player count
+		// Require FFA mode AND minimum player count
 		if (!isFFA) {
 			this.isRankedGameFlag = false;
 			return false;
-		}
-
-		// In developer mode, always enable ranked (for testing)
-		if (DEVELOPER_MODE) {
-			this.isRankedGameFlag = true;
-			return true;
 		}
 
 		this.isRankedGameFlag = humanPlayerCount >= RANKED_MIN_PLAYERS;
@@ -288,12 +271,9 @@ export class RatingManager {
 	 * @param players Array of players participating in the game
 	 */
 	public captureInitialGameData(players: ActivePlayer[]): void {
-		// Filter to eligible players (human players only in production, all in dev mode)
+		// Filter to eligible players (human players only - exclude AI/computer players)
 		const eligiblePlayers = players.filter((player) => {
-			if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
-				return false;
-			}
-			return true;
+			return GetPlayerController(player.getPlayer()) === MAP_CONTROL_USER;
 		});
 
 		this.initialPlayerCount = eligiblePlayers.length;
@@ -474,6 +454,12 @@ export class RatingManager {
 
 		for (let i = 0; i < players.length; i++) {
 			const player = players[i];
+
+			// Skip computer/AI players - they should never be in the rating system
+			if (GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
+				continue;
+			}
+
 			const btag = NameManager.getInstance().getBtag(player.getPlayer());
 
 			// Skip if this player already has data loaded
@@ -592,8 +578,8 @@ export class RatingManager {
 			return;
 		}
 
-		// Skip computer/AI players in normal mode
-		if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
+		// Skip computer/AI players
+		if (GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
 			return;
 		}
 
@@ -738,8 +724,8 @@ export class RatingManager {
 				return false;
 			}
 
-			// Exclude computer/AI players in normal mode
-			if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
+			// Exclude computer/AI players
+			if (GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
 				return false;
 			}
 
@@ -910,9 +896,9 @@ export class RatingManager {
 				return false;
 			}
 
-			// Exclude computer/AI players in normal mode
-			if (!DEVELOPER_MODE && GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
-				debugPrint(`[RatingManager] Filter: ${btag} excluded - AI player in non-dev mode`);
+			// Exclude computer/AI players
+			if (GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
+				debugPrint(`[RatingManager] Filter: ${btag} excluded - AI player`);
 				return false;
 			}
 
@@ -1053,7 +1039,7 @@ export class RatingManager {
 		};
 
 		// Load existing "others" database for this account
-		const existingData = readOthersRatings(sanitizedName, this.seasonId, DEVELOPER_MODE);
+		const existingData = readOthersRatings(sanitizedName, this.seasonId);
 
 		// Create map for efficient merging
 		const playerMap = new Map<string, PlayerRatingData>();
@@ -1105,7 +1091,7 @@ export class RatingManager {
 			playerCount: mergedPlayers.length,
 		};
 
-		writeOthersRatings(othersData, sanitizedName, this.seasonId, DEVELOPER_MODE);
+		writeOthersRatings(othersData, sanitizedName, this.seasonId);
 		debugPrint(
 			`[RatingManager] Broadcast finalized player ${cleanPlayerData.btag} (rating: ${cleanPlayerData.rating}) to ${localBtag}'s others database`
 		);
@@ -1149,7 +1135,7 @@ export class RatingManager {
 		}
 
 		// Load existing "others" database for this account
-		const existingData = readOthersRatings(sanitizedName, this.seasonId, DEVELOPER_MODE);
+		const existingData = readOthersRatings(sanitizedName, this.seasonId);
 
 		// Create map for efficient merging
 		const playerMap = new Map<string, PlayerRatingData>();
@@ -1207,6 +1193,6 @@ export class RatingManager {
 			playerCount: mergedPlayers.length,
 		};
 
-		writeOthersRatings(othersData, sanitizedName, this.seasonId, DEVELOPER_MODE);
+		writeOthersRatings(othersData, sanitizedName, this.seasonId);
 	}
 }
