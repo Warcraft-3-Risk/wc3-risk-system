@@ -105,7 +105,7 @@ export const EDITOR_DEVELOPER_MODE: boolean = false;
 // Enable/disable rating file encryption. Default is true.
 // When enabled: Rating files are encrypted with XOR+Base64 (production use)
 // When disabled: Rating files are stored as plain text (useful for debugging)
-export const RATING_FILE_ENCRYPTION_ENABLED: boolean = false;
+export const RATING_FILE_ENCRYPTION_ENABLED: boolean = true;
 
 // ============================================
 // P2P Rating Sync Settings
