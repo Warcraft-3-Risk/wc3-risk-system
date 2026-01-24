@@ -157,22 +157,51 @@ export function arrayRange(start: number, stop: number, step: number) {
 }
 
 /**
- * Safely truncates a string to a maximum length without cutting between '|' and 'r' in WC3 color codes.
- * If the truncation would cut between '|' and 'r', includes the 'r' to keep '|r' together.
+ * Safely truncates a string to a maximum VISIBLE length, properly handling WC3 color codes.
+ * Color codes (|cXXXXXXXX) and resets (|r) are not counted toward the visible length.
+ * Ensures we don't cut in the middle of a color code.
  * @param str The string to truncate.
- * @param maxLength The maximum length of the resulting string.
- * @return The truncated string with '|r' kept intact.
+ * @param maxVisibleLength The maximum number of visible characters (excluding color codes).
+ * @return The truncated string with color codes preserved.
  */
-export function truncateWithColorCode(str: string, maxLength: number): string {
-	if (!str || str.length <= maxLength) {
+export function truncateWithColorCode(str: string, maxVisibleLength: number): string {
+	if (!str) {
 		return str;
 	}
 
-	let truncated = str.slice(0, maxLength);
+	let visibleCount = 0;
+	let i = 0;
+	let hasOpenColorCode = false;
 
-	// If we cut right before 'r' and the previous char is '|', include the 'r'
-	if (truncated.endsWith('|') && str.length > maxLength && str.charAt(maxLength) === 'r') {
-		truncated = str.slice(0, maxLength + 1);
+	while (i < str.length && visibleCount < maxVisibleLength) {
+		// Check for color code start: |c followed by 8 hex characters
+		if (str.charAt(i) === '|' && i + 1 < str.length) {
+			const nextChar = str.charAt(i + 1);
+
+			if (nextChar === 'c' && i + 9 < str.length) {
+				// Skip the full color code: |c + 8 hex chars = 10 characters total
+				i += 10;
+				hasOpenColorCode = true;
+				continue;
+			} else if (nextChar === 'r') {
+				// Skip the reset code: |r = 2 characters
+				i += 2;
+				hasOpenColorCode = false;
+				continue;
+			}
+		}
+
+		// Regular visible character
+		visibleCount++;
+		i++;
+	}
+
+	// Get the truncated string up to position i
+	let truncated = str.slice(0, i);
+
+	// If we have an open color code and the string was truncated, close it
+	if (hasOpenColorCode && i < str.length) {
+		truncated += '|r';
 	}
 
 	return truncated;

@@ -2,6 +2,7 @@ import { File } from 'w3ts';
 import { PlayerRatingData, RatingFileData } from './types';
 import { RATING_FILE_ENCRYPTION_ENABLED } from 'src/configs/game-settings';
 import { encryptData, decryptData } from './rating-encryption';
+import { HexColors } from '../utils/hex-colors';
 
 /**
  * Handles all file I/O operations for rating data with optional encryption
@@ -66,7 +67,7 @@ export function readRatings(filePath: string): RatingFileData | null {
 			contents = decryptData(rawContents);
 			if (!contents) {
 				// Decryption failed - file is corrupted, will regenerate with starting rating
-				print(`[RATING FILE] Decryption failed for ${filePath} - file corrupted, will regenerate`);
+				print(`${HexColors.RED}WARNING:|r Rating file decryption failed - file corrupted, will regenerate`);
 				return null;
 			}
 		} else {

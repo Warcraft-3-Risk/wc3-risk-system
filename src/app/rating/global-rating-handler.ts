@@ -2,6 +2,7 @@ import { File } from 'w3ts';
 import { OthersRatingFileData, PlayerRatingData } from './types';
 import { RANKED_SEASON_RESET_KEY, RATING_FILE_ENCRYPTION_ENABLED } from 'src/configs/game-settings';
 import { encryptData, decryptData } from './rating-encryption';
+import { HexColors } from '../utils/hex-colors';
 
 /**
  * Handles file I/O operations for "others" ratings database
@@ -95,7 +96,7 @@ export function readOthersRatings(sanitizedName: string, seasonId: number): Othe
 			contents = decryptData(rawContents);
 			if (!contents) {
 				// Decryption failed - file is corrupted, will be regenerated
-				print(`[OTHERS RATINGS] Decryption failed - file corrupted, will regenerate`);
+				print(`${HexColors.RED}WARNING:|r External ratings decryption failed - file corrupted, will regenerate`);
 				return null;
 			}
 		} else {
@@ -148,7 +149,7 @@ export function readOthersRatings(sanitizedName: string, seasonId: number): Othe
 
 		// Validate player count matches
 		if (playerCount !== players.length) {
-			print(`[OTHERS RATINGS] Player count mismatch: expected ${playerCount}, got ${players.length}`);
+			print(`${HexColors.RED}WARNING:|r External ratings player count mismatch: expected ${playerCount}, got ${players.length}`);
 			return null;
 		}
 
@@ -162,13 +163,13 @@ export function readOthersRatings(sanitizedName: string, seasonId: number): Othe
 
 		// Validate checksum
 		if (!validateOthersChecksum(data)) {
-			print(`[OTHERS RATINGS] Checksum validation failed - file corrupted, will regenerate`);
+			print(`${HexColors.RED}WARNING:|r External ratings checksum validation failed - file corrupted, will regenerate`);
 			return null;
 		}
 
 		return data;
 	} catch (error) {
-		print(`[OTHERS RATINGS] Error reading others ratings: ${error}`);
+		print(`${HexColors.RED}WARNING:|r Error reading external ratings: ${error}`);
 		return null;
 	}
 }
@@ -226,7 +227,7 @@ export function writeOthersRatings(data: OthersRatingFileData, sanitizedName: st
 
 		return true;
 	} catch (error) {
-		print(`[OTHERS RATINGS] Error writing others ratings: ${error}`);
+		print(`${HexColors.RED}WARNING:|r Error writing external ratings: ${error}`);
 		return false;
 	}
 }

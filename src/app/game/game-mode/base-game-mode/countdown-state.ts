@@ -10,6 +10,7 @@ import { HexColors } from 'src/app/utils/hex-colors';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { updateRatingStatsButtonForRankedStatus } from 'src/app/ui/player-preference-buttons';
+import { GlobalGameData } from '../../state/global-game-state';
 
 export class CountdownState<T extends StateData> extends BaseState<T> {
 	private initialDuration: number;
@@ -35,33 +36,40 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 				if (isRanked) {
 					// Generate unique game ID for crash recovery
 					ratingManager.generateGameId();
-					const message = `${HexColors.TANGERINE}This is a ranked game!|r Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats.`;
 
-					// Send message only to players who have rating display enabled
-					PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
-						const btag = NameManager.getInstance().getBtag(activePlayer.getPlayer());
-						const showRating = ratingManager.getShowRatingPreference(btag);
+					// Only show ranked/unranked message on the first match (not on restarts)
+					if (GlobalGameData.matchCount === 1) {
+						const message = `${HexColors.TANGERINE}This is a ranked game!|r Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats.`;
 
-						// Only show message if player has rating display enabled
-						if (showRating) {
-							DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 5, message);
-						}
-					});
+						// Send message only to players who have rating display enabled
+						PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
+							const btag = NameManager.getInstance().getBtag(activePlayer.getPlayer());
+							const showRating = ratingManager.getShowRatingPreference(btag);
+
+							// Only show message if player has rating display enabled
+							if (showRating) {
+								DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 5, message);
+							}
+						});
+					}
 
 					// Note: P2P rating sync already started in ModeSelection.run() during settings phase
 				} else {
-					const message = `${HexColors.TANGERINE}This is an unranked game!|r Ranked play requires at least ${HexColors.TANGERINE}16 eligible players|r.`;
+					// Only show ranked/unranked message on the first match (not on restarts)
+					if (GlobalGameData.matchCount === 1) {
+						const message = `${HexColors.TANGERINE}This is an unranked game!|r Ranked play requires at least ${HexColors.TANGERINE}16 eligible FFA players|r.`;
 
-					// Send message only to players who have rating display enabled
-					PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
-						const btag = NameManager.getInstance().getBtag(activePlayer.getPlayer());
-						const showRating = ratingManager.getShowRatingPreference(btag);
+						// Send message only to players who have rating display enabled
+						PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
+							const btag = NameManager.getInstance().getBtag(activePlayer.getPlayer());
+							const showRating = ratingManager.getShowRatingPreference(btag);
 
-						// Only show message if player has rating display enabled
-						if (showRating) {
-							DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 5, message);
-						}
-					});
+							// Only show message if player has rating display enabled
+							if (showRating) {
+								DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 5, message);
+							}
+						});
+					}
 				}
 
 				// Pre-initialize rating stats UI frames for all players during countdown

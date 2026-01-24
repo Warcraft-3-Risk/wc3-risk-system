@@ -22,12 +22,15 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 	run(): void {
 		CountdownMessage('Initializing the game');
 
-		const message = `Use ${HexColors.TANGERINE}-help|r if you're new to the game.`;
+		// Only show help message on the first match (not on restarts)
+		if (GlobalGameData.matchCount === 1) {
+			const message = `Use ${HexColors.TANGERINE}-help|r if you're new to the game.`;
 
-		// Send message to all players as chat text (like -help command)
-		PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
-			DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 5, message);
-		});
+			// Send message to all players as chat text (like -help command)
+			PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
+				DisplayTimedTextToPlayer(activePlayer.getPlayer(), 0, 0, 5, message);
+			});
+		}
 
 		clearTickUI();
 
