@@ -18,24 +18,21 @@ export class MinimapIconManager {
 	private cityOuterBorders: Map<City, framehandle> = new Map(); // Outer border frames for capital cities
 	private capitalIcons: Map<City, boolean> = new Map(); // Track which cities are capitals
 	private trackedUnits: Map<unit, framehandle> = new Map(); // Moving units to track
+	private framePool: framehandle[] = []; // Pool of unused frames for recycling
 	private lastSeenOwners: Map<City, player> = new Map(); // Remember last seen owner
 	private minimapFrame: framehandle;
 	private updateTimer: timer;
 	private isActive: boolean; // Whether custom icons are active (only for world terrain)
 
-	// Unit types to track on minimap
-	private readonly TRACKED_UNIT_TYPES: number[] = [
-		UNIT_ID.RIFLEMEN
-	];
-
 	// Minimap constants (corner minimap dimensions)
 	private readonly MINIMAP_WIDTH = 0.140; // Minimap width in screen coordinates
 	private readonly MINIMAP_HEIGHT = 0.140; // Minimap height in screen coordinates
 	private readonly BUILDING_ICON_SIZE = 0.0035; // Icon size for regular cities
-	private readonly UNIT_ICON_SIZE = 0.0030; // Icon size for regular units
+	private readonly UNIT_ICON_SIZE = 0.0020; // Icon size for regular units
 	private readonly CAPITAL_ICON_SIZE = 0.0025; // Capital colored center size (smaller to show borders)
 	private readonly CAPITAL_BORDER_INNER = 0.0035; // Capital inner border size (black ring)
 	private readonly CAPITAL_BORDER_OUTER = 0.0045; // Capital outer border size (white ring)
+	private readonly INITIAL_POOL_SIZE = 2000; // Initial number of frames to create to avoid runtime spikes
 
 	// World bounds
 	private worldMinX: number;
@@ -107,6 +104,32 @@ export class MinimapIconManager {
 
 		// Start update timer (update every 1 second)
 		this.startUpdateTimer();
+
+		// Pre-populate frame pool to prevent lag spikes during gameplay
+		this.expandPool(this.INITIAL_POOL_SIZE);
+	}
+
+	/**
+	 * Expands the frame pool by the specified amount.
+	 * @param count - Number of frames to add
+	 */
+	private expandPool(count: number): void {
+		try {
+			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
+			for (let i = 0; i < count; i++) {
+				const iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapUnitIcon', gameUI, '', 0);
+				if (iconFrame) {
+					// Initialize properties
+					BlzFrameSetSize(iconFrame, this.UNIT_ICON_SIZE, this.UNIT_ICON_SIZE);
+					BlzFrameSetLevel(iconFrame, 15);
+					BlzFrameSetVisible(iconFrame, false);
+					this.framePool.push(iconFrame);
+				}
+			}
+			debugPrint(`MinimapIconManager: Expanded pool by ${count}. Total size: ${this.framePool.length}`);
+		} catch (e) {
+			debugPrint('MinimapIconManager: Error expanding pool - ' + e);
+		}
 	}
 
 	/**
@@ -117,18 +140,14 @@ export class MinimapIconManager {
 	public registerIfValid(unit: unit): void {
 		if (!this.isActive) return;
 
-		const unitType = GetUnitTypeId(unit);
+		// Only track units marked as SPAWN
+		if (!IsUnitType(unit, UNIT_TYPE.SPAWN)) {
+			return;
+		}
 
-		if (this.TRACKED_UNIT_TYPES.includes(unitType)) {
-			// Specific check for Riflemen: Must be a SPAWN unit (not trained from barracks)
-			if (unitType === UNIT_ID.RIFLEMEN && !IsUnitType(unit, UNIT_TYPE.SPAWN)) {
-				return;
-			}
-
-			// Check if already tracked to avoid duplicates
-			if (!this.trackedUnits.has(unit)) {
-				this.registerTrackedUnit(unit);
-			}
+		// Check if already tracked to avoid duplicates
+		if (!this.trackedUnits.has(unit)) {
+			this.registerTrackedUnit(unit);
 		}
 	}
 
@@ -141,8 +160,9 @@ export class MinimapIconManager {
 
 		const iconFrame = this.trackedUnits.get(unit);
 		if (iconFrame) {
-			BlzDestroyFrame(iconFrame);
+			BlzFrameSetVisible(iconFrame, false);
 			this.trackedUnits.delete(unit);
+			this.framePool.push(iconFrame);
 			// Restore minimap display when untracking?
 			// Usually we untrack when unit dies or loads.
 			// If it loads, it's hidden anyway.
@@ -165,11 +185,18 @@ export class MinimapIconManager {
 			// Hide the default minimap display for the unit
 			BlzSetUnitBooleanField(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 
-			// Create color icon frame
-			const iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapUnitIcon', gameUI, '', 0);
+			let iconFrame: framehandle;
+
+			// Recycle frame if available, otherwise create new
+			if (this.framePool.length > 0) {
+				iconFrame = this.framePool.pop();
+			} else {
+				// Create color icon frame
+				iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapUnitIcon', gameUI, '', 0);
+			}
 
 			if (!iconFrame) {
-				debugPrint('MinimapIconManager: Failed to create frame for unit');
+				debugPrint('MinimapIconManager: Failed to create/recycle frame for unit');
 				return;
 			}
 
@@ -191,6 +218,7 @@ export class MinimapIconManager {
 			} else {
 				BlzFrameSetVisible(iconFrame, false);
 			}
+			debugPrint(`MinimapIconManager: Count of tracked units: ${this.trackedUnits.size}, Pool size: ${this.framePool.length}`);
 		} catch (e) {
 			debugPrint('MinimapIconManager: Error registering unit - ' + e);
 		}
@@ -350,8 +378,9 @@ export class MinimapIconManager {
 		unitsToRemove.forEach((unit) => {
 			const frame = this.trackedUnits.get(unit);
 			if (frame) {
-				BlzDestroyFrame(frame);
+				BlzFrameSetVisible(frame, false);
 				this.trackedUnits.delete(unit);
+				this.framePool.push(frame);
 			}
 		});
 	}
@@ -596,11 +625,15 @@ export class MinimapIconManager {
 		this.trackedUnits.forEach((iconFrame) => {
 			BlzDestroyFrame(iconFrame);
 		});
+		this.framePool.forEach((frame) => {
+			BlzDestroyFrame(frame);
+		});
 		this.cityIcons.clear();
 		this.cityBorders.clear();
 		this.cityOuterBorders.clear();
 		this.capitalIcons.clear();
 		this.trackedUnits.clear();
+		this.framePool = [];
 		this.lastSeenOwners.clear();
 
 		if (this.updateTimer) {
