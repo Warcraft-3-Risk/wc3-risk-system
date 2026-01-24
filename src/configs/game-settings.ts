@@ -120,3 +120,6 @@ export const RATING_SYNC_TIMEOUT: number = 10.0;
 // All current game players are always synced regardless of this limit.
 // Note: Lower values reduce lag during sync (100 = ~10KB per player vs 250 = ~25KB)
 export const RATING_SYNC_TOP_PLAYERS: number = 100;
+
+// Force the use of custom minimap icons even if the map is not world map.
+export const FORCE_CUSTOM_MINIMAP_ICONS: boolean = true;

@@ -1,3 +1,4 @@
+import { FORCE_CUSTOM_MINIMAP_ICONS } from 'src/configs/game-settings';
 import { City } from '../city/city';
 import { debugPrint } from '../utils/debug-print';
 import { MAP_TYPE } from '../utils/map-info';
@@ -49,7 +50,7 @@ export class MinimapIconManager {
 	 */
 	private constructor() {
 		// Only activate for world terrain
-		this.isActive = MAP_TYPE === 'world';
+		this.isActive = FORCE_CUSTOM_MINIMAP_ICONS || MAP_TYPE === 'world';
 
 		debugPrint('MinimapIconManager: Initialized for terrain: ' + MAP_TYPE);
 		debugPrint('MinimapIconManager: Active: ' + this.isActive);
