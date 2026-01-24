@@ -7,6 +7,7 @@ import { debugPrint } from '../utils/debug-print';
 import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { ORDER_ID } from '../../configs/order-id';
+import { MinimapIconManager } from './minimap-icon-manager';
 
 enum PatrolState {
 	LOADING,
@@ -168,6 +169,7 @@ export class TransportManager {
 			// Track all cargo units (clients) again since the transport is dead
 			transportData.cargo.forEach((unit) => {
 				UnitLagManager.getInstance().trackUnit(unit);
+				MinimapIconManager.getInstance().registerIfValid(unit);
 			});
 		}
 
@@ -214,6 +216,7 @@ export class TransportManager {
 
 				// Untrack the unit since it's now loaded and managed by the transport
 				UnitLagManager.getInstance().untrackUnit(loadedUnit);
+				MinimapIconManager.getInstance().unregisterTrackedUnit(loadedUnit);
 
 				const transportData = this.transports.get(transport);
 				transportData.cargo.push(loadedUnit);
@@ -357,6 +360,7 @@ export class TransportManager {
 							TransportManager.delayedTrackQueue.forEach((unit) => {
 								debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
 								UnitLagManager.getInstance().trackUnit(unit);
+								MinimapIconManager.getInstance().registerIfValid(unit);
 							});
 							TransportManager.delayedTrackQueue = [];
 							TransportManager.delayedTrackTimerRunning = false;
@@ -581,6 +585,7 @@ export class TransportManager {
 				transport.cargo = transport.cargo.filter((unit) => IsUnitInTransport(unit, transport.unit));
 				unloadedUnits.forEach((unit) => {
 					UnitLagManager.getInstance().trackUnit(unit);
+					MinimapIconManager.getInstance().registerIfValid(unit);
 					const index = transport.orderedUnits.indexOf(unit);
 					if (index > -1) {
 						this.unregisterOrder(transport, unit);

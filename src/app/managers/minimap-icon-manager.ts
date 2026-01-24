@@ -1,6 +1,9 @@
 import { FORCE_CUSTOM_MINIMAP_ICONS } from 'src/configs/game-settings';
+import { UNIT_ID } from 'src/configs/unit-id';
+import { UNIT_TYPE } from '../utils/unit-types';
 import { City } from '../city/city';
 import { debugPrint } from '../utils/debug-print';
+import { ClientManager } from '../game/services/client-manager';
 import { MAP_TYPE } from '../utils/map-info';
 
 /**
@@ -14,15 +17,22 @@ export class MinimapIconManager {
 	private cityBorders: Map<City, framehandle> = new Map(); // Inner border frames for capital cities
 	private cityOuterBorders: Map<City, framehandle> = new Map(); // Outer border frames for capital cities
 	private capitalIcons: Map<City, boolean> = new Map(); // Track which cities are capitals
+	private trackedUnits: Map<unit, framehandle> = new Map(); // Moving units to track
 	private lastSeenOwners: Map<City, player> = new Map(); // Remember last seen owner
 	private minimapFrame: framehandle;
 	private updateTimer: timer;
 	private isActive: boolean; // Whether custom icons are active (only for world terrain)
 
+	// Unit types to track on minimap
+	private readonly TRACKED_UNIT_TYPES: number[] = [
+		UNIT_ID.RIFLEMEN
+	];
+
 	// Minimap constants (corner minimap dimensions)
 	private readonly MINIMAP_WIDTH = 0.140; // Minimap width in screen coordinates
 	private readonly MINIMAP_HEIGHT = 0.140; // Minimap height in screen coordinates
-	private readonly ICON_SIZE = 0.0035; // Icon size for regular cities
+	private readonly BUILDING_ICON_SIZE = 0.0035; // Icon size for regular cities
+	private readonly UNIT_ICON_SIZE = 0.0030; // Icon size for regular units
 	private readonly CAPITAL_ICON_SIZE = 0.0025; // Capital colored center size (smaller to show borders)
 	private readonly CAPITAL_BORDER_INNER = 0.0035; // Capital inner border size (black ring)
 	private readonly CAPITAL_BORDER_OUTER = 0.0045; // Capital outer border size (white ring)
@@ -100,6 +110,93 @@ export class MinimapIconManager {
 	}
 
 	/**
+	 * Registers a unit if it is of a trackable type.
+	 *Safe to call with any unit.
+	 * @param unit - The unit to check and potentially track
+	 */
+	public registerIfValid(unit: unit): void {
+		if (!this.isActive) return;
+
+		const unitType = GetUnitTypeId(unit);
+
+		if (this.TRACKED_UNIT_TYPES.includes(unitType)) {
+			// Specific check for Riflemen: Must be a SPAWN unit (not trained from barracks)
+			if (unitType === UNIT_ID.RIFLEMEN && !IsUnitType(unit, UNIT_TYPE.SPAWN)) {
+				return;
+			}
+
+			// Check if already tracked to avoid duplicates
+			if (!this.trackedUnits.has(unit)) {
+				this.registerTrackedUnit(unit);
+			}
+		}
+	}
+
+	/**
+	 * Unregisters a tracked unit (e.g. when loaded into transport)
+	 * @param unit - The unit to stop tracking
+	 */
+	public unregisterTrackedUnit(unit: unit): void {
+		if (!this.isActive) return;
+
+		const iconFrame = this.trackedUnits.get(unit);
+		if (iconFrame) {
+			BlzDestroyFrame(iconFrame);
+			this.trackedUnits.delete(unit);
+			// Restore minimap display when untracking?
+			// Usually we untrack when unit dies or loads.
+			// If it loads, it's hidden anyway.
+			// If we stop tracking for other reasons, we might want to show it again.
+			// But for now, sticking to simple removal.
+			BlzSetUnitBooleanField(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+		}
+	}
+
+	/**
+	 * Registers a moving unit to be tracked on the minimap.
+	 * @param unit - The unit to track
+	 */
+	public registerTrackedUnit(unit: unit): void {
+		if (!this.isActive) return;
+
+		try {
+			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
+
+			// Hide the default minimap display for the unit
+			BlzSetUnitBooleanField(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+
+			// Create color icon frame
+			const iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapUnitIcon', gameUI, '', 0);
+
+			if (!iconFrame) {
+				debugPrint('MinimapIconManager: Failed to create frame for unit');
+				return;
+			}
+
+			// Set icon size (same as cities for now)
+			BlzFrameSetSize(iconFrame, this.UNIT_ICON_SIZE, this.UNIT_ICON_SIZE);
+
+			// Set level to render above minimap (Top level for units)
+			BlzFrameSetLevel(iconFrame, 15);
+
+			// Store the frame
+			this.trackedUnits.set(unit, iconFrame);
+
+			// Initial update
+			const localPlayer = GetLocalPlayer();
+			if (IsUnitVisible(unit, localPlayer)) {
+				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
+				this.updateUnitIconColor(iconFrame, unit);
+				BlzFrameSetVisible(iconFrame, true);
+			} else {
+				BlzFrameSetVisible(iconFrame, false);
+			}
+		} catch (e) {
+			debugPrint('MinimapIconManager: Error registering unit - ' + e);
+		}
+	}
+
+	/**
 	 * Creates a SimpleFrame icon for a city on the minimap.
 	 */
 	private createCityIcon(city: City): void {
@@ -120,7 +217,7 @@ export class MinimapIconManager {
 			}
 
 			// Set icon size
-			BlzFrameSetSize(iconFrame, this.ICON_SIZE, this.ICON_SIZE);
+			BlzFrameSetSize(iconFrame, this.BUILDING_ICON_SIZE, this.BUILDING_ICON_SIZE);
 
 			// Set level to render above minimap (and above border if present)
 			BlzFrameSetLevel(iconFrame, 10);
@@ -223,6 +320,40 @@ export class MinimapIconManager {
 			// Update color based on owner and visibility
 			this.updateIconColor(iconFrame, city, isVisible);
 		});
+
+		// Update tracked units
+		const unitsToRemove: unit[] = [];
+		this.trackedUnits.forEach((iconFrame, unit) => {
+			// Check if unit is still valid and alive
+			// Note: 0.405 is the death threshold in WC3
+			if (GetUnitTypeId(unit) === 0 || GetWidgetLife(unit) <= 0.405) {
+				unitsToRemove.push(unit);
+				BlzFrameSetVisible(iconFrame, false);
+				return;
+			}
+
+			// Check visibility
+			if (IsUnitVisible(unit, localPlayer)) {
+				// Update position
+				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
+				// Update color
+				this.updateUnitIconColor(iconFrame, unit);
+				// Show icon
+				BlzFrameSetVisible(iconFrame, true);
+			} else {
+				// Hide icon if in fog
+				BlzFrameSetVisible(iconFrame, false);
+			}
+		});
+
+		// Cleanup dead/removed units
+		unitsToRemove.forEach((unit) => {
+			const frame = this.trackedUnits.get(unit);
+			if (frame) {
+				BlzDestroyFrame(frame);
+				this.trackedUnits.delete(unit);
+			}
+		});
 	}
 
 	/**
@@ -300,6 +431,57 @@ export class MinimapIconManager {
 		const colorStr = colorIndex < 10 ? '0' + colorIndex : '' + colorIndex;
 		const texture = 'ReplaceableTextures\\TeamColor\\TeamColor' + colorStr + '.blp';
 
+		BlzFrameSetTexture(iconFrame, texture, 0, true);
+	}
+
+	/**
+	 * Updates a unit icon's color based on the unit's owner.
+	 * @param iconFrame - The frame to update
+	 * @param unit - The unit whose owner to check
+	 */
+	private updateUnitIconColor(iconFrame: framehandle, unit: unit): void {
+		// Used the ClientManager to resolve the real owner (maps Client -> Player)
+		const owner = ClientManager.getInstance().getOwnerOfUnit(unit);
+		const localPlayer = GetLocalPlayer();
+		const allyColorMode = GetAllyColorFilterState();
+
+		// If the local player owns this unit (or owns the client), show it in WHITE
+		if (owner == localPlayer) {
+			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
+			return;
+		}
+
+		// If ally color mode is enabled (mode 1 or 2)
+		// 1 = Ally/Enemy
+		// 2 = Ally (Teal)/Enemy
+		if (allyColorMode > 0) {
+			const ownerId = GetPlayerId(owner as player);
+			if (ownerId >= 24) {
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
+				return;
+			}
+
+			if (IsPlayerAlly(owner as player, localPlayer)) {
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
+			} else if (IsPlayerEnemy(owner as player, localPlayer)) {
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor00.blp', 0, true);
+			} else {
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
+			}
+			return;
+		}
+
+		// Default: Use player colors
+		const playerColor = GetPlayerColor(owner as player);
+		const colorIndex = GetHandleId(playerColor);
+
+		if (colorIndex < 0 || colorIndex > 23) {
+			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
+			return;
+		}
+
+		const colorStr = colorIndex < 10 ? '0' + colorIndex : '' + colorIndex;
+		const texture = 'ReplaceableTextures\\TeamColor\\TeamColor' + colorStr + '.blp';
 		BlzFrameSetTexture(iconFrame, texture, 0, true);
 	}
 
@@ -411,10 +593,14 @@ export class MinimapIconManager {
 		this.cityOuterBorders.forEach((outerBorderFrame) => {
 			BlzDestroyFrame(outerBorderFrame);
 		});
+		this.trackedUnits.forEach((iconFrame) => {
+			BlzDestroyFrame(iconFrame);
+		});
 		this.cityIcons.clear();
 		this.cityBorders.clear();
 		this.cityOuterBorders.clear();
 		this.capitalIcons.clear();
+		this.trackedUnits.clear();
 		this.lastSeenOwners.clear();
 
 		if (this.updateTimer) {

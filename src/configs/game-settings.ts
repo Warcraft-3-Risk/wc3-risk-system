@@ -6,13 +6,13 @@
 export const CITIES_TO_WIN_RATIO: number = 0.6;
 
 //This is the starting gold for each player. 4 gold by default.
-export const STARTING_INCOME: number = 4;
+export const STARTING_INCOME: number = 100;
 
 //This is the starting countdown for the game. 10 by default
-export const STARTING_COUNTDOWN: number = 10;
+export const STARTING_COUNTDOWN: number = 0;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
-export const TURN_DURATION_IN_SECONDS: number = 60;
+export const TURN_DURATION_IN_SECONDS: number = 30;
 
 //This is the duration of a tick in seconds. 1 second by default.
 export const TICK_DURATION_IN_SECONDS: number = 1;
@@ -60,7 +60,7 @@ export const W3C_DRAW_DURATION: number = 120;
 export const MMD_ENABLED: boolean = true;
 
 // Enable/disable player client allocation. Default is false.
-export const CLIENT_ALLOCATION_ENABLED = false;
+export const CLIENT_ALLOCATION_ENABLED = true;
 
 // This represents whether the ban list is active. Is set to true by default.
 export const BAN_LIST_ACTIVE: boolean = true;

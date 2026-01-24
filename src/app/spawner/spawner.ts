@@ -7,6 +7,7 @@ import { Resetable } from '../interfaces/resetable';
 import { debugPrint } from '../utils/debug-print';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
+import { MinimapIconManager } from '../managers/minimap-icon-manager';
 
 export const SPAWNER_UNITS: Map<unit, Spawner> = new Map<unit, Spawner>();
 
@@ -88,6 +89,9 @@ export class Spawner implements Resetable, Ownable {
 			}
 
 			UnitAddType(u, UNIT_TYPE.SPAWN);
+			// Register for minimap tracking if valid (must be done after adding SPAWN type)
+			MinimapIconManager.getInstance().registerIfValid(u);
+
 			if (GetLocalPlayer() == this.getOwner()) {
 				SetUnitVertexColor(u, 200, 200, 200, 150);
 			}

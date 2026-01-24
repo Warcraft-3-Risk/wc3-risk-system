@@ -2,8 +2,8 @@
 
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { ClientManager } from './client-manager';
-import { DummyPoolManager } from './dummy-pool-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 
 // Players may experience unit lag when too many orders are issued simultaneously.
 // Warcraft III appears to enforce a hard cap on the number of order issues a single player can queue.
@@ -14,8 +14,6 @@ import { debugPrint } from 'src/app/utils/debug-print';
 export class UnitLagManager {
 	// This class will manage the player clients and their interactions.
 	private static instance: UnitLagManager;
-	private dummyPool: DummyPoolManager;
-	private trackedUnits: Map<unit, unit> = new Map<unit, unit>();
 
 	public static getInstance(): UnitLagManager {
 		if (!UnitLagManager.instance) {
@@ -24,61 +22,26 @@ export class UnitLagManager {
 		return UnitLagManager.instance;
 	}
 
-	private constructor() {
-		this.dummyPool = new DummyPoolManager();
-	}
+	private constructor() {}
 
-	// Track a unit by creating a dummy minimap indicator that follows it around.
-	// The tracked unit will be hidden from the minimap for its owner, but visible to all other players.
-	// The dummy unit which is only visible to the owner will superseed the tracked unit on the minimap, masking the tracked unit as white (yours).
+	// Track a unit by registering it with the MinimapIconManager.
+	// This replaces the old method of using dummy units to follow the tracked unit.
+	// The untracked unit is effectively just managed for its minimap icon color.
 	public trackUnit(unit: unit): void {
-		// Do not retrack a unit
-		if (this.trackedUnits.get(unit)) {
-			return;
-		}
-
-		// Only clients can have their units tracked
+		// Only clients need their units tracked/fixed
 		if (!ClientManager.getInstance().isAnyClientOwnerOfUnit(unit)) {
-			debugPrint(`UnitLagManager: Not tracking ${GetUnitName(unit)} as its owner is not a client.`);
+			// debugPrint(`UnitLagManager: Not tracking ${GetUnitName(unit)} as its owner is not a client.`);
 			return;
 		}
 
-		// Hide tracked unit on minimap - also hides the unit for the client themselves if they own the unit
-		if (ClientManager.getInstance().isPlayerOrClientOwnerOfUnit(unit, GetLocalPlayer())) {
-			// Hide the tracked unit on the minimap
-			// Owner and clients should only see the dummy unit on the minimap
-			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
-			debugPrint(`UnitLagManager: Hiding ${GetUnitName(unit)} from minimap for its owner.`);
-		} else {
-			// Non-owners should see the tracked unit on the minimap
-			BlzSetUnitBooleanFieldBJ(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
-			debugPrint(`UnitLagManager: Showing ${GetUnitName(unit)} on minimap for non-owners.`);
-		}
-
-		// Create a dummy minimap indicator unit that follows the tracked unit
-		const dummy = this.dummyPool.pop(
-			ClientManager.getInstance().getOwner(ClientManager.getInstance().getOwnerOfUnit(unit)),
-			GetUnitX(unit),
-			GetUnitY(unit)
-		);
-		SetUnitPathing(dummy, false);
-		IssueTargetOrderById(dummy, 851986, unit);
-		BlzSetUnitBooleanFieldBJ(dummy, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
-		this.trackedUnits.set(unit, dummy);
-		debugPrint(`UnitLagManager: ${GetUnitName(dummy)} is now tracking ${GetUnitName(unit)}.`);
+		// Use MinimapIconManager to handle the visual representation
+		debugPrint(`UnitLagManager: Tracking ${GetUnitName(unit)} via MinimapIconManager.`);
+		MinimapIconManager.getInstance().registerTrackedUnit(unit);
 	}
 
 	public untrackUnit(unit: unit): void {
-		// Unit has a dummy and we want to remove it
-		const dummy = this.trackedUnits.get(unit);
-		if (dummy) {
-			this.trackedUnits.delete(unit);
-			this.dummyPool.push(dummy);
-			BlzSetUnitBooleanFieldBJ(dummy, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
-			debugPrint(`UnitLagManager: ${GetUnitName(dummy)} is stopping tracking of ${GetUnitName(unit)}.`);
-		} else {
-			debugPrint(`UnitLagManager: No dummy found for ${GetUnitName(unit)}.`);
-		}
+		debugPrint(`UnitLagManager: Untracking ${GetUnitName(unit)}.`);
+		MinimapIconManager.getInstance().unregisterTrackedUnit(unit);
 	}
 
 	public static IsUnitAlly(unit: unit, player: player): boolean {
