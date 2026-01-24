@@ -137,10 +137,10 @@ export class ObserverBoard extends Scoreboard {
 			const change = ratingResult.totalChange;
 			const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
 			const sign = change >= 0 ? '+' : '';
-			const truncatedName = truncateWithColorCode(playerName, 17);
+			const truncatedName = truncateWithColorCode(playerName, 8);
 			this.setItemValue(`${grey}${teamPrefix}${truncatedName}${color}(${sign}${change})|r`, row, this.PLAYER_COL);
 		} else {
-			const truncatedName = truncateWithColorCode(playerName, 20);
+			const truncatedName = truncateWithColorCode(playerName, 11);
 			this.setItemValue(`${grey}${teamPrefix}${truncatedName}`, row, this.PLAYER_COL);
 		}
 
