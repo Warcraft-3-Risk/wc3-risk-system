@@ -25,26 +25,8 @@ export function setTickUI(tickCounter: string, turnCount: string): void {
 }
 
 export function clearTickUI(): void {
-	// Get frame reference outside of local player block to prevent desync
-	const customGoldText = BlzGetFrameByName('CustomGoldText', 0);
-
-	if (!IsPlayerObserver(GetLocalPlayer())) {
-		if (GetHandleId(customGoldText) !== 0) {
-			BlzFrameSetText(customGoldText, '');
-		}
-	}
+	BlzFrameSetText(BlzGetFrameByName('ResourceBarGoldText', 0), '');
 	setTickUI('', '');
-}
-
-export function updateGold(player: player, goldAmount: number): void {
-	// Get frame reference outside of local player block to prevent desync
-	const customGoldText = BlzGetFrameByName('CustomGoldText', 0);
-
-	if (player == GetLocalPlayer()) {
-		if (GetHandleId(customGoldText) !== 0) {
-			BlzFrameSetText(customGoldText, `${goldAmount}`);
-		}
-	}
 }
 
 function getDayNightName(turn: number): string {

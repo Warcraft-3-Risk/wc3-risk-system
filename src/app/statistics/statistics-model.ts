@@ -3,7 +3,7 @@ import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
 import { AddLeadingZero } from '../utils/utils';
 import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
-import { MAP_VERSION } from '../utils/map-info';
+import { MAP_VERSION, MAP_TYPE } from '../utils/map-info';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { SettingsContext } from '../settings/settings-context';
 import { TeamManager } from '../teams/team-manager';
@@ -72,7 +72,10 @@ export class StatisticsModel {
 			.forEach((p) => {
 				if (p === player) return;
 
-				const killsOnPlayer = p.trackedData.killsDeaths.get(player.getPlayer()).kills;
+				const kdTrack = p.trackedData.killsDeaths.get(player.getPlayer());
+				if (!kdTrack) return; // Skip if no KD data (e.g., observer)
+
+				const killsOnPlayer = kdTrack.kills;
 
 				if (killsOnPlayer > maxKills) {
 					maxKills = killsOnPlayer;
@@ -110,7 +113,7 @@ export class StatisticsModel {
 
 		this.timePlayed = `${HexColors.TANGERINE}Game Time:|r ${formattedTime}
 		${HexColors.TANGERINE}Total Turns:|r ${totalTurns.toFixed(2)}
-		${HexColors.TANGERINE}Version:|r v${MAP_VERSION}
+		${HexColors.TANGERINE}Version:|r ${MAP_TYPE.charAt(0).toUpperCase() + MAP_TYPE.slice(1)} v${MAP_VERSION}
 		${HexColors.TANGERINE}Settings:|r ${settings}`;
 	}
 
@@ -119,8 +122,13 @@ export class StatisticsModel {
 			if (playerA === winner) return -1;
 			if (playerB === winner) return 1;
 
-			if (playerA.trackedData.turnDied !== playerB.trackedData.turnDied) {
-				return playerB.trackedData.turnDied - playerA.trackedData.turnDied;
+			// Alive players (turnDied = 0) should rank higher than dead players
+			// Treat alive players as having turnDied = Infinity (use a large number)
+			const turnDiedA = playerA.trackedData.turnDied === 0 ? 999999 : playerA.trackedData.turnDied;
+			const turnDiedB = playerB.trackedData.turnDied === 0 ? 999999 : playerB.trackedData.turnDied;
+
+			if (turnDiedA !== turnDiedB) {
+				return turnDiedB - turnDiedA;
 			}
 
 			return playerB.trackedData.cities.cities.length - playerA.trackedData.cities.cities.length;
@@ -137,11 +145,12 @@ export class StatisticsModel {
 			}
 
 			// Sort teams by who has members that have lived the longest
+			// Alive players (turnDied = 0) should count as having lived the longest
 			const teamAPlayers = teamA.getMembers();
 			const teamBPlayers = teamB.getMembers();
 
-			const teamALongestLife = Math.max(...teamAPlayers.map((player) => player.trackedData.turnDied));
-			const teamBLongestLife = Math.max(...teamBPlayers.map((player) => player.trackedData.turnDied));
+			const teamALongestLife = Math.max(...teamAPlayers.map((player) => player.trackedData.turnDied === 0 ? 999999 : player.trackedData.turnDied));
+			const teamBLongestLife = Math.max(...teamBPlayers.map((player) => player.trackedData.turnDied === 0 ? 999999 : player.trackedData.turnDied));
 
 			if (teamALongestLife !== teamBLongestLife) {
 				return teamBLongestLife - teamALongestLife;

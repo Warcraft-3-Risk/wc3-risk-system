@@ -64,3 +64,59 @@ export const CLIENT_ALLOCATION_ENABLED = false;
 
 // This represents whether the ban list is active. Is set to true by default.
 export const BAN_LIST_ACTIVE: boolean = true;
+
+// Rating system settings
+// Master toggle for the entire rating system. When disabled:
+//   - No rating stats button (F4) is shown
+//   - No "ranked/unranked game" messages are displayed
+//   - No rating data is stored or loaded
+//   - Statistics always uses the unranked leaderboard (without rating column)
+//   - Rating sync is skipped entirely
+export const RATING_SYSTEM_ENABLED: boolean = true;
+
+// This represents the current ranked season ID. Change this to start a new season.
+export const RANKED_SEASON_ID: number = 1;
+
+// Season reset key - change this to reset all rating data WITHOUT changing the season ID.
+// This allows you to "soft reset" the season by using new file paths.
+// Use 1-4 lowercase letters (e.g., "a", "ab", "abc", "abcd").
+// Leave empty string "" to disable (files will be named without a reset key).
+export const RANKED_SEASON_RESET_KEY: string = 'test';
+
+// This represents the minimum number of human players required for a ranked game.
+export const RANKED_MIN_PLAYERS: number = 16;
+
+// This represents the starting rating for new players.
+export const RANKED_STARTING_RATING: number = 1000;
+
+// Opponent strength modifier scale factor (0.32 gives range 0.68x to 1.32x)
+// Higher values make rating differences matter more, creating stronger ceiling effects
+// Formula: modifier ranges from (1 - factor) to (1 + factor) based on rating difference
+// For gains: higher rated vs lower opponents = less gain (0.68x at +400 diff)
+// For losses: higher rated vs lower opponents = more loss (1.32x at +400 diff)
+// This helps prevent runaway ratings at the top while protecting lower-rated players
+export const RANKED_OPPONENT_STRENGTH_FACTOR: number = 0.32;
+
+// Enable/disable editor developer mode. Default is false.
+// When enabled: Enables country creator commands for map editing (singleplayer only)
+// When disabled: Country creator commands are disabled
+export const EDITOR_DEVELOPER_MODE: boolean = false;
+
+// Enable/disable rating file encryption. Default is true.
+// When enabled: Rating files are encrypted with XOR+Base64 (production use)
+// When disabled: Rating files are stored as plain text (useful for debugging)
+export const RATING_FILE_ENCRYPTION_ENABLED: boolean = true;
+
+// ============================================
+// P2P Rating Sync Settings
+// ============================================
+
+// Timeout for P2P rating sync in seconds. After this time, sync completes with whatever data was received.
+// 10 seconds allows sufficient time for staggered SyncRequest creation (~2s) plus P2P transmission
+export const RATING_SYNC_TIMEOUT: number = 10.0;
+
+// Maximum number of top players to sync from "others" database.
+// This limits sync payload size and leaderboard storage.
+// All current game players are always synced regardless of this limit.
+// Note: Lower values reduce lag during sync (100 = ~10KB per player vs 250 = ~25KB)
+export const RATING_SYNC_TOP_PLAYERS: number = 100;

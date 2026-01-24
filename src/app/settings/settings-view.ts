@@ -1,6 +1,5 @@
 import { HexColors } from '../utils/hex-colors';
 import { MAP_NAME } from '../utils/map-info';
-import { PLAYER_SLOTS } from '../utils/utils';
 import { SettingsContext } from './settings-context';
 import { DiplomacyStringsColorFormatted } from './strategies/diplomacy-strategy';
 import { FogOptionsColorFormatted } from './strategies/fog-strategy';
@@ -34,7 +33,7 @@ export class SettingsView {
 
 	private disablePromodeIfMoreThanTwoTeams() {
 		const uniqueTeams = new Set<number>();
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p = Player(i);
 			if (IsPlayerSlotState(p, PLAYER_SLOT_STATE_PLAYING) && !IsPlayerObserver(p)) {
 				uniqueTeams.add(GetPlayerTeam(p));
@@ -205,14 +204,14 @@ export class SettingsView {
 				if (frameValue === 1 || frameValue === 2) {
 					SettingsContext.getInstance().getSettings().GameType = 0;
 					SettingsContext.getInstance().getSettings().Fog = 1;
-					SettingsContext.getInstance().getSettings().Diplomacy.option = 1;
+					SettingsContext.getInstance().getSettings().Diplomacy.option = 2;
 					SettingsContext.getInstance().getSettings().Overtime.option = 3;
 
 					BlzFrameSetValue(gameTypeFrame, 0);
 					BlzFrameSetEnable(gameTypeFrame, false);
 					BlzFrameSetValue(fogFrame, 1);
 					BlzFrameSetEnable(fogFrame, false);
-					BlzFrameSetValue(diploFrame, 1);
+					BlzFrameSetValue(diploFrame, 2);
 					BlzFrameSetEnable(diploFrame, false);
 					BlzFrameSetValue(overtimeFrame, 3);
 					BlzFrameSetEnable(overtimeFrame, false);

@@ -1,16 +1,14 @@
-import { StatisticsModel } from './statistics-model';
-
 export class StatisticsPage {
 	private currentPage: number = 0;
 	private totalPages: number = 1;
 	private columnsPerPage: number = 11;
 	private pinnedColumns: number = 1;
-	private model: StatisticsModel;
+	private totalColumnCount: number;
 	private pageIndicator: framehandle;
 	private onPageChange: () => void;
 
-	constructor(model: StatisticsModel, pageIndicator: framehandle, columnsPerPage: number, pinnedColumns: number, onPageChange: () => void) {
-		this.model = model;
+	constructor(totalColumnCount: number, pageIndicator: framehandle, columnsPerPage: number, pinnedColumns: number, onPageChange: () => void) {
+		this.totalColumnCount = totalColumnCount;
 		this.pageIndicator = pageIndicator;
 		this.columnsPerPage = columnsPerPage;
 		this.pinnedColumns = pinnedColumns;
@@ -68,7 +66,7 @@ export class StatisticsPage {
 	}
 
 	public calculateTotalPages(): void {
-		const totalPaginatedColumns = this.model.getColumnData().length - this.pinnedColumns;
+		const totalPaginatedColumns = this.totalColumnCount - this.pinnedColumns;
 		this.totalPages = Math.ceil(totalPaginatedColumns / this.columnsPerPage);
 	}
 }

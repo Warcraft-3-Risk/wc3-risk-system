@@ -1,13 +1,19 @@
 import { ActivePlayer } from './types/active-player';
 import { HumanPlayer } from './types/human-player';
-import { buildGuardHealthButton, buildGuardValueButton, buildLabelToggleButton } from '../ui/player-preference-buttons';
+import {
+	buildGuardHealthButton,
+	buildGuardValueButton,
+	buildLabelToggleButton,
+	buildRatingStatsButton,
+} from '../ui/player-preference-buttons';
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
 import { debugPrint } from '../utils/debug-print';
 import { NameManager } from '../managers/names/name-manager';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
-import { BAN_LIST_ACTIVE } from 'src/configs/game-settings';
+import { BAN_LIST_ACTIVE, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
+import { RatingStatsUI } from '../ui/rating-stats-ui';
 
 const banList: string[] = ['inbreeder#2416', 'remy#22303', 'overthrow#21522', 'vixen#22381'];
 
@@ -40,7 +46,12 @@ export class PlayerManager {
 			}
 
 			if (IsPlayerObserver(player)) {
-				this._observerFromHandle.set(player, new HumanPlayer(player));
+				const humanPlayer = new HumanPlayer(player);
+				this._observerFromHandle.set(player, humanPlayer);
+
+				if (RATING_SYSTEM_ENABLED) {
+					humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
+				}
 				continue;
 			}
 
@@ -49,12 +60,20 @@ export class PlayerManager {
 			}
 
 			if (GetPlayerController(player) == MAP_CONTROL_USER || GetPlayerController(player) == MAP_CONTROL_COMPUTER) {
-				this._playerFromHandle.set(player, new HumanPlayer(player));
+				const humanPlayer = new HumanPlayer(player);
+				this._playerFromHandle.set(player, humanPlayer);
 				this._playerControllerHandle.set(player, MAP_CONTROL_USER);
+
+				// Create and inject RatingStatsUI after player creation (only if rating system is enabled)
+				if (RATING_SYSTEM_ENABLED) {
+					humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
+				}
 
 				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
 				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
 				const labelButton = buildLabelToggleButton(this._playerFromHandle.get(player));
+				// Only create rating stats button if rating system is enabled
+				const ratingButton = RATING_SYSTEM_ENABLED ? buildRatingStatsButton(this._playerFromHandle.get(player)) : null;
 				let contents: string = '';
 
 				if (player == GetLocalPlayer()) {
@@ -64,7 +83,14 @@ export class PlayerManager {
 						BlzFrameSetVisible(healthButton, false);
 						BlzFrameSetVisible(valueButton, false);
 						BlzFrameSetVisible(labelButton, false);
+						if (ratingButton) {
+							BlzFrameSetVisible(ratingButton, false);
+						}
 					}
+
+					// Note: Rating preference is now stored in the rating file itself
+					// and loaded via RatingManager.getShowRatingPreference()
+					// The old 'risk/rating.pld' file is no longer used
 				}
 			}
 		}
@@ -174,6 +200,18 @@ export class PlayerManager {
 
 	public getHumanPlayers(): ActivePlayer[] {
 		return Array.from(this._playerFromHandle.values()).filter((p: ActivePlayer) => GetPlayerController(p.getPlayer()) === MAP_CONTROL_USER);
+	}
+
+	/**
+	 * Get only human players (excludes AI/Computer players)
+	 * Used for P2P rating synchronization to exclude Computer players
+	 * @returns Array of human ActivePlayer objects
+	 */
+	public getHumanPlayersOnly(): ActivePlayer[] {
+		return Array.from(this._playerFromHandle.values()).filter((p: ActivePlayer) => {
+			const controller = GetPlayerController(p.getPlayer());
+			return controller === MAP_CONTROL_USER;
+		});
 	}
 
 	public getHumanPlayersCount(): number {

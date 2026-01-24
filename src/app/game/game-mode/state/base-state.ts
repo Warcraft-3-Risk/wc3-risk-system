@@ -11,7 +11,7 @@ import {
 	onPlayerNomadHandle,
 	onPlayerSTFUHandle,
 } from '../utillity/on-player-status';
-import { updateGold } from '../utillity/update-ui';
+import { RatingManager } from 'src/app/rating/rating-manager';
 
 export abstract class BaseState<T extends StateData> {
 	get stateData(): T {
@@ -34,6 +34,10 @@ export abstract class BaseState<T extends StateData> {
 
 	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
 		onPlayerDeadHandle(player, forfeit);
+
+		// Immediately finalize rating for dead/forfeited player
+		// This writes a REAL entry (not pending) so rating never changes after death
+		RatingManager.getInstance().finalizePlayerRating(player);
 	}
 
 	onPlayerNomad(player: ActivePlayer): void {
@@ -43,6 +47,11 @@ export abstract class BaseState<T extends StateData> {
 	onPlayerLeft(player: ActivePlayer): void {
 		onPlayerLeftHandle(player);
 		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
+
+		// Finalize rating for player who left/disconnected
+		// This ensures their rating change is calculated and shown on scoreboard
+		// Note: finalizePlayerRating safely handles already-finalized players
+		RatingManager.getInstance().finalizePlayerRating(player);
 	}
 
 	onPlayerSTFU(player: ActivePlayer): void {
@@ -53,11 +62,7 @@ export abstract class BaseState<T extends StateData> {
 		EventEmitter.getInstance().emit(EVENT_ON_PLAYER_DEAD, player, true);
 	}
 
-	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer) {
-		// Update soft gold cap display
-		updateGold(owner.getPlayer(), GetPlayerState(owner.getPlayer(), PLAYER_STATE_RESOURCE_GOLD));
-		updateGold(preOwner.getPlayer(), GetPlayerState(preOwner.getPlayer(), PLAYER_STATE_RESOURCE_GOLD));
-	}
+	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer) {}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit) {}
 

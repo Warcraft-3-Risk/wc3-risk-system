@@ -4,7 +4,9 @@ import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
 import { ActivePlayer } from 'src/app/player/types/active-player';
+import { RatingManager } from 'src/app/rating/rating-manager';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
+import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
 import { Quests } from '../../../quests/quests';
@@ -35,16 +37,29 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 		EnableDragSelect(false, false);
 	}
 
-	if(forfeit) {
-		GlobalMessage(`${NameManager.getInstance().getDisplayName(player.getPlayer())} has forfeited!`, 'Sound\\Interface\\SecretFound.flac');
+	// Build display name with optional rating (local player check for display customization)
+	const ratingManager = RatingManager.getInstance();
+	const localPlayer = GetLocalPlayer();
+	const localBtag = NameManager.getInstance().getBtag(localPlayer);
+	const showRatings = ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && ratingManager.getShowRatingPreference(localBtag);
+
+	let playerDisplayName = NameManager.getInstance().getDisplayName(player.getPlayer());
+	if (showRatings) {
+		const defeatedBtag = NameManager.getInstance().getBtag(player.getPlayer());
+		const defeatedRating = ratingManager.getInitialPlayerRating(defeatedBtag);
+		playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${defeatedRating})|r`;
+	}
+
+	if (forfeit) {
+		GlobalMessage(`${playerDisplayName} has forfeited!`, 'Sound\\Interface\\SecretFound.flac');
 	} else if (player.killedBy) {
 		GlobalMessage(
-			`${NameManager.getInstance().getDisplayName(player.getPlayer())} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`,
+			`${playerDisplayName} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`,
 			'Sound\\Interface\\SecretFound.flac'
 		);
 	} else {
 		GlobalMessage(
-			`${NameManager.getInstance().getDisplayName(player.getPlayer())} has been defeated!`,
+			`${playerDisplayName} has been defeated!`,
 			'Sound\\Interface\\SecretFound.flac'
 		);
 	}
@@ -111,7 +126,21 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.LEFT;
 	player.setEndData();
 	player.trackedData.income.income = 0;
-	GlobalMessage(`${NameManager.getInstance().getDisplayName(player.getPlayer())} has left the game!`, 'Sound\\Interface\\SecretFound.flac');
+
+	// Build display name with optional rating (local player check for display customization)
+	const ratingManager = RatingManager.getInstance();
+	const localPlayer = GetLocalPlayer();
+	const localBtag = NameManager.getInstance().getBtag(localPlayer);
+	const showRatings = ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && ratingManager.getShowRatingPreference(localBtag);
+
+	let playerDisplayName = NameManager.getInstance().getDisplayName(player.getPlayer());
+	if (showRatings) {
+		const leftBtag = NameManager.getInstance().getBtag(player.getPlayer());
+		const leftRating = ratingManager.getInitialPlayerRating(leftBtag);
+		playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${leftRating})|r`;
+	}
+
+	GlobalMessage(`${playerDisplayName} has left the game!`, 'Sound\\Interface\\SecretFound.flac');
 
 	PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), PLAYER_STATUS.LEFT);
 	ScoreboardManager.getInstance().updatePartial();

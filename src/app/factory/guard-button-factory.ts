@@ -10,7 +10,7 @@ export type ButtonConfig = {
 		secondary: string;
 	};
 	xOffset: number;
-	action: (context: number, textures: { primary: string; secondary: string }) => void;
+	action: (context: number, textures: { primary: string; secondary: string }, button: framehandle) => void;
 	initialTooltipText?: string;
 	textXOffset?: number;
 };
@@ -67,7 +67,7 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 	BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
 	TriggerAddCondition(
 		hotkeyTrigger,
-		Condition(() => config.action(config.createContext, config.textures))
+		Condition(() => config.action(config.createContext, config.textures, button))
 	);
 
 	const buttonTrig = CreateTrigger();
@@ -75,7 +75,7 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 	BlzTriggerRegisterFrameEvent(hotkeyTrigger, button, FRAMEEVENT_CONTROL_CLICK);
 	TriggerAddCondition(
 		buttonTrig,
-		Condition(() => config.action(config.createContext, config.textures))
+		Condition(() => config.action(config.createContext, config.textures, button))
 	);
 
 	BlzFrameSetVisible(button, false);

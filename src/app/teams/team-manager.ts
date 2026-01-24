@@ -1,6 +1,6 @@
 import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
-import { arrayRange, PLAYER_SLOTS, ShuffleArray } from '../utils/utils';
+import { arrayRange, ShuffleArray } from '../utils/utils';
 import { Team } from './team';
 
 export class TeamManager {
@@ -13,7 +13,7 @@ export class TeamManager {
 		this.teams = new Map<number, Team>();
 		const tempTeams: Map<number, ActivePlayer[]> = new Map<number, ActivePlayer[]>();
 
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = PlayerManager.getInstance().players.get(Player(i));
 
 			if (!player) continue;
@@ -82,15 +82,22 @@ export class TeamManager {
 		});
 	}
 
+	public disableSharedControl() {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			BlzFrameSetEnable(BlzGetFrameByName('UnitsCheckBox', i), false);
+			BlzFrameSetVisible(BlzGetFrameByName('UnitsCheckBox', i), false);
+		}
+	}
+
 	public getActiveTeams(): Team[] {
 		return this.getTeams().filter((team) => team.getMembers().find((member) => member.status.isActive()));
 	}
 
 	public static breakTeams() {
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const playerA: player = Player(i);
 
-			for (let j = 0; j < PLAYER_SLOTS; j++) {
+			for (let j = 0; j < bj_MAX_PLAYERS; j++) {
 				const playerB: player = Player(j);
 
 				SetPlayerAlliance(playerA, playerB, ALLIANCE_PASSIVE, false);

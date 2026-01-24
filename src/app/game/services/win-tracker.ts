@@ -1,6 +1,5 @@
 import { debugPrint } from 'src/app/utils/debug-print';
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
-import { PLAYER_SLOTS } from 'src/app/utils/utils';
 
 interface EntityData {
 	entity: player;
@@ -17,7 +16,7 @@ export class WinTracker {
 
 		const entityList: player[] = [];
 
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
 
 			if (IsPlayerObserver(player)) continue;

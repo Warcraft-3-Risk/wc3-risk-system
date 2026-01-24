@@ -23,9 +23,7 @@ export function OwnershipChangeEvent() {
 	const t: trigger = CreateTrigger();
 
 	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
-		debugPrint(`Registering ownership change event for player ${i}`);
 		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_CHANGE_OWNER, null);
-		debugPrint(`Registered ownership change event for player ${i}`);
 	}
 
 	TriggerAddCondition(

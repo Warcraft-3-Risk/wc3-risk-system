@@ -66,7 +66,9 @@ do
     local oldRallyPoint = GetUnitRallyPoint
     function GetUnitRallyPoint(whichUnit)
         local loc = oldRallyPoint(whichUnit)
-        unpooledLocations[loc] = true
+        if loc ~= nil then
+            unpooledLocations[loc] = true
+        end
         return loc
     end
 

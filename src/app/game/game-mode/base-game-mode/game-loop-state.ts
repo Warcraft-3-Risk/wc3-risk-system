@@ -23,10 +23,19 @@ import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { ClientManager } from '../../services/client-manager';
 import { IncomeManager } from 'src/app/managers/income-manager';
+import { RatingManager } from 'src/app/rating/rating-manager';
+import { StatisticsController } from 'src/app/statistics/statistics-controller';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
 		GlobalGameData.matchState = 'inProgress';
+
+		// Capture initial game data for rating calculations
+		// This locks in player count and ratings at game start - never changes during game
+		const ratingManager = RatingManager.getInstance();
+		if (ratingManager.isRankedGame()) {
+			ratingManager.captureInitialGameData(GlobalGameData.matchPlayers);
+		}
 
 		ReplayManager.getInstance().onRoundStart();
 
@@ -75,7 +84,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				updateTickUI();
 			} catch (error) {
 				File.write('errors', error as string);
-				print('Error in Timer ' + error);
+				debugPrint('Error in Timer ' + error);
 			}
 		});
 	}
@@ -187,6 +196,24 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		}
 
 		ScoreboardManager.getInstance().updateFull();
+
+		// Save preliminary ratings for crash recovery (only for ranked games)
+		const ratingManager = RatingManager.getInstance();
+		if (ratingManager.isRankedGame()) {
+			const statsModel = StatisticsController.getInstance().getModel();
+			statsModel.setData(); // Refresh the rankings
+			const currentRanks = statsModel.getRanks();
+			ratingManager.saveRatingsInProgress(currentRanks, turn);
+		}
+
+		// Refresh rating stats UI for all players to show updated K/D values
+		// This runs REGARDLESS of ranked status so players can see their current game stats
+		debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`);
+		GlobalGameData.matchPlayers.forEach((player) => {
+			if (player.ratingStatsUI && player.ratingStatsUI.refresh) {
+				player.ratingStatsUI.refresh();
+			}
+		});
 	}
 
 	onTick(tick: number): void {

@@ -1,4 +1,4 @@
-import { GetRandomElements, PLAYER_SLOTS } from '../../utils/utils';
+import { GetRandomElements } from '../../utils/utils';
 import { Alliance } from './alliance';
 
 export class AllianceManager {
@@ -10,7 +10,7 @@ export class AllianceManager {
 
 		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, false);
 
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			//Remove all non playing players and observers.
 			if (!this.isValidPlayer(Player(i))) continue;
 
@@ -100,8 +100,10 @@ export class AllianceManager {
 
 		this.clearAlliances();
 
-		for (let i = 0; i < PLAYER_SLOTS; i++) {
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p: player = Player(i);
+
+			if (IsPlayerObserver(p)) continue;
 
 			if (GetPlayerController(p) == MAP_CONTROL_USER) {
 				players.push(p);

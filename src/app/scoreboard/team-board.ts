@@ -79,7 +79,8 @@ export class TeamBoard extends Scoreboard {
 		this.teams.sort((teamA, teamB) => {
 			if (teamA.getIncome() < teamB.getIncome()) return 1;
 			if (teamA.getIncome() > teamB.getIncome()) return -1;
-			return 0;
+			// Secondary sort by team number for deterministic ordering across all clients
+			return teamA.getNumber() - teamB.getNumber();
 		});
 
 		let row: number = 2;

@@ -2,11 +2,10 @@ import { NameManager } from '../managers/names/name-manager';
 import { TrackedData } from '../player/data/tracked-data';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { ShuffleArray } from '../utils/utils';
+import { ShuffleArray, truncateWithColorCode } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
-import { ParticipantEntityManager } from '../utils/participant-entity';
-import { GlobalGameData } from '../game/state/global-game-state';
+import { RatingManager } from '../rating/rating-manager';
 
 export class StandardBoard extends Scoreboard {
 	private players: ActivePlayer[];
@@ -68,7 +67,8 @@ export class StandardBoard extends Scoreboard {
 			if (playerAIncome < playerBIncome) return 1;
 			if (playerAIncome > playerBIncome) return -1;
 
-			return 0;
+			// Secondary sort by player ID for deterministic ordering across all clients
+			return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
 		});
 
 		let row: number = 2;
@@ -78,8 +78,8 @@ export class StandardBoard extends Scoreboard {
 
 			let textColor: string = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 
-			if(player.status.isEliminated()) {
-				this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, 2);
+			if (player.status.isEliminated()) {
+				this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, this.INCOME_COL);
 			} else {
 				this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
 			}
@@ -131,7 +131,26 @@ export class StandardBoard extends Scoreboard {
 
 		// --- Eliminated Player Formatting ---
 		if (player.status.isEliminated()) {
-			this.setItemValue(`${grey}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
+			// Show rating change after player name if available (ranked game + local player has rating display enabled)
+			const ratingManager = RatingManager.getInstance();
+			const btag = NameManager.getInstance().getBtag(player.getPlayer());
+			const ratingResult = ratingManager.getRatingResults().get(btag);
+			const playerName = NameManager.getInstance().getDisplayName(player.getPlayer());
+
+			// Check if the LOCAL (viewing) player has rating display enabled
+			const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
+			const localShowRating = ratingManager.getShowRatingPreference(localBtag);
+
+			if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && localShowRating) {
+				const change = ratingResult.totalChange;
+				const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
+				const sign = change >= 0 ? '+' : '';
+				const truncatedName = truncateWithColorCode(playerName, 17);
+				this.setItemValue(`${grey}${truncatedName}${color}(${sign}${change})|r`, row, this.PLAYER_COL);
+			} else {
+				const truncatedName = truncateWithColorCode(playerName, 20);
+				this.setItemValue(`${grey}${truncatedName}`, row, this.PLAYER_COL);
+			}
 
 			// Cities
 			this.setItemValue(`${grey}${data.cities.cities.length}`, row, this.CITIES_COL);
@@ -164,7 +183,7 @@ export class StandardBoard extends Scoreboard {
 			this.setItemValue(`${textColor}${data.killsDeaths.get(player.getPlayer()).deathValue}`, row, this.DEATHS_COL);
 
 			// Status
-			if(player.status.isNomad()) {
+			if (player.status.isNomad()) {
 				this.setItemValue(`${HexColors.ORANGE}${player.status.statusDuration}`, row, this.STATUS_COL);
 			} else {
 				this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);

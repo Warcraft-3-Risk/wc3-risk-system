@@ -102,3 +102,114 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 		},
 	});
 }
+/**
+ * Update the F4 rating stats button appearance based on ranked game status
+ * Should be called after ranked status is determined in countdown phase
+ * @param player The player whose button to update
+ * @param isRanked Whether the game is ranked
+ */
+export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isRanked: boolean): void {
+	if (GetLocalPlayer() != player.getPlayer()) {
+		return;
+	}
+
+	const buttonContext = GetPlayerId(player.getPlayer()) + 300;
+	const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', buttonContext);
+	const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', buttonContext);
+
+	if (!buttonBackdrop) {
+		return;
+	}
+
+	if (isRanked) {
+		// For ranked games, show icon based on player's preference
+		const { RatingManager } = require('src/app/rating/rating-manager');
+		const { NameManager } = require('src/app/managers/names/name-manager');
+		const ratingManager = RatingManager.getInstance();
+		const btag = NameManager.getInstance().getBtag(player.getPlayer());
+		const showRating = ratingManager.getShowRatingPreference(btag);
+
+		const texture = showRating
+			? 'ReplaceableTextures\\CommandButtons\\BTNMedalHeroism.blp'
+			: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp';
+		BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+		if (buttonTooltip) {
+			const preferenceText = showRating ? `${HexColors.GREEN}Enabled` : `${HexColors.RED}Disabled`;
+			BlzFrameSetText(
+				buttonTooltip,
+				`Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${preferenceText}`
+			);
+		}
+	} else {
+		// For unranked games, always show disabled icon
+		BlzFrameSetTexture(
+			buttonBackdrop,
+			'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
+			0,
+			false
+		);
+
+		if (buttonTooltip) {
+			BlzFrameSetText(
+				buttonTooltip,
+				`Rating Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`
+			);
+		}
+	}
+}
+
+export function buildRatingStatsButton(player: ActivePlayer): framehandle {
+	return createGuardButton({
+		player: player,
+		createContext: GetPlayerId(player.getPlayer()) + 300,
+		key: OSKEY_F4,
+		textures: {
+			primary: 'ReplaceableTextures\\CommandButtons\\BTNMedalHeroism.blp',
+			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
+		},
+		xOffset: 0.069,
+		initialTooltipText: `Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
+		action: (context: number, textures: { primary: string; secondary: string }, button) => {
+			if (GetLocalPlayer() == player.getPlayer()) {
+				// Import RatingManager at runtime to check ranked status
+				const { RatingManager } = require('src/app/rating/rating-manager');
+				const ratingManager = RatingManager.getInstance();
+
+				// Check if this is a ranked game - if not, show message and do nothing
+				if (!ratingManager.isRankedGame()) {
+					DisplayTimedTextToPlayer(
+						player.getPlayer(),
+						0,
+						0,
+						3,
+						`${HexColors.TANGERINE}Rating stats are unavailable in unranked games.|r`
+					);
+					return;
+				}
+
+				// Import RatingSyncManager at runtime to check sync status
+				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager');
+
+				// Check if sync is complete before allowing UI access
+				if (!RatingSyncManager.getInstance().isSyncComplete()) {
+					// Show warning message and don't open UI (prevents desync)
+					DisplayTimedTextToPlayer(
+						player.getPlayer(),
+						0,
+						0,
+						3,
+						`${HexColors.TANGERINE}Rating data is still synchronizing...|r Please wait a moment.`
+					);
+					return;
+				}
+
+				player.ratingStatsUI.toggle();
+
+				// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+				BlzFrameSetEnable(button, false);
+				BlzFrameSetEnable(button, true);
+			}
+		},
+	});
+}

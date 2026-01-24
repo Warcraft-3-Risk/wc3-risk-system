@@ -1412,12 +1412,6 @@ STRING 7522
 |cff3BA0CBAbilties:|r Splash Damage (170 Range), Attack Ground
 }
 
-STRING 7523
-// Abilities: a002 (Dispel Magic), Ubertip (Tooltip - Normal - Extended)
-{
-Removes all buffs from units in a target area.
-}
-
 STRING 7524
 // Units: h006 (|cffff8000Conquered Capital|r), Name (Name)
 {
@@ -1497,5 +1491,35 @@ This unit has 10% increased damage and 10% increased range against ships.
 STRING 7540
 {
 Artillery
+}
+
+STRING 7541
+// Abilities: a002 (Dispel Magic), Ubertip (Tooltip - Normal - Extended)
+{
+Removes all buffs from enemy units in a target area.
+}
+
+STRING 7543
+// Abilities: A008 (Auto Transport), Name (Name)
+{
+Auto Transport
+}
+
+STRING 7544
+// Abilities: A008 (Auto Transport), Ubertip (Tooltip - Normal - Extended)
+{
+Establish an automated ferry route between the current position and a target destination.
+
+The ship will wait at the starting location and automatically load nearby units. It departs when full (10 units) or 5 seconds after the last unit is loaded.
+
+Upon reaching the destination, the ship unloads all cargo and returns to the starting point to repeat the cycle.
+
+Note: Only functions on valid coastal terrain. Issuing other orders will cancel the route.
+}
+
+STRING 7545
+// Abilities: A008 (Auto Transport), Tip (Tooltip - Normal)
+{
+Auto Transport
 }
 

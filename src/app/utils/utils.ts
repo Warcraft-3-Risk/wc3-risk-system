@@ -1,8 +1,6 @@
 /** The player object for neutral hostile units. */
 export const NEUTRAL_HOSTILE: player = Player(PLAYER_NEUTRAL_AGGRESSIVE);
 
-/** The number of player slots in the game, excluding neutral players. */
-export const PLAYER_SLOTS: number = bj_MAX_PLAYERS - 1;
 
 export const CUSTOM_MAP_DATA_MINE_TYPE_TXT: string = 'txt';
 
@@ -156,4 +154,26 @@ export function ComputeRatio(dividend: number, divisor: number): string {
  */
 export function arrayRange(start: number, stop: number, step: number) {
 	return Array.from({ length: (stop - start) / step + 1 }, (value, index) => start + index * step);
+}
+
+/**
+ * Safely truncates a string to a maximum length without cutting between '|' and 'r' in WC3 color codes.
+ * If the truncation would cut between '|' and 'r', includes the 'r' to keep '|r' together.
+ * @param str The string to truncate.
+ * @param maxLength The maximum length of the resulting string.
+ * @return The truncated string with '|r' kept intact.
+ */
+export function truncateWithColorCode(str: string, maxLength: number): string {
+	if (!str || str.length <= maxLength) {
+		return str;
+	}
+
+	let truncated = str.slice(0, maxLength);
+
+	// If we cut right before 'r' and the previous char is '|', include the 'r'
+	if (truncated.endsWith('|') && str.length > maxLength && str.charAt(maxLength) === 'r') {
+		truncated = str.slice(0, maxLength + 1);
+	}
+
+	return truncated;
 }

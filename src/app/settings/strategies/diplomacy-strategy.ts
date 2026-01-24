@@ -11,8 +11,9 @@ export interface DiplomacyOptions {
 export const DiplomacyStrings: Record<number, string> = {
 	0: `FFA`,
 	1: `Lobby Teams`,
-	2: `Random Teams`,
-	3: `Free Ally`,
+	2: `Lobby Teams (Shared)`,
+	3: `Random Teams`,
+	4: `Free Ally`,
 };
 
 export const DiplomacyStringsColorFormatted: Record<number, string> = {
@@ -20,6 +21,7 @@ export const DiplomacyStringsColorFormatted: Record<number, string> = {
 	1: `${HexColors.RED}${DiplomacyStrings[1]}|r`,
 	2: `${HexColors.RED}${DiplomacyStrings[2]}|r`,
 	3: `${HexColors.RED}${DiplomacyStrings[3]}|r`,
+	4: `${HexColors.RED}${DiplomacyStrings[4]}|r`,
 };
 
 export class DiplomacyStrategy implements SettingsStrategy {
@@ -27,8 +29,9 @@ export class DiplomacyStrategy implements SettingsStrategy {
 	private readonly strategyMap: Map<number, () => void> = new Map([
 		[0, this.handleFFA],
 		[1, this.handleLobbyTeams],
-		[2, this.handleRandomTeams],
-		[3, this.handleFreeAlly],
+		[2, this.handleLobbyTeamsShared],
+		[3, this.handleRandomTeams],
+		[4, this.handleFreeAlly],
 	]);
 
 	constructor(diplomacy: DiplomacyOptions) {
@@ -48,7 +51,12 @@ export class DiplomacyStrategy implements SettingsStrategy {
 	}
 
 	private handleLobbyTeams(): void {
-		TeamManager.getInstance();
+		TeamManager.getInstance().disableSharedControl();
+
+		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, true);
+	}
+
+	private handleLobbyTeamsShared(): void {
 		TeamManager.getInstance().allowFullSharedControl();
 
 		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, true);

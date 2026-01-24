@@ -10,6 +10,8 @@ import { PromodeOptionsColorFormatted } from '../settings/strategies/promode-str
 import { HexColors } from '../utils/hex-colors';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { ShuffleArray } from '../utils/utils';
+import { RatingManager } from '../rating/rating-manager';
+import { debugPrint } from '../utils/debug-print';
 
 /**
  * Responsible for creating in-game quests.
@@ -22,6 +24,7 @@ type QuestType =
 	| 'QUEST_OVERTIME'
 	| 'QUEST_FIGHT_BONUS'
 	| 'QUEST_CAMERA'
+	| 'QUEST_COMMANDS'
 	| 'QUEST_SETTINGS'
 	| 'QUEST_PLAYERS';
 
@@ -42,6 +45,7 @@ export class Quests {
 	public Create() {
 		this.Credits();
 		this.HowToPlay();
+		this.Commands();
 		this.ArmyComposition();
 		this.Overtime();
 		this.FightBonus();
@@ -50,7 +54,9 @@ export class Quests {
 
 	private Credits() {
 		let description = `Join our community on Discord: https://discord.gg/wc3risk
-		 
+
+		Learn about the history of Risk in "Risk Revolution, Devolution and Reforged" - available on Amazon and our community Discord.
+		
 		Code: ForLolz#11696, microhive#2772, roflmaooo#2930, xate#21335
 		Terrain: Nerla#1510, Quetra#8939
 		Units: Saran, ForLolz#11696
@@ -127,39 +133,81 @@ export class Quests {
 		const description = `Fight Bonus and Bounty reward active combat with gold.
 
 			Fight Bonus:
-			The bar in the top-right fills as you kill or lose units. At 100 points, you receive 10-60 gold (scales with total value) and the bar resets.
+			The bar in the top-right fills as you kill units. At 175 points, you receive 10-45 gold (scales with total value) and the bar resets.
 
-			Denying your own units fills your Fight Bonus bar but NOT your opponent's. Bounty is only awarded for enemy kills, not denies.
+			Bounty:
+			You instantly receive 25% of each killed unit's value as gold. This reward is immediate and separate from the Fight Bonus.
 
 			Strategy:
-			- Aggressive play earns more bonus gold
-			- Both winning and losing fights fill Fight Bonus
-			- Denying high-value units benefits you without helping your opponent
+			- Aggressive play earns more bonus gold from both systems
+			- Denying high-value units denies both bounty and fight bonus for your opponent
+			- Bounty provides immediate income, while Fight Bonus provides larger periodic rewards
 		`;
 
-		this.BuildQuest('QUEST_FIGHT_BONUS', 'Fight Bonus & Bounty', description, 'ReplaceableTextures\\CommandButtons\\BTNChestOfGold.blp', true);
+		this.BuildQuest(
+			'QUEST_FIGHT_BONUS',
+			'Fight Bonus & Bounty',
+			description,
+			'ReplaceableTextures\\CommandButtons\\BTNChestOfGold.blp',
+			true
+		);
 	}
 
 	private Camera() {
 		const description = `The camera system allows full control over a player's camera. You can adjust the distance, rotation, and angle of attack (AoA).
-			
-			To use the camera command, type -cam or -zoom.  
+
+			To use the camera command, type -cam or -zoom.
 			Format: -cam <distance> <rotation> <AoA>
-			
-			You don’t need to supply all three parameters. However, if you want to change the second or third, you must also provide all preceding parameters.  
+
+			You don't need to supply all three parameters. However, if you want to change the second or third, you must also provide all preceding parameters.
 			To reset your camera to default values, type the command with no parameters.
-			
+
 			This example sets your camera to a top-down view with the default rotation and a distance of 5000:
-			-cam 5000 90 270  
+			-cam 5000 90 270
 			-zoom 5000 90 270
-			
+
 			Parameter Ranges:
-			- Distance: 1000 – 8500  
-			- Rotation: 0 – 360  
+			- Distance: 1000 – 8500
+			- Rotation: 0 – 360
 			- AoA: 270 – 350
 		`;
 
 		this.BuildQuest('QUEST_CAMERA', 'Camera', description, 'ReplaceableTextures\\WorldEditUI\\Doodad-Cinematic.blp', true);
+	}
+
+	private Commands() {
+		const description = `${HexColors.YELLOW}General Commands:|r
+			-help / -commands - Display the command list in chat
+			-tutorial / -tut - Quick tutorial on how to play
+			-advanced / -adv - Advanced gameplay tips and tricks
+			-cam / -zoom <distance> <rotation> <AoA> - Adjust camera settings
+			-ui - Toggle visibility of UI buttons (guard health, value, labels)
+
+			${HexColors.YELLOW}Game Commands:|r
+			-ff - Forfeit the game without leaving (counts as defeat)
+			-ng - Restart the game when it is over
+			-names - Display a list of all alive/nomad players in the game
+
+			${HexColors.YELLOW}Team Mode Commands:|r
+			-allies / -ally - Show your allies with their colors and real names
+			-gold / -g <player> <amount> - Send gold to an ally
+			  Example: -gold red 100 (sends 100 gold to red player)
+			  Example: -g blue (sends all your gold to blue player)
+
+			${HexColors.YELLOW}Social Commands:|r
+			-mute <player name/color> - Mute a dead player for 300 seconds
+			  Example: -mute blue
+
+			${HexColors.YELLOW}Hotkeys:|r
+			F4 - Toggle rating stats window
+			F6 - Toggle guard health bar preference
+			F7 - Toggle guard value display preference
+			F8 - Toggle country label visibility
+			F9 - Open quest/information panel
+			F11 - Toggle allies tab visibility
+		`;
+
+		this.BuildQuest('QUEST_COMMANDS', 'Commands', description, 'ReplaceableTextures\\CommandButtons\\BTNSelectHeroOn.blp', true);
 	}
 
 	private BuildQuest(questType: QuestType, title: string, description: string, icon: string, required: boolean) {
@@ -176,8 +224,7 @@ export class Quests {
 	}
 
 	public AddSettingsQuest(settings: SettingsContext): void {
-		let description = `Game Settings:
-			Host: ${NameManager.getInstance().getBtag(PlayerManager.getInstance().getHost().getPlayer())}
+		let description = `Host: ${NameManager.getInstance().getBtag(PlayerManager.getInstance().getHost().getPlayer())}
 			Diplomacy: ${DiplomacyStringsColorFormatted[settings.getSettings().Diplomacy.option]}
 			Fog: ${FogOptionsColorFormatted[settings.getSettings().Fog]}
 			Game Type: ${GameTypeOptionsColorFormatted[settings.getSettings().GameType]}
@@ -189,53 +236,86 @@ export class Quests {
 	}
 
 	public addPlayersQuest(): void {
-		let description: string = `${HexColors.YELLOW}Initial Players|r`;
-		let nameList: ActivePlayer[] = [];
 		const playerManager = PlayerManager.getInstance();
 		const nameManager = NameManager.getInstance();
-		playerManager.players.forEach((activePlayer) => {
-			nameList.push(activePlayer);
-		});
-		ShuffleArray(nameList);
+		const ratingManager = RatingManager.getInstance();
+		playerManager.playersAndObservers.forEach((activePlayer) => {
+			if (activePlayer.getPlayer() == GetLocalPlayer()) {
+				const showRating = ratingManager.getShowRatingPreference(nameManager.getBtag(GetLocalPlayer()));
 
-		// Save the shuffled list for future reference - in order to keep the list order consistent
-		this.shuffledPlayerList = Array.from(nameList);
+				let description: string = `${HexColors.YELLOW}Initial Players|r`;
+				let nameList: ActivePlayer[] = [];
+				playerManager.players.forEach((activePlayer) => {
+					nameList.push(activePlayer);
+				});
+				ShuffleArray(nameList);
 
-		nameList.forEach((player) => {
-			description += `\n${nameManager.getBtag(player.getPlayer())}`;
+				// Save the shuffled list for future reference - in order to keep the list order consistent
+				this.shuffledPlayerList = Array.from(nameList);
+
+				nameList.forEach((player) => {
+					const btag = nameManager.getBtag(player.getPlayer());
+
+					description += `\n${btag}`;
+
+					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
+						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
+					}
+				});
+				this.BuildQuest('QUEST_PLAYERS', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
+			}
 		});
-		this.BuildQuest('QUEST_PLAYERS', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 
 	public updatePlayersQuest(): void {
+		const playerManager = PlayerManager.getInstance();
+		const nameManager = NameManager.getInstance();
+		const ratingManager = RatingManager.getInstance();
+
 		if (!this.quests.has('QUEST_PLAYERS')) this.addPlayersQuest();
 
-		let description: string = `${HexColors.YELLOW}Active Players|r`;
+		playerManager.playersAndObservers.forEach((activePlayer) => {
+			if (activePlayer.getPlayer() == GetLocalPlayer()) {
+				const showRating = ratingManager.getShowRatingPreference(nameManager.getBtag(GetLocalPlayer()));
 
-		const activePlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isAlive() : false));
-		activePlayers.forEach((player) => {
-			description += `\n${NameManager.getInstance().getBtag(player.getPlayer())} (${HexColors.GREEN + 'Active|r'})`;
-		});
+				let description: string = `${HexColors.YELLOW}Active Players|r`;
 
-		description += `\n\n${HexColors.YELLOW}Eliminated Players|r`;
-		const eliminatedPlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isEliminated() : false));
-		eliminatedPlayers.forEach((player) => {
-			description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())} (${player.status ? player.status.status : 'Unknown'})`;
+				const activePlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isAlive() : false));
+				activePlayers.forEach((player) => {
+					const btag = nameManager.getBtag(player.getPlayer());
+					description += `\n${btag}`;
+					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
+						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
+					}
+					description += ` (${HexColors.GREEN + 'Active|r'})`;
+				});
 
-			if (player.killedBy) {
-				const killedByActivePlayer = PlayerManager.getInstance().players.get(player.killedBy);
+				description += `\n\n${HexColors.YELLOW}Eliminated Players|r`;
+				const eliminatedPlayers = this.shuffledPlayerList.filter((player) => (player.status ? player.status.isEliminated() : false));
+				eliminatedPlayers.forEach((player) => {
+					const btag = nameManager.getBtag(player.getPlayer());
+					description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())}`;
+					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
+						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
+					}
+					description += ` (${player.status ? player.status.status : 'Unknown'})`;
 
-				// Dependent on whether the killer is still alive or not we have to be careful to not leak his player name
-				if (killedByActivePlayer.status.isActive()) {
-					description += ' killed by ' + NameManager.getInstance().getDisplayName(player.killedBy);
-				} else {
-					description += ' killed by ' + ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.killedBy);
-				}
+					if (player.killedBy) {
+						const killedByActivePlayer = PlayerManager.getInstance().players.get(player.killedBy);
 
-				description += ' (' + (killedByActivePlayer.status ? killedByActivePlayer.status.status : 'Unknown') + ')';
+						// Dependent on whether the killer is still alive or not we have to be careful to not leak his player name
+						if (killedByActivePlayer.status.isActive()) {
+							description += ' killed by ' + NameManager.getInstance().getDisplayName(player.killedBy);
+						} else {
+							description += ' killed by ' + ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.killedBy);
+						}
+
+						description += ' (' + (killedByActivePlayer.status ? killedByActivePlayer.status.status : 'Unknown') + ')';
+					}
+				});
+
+				this.BuildQuest('QUEST_PLAYERS', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 			}
 		});
-
-		this.BuildQuest('QUEST_PLAYERS', 'Players', description, 'ReplaceableTextures\\CommandButtons\\BTNPeasant.blp', false);
 	}
 }
