@@ -2,7 +2,7 @@ import { NameManager } from '../managers/names/name-manager';
 import { TrackedData } from '../player/data/tracked-data';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { ShuffleArray, truncateWithColorCode } from '../utils/utils';
+import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { RatingManager } from '../rating/rating-manager';
@@ -78,19 +78,14 @@ export class StandardBoard extends Scoreboard {
 
 			let textColor: string = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 
-			if (player.status.isEliminated()) {
-				this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, this.INCOME_COL);
-			} else {
-				this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
-			}
-
+			// Income is now handled in updatePlayerData() to coordinate with column width changes
 			this.updatePlayerData(player, row, textColor, data);
 			row++;
 		});
 	}
 
 	/**
-	 * Updates all columns except income on the scoreboard.
+	 * Updates all columns on the scoreboard (without re-sorting).
 	 */
 	public updatePartial(): void {
 		let row: number = 2;
@@ -141,16 +136,17 @@ export class StandardBoard extends Scoreboard {
 			const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
 			const localShowRating = ratingManager.getShowRatingPreference(localBtag);
 
+			// Player name (no truncation needed since rating goes in income column)
+			this.setItemValue(`${grey}${playerName}`, row, this.PLAYER_COL);
+
+			// Show rating change in income column for eliminated players
 			if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && localShowRating) {
-				// Use effective change (newRating - oldRating) to account for rating floor
 				const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
 				const color = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
 				const sign = effectiveChange >= 0 ? '+' : '';
-				const truncatedName = truncateWithColorCode(playerName, 7);
-				this.setItemValue(`${grey}${truncatedName}${color}(${sign}${effectiveChange})|r`, row, this.PLAYER_COL);
+				this.setItemValue(`${color}${sign}${effectiveChange}|r`, row, this.INCOME_COL);
 			} else {
-				const truncatedName = truncateWithColorCode(playerName, 11);
-				this.setItemValue(`${grey}${truncatedName}`, row, this.PLAYER_COL);
+				this.setItemValue(`${grey}-`, row, this.INCOME_COL);
 			}
 
 			// Cities
@@ -171,6 +167,9 @@ export class StandardBoard extends Scoreboard {
 		} else {
 			// Name
 			this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
+
+			// Income
+			this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
 
 			// Cities
 			const requiredCities = VictoryManager.getCityCountWin();

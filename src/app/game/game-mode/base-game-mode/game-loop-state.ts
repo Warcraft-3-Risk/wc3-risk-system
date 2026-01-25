@@ -226,48 +226,70 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			VictoryManager.getCityCountWin() * CITIES_TO_WIN_WARNING_RATIO
 		);
 
+		// Filter out eliminated players from announcements
+		playersToAnnounce = playersToAnnounce.filter((participant) => {
+			if (participant instanceof ActivePlayer) {
+				return !participant.status.isEliminated();
+			}
+			return true;
+		});
+
 		if (playersToAnnounce.length == 0) return;
 
-		function playerCityCountDescription(candidate: ActivePlayer, state: VictoryProgressState) {
-			if (state == 'TIE' && candidate.trackedData.cities.cities.length >= VictoryManager.getCityCountWin()) {
+		// Find the maximum city count among players above win threshold (for determining actual ties)
+		const winThreshold = VictoryManager.getCityCountWin();
+		let maxCityCount = 0;
+		playersToAnnounce.forEach((participant) => {
+			const cities = ParticipantEntityManager.getCityCount(participant);
+			if (cities >= winThreshold && cities > maxCityCount) {
+				maxCityCount = cities;
+			}
+		});
+
+		function playerCityCountDescription(candidate: ActivePlayer, state: VictoryProgressState, maxCities: number) {
+			const playerCities = candidate.trackedData.cities.cities.length;
+			// Only show "TIED to win" if player has the maximum city count (actually tied)
+			if (state == 'TIE' && playerCities >= VictoryManager.getCityCountWin() && playerCities == maxCities) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
-				const remainingCities = VictoryManager.getCityCountWin() - candidate.trackedData.cities.cities.length;
+				const remainingCities = VictoryManager.getCityCountWin() - playerCities;
 				if (remainingCities < 0) {
 					return `satisfies the city count to win!`;
 				} else if (remainingCities == 0) {
 					return `must maintain their city count this round to win!`;
 				} else {
-					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - candidate.trackedData.cities.cities.length}|r more to win!`;
+					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - playerCities}|r more to win!`;
 				}
 			}
 		}
 
-		function playerAnnounceCandidate(candidate: ActivePlayer, state: VictoryProgressState): string {
+		function playerAnnounceCandidate(candidate: ActivePlayer, state: VictoryProgressState, maxCities: number): string {
 			let line = `${ParticipantEntityManager.getDisplayName(candidate)} owns ${HexColors.RED}${
 				candidate.trackedData.cities.cities.length
-			}|r cities and ${playerCityCountDescription(candidate, state)}`;
+			}|r cities and ${playerCityCountDescription(candidate, state, maxCities)}`;
 
 			return line;
 		}
 
-		function teamCityCountDescription(candidate: Team, state: VictoryProgressState) {
-			if (state == 'TIE' && candidate.getCities() >= VictoryManager.getCityCountWin()) {
+		function teamCityCountDescription(candidate: Team, state: VictoryProgressState, maxCities: number) {
+			const teamCities = candidate.getCities();
+			// Only show "TIED to win" if team has the maximum city count (actually tied)
+			if (state == 'TIE' && teamCities >= VictoryManager.getCityCountWin() && teamCities == maxCities) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
-				const remainingCities = VictoryManager.getCityCountWin() - candidate.getCities();
+				const remainingCities = VictoryManager.getCityCountWin() - teamCities;
 				if (remainingCities < 0) {
 					return `satisfies the city count to win!`;
 				} else if (remainingCities == 0) {
 					return `must maintain their city count this round to win!`;
 				} else {
-					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - candidate.getCities()}|r more to win!`;
+					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - teamCities}|r more to win!`;
 				}
 			}
 		}
 
-		function teamAnnounceCandidate(candidate: Team, state: VictoryProgressState): string {
-			let line = `${ParticipantEntityManager.getDisplayName(candidate)}|r owns ${HexColors.RED}${candidate.getCities()}|r cities and ${teamCityCountDescription(candidate, state)}`;
+		function teamAnnounceCandidate(candidate: Team, state: VictoryProgressState, maxCities: number): string {
+			let line = `${ParticipantEntityManager.getDisplayName(candidate)}|r owns ${HexColors.RED}${candidate.getCities()}|r cities and ${teamCityCountDescription(candidate, state, maxCities)}`;
 
 			return line;
 		}
@@ -280,13 +302,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		if (playersToAnnounce[0] instanceof Team) {
 			const playerMessages = playersToAnnounce
-				.map((player) => teamAnnounceCandidate(player as Team, VictoryManager.GAME_VICTORY_STATE))
+				.map((player) => teamAnnounceCandidate(player as Team, VictoryManager.GAME_VICTORY_STATE, maxCityCount))
 				.join('\n');
 
 			GlobalMessage([tiedMessage, overtimeMessage, playerMessages].join('\n\n'), 'Sound\\Interface\\ItemReceived.flac', 4);
 		} else {
 			const playerMessages = playersToAnnounce
-				.map((player) => playerAnnounceCandidate(player as ActivePlayer, VictoryManager.GAME_VICTORY_STATE))
+				.map((player) => playerAnnounceCandidate(player as ActivePlayer, VictoryManager.GAME_VICTORY_STATE, maxCityCount))
 				.join('\n');
 
 			GlobalMessage([tiedMessage, overtimeMessage, playerMessages].join('\n\n'), 'Sound\\Interface\\ItemReceived.flac', 4);
