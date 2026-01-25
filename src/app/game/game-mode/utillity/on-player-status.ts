@@ -47,7 +47,17 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 	if (showRatings) {
 		const defeatedBtag = NameManager.getInstance().getBtag(player.getPlayer());
 		const defeatedRating = ratingManager.getInitialPlayerRating(defeatedBtag);
-		playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${defeatedRating})|r`;
+		const ratingResult = ratingManager.getRatingResults().get(defeatedBtag);
+
+		if (ratingResult) {
+			// Show initial rating + effective change (accounting for floor)
+			const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
+			const changeColor = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
+			const changeSign = effectiveChange >= 0 ? '+' : '';
+			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${defeatedRating})|r ${changeColor}(${changeSign}${effectiveChange})|r`;
+		} else {
+			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${defeatedRating})|r`;
+		}
 	}
 
 	if (forfeit) {
@@ -137,7 +147,17 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 	if (showRatings) {
 		const leftBtag = NameManager.getInstance().getBtag(player.getPlayer());
 		const leftRating = ratingManager.getInitialPlayerRating(leftBtag);
-		playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${leftRating})|r`;
+		const ratingResult = ratingManager.getRatingResults().get(leftBtag);
+
+		if (ratingResult) {
+			// Show initial rating + effective change (accounting for floor)
+			const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
+			const changeColor = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
+			const changeSign = effectiveChange >= 0 ? '+' : '';
+			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${leftRating})|r ${changeColor}(${changeSign}${effectiveChange})|r`;
+		} else {
+			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${leftRating})|r`;
+		}
 	}
 
 	GlobalMessage(`${playerDisplayName} has left the game!`, 'Sound\\Interface\\SecretFound.flac');

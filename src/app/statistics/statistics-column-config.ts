@@ -116,11 +116,12 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				const ratingResults = ratingManager.getRatingResults();
 				const result = ratingResults ? ratingResults.get(btag) : undefined;
 
-				if (result && result.newRating != undefined && result.totalChange != undefined) {
-					const change = result.totalChange;
-					const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
-					const sign = change >= 0 ? '+' : '';
-					return `${highlightIfOwnPlayer(player, result.newRating)} (${color}${sign}${change}|r)`;
+				if (result && result.newRating != undefined && result.oldRating != undefined) {
+					// Use effective change (newRating - oldRating) to account for rating floor
+					const effectiveChange = result.newRating - result.oldRating;
+					const color = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
+					const sign = effectiveChange >= 0 ? '+' : '';
+					return `${highlightIfOwnPlayer(player, result.newRating)} (${color}${sign}${effectiveChange}|r)`;
 				}
 
 				return `${highlightIfOwnPlayer(player, ratingManager.getPlayerRating(btag))}`;

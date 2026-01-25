@@ -142,11 +142,12 @@ export class StandardBoard extends Scoreboard {
 			const localShowRating = ratingManager.getShowRatingPreference(localBtag);
 
 			if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && localShowRating) {
-				const change = ratingResult.totalChange;
-				const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
-				const sign = change >= 0 ? '+' : '';
+				// Use effective change (newRating - oldRating) to account for rating floor
+				const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
+				const color = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
+				const sign = effectiveChange >= 0 ? '+' : '';
 				const truncatedName = truncateWithColorCode(playerName, 7);
-				this.setItemValue(`${grey}${truncatedName}${color}(${sign}${change})|r`, row, this.PLAYER_COL);
+				this.setItemValue(`${grey}${truncatedName}${color}(${sign}${effectiveChange})|r`, row, this.PLAYER_COL);
 			} else {
 				const truncatedName = truncateWithColorCode(playerName, 11);
 				this.setItemValue(`${grey}${truncatedName}`, row, this.PLAYER_COL);
