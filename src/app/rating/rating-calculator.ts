@@ -7,6 +7,7 @@
  *    - Zero-sum system: total gains = total losses (before floor adjustment)
  *    - Top 50% gain points, bottom 50% lose points
  *    - Symmetric curves for gains and losses
+ *    - Winner bonus: 1st place gets extra points to reward winning over just placing high
  * 2. Opponent Strength Modifier: Adjusts based on your rating vs average opponent rating
  *    - Beat weaker players = gain less points
  *    - Beat stronger players = gain more points
@@ -26,6 +27,10 @@ const TARGET_INFLATION_PER_GAME = 0;
 // Symmetric values ensure fair zero-sum distribution
 const MAX_WIN_POINTS = 40;
 const MAX_LOSS_POINTS = 40;
+
+// Bonus points for 1st place only (rewards winning over just placing high)
+// This creates a bigger gap between winner and 2nd/3rd place
+const WINNER_BONUS = 20;
 
 // Breakeven percentile: top 50% gain, bottom 50% lose
 // Standard zero-sum split for competitive fairness
@@ -79,7 +84,14 @@ function calculateRawPoints(placement: number, playerCount: number): number {
 		// Gaining zone: curved distribution from MAX_WIN_POINTS to ~0
 		const posRatio = placement / breakevenPos;
 		// Use power curve for more reward at top positions
-		return MAX_WIN_POINTS * (1 - posRatio * posRatio);
+		let points = MAX_WIN_POINTS * (1 - posRatio * posRatio);
+
+		// Add winner bonus for 1st place only
+		if (placement === 0) {
+			points += WINNER_BONUS;
+		}
+
+		return points;
 	} else if (placement === breakevenPos) {
 		// Breakeven position
 		return 0;
@@ -131,8 +143,8 @@ export function calculatePlacementPoints(placement: number, playerCount: number)
 	// Calculate adjustment needed to achieve zero-sum (TARGET = 0)
 	const adjustment = (TARGET_INFLATION_PER_GAME - rawSum) / playerCount;
 
-	// Return adjusted points (floored)
-	return Math.floor(rawPoints + adjustment);
+	// Return adjusted points (rounded for better zero-sum accuracy)
+	return Math.round(rawPoints + adjustment);
 }
 
 /**
@@ -207,7 +219,7 @@ export function calculateRatingChange(
 	const opponentStrengthModifier = calculateOpponentStrengthModifier(playerRating, opponentRatings, isGain);
 
 	// Apply multiplier (no lobby size multiplier - handled by dynamic placement points)
-	const totalChange = Math.floor(basePlacementPoints * opponentStrengthModifier);
+	const totalChange = Math.round(basePlacementPoints * opponentStrengthModifier);
 
 	return totalChange;
 }
