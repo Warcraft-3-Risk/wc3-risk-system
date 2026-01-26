@@ -89,14 +89,6 @@ export const RANKED_MIN_PLAYERS: number = 16;
 // This represents the starting rating for new players.
 export const RANKED_STARTING_RATING: number = 1000;
 
-// Opponent strength modifier scale factor (0.32 gives range 0.68x to 1.32x)
-// Higher values make rating differences matter more, creating stronger ceiling effects
-// Formula: modifier ranges from (1 - factor) to (1 + factor) based on rating difference
-// For gains: higher rated vs lower opponents = less gain (0.68x at +400 diff)
-// For losses: higher rated vs lower opponents = more loss (1.32x at +400 diff)
-// This helps prevent runaway ratings at the top while protecting lower-rated players
-export const RANKED_OPPONENT_STRENGTH_FACTOR: number = 0.32;
-
 // Enable/disable editor developer mode. Default is false.
 // When enabled: Enables country creator commands for map editing (singleplayer only)
 // When disabled: Country creator commands are disabled

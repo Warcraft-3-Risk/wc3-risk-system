@@ -109,11 +109,11 @@ export function readRatings(filePath: string): RatingFileData | null {
 						playerData.totalKillValue = tonumber(parts[6]) || 0;
 						playerData.totalDeathValue = tonumber(parts[7]) || 0;
 					}
-					// Optional: read showRating if present (default: true)
+					// Optional: read showRating if present (default: false)
 					if (parts.length >= 9) {
 						playerData.showRating = parts[8] === 'true';
 					} else {
-						playerData.showRating = true; // Default to true for existing files
+						playerData.showRating = false; // Default to false for existing files
 					}
 					// Optional: read totalPlacement if present (default: 0)
 					if (parts.length >= 10) {
@@ -178,7 +178,7 @@ export function writeRatings(filePath: string, data: RatingFileData): boolean {
 		// Format: player:btag:rating:gamesPlayed:lastUpdated:wins:losses:totalKillValue:totalDeathValue:showRating:totalPlacement
 		const totalKillValue = math.floor(p.totalKillValue || 0);
 		const totalDeathValue = math.floor(p.totalDeathValue || 0);
-		const showRating = p.showRating !== undefined ? p.showRating : true; // Default to true
+		const showRating = p.showRating !== undefined ? p.showRating : false; // Default to false (hidden for new players)
 		const totalPlacement = math.floor(p.totalPlacement || 0);
 		lines.push(`player:${p.btag}:${p.rating}:${p.gamesPlayed}:${p.lastUpdated}:${p.wins}:${p.losses}:${totalKillValue}:${totalDeathValue}:${showRating}:${totalPlacement}`);
 

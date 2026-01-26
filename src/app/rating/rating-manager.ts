@@ -2,6 +2,7 @@ import { GameRatingResult, OthersRatingFileData, PlayerRatingData, RatingFileDat
 import { readRatings, validateChecksum, writeRatings } from './rating-file-handler';
 import { readOthersRatings, writeOthersRatings } from './global-rating-handler';
 import {
+	calculateKillAdjustment,
 	calculateOpponentStrengthModifier,
 	calculatePlacementPoints,
 	calculateRatingChange
@@ -39,6 +40,7 @@ export class RatingManager {
 	// Initial game state - captured at game start, never changes during the game
 	private initialPlayerCount: number = 0;
 	private initialPlayerRatings: Map<string, number> = new Map();
+	private initialPlayers: ActivePlayer[] = []; // Store initial players for kill value access
 	private eliminatedCount: number = 0;
 	private finalizedPlayers: Set<string> = new Set();
 
@@ -52,6 +54,7 @@ export class RatingManager {
 		this.isRankedGameFlag = false;
 		this.seasonId = RANKED_SEASON_ID;
 		this.initialPlayerRatings = new Map();
+		this.initialPlayers = [];
 		this.finalizedPlayers = new Set();
 	}
 
@@ -156,7 +159,7 @@ export class RatingManager {
 				totalKillValue: 0,
 				totalDeathValue: 0,
 				totalPlacement: 0,
-				showRating: true,
+				showRating: false, // Default to hiding rating for new players
 				_isSynced: false,
 			};
 			this.ratingData.set(btag, freshData);
@@ -280,6 +283,7 @@ export class RatingManager {
 		this.eliminatedCount = 0;
 		this.finalizedPlayers.clear();
 		this.initialPlayerRatings.clear();
+		this.initialPlayers = eligiblePlayers; // Store players for kill value access
 
 		// Capture each player's rating at game start
 		eligiblePlayers.forEach((player) => {
@@ -313,6 +317,35 @@ export class RatingManager {
 	 */
 	public isPlayerFinalized(btag: string): boolean {
 		return this.finalizedPlayers.has(btag);
+	}
+
+	/**
+	 * Build an array of all players' current kill values
+	 * Used for calculating the kill modifier
+	 * @param players Optional array of players to use (defaults to initial players)
+	 * @returns Array of kill values for all players
+	 */
+	private buildAllKillValues(players?: ActivePlayer[]): number[] {
+		const playersToUse = players || this.initialPlayers;
+		const killValues: number[] = [];
+
+		for (const player of playersToUse) {
+			const killsDeaths = player.trackedData.killsDeaths.get(player.getPlayer());
+			const killValue = killsDeaths ? killsDeaths.killValue : 0;
+			killValues.push(killValue);
+		}
+
+		return killValues;
+	}
+
+	/**
+	 * Get a player's current kill value
+	 * @param player The player to get kill value for
+	 * @returns Player's current kill value
+	 */
+	private getPlayerKillValue(player: ActivePlayer): number {
+		const killsDeaths = player.trackedData.killsDeaths.get(player.getPlayer());
+		return killsDeaths ? killsDeaths.killValue : 0;
 	}
 
 	/**
@@ -362,7 +395,7 @@ export class RatingManager {
 	}
 
 	/**
-	 * Get player's showRating preference (default: true)
+	 * Get player's showRating preference (default: false)
 	 * Automatically loads player's rating file if not loaded yet
 	 * @param btag Player's BattleTag
 	 * @returns True if player wants to show rating, false to hide
@@ -375,9 +408,9 @@ export class RatingManager {
 
 		const data = this.ratingData.get(btag);
 		if (!data) {
-			return true; // Default to showing rating for new players
+			return false; // Default to hiding rating for new players
 		}
-		return data.showRating !== undefined ? data.showRating : true;
+		return data.showRating !== undefined ? data.showRating : false;
 	}
 
 	/**
@@ -478,7 +511,7 @@ export class RatingManager {
 				totalKillValue: 0,
 				totalDeathValue: 0,
 				totalPlacement: 0,
-				showRating: true, // Default to showing rating
+				showRating: false, // Default to hiding rating for new players
 				_isSynced: false, // Mark as NOT synced (default-initialized)
 			};
 
@@ -605,11 +638,23 @@ export class RatingManager {
 			}
 		});
 
-		// Calculate rating change using INITIAL player count
+		// Build kill values for kill modifier calculation
+		const allKillValues = this.buildAllKillValues();
+		const playerKillValue = this.getPlayerKillValue(player);
+
+		// Calculate rating change using INITIAL player count and kill adjustment
 		const basePlacementPoints = calculatePlacementPoints(placement, this.initialPlayerCount);
 		const isGain = basePlacementPoints >= 0;
 		const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, opponentRatings, isGain);
-		const totalChange = calculateRatingChange(placement, currentRating, opponentRatings, this.initialPlayerCount);
+		const killAdjustment = calculateKillAdjustment(playerKillValue, allKillValues);
+		const totalChange = calculateRatingChange(
+			placement,
+			currentRating,
+			opponentRatings,
+			this.initialPlayerCount,
+			playerKillValue,
+			allKillValues
+		);
 
 		// Get or create player rating data
 		let playerData = this.ratingData.get(btag);
@@ -668,6 +713,7 @@ export class RatingManager {
 			basePlacementPoints: basePlacementPoints,
 			lobbySizeMultiplier: 1.0, // No longer used - dynamic placement handles lobby size
 			opponentStrengthModifier: opponentStrengthModifier,
+			killAdjustment: killAdjustment,
 			totalChange: totalChange,
 			oldRating: oldRating,
 			newRating: newRating,
@@ -744,6 +790,9 @@ export class RatingManager {
 			opponentRatings.push(rating);
 		});
 
+		// Build all kill values from ranks (all players in the game)
+		const allKillValues = this.buildAllKillValues(ranks);
+
 		// Finalize each survivor - they get placements 0, 1, 2... (1st, 2nd, 3rd...)
 		// Since ranks is sorted, first survivor = winner
 		survivors.forEach((player, index) => {
@@ -761,11 +810,22 @@ export class RatingManager {
 				}
 			});
 
-			// Calculate rating change using INITIAL player count
+			// Get player's kill value for kill modifier
+			const playerKillValue = this.getPlayerKillValue(player);
+
+			// Calculate rating change using INITIAL player count and kill adjustment
 			const basePlacementPoints = calculatePlacementPoints(placement, this.initialPlayerCount);
 			const isGain = basePlacementPoints >= 0;
 			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, properOpponentRatings, isGain);
-			const totalChange = calculateRatingChange(placement, currentRating, properOpponentRatings, this.initialPlayerCount);
+			const killAdjustment = calculateKillAdjustment(playerKillValue, allKillValues);
+			const totalChange = calculateRatingChange(
+				placement,
+				currentRating,
+				properOpponentRatings,
+				this.initialPlayerCount,
+				playerKillValue,
+				allKillValues
+			);
 
 			// Get or create player rating data
 			let playerData = this.ratingData.get(btag);
@@ -824,6 +884,7 @@ export class RatingManager {
 				basePlacementPoints: basePlacementPoints,
 				lobbySizeMultiplier: 1.0, // No longer used - dynamic placement handles lobby size
 				opponentStrengthModifier: opponentStrengthModifier,
+				killAdjustment: killAdjustment,
 				totalChange: totalChange,
 				oldRating: oldRating,
 				newRating: newRating,
@@ -924,6 +985,9 @@ export class RatingManager {
 			opponentRatings.push(rating);
 		});
 
+		// Build all kill values for kill modifier calculation
+		const allKillValues = this.buildAllKillValues();
+
 		// Calculate and save pending entries for each alive player
 		// Pending entry simulates "what if this player disconnects NOW" - they'd be the NEXT eliminated
 		// All alive players get the same placement: they'd be last place among remaining players
@@ -945,11 +1009,21 @@ export class RatingManager {
 				}
 			});
 
-			// Calculate rating change using INITIAL player count
+			// Get player's kill value for kill modifier
+			const playerKillValue = this.getPlayerKillValue(player);
+
+			// Calculate rating change using INITIAL player count and kill modifier
 			const basePlacementPoints = calculatePlacementPoints(preliminaryPlacement, this.initialPlayerCount);
 			const isGain = basePlacementPoints >= 0;
 			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, properOpponentRatings, isGain);
-			const totalChange = calculateRatingChange(preliminaryPlacement, currentRating, properOpponentRatings, this.initialPlayerCount);
+			const totalChange = calculateRatingChange(
+				preliminaryPlacement,
+				currentRating,
+				properOpponentRatings,
+				this.initialPlayerCount,
+				playerKillValue,
+				allKillValues
+			);
 
 			// Get or create player rating data
 			let playerData = this.ratingData.get(btag);

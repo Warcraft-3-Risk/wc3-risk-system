@@ -119,8 +119,10 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				if (result && result.newRating != undefined && result.oldRating != undefined) {
 					// Use effective change (newRating - oldRating) to account for rating floor
 					const effectiveChange = result.newRating - result.oldRating;
-					const color = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
-					const sign = effectiveChange >= 0 ? '+' : '';
+					// If effective change is 0 but total change was negative, player was protected by floor
+					const wasFloorProtected = effectiveChange === 0 && result.totalChange < 0;
+					const color = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
+					const sign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
 					return `${highlightIfOwnPlayer(player, result.newRating)} (${color}${sign}${effectiveChange}|r)`;
 				}
 
