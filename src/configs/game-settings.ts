@@ -81,7 +81,7 @@ export const RANKED_SEASON_ID: number = 1;
 // This allows you to "soft reset" the season by using new file paths.
 // Use 1-4 lowercase letters (e.g., "a", "ab", "abc", "abcd").
 // Leave empty string "" to disable (files will be named without a reset key).
-export const RANKED_SEASON_RESET_KEY: string = 'test';
+export const RANKED_SEASON_RESET_KEY: string = 'live';
 
 // This represents the minimum number of human players required for a ranked game.
 export const RANKED_MIN_PLAYERS: number = 16;
