@@ -650,7 +650,7 @@ Frame "BACKDROP" "RatingStatsFrame" INHERITS "QuestButtonBaseTemplate" {
         ButtonText "RatingDisableButtonText",
 
         Frame "TEXT" "RatingDisableButtonText" INHERITS "EscMenuButtonTextTemplate" {
-            Text "Enabled",
+            Text "Ranked UI: Enabled",
         }
     }
 

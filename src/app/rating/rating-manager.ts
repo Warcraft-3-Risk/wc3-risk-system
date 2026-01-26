@@ -678,8 +678,10 @@ export class RatingManager {
 		this.finalizedPlayers.add(btag);
 
 		// Save to file immediately (REAL entry, not pending)
+		// Only save if this is the LOCAL player - each player saves only their own rating file
 		const isHuman = GetPlayerController(player.getPlayer()) === MAP_CONTROL_USER;
-		if (isHuman) {
+		const isLocalPlayer = player.getPlayer() === GetLocalPlayer();
+		if (isHuman && isLocalPlayer) {
 			const saved = this.savePlayerRating(btag);
 			if (!saved) {
 				print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
@@ -832,8 +834,10 @@ export class RatingManager {
 			this.finalizedPlayers.add(btag);
 
 			// Save to file immediately
+			// Only save if this is the LOCAL player - each player saves only their own rating file
 			const isHuman = GetPlayerController(player.getPlayer()) === MAP_CONTROL_USER;
-			if (isHuman) {
+			const isLocalPlayer = player.getPlayer() === GetLocalPlayer();
+			if (isHuman && isLocalPlayer) {
 				const saved = this.savePlayerRating(btag);
 				if (!saved) {
 					print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
@@ -996,13 +1000,17 @@ export class RatingManager {
 			};
 
 			// Save this player's rating with pending game
-			const saved = this.savePlayerRating(btag);
-			if (!saved) {
-				debugPrint(`[RatingManager] Failed to save pending rating for ${btag}`);
-			} else {
-				debugPrint(
-					`[RatingManager] Saved pending entry for ${btag}: turn=${currentTurn}, preliminaryPlacement=${preliminaryPlacement + 1}, preliminaryRating=${preliminaryRating}`
-				);
+			// Only save if this is the LOCAL player - each player saves only their own rating file
+			const isLocalPlayer = player.getPlayer() === GetLocalPlayer();
+			if (isLocalPlayer) {
+				const saved = this.savePlayerRating(btag);
+				if (!saved) {
+					debugPrint(`[RatingManager] Failed to save pending rating for ${btag}`);
+				} else {
+					debugPrint(
+						`[RatingManager] Saved pending entry for ${btag}: turn=${currentTurn}, preliminaryPlacement=${preliminaryPlacement + 1}, preliminaryRating=${preliminaryRating}`
+					);
+				}
 			}
 		});
 	}

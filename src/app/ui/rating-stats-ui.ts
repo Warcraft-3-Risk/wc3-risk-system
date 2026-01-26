@@ -334,7 +334,7 @@ export class RatingStatsUI {
 		const btag = NameManager.getInstance().getBtag(this.player.getPlayer());
 		const showRating = ratingManager.getShowRatingPreference(btag);
 
-		const buttonText = showRating ? 'Enabled' : 'Disabled';
+		const buttonText = showRating ? 'Ranked UI: Enabled' : 'Ranked UI: Disabled';
 		BlzFrameSetText(this.enableDisableButtonText, buttonText);
 	}
 
