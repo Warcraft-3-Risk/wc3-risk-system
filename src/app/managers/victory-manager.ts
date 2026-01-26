@@ -37,7 +37,16 @@ export class VictoryManager {
 	}
 
 	public setLeader(participant: ParticipantEntity) {
-		if (GlobalGameData.leader == undefined) {
+		// Don't set eliminated players as leader
+		if (participant instanceof ActivePlayer && participant.status.isEliminated()) {
+			return;
+		}
+
+		// If current leader is eliminated, always replace them
+		const currentLeaderEliminated =
+			GlobalGameData.leader instanceof ActivePlayer && GlobalGameData.leader.status.isEliminated();
+
+		if (GlobalGameData.leader == undefined || currentLeaderEliminated) {
 			GlobalGameData.leader = participant;
 		} else if (ParticipantEntityManager.getCityCount(participant) > ParticipantEntityManager.getCityCount(GlobalGameData.leader)) {
 			GlobalGameData.leader = participant;
@@ -56,6 +65,14 @@ export class VictoryManager {
 	// This function is used to get the players who have won with the most cities (many players can have the same number of cities)
 	public victors(): ParticipantEntity[] {
 		let potentialVictors = this.getOwnershipByThresholdDescending(VictoryManager.getCityCountWin());
+
+		// Filter out eliminated players - they cannot be victors even if they have enough cities
+		potentialVictors = potentialVictors.filter((participant) => {
+			if (participant instanceof ActivePlayer) {
+				return !participant.status.isEliminated();
+			}
+			return true; // Teams are already filtered by getActiveTeams()
+		});
 
 		if (potentialVictors.length == 0) {
 			return [];

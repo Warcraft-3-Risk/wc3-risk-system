@@ -78,45 +78,111 @@ export class RatingSyncManager {
 	 * @param humanPlayers Array of human players (excludes AI)
 	 */
 	public startSync(humanPlayers: ActivePlayer[]): void {
+		const localPlayer = GetLocalPlayer();
+		const localPlayerId = GetPlayerId(localPlayer);
+		const localBtag = NameManager.getInstance().getBtag(localPlayer);
+		const isLocalObserver = IsPlayerObserver(localPlayer);
+
+		debugPrint(`[RATING SYNC] ========== SYNC START ==========`);
+		debugPrint(`[RATING SYNC] Local player: ${localBtag} (id=${localPlayerId}, isObserver=${isLocalObserver})`);
+		debugPrint(`[RATING SYNC] Human players count: ${humanPlayers.length}`);
+
+		// Log all human players
+		for (let i = 0; i < humanPlayers.length; i++) {
+			const ap = humanPlayers[i];
+			const p = ap.getPlayer();
+			const pId = GetPlayerId(p);
+			const pBtag = NameManager.getInstance().getBtag(p);
+			const pIsObs = IsPlayerObserver(p);
+			debugPrint(`[RATING SYNC]   Player ${i}: ${pBtag} (id=${pId}, isObserver=${pIsObs})`);
+		}
+
 		// If single player (no other humans to sync with), just load local data
 		if (humanPlayers.length < 2) {
+			debugPrint(`[RATING SYNC] Only ${humanPlayers.length} human(s), using local-only mode`);
 			this.loadLocalDataOnly();
 			return;
 		}
 
-		this.expectedPlayerCount = humanPlayers.length;
+		// Filter out observers - WC3's BlzSendSyncData() doesn't work for observers
+		// Observers can't send sync data, so we only create SyncRequests for non-observer players
+		const nonObserverPlayers: ActivePlayer[] = [];
+		for (let i = 0; i < humanPlayers.length; i++) {
+			const ap = humanPlayers[i];
+			if (!IsPlayerObserver(ap.getPlayer())) {
+				nonObserverPlayers.push(ap);
+			}
+		}
+
+		debugPrint(`[RATING SYNC] Non-observer players: ${nonObserverPlayers.length} (filtered from ${humanPlayers.length})`);
+
+		// If no non-observer players (all observers), use local-only mode
+		// Observers can't send sync data, so there's nothing to sync
+		if (nonObserverPlayers.length < 1) {
+			debugPrint(`[RATING SYNC] Only observers in lobby, using local-only mode`);
+			this.loadLocalDataOnly();
+			return;
+		}
+
+		debugPrint(`[RATING SYNC] Starting P2P sync with ${nonObserverPlayers.length} non-observer players, timeout=${RATING_SYNC_TIMEOUT}s`);
+
+		this.expectedPlayerCount = nonObserverPlayers.length;
 		this.completedSyncs = 0;
 
 		// Stagger SyncRequest creation to prevent frame lag
 		// Create one SyncRequest every 0.1 seconds for smoother performance
 		const SYNC_STAGGER_DELAY = 0.1;
 		let currentIndex = 0;
+		const syncStartTime = os.time();
 
 		const staggerTimer = CreateTimer();
 		TimerStart(staggerTimer, SYNC_STAGGER_DELAY, true, () => {
-			if (currentIndex >= humanPlayers.length) {
+			if (currentIndex >= nonObserverPlayers.length) {
 				// All SyncRequests created, stop the timer
 				PauseTimer(staggerTimer);
 				DestroyTimer(staggerTimer);
+				debugPrint(`[RATING SYNC] All ${nonObserverPlayers.length} SyncRequests created`);
 				return;
 			}
 
-			const activePlayer = humanPlayers[currentIndex];
+			const activePlayer = nonObserverPlayers[currentIndex];
 			const player = activePlayer.getPlayer();
 			const playerId = GetPlayerId(player);
+			const playerBtag = NameManager.getInstance().getBtag(player);
+			const isObserver = IsPlayerObserver(player);
+			const isSource = player === localPlayer;
+
+			debugPrint(`[RATING SYNC] Creating SyncRequest ${currentIndex + 1}/${nonObserverPlayers.length} for ${playerBtag} (id=${playerId}, isObserver=${isObserver}, isSource=${isSource})`);
 
 			// Build the data to sync for this player
 			const dataToSync = this.buildPlayerSyncData(player);
 			const serializedData = this.serializePlayerData(dataToSync);
 
+			debugPrint(`[RATING SYNC]   -> Built ${dataToSync.length} players to sync (serialized length: ${serializedData.length} chars)`);
+
 			// Create SyncRequest - w3ts handles chunking automatically
 			const mapPlayer = MapPlayer.fromHandle(player);
 			new SyncRequest(mapPlayer, serializedData)
 				.then((res, req) => {
+					const elapsed = os.time() - syncStartTime;
+					const receivedPlayers = this.deserializePlayerData(res.data);
+					debugPrint(`[RATING SYNC] SyncRequest COMPLETED for ${playerBtag} (id=${playerId}) after ${elapsed}s`);
+					debugPrint(`[RATING SYNC]   -> Received ${receivedPlayers.length} players (data length: ${res.data.length} chars)`);
+					if (receivedPlayers.length > 0 && receivedPlayers.length <= 5) {
+						// Log individual players if only a few
+						for (let j = 0; j < receivedPlayers.length; j++) {
+							debugPrint(`[RATING SYNC]   -> Player ${j}: ${receivedPlayers[j].btag} (rating=${receivedPlayers[j].rating})`);
+						}
+					} else if (receivedPlayers.length > 5) {
+						// Just log first and last few
+						debugPrint(`[RATING SYNC]   -> First: ${receivedPlayers[0].btag} (rating=${receivedPlayers[0].rating})`);
+						debugPrint(`[RATING SYNC]   -> Last: ${receivedPlayers[receivedPlayers.length - 1].btag}`);
+					}
 					this.handleSyncComplete(playerId, res.data);
 				})
 				.catch((res, req) => {
-					debugPrint(`[RATING SYNC] Sync failed for player ${playerId}: timeout`);
+					const elapsed = os.time() - syncStartTime;
+					debugPrint(`[RATING SYNC] SyncRequest FAILED/TIMEOUT for ${playerBtag} (id=${playerId}) after ${elapsed}s`);
 					this.handleSyncComplete(playerId, '');
 				});
 
@@ -135,9 +201,12 @@ export class RatingSyncManager {
 	private buildPlayerSyncData(player: player): PlayerRatingData[] {
 		const playersToSync: PlayerRatingData[] = [];
 		const localPlayer = GetLocalPlayer();
+		const targetBtag = NameManager.getInstance().getBtag(player);
+		const localBtag = NameManager.getInstance().getBtag(localPlayer);
 
 		// Only the local player builds their actual data
 		if (player !== localPlayer) {
+			debugPrint(`[RATING SYNC] buildPlayerSyncData: Skipping ${targetBtag} (not local player ${localBtag})`);
 			return playersToSync;
 		}
 
@@ -145,18 +214,23 @@ export class RatingSyncManager {
 		const btag = nameManager.getBtag(localPlayer);
 
 		if (!btag) {
+			debugPrint(`[RATING SYNC] buildPlayerSyncData: ERROR - No btag for local player!`);
 			return playersToSync;
 		}
+
+		debugPrint(`[RATING SYNC] buildPlayerSyncData: Building data for local player ${btag}`);
 
 		// 1. Add personal rating data
 		const hash = this.sanitizePlayerName(btag);
 		const resetKey = RANKED_SEASON_RESET_KEY || '';
 		// Must use .txt extension - WC3 only supports .txt and .pld file extensions
 		const filePath = `risk/p${this.seasonId}${resetKey}_${hash}.txt`;
+		debugPrint(`[RATING SYNC]   -> Reading personal file: ${filePath}`);
 		const ratingFile = readRatings(filePath);
 
 		// Validate checksum if file exists
 		const isValidFile = ratingFile && validateChecksum(ratingFile);
+		debugPrint(`[RATING SYNC]   -> Personal file exists: ${ratingFile !== null}, valid: ${isValidFile}`);
 		if (ratingFile && !isValidFile) {
 			print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
 		}
@@ -175,11 +249,13 @@ export class RatingSyncManager {
 				ratingFile.player.totalPlacement = pg.totalPlacement;
 				ratingFile.player.lastUpdated = pg.timestamp;
 				delete ratingFile.player.pendingGame;
-				debugPrint(`[RATING SYNC] Finalized pending game for sync: ${btag}`);
+				debugPrint(`[RATING SYNC]   -> Finalized pending game for sync: ${btag}`);
 			}
+			debugPrint(`[RATING SYNC]   -> Personal data: rating=${ratingFile.player.rating}, games=${ratingFile.player.gamesPlayed}`);
 			playersToSync.push(ratingFile.player);
 		} else {
 			// New player or corrupted file - add default starting data
+			debugPrint(`[RATING SYNC]   -> Using default data (new player or corrupted file)`);
 			const timestamp = math.floor(os.time());
 			playersToSync.push({
 				btag: btag,
@@ -195,8 +271,10 @@ export class RatingSyncManager {
 		}
 
 		// 2. Add top N players from "others" database
+		debugPrint(`[RATING SYNC]   -> Reading others database for hash: ${hash}`);
 		const othersData = readOthersRatings(hash, this.seasonId);
 		if (othersData && othersData.players.length > 0) {
+			debugPrint(`[RATING SYNC]   -> Others database has ${othersData.players.length} players`);
 			// Sort by rating descending
 			const sortedPlayers = othersData.players.sort((a, b) => {
 				if (b.rating !== a.rating) {
@@ -209,14 +287,20 @@ export class RatingSyncManager {
 
 			// Take top N players (don't include personal data again)
 			const topPlayers = sortedPlayers.slice(0, RATING_SYNC_TOP_PLAYERS);
+			let addedCount = 0;
 			for (let i = 0; i < topPlayers.length; i++) {
 				const otherPlayer = topPlayers[i];
 				if (otherPlayer.btag !== btag) {
 					playersToSync.push(otherPlayer);
+					addedCount++;
 				}
 			}
+			debugPrint(`[RATING SYNC]   -> Added ${addedCount} players from others database`);
+		} else {
+			debugPrint(`[RATING SYNC]   -> No others database found or empty`);
 		}
 
+		debugPrint(`[RATING SYNC]   -> Total players to sync: ${playersToSync.length}`);
 		return playersToSync;
 	}
 
@@ -271,7 +355,10 @@ export class RatingSyncManager {
 	 * Handle completed sync from a player
 	 */
 	private handleSyncComplete(playerId: number, data: string): void {
+		debugPrint(`[RATING SYNC] handleSyncComplete: playerId=${playerId}, isComplete=${this.isComplete}, completedSyncs=${this.completedSyncs}/${this.expectedPlayerCount}`);
+
 		if (this.isComplete) {
+			debugPrint(`[RATING SYNC]   -> Ignoring (sync already complete)`);
 			return; // Already completed
 		}
 
@@ -279,8 +366,12 @@ export class RatingSyncManager {
 		this.receivedPlayerData.set(playerId, players);
 		this.completedSyncs++;
 
+		debugPrint(`[RATING SYNC]   -> Stored ${players.length} players for playerId=${playerId}`);
+		debugPrint(`[RATING SYNC]   -> Progress: ${this.completedSyncs}/${this.expectedPlayerCount} syncs complete`);
+
 		// Check if all syncs are complete
 		if (this.completedSyncs >= this.expectedPlayerCount) {
+			debugPrint(`[RATING SYNC]   -> All syncs received, calling completeSync()`);
 			this.completeSync();
 		}
 	}
@@ -289,12 +380,17 @@ export class RatingSyncManager {
 	 * Start timeout timer for sync completion
 	 */
 	private startTimeoutTimer(): void {
+		debugPrint(`[RATING SYNC] Starting timeout timer: ${RATING_SYNC_TIMEOUT}s`);
 		const timeoutTimer = CreateTimer();
 
 		TimerStart(timeoutTimer, RATING_SYNC_TIMEOUT, false, () => {
 			DestroyTimer(timeoutTimer);
+			debugPrint(`[RATING SYNC] TIMEOUT TRIGGERED! isComplete=${this.isComplete}, completedSyncs=${this.completedSyncs}/${this.expectedPlayerCount}`);
 			if (!this.isComplete) {
+				debugPrint(`[RATING SYNC]   -> Forcing completeSync() due to timeout`);
 				this.completeSync();
+			} else {
+				debugPrint(`[RATING SYNC]   -> Sync already complete, timeout ignored`);
 			}
 		});
 	}
@@ -304,12 +400,17 @@ export class RatingSyncManager {
 	 * Used for single player games or when sync is disabled
 	 */
 	private loadLocalDataOnly(): void {
+		debugPrint(`[RATING SYNC] ========== LOCAL ONLY MODE ==========`);
+
 		const receivedPlayers: PlayerRatingData[] = [];
 
 		// Add local player's own data (most accurate)
 		const localPlayer = GetLocalPlayer();
 		const nameManager = NameManager.getInstance();
 		const btag = nameManager.getBtag(localPlayer);
+		const isLocalObserver = IsPlayerObserver(localPlayer);
+
+		debugPrint(`[RATING SYNC] Local player: ${btag} (isObserver=${isLocalObserver})`);
 
 		if (btag) {
 			const hash = this.sanitizePlayerName(btag);
@@ -408,11 +509,16 @@ export class RatingSyncManager {
 	 */
 	private loadOthersDatabase(receivedPlayers: PlayerRatingData[]): void {
 		const sanitizedName = this.getSanitizedLocalPlayerName();
+		debugPrint(`[RATING SYNC] loadOthersDatabase: Loading for hash ${sanitizedName}`);
+
 		const othersData = readOthersRatings(sanitizedName, this.seasonId);
 
 		if (!othersData || othersData.players.length === 0) {
+			debugPrint(`[RATING SYNC]   -> No others data found or empty`);
 			return;
 		}
+
+		debugPrint(`[RATING SYNC]   -> Found ${othersData.players.length} players in others database`);
 
 		// Sort players by rating (descending), then by btag (alphabetically) for deterministic ordering
 		const sortedPlayers = othersData.players.sort((a, b) => {
@@ -428,6 +534,8 @@ export class RatingSyncManager {
 		const topPlayers = sortedPlayers.slice(0, RATING_SYNC_TOP_PLAYERS);
 
 		// Add top players from others database
+		let addedCount = 0;
+		let skippedCount = 0;
 		for (let i = 0; i < topPlayers.length; i++) {
 			const otherPlayer = topPlayers[i];
 
@@ -442,8 +550,13 @@ export class RatingSyncManager {
 
 			if (!alreadyExists) {
 				receivedPlayers.push(otherPlayer);
+				addedCount++;
+			} else {
+				skippedCount++;
 			}
 		}
+
+		debugPrint(`[RATING SYNC]   -> Added ${addedCount} players, skipped ${skippedCount} duplicates`);
 	}
 
 	/**
@@ -452,7 +565,11 @@ export class RatingSyncManager {
 	 * Uses batched processing to prevent frame lag with many players
 	 */
 	private completeSync(): void {
+		debugPrint(`[RATING SYNC] ========== COMPLETE SYNC ==========`);
+		debugPrint(`[RATING SYNC] isComplete=${this.isComplete}, completedSyncs=${this.completedSyncs}/${this.expectedPlayerCount}`);
+
 		if (this.isComplete) {
+			debugPrint(`[RATING SYNC]   -> Already complete, returning`);
 			return;
 		}
 
@@ -460,13 +577,17 @@ export class RatingSyncManager {
 
 		// Flatten all received player data into a single array for batched processing
 		const allReceivedPlayers: PlayerRatingData[] = [];
+		debugPrint(`[RATING SYNC] Received data from ${this.receivedPlayerData.size} players:`);
 		this.receivedPlayerData.forEach((playersData, playerId) => {
+			const count = playersData ? playersData.length : 0;
+			debugPrint(`[RATING SYNC]   -> playerId=${playerId}: ${count} players`);
 			if (playersData && playersData.length > 0) {
 				for (let i = 0; i < playersData.length; i++) {
 					allReceivedPlayers.push(playersData[i]);
 				}
 			}
 		});
+		debugPrint(`[RATING SYNC] Total received players (before dedup): ${allReceivedPlayers.length}`);
 
 		// Map to track all players (btag -> PlayerRatingData)
 		// When duplicates exist, keep the one with newest lastUpdated timestamp
@@ -524,10 +645,15 @@ export class RatingSyncManager {
 	 * @param totalPlayersReceived Total count of players received from sync
 	 */
 	private finalizeSyncAfterBatching(allPlayersMap: Map<string, PlayerRatingData>, totalPlayersReceived: number): void {
+		debugPrint(`[RATING SYNC] ========== FINALIZE SYNC ==========`);
+		debugPrint(`[RATING SYNC] allPlayersMap size: ${allPlayersMap.size}, totalPlayersReceived: ${totalPlayersReceived}`);
+
 		// Add local player's own data (highest priority - most accurate)
 		const localPlayer = GetLocalPlayer();
 		const nameManager = NameManager.getInstance();
 		const btag = nameManager.getBtag(localPlayer);
+		const isLocalObserver = IsPlayerObserver(localPlayer);
+		debugPrint(`[RATING SYNC] Local player: ${btag} (isObserver=${isLocalObserver})`);
 
 		if (btag) {
 			const hash = this.sanitizePlayerName(btag);
@@ -568,8 +694,11 @@ export class RatingSyncManager {
 			mergedPlayers.push(player);
 		});
 
+		debugPrint(`[RATING SYNC] Merged players count: ${mergedPlayers.length}`);
+
 		// If P2P sync failed (no data received from other players), load local "others" database as fallback
 		if (totalPlayersReceived === 0) {
+			debugPrint(`[RATING SYNC] WARNING: No data received from sync! Using FALLBACK path`);
 			const fallbackPlayers: PlayerRatingData[] = [];
 
 			// Add players already in mergedPlayers (local player's personal file)
@@ -578,42 +707,90 @@ export class RatingSyncManager {
 			}
 
 			// Load local "others" database
+			debugPrint(`[RATING SYNC]   -> Loading local others database...`);
 			this.loadOthersDatabase(fallbackPlayers);
+			debugPrint(`[RATING SYNC]   -> After loading others: ${fallbackPlayers.length} players`);
 
 			// Use fallback data instead of empty merged data
 			this.mergeAndSave(fallbackPlayers);
 		} else {
 			// Normal P2P sync succeeded
+			debugPrint(`[RATING SYNC] P2P sync succeeded with ${totalPlayersReceived} total entries, using NORMAL path`);
 			this.mergeAndSave(mergedPlayers);
 		}
 	}
 
 	/**
 	 * Save "others" rating file with top N OTHER players (excluding local player)
+	 * IMPORTANT: Merges with existing "others" database to prevent data loss from sync issues
 	 * Sorts by rating and limits to RATING_SYNC_TOP_PLAYERS to prevent unbounded growth
-	 * @param allPlayers Array of all player data
+	 * @param allPlayers Array of all player data from sync
 	 */
 	private saveOthersFile(allPlayers: PlayerRatingData[]): void {
+		debugPrint(`[RATING SYNC] saveOthersFile: Input ${allPlayers.length} players from sync`);
+
 		// Get local player's btag (to exclude from "others" database)
 		const localPlayer = GetLocalPlayer();
 		const nameManager = NameManager.getInstance();
 		const localBtag = nameManager.getBtag(localPlayer);
+		const isLocalObserver = IsPlayerObserver(localPlayer);
+		const sanitizedName = this.getSanitizedLocalPlayerName();
 
-		// Separate OTHER players (exclude local player) for saving to "others" file
-		const otherPlayers: PlayerRatingData[] = [];
+		debugPrint(`[RATING SYNC]   -> Local player: ${localBtag} (isObserver=${isLocalObserver})`);
+
+		// CRITICAL FIX: Load existing "others" database first and merge with synced data
+		// This prevents data loss when sync fails or returns incomplete data (common with observers)
+		// Same pattern as updateOthersDatabase() uses at game end
+		const existingOthersData = readOthersRatings(sanitizedName, this.seasonId);
+		const playerMap = new Map<string, PlayerRatingData>();
+
+		// Add existing players from "others" database first
+		if (existingOthersData && existingOthersData.players.length > 0) {
+			debugPrint(`[RATING SYNC]   -> Loading existing others database: ${existingOthersData.players.length} players`);
+			for (let i = 0; i < existingOthersData.players.length; i++) {
+				const player = existingOthersData.players[i];
+				if (player.btag !== localBtag) {
+					playerMap.set(player.btag, player);
+				}
+			}
+		} else {
+			debugPrint(`[RATING SYNC]   -> No existing others database found`);
+		}
+
+		// Merge synced players (newer timestamp wins)
+		let updatedCount = 0;
+		let newCount = 0;
 		for (let i = 0; i < allPlayers.length; i++) {
 			const player = allPlayers[i];
-			if (player.btag !== localBtag) {
-				otherPlayers.push(player);
+			if (player.btag === localBtag) {
+				continue; // Skip self
+			}
+
+			const existing = playerMap.get(player.btag);
+			if (!existing) {
+				playerMap.set(player.btag, player);
+				newCount++;
+			} else if (player.lastUpdated > existing.lastUpdated) {
+				playerMap.set(player.btag, player);
+				updatedCount++;
 			}
 		}
 
-		if (otherPlayers.length === 0) {
+		debugPrint(`[RATING SYNC]   -> Merged: ${newCount} new, ${updatedCount} updated, ${playerMap.size} total`);
+
+		if (playerMap.size === 0) {
+			debugPrint(`[RATING SYNC]   -> No other players to save, returning`);
 			return;
 		}
 
+		// Convert map to array
+		const mergedPlayers: PlayerRatingData[] = [];
+		playerMap.forEach((player) => {
+			mergedPlayers.push(player);
+		});
+
 		// Sort by rating (descending) to keep the best players
-		otherPlayers.sort((a, b) => {
+		mergedPlayers.sort((a, b) => {
 			if (b.rating !== a.rating) {
 				return b.rating - a.rating;
 			}
@@ -630,10 +807,17 @@ export class RatingSyncManager {
 		// Limit to top N players (RATING_SYNC_TOP_PLAYERS)
 		// This ensures the "others" file doesn't grow unbounded
 		// When a new player enters the top N, they replace the lowest-rated player
-		const topPlayers = otherPlayers.slice(0, RATING_SYNC_TOP_PLAYERS);
+		const topPlayers = mergedPlayers.slice(0, RATING_SYNC_TOP_PLAYERS);
+
+		debugPrint(`[RATING SYNC]   -> After limit: ${topPlayers.length} players (limit=${RATING_SYNC_TOP_PLAYERS})`);
+		if (topPlayers.length > 0) {
+			debugPrint(`[RATING SYNC]   -> First: ${topPlayers[0].btag} (rating=${topPlayers[0].rating})`);
+			if (topPlayers.length > 1) {
+				debugPrint(`[RATING SYNC]   -> Last: ${topPlayers[topPlayers.length - 1].btag} (rating=${topPlayers[topPlayers.length - 1].rating})`);
+			}
+		}
 
 		// Save to local "others" database for this account
-		const sanitizedName = this.getSanitizedLocalPlayerName();
 		const othersData = {
 			version: 1,
 			seasonId: this.seasonId,
@@ -642,7 +826,9 @@ export class RatingSyncManager {
 			playerCount: topPlayers.length,
 		};
 
+		debugPrint(`[RATING SYNC]   -> Writing to others file for hash: ${sanitizedName}`);
 		writeOthersRatings(othersData, sanitizedName, this.seasonId);
+		debugPrint(`[RATING SYNC]   -> Others file saved successfully`);
 	}
 
 	/**
@@ -652,6 +838,9 @@ export class RatingSyncManager {
 	 * @param allPlayers Array of all player data (from sync + local "others" database)
 	 */
 	private mergeAndSave(allPlayers: PlayerRatingData[]): void {
+		debugPrint(`[RATING SYNC] ========== MERGE AND SAVE ==========`);
+		debugPrint(`[RATING SYNC] Input: ${allPlayers.length} players to process`);
+
 		const ratingManager = RatingManager.getInstance();
 
 		// Sort all merged players by rating (descending) to find the global top N
@@ -672,9 +861,18 @@ export class RatingSyncManager {
 		// Take only top N players - this ensures everyone's leaderboard shows the same players
 		// RATING_SYNC_TOP_PLAYERS defines the leaderboard size (e.g., 100)
 		const topPlayers = sortedPlayers.slice(0, RATING_SYNC_TOP_PLAYERS);
+		debugPrint(`[RATING SYNC] Sorted and took top ${topPlayers.length} players (limit: ${RATING_SYNC_TOP_PLAYERS})`);
+
+		if (topPlayers.length > 0) {
+			debugPrint(`[RATING SYNC]   -> Top player: ${topPlayers[0].btag} (rating=${topPlayers[0].rating})`);
+			if (topPlayers.length > 1) {
+				debugPrint(`[RATING SYNC]   -> Last player: ${topPlayers[topPlayers.length - 1].btag} (rating=${topPlayers[topPlayers.length - 1].rating})`);
+			}
+		}
 
 		// Load only top N players into memory (marked as synced)
 		// This ensures leaderboard shows exactly top N players
+		debugPrint(`[RATING SYNC] Loading ${topPlayers.length} players into RatingManager memory...`);
 		ratingManager.loadPlayersFromSync(topPlayers);
 
 		// Initialize current game players with default data if they're not in top N
@@ -684,6 +882,7 @@ export class RatingSyncManager {
 		PlayerManager.getInstance().players.forEach((player) => {
 			currentPlayers.push(player);
 		});
+		debugPrint(`[RATING SYNC] Initializing ${currentPlayers.length} current game players...`);
 		ratingManager.initializeCurrentGamePlayers(currentPlayers);
 
 		// Save local player's rating file immediately (creates file for new players)
@@ -691,15 +890,18 @@ export class RatingSyncManager {
 		const localPlayer = GetLocalPlayer();
 		const localBtag = NameManager.getInstance().getBtag(localPlayer);
 		if (localBtag) {
+			debugPrint(`[RATING SYNC] Saving personal rating file for ${localBtag}...`);
 			ratingManager.savePlayerRating(localBtag);
 		}
 
 		// Save "others" file with top N players (excluding local player)
 		// Use the same topPlayers list to ensure consistency
+		debugPrint(`[RATING SYNC] Saving others file with ${topPlayers.length} players...`);
 		this.saveOthersFile(topPlayers);
 
 		// Mark sync as fully complete - safe for UI to access now
 		this.syncFullyCompleted = true;
+		debugPrint(`[RATING SYNC] ========== SYNC FULLY COMPLETE ==========`);
 	}
 
 	/**

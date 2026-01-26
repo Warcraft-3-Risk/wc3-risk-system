@@ -285,7 +285,8 @@ export class Quests {
 					const btag = nameManager.getBtag(player.getPlayer());
 					description += `\n${btag}`;
 					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
-						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
+						// Show initial rating for active players (no change yet)
+						description += ` (${HexColors.GREEN}${ratingManager.getInitialPlayerRating(btag)}|r)`;
 					}
 					description += ` (${HexColors.GREEN + 'Active|r'})`;
 				});
@@ -296,7 +297,17 @@ export class Quests {
 					const btag = nameManager.getBtag(player.getPlayer());
 					description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())}`;
 					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
-						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
+						// Show initial rating + effective change for eliminated players
+						const initialRating = ratingManager.getInitialPlayerRating(btag);
+						const ratingResult = ratingManager.getRatingResults().get(btag);
+						if (ratingResult) {
+							const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
+							const changeColor = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
+							const changeSign = effectiveChange >= 0 ? '+' : '';
+							description += ` ${HexColors.TANGERINE}(${initialRating})|r ${changeColor}(${changeSign}${effectiveChange})|r`;
+						} else {
+							description += ` (${HexColors.GREEN}${initialRating}|r)`;
+						}
 					}
 					description += ` (${player.status ? player.status.status : 'Unknown'})`;
 

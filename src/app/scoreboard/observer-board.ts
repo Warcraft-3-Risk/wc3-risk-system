@@ -2,7 +2,7 @@ import { NameManager } from '../managers/names/name-manager';
 import { TrackedData } from '../player/data/tracked-data';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { ShuffleArray, truncateWithColorCode } from '../utils/utils';
+import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
@@ -133,20 +133,17 @@ export class ObserverBoard extends Scoreboard {
 		const ratingResult = ratingManager.getRatingResults().get(btag);
 		const playerName = NameManager.getInstance().getDisplayName(player.getPlayer());
 
+		this.setItemValue(`${grey}${teamPrefix}${playerName}`, row, this.PLAYER_COL);
+
+		// Show rating change in income column for eliminated players
 		if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled()) {
-			const change = ratingResult.totalChange;
-			const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
-			const sign = change >= 0 ? '+' : '';
-			const truncatedName = truncateWithColorCode(playerName, 7);
-			this.setItemValue(`${grey}${teamPrefix}${truncatedName}${color}(${sign}${change})|r`, row, this.PLAYER_COL);
+			const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
+			const color = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
+			const sign = effectiveChange >= 0 ? '+' : '';
+			this.setItemValue(`${color}${sign}${effectiveChange}|r`, row, this.INCOME_COL);
 		} else {
-			const truncatedName = truncateWithColorCode(playerName, 11);
-			this.setItemValue(`${grey}${teamPrefix}${truncatedName}`, row, this.PLAYER_COL);
+			this.setItemValue(`${grey}-`, row, this.INCOME_COL);
 		}
-
-
-		// Income
-		this.setItemValue(`${grey}-`, row, this.INCOME_COL);
 
 		// Gold
 		this.setItemValue(`${grey}-`, row, this.GOLD_COL);

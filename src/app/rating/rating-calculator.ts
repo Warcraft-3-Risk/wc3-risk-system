@@ -1,33 +1,35 @@
 /**
- * Simplified rating calculation logic for multi-player ELO system
+ * Zero-sum rating calculation logic for multi-player ELO system
  *
  * Formula: ratingChange = basePlacementPoints × opponentStrengthModifier
  *
  * 1. Base Placement Points: Dynamically calculated based on percentile position
- *    - Inflationary system with ~200 net points per game (10 pts/player average)
- *    - Top ~55% gain points, bottom ~45% lose points
- *    - Softer loss curve (max -30) to reduce frustration for casual players
+ *    - Zero-sum system: total gains = total losses (before floor adjustment)
+ *    - Top 50% gain points, bottom 50% lose points
+ *    - Symmetric curves for gains and losses
  * 2. Opponent Strength Modifier: Adjusts based on your rating vs average opponent rating
  *    - Beat weaker players = gain less points
  *    - Beat stronger players = gain more points
  *    - Lose to weaker players = lose more points
  *    - Lose to stronger players = lose less points
+ * 3. Floor Protection: Players cannot drop below RANKED_STARTING_RATING (1000)
+ *    - This creates small inflation only when floor-protected players would lose points
  */
 
 import { RANKED_OPPONENT_STRENGTH_FACTOR } from 'src/configs/game-settings';
 
-// Target net inflation per game (distributed across all players)
-// Higher values make the system more inflationary, helping average players climb
-// With BREAKEVEN at 0.55, raw sum is ~295 for 20 players, so 200 gives moderate adjustment
-const TARGET_INFLATION_PER_GAME = 200;
+// Target net points per game: 0 = zero-sum (total gains = total losses)
+// Small inflation only occurs when floor-protected players (at 1000) would lose points
+const TARGET_INFLATION_PER_GAME = 0;
 
-// Maximum points for 1st place and last place (before inflation adjustment)
-const MAX_WIN_POINTS = 50;
-const MAX_LOSS_POINTS = 30;
+// Maximum points for 1st place and last place (before normalization)
+// Symmetric values ensure fair zero-sum distribution
+const MAX_WIN_POINTS = 40;
+const MAX_LOSS_POINTS = 40;
 
-// Breakeven percentile (top 55% gain, bottom 45% lose)
-// This means more players gain points each game, reducing frustration
-const BREAKEVEN_PERCENTILE = 0.55;
+// Breakeven percentile: top 50% gain, bottom 50% lose
+// Standard zero-sum split for competitive fairness
+const BREAKEVEN_PERCENTILE = 0.50;
 
 /**
  * Get the military rank icon path based on player's rating
@@ -59,7 +61,7 @@ export function getRankIcon(rating: number): string {
 }
 
 /**
- * Calculate raw placement points (before inflation adjustment)
+ * Calculate raw placement points (before zero-sum normalization)
  * Uses a curved distribution based on percentile position
  */
 function calculateRawPoints(placement: number, playerCount: number): number {
@@ -96,7 +98,7 @@ function calculateRawPoints(placement: number, playerCount: number): number {
 
 /**
  * Calculate the sum of raw points for all positions in a game
- * Used to determine the inflation adjustment needed
+ * Used to determine the zero-sum normalization adjustment
  */
 function calculateRawPointsSum(playerCount: number): number {
 	let sum = 0;
@@ -108,11 +110,12 @@ function calculateRawPointsSum(playerCount: number): number {
 
 /**
  * Calculate placement points based on rank position and player count
- * Dynamically adjusts to ensure consistent inflation across all lobby sizes (16-23 players)
+ * Normalized to ensure zero-sum across all lobby sizes (16-23 players)
+ * Total gains = total losses (before floor protection is applied)
  *
  * @param placement Final rank (0-based index: 0 = 1st, 1 = 2nd, etc.)
  * @param playerCount Total number of players in the game
- * @returns Points earned from placement
+ * @returns Points earned from placement (positive for top 50%, negative for bottom 50%)
  */
 export function calculatePlacementPoints(placement: number, playerCount: number): number {
 	if (playerCount <= 1) {
@@ -125,7 +128,7 @@ export function calculatePlacementPoints(placement: number, playerCount: number)
 	// Calculate current raw sum
 	const rawSum = calculateRawPointsSum(playerCount);
 
-	// Calculate adjustment needed to achieve target inflation
+	// Calculate adjustment needed to achieve zero-sum (TARGET = 0)
 	const adjustment = (TARGET_INFLATION_PER_GAME - rawSum) / playerCount;
 
 	// Return adjusted points (floored)
