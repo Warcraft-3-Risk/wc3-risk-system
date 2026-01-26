@@ -282,7 +282,7 @@ export class RatingStatsUI {
 
 			// Show confirmation message
 			const statusText = newPreference ? 'enabled' : 'disabled';
-			const message = `${HexColors.TANGERINE}Displaying of stats has been ${statusText}.|r`;
+			const message = `${HexColors.TANGERINE}Ranked UI has been ${statusText}.|r`;
 			DisplayTimedTextToPlayer(this.player.getPlayer(), 0, 0, 3, message);
 		} else {
 			// Show error message
@@ -322,7 +322,7 @@ export class RatingStatsUI {
 			const preferenceText = showRating ? `${HexColors.GREEN}Enabled` : `${HexColors.RED}Disabled`;
 			BlzFrameSetText(
 				buttonTooltip,
-				`Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${preferenceText}`
+				`Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${preferenceText}`
 			);
 		}
 	}

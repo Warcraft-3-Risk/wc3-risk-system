@@ -138,7 +138,7 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 			const preferenceText = showRating ? `${HexColors.GREEN}Enabled` : `${HexColors.RED}Disabled`;
 			BlzFrameSetText(
 				buttonTooltip,
-				`Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${preferenceText}`
+				`Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${preferenceText}`
 			);
 		}
 	} else {
@@ -153,7 +153,7 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 		if (buttonTooltip) {
 			BlzFrameSetText(
 				buttonTooltip,
-				`Rating Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`
+				`Ranked Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`
 			);
 		}
 	}
@@ -169,7 +169,7 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
 		},
 		xOffset: 0.069,
-		initialTooltipText: `Rating Stats ${HexColors.TANGERINE}(F4)|r\nView your rating statistics and toggle rating display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
+		initialTooltipText: `Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
 		action: (context: number, textures: { primary: string; secondary: string }, button) => {
 			if (GetLocalPlayer() == player.getPlayer()) {
 				// Import RatingManager at runtime to check ranked status
@@ -183,7 +183,7 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 						0,
 						0,
 						3,
-						`${HexColors.TANGERINE}Rating stats are unavailable in unranked games.|r`
+						`${HexColors.TANGERINE}Ranked stats are unavailable in unranked games.|r`
 					);
 					return;
 				}
