@@ -37,6 +37,16 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 					// Generate unique game ID for crash recovery
 					ratingManager.generateGameId();
 
+					// Retroactively finalize any human players who left before ranked status was determined
+					GlobalGameData.matchPlayers.forEach((matchPlayer) => {
+						if (
+							GetPlayerController(matchPlayer.getPlayer()) === MAP_CONTROL_USER &&
+							GetPlayerSlotState(matchPlayer.getPlayer()) !== PLAYER_SLOT_STATE_PLAYING
+						) {
+							ratingManager.finalizePlayerRating(matchPlayer);
+						}
+					});
+
 					// Only show ranked/unranked message on the first match (not on restarts)
 					if (GlobalGameData.matchCount === 1) {
 						const message = `${HexColors.TANGERINE}This is a ranked game!|r Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats.`;

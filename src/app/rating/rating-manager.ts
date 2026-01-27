@@ -647,7 +647,7 @@ export class RatingManager {
 		const isGain = basePlacementPoints >= 0;
 		const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, opponentRatings, isGain);
 		const killAdjustment = calculateKillAdjustment(playerKillValue, allKillValues);
-		const totalChange = calculateRatingChange(
+		let totalChange = calculateRatingChange(
 			placement,
 			currentRating,
 			opponentRatings,
@@ -655,6 +655,13 @@ export class RatingManager {
 			playerKillValue,
 			allKillValues
 		);
+
+		// If game data wasn't captured yet (player left before game loop started),
+		// the calculation returns 0 due to playerCount <= 1 guard.
+		// Force negative so floor protection displays as -0 instead of +0.
+		if (this.initialPlayerCount === 0 && totalChange === 0) {
+			totalChange = -1;
+		}
 
 		// Get or create player rating data
 		let playerData = this.ratingData.get(btag);
