@@ -27,6 +27,7 @@ export class PlayerManager {
 	private _playerControllerHandle: Map<player, mapcontrol>;
 	//TODO observers can just be "player" type. HOWEVER, this may come in handy later if i ever decide to implement obs that are actual players
 	private _observerFromHandle: Map<player, HumanPlayer>;
+	private _initialHumanPlayerCount: number = 0;
 
 	private constructor() {
 		this._playerFromHandle = new Map<player, ActivePlayer>();
@@ -216,6 +217,22 @@ export class PlayerManager {
 
 	public getHumanPlayersCount(): number {
 		return this.getHumanPlayers().length;
+	}
+
+	/**
+	 * Captures the current human player count as the initial lobby count.
+	 * Must be called before any player cleanup/removal occurs.
+	 */
+	public captureInitialHumanPlayerCount(): void {
+		this._initialHumanPlayerCount = this.getHumanPlayersCount();
+	}
+
+	/**
+	 * Returns the initial human player count captured before cleanup.
+	 * Falls back to current count if not yet captured.
+	 */
+	public getInitialHumanPlayerCount(): number {
+		return this._initialHumanPlayerCount > 0 ? this._initialHumanPlayerCount : this.getHumanPlayersCount();
 	}
 
 	public isObserver(player: player) {

@@ -61,13 +61,25 @@ export class StandardBoard extends Scoreboard {
 	 */
 	public updateFull(): void {
 		this.players.sort((pA, pB) => {
-			const playerAIncome: number = pA.trackedData.income.income;
-			const playerBIncome: number = pB.trackedData.income.income;
+			const aEliminated = pA.status.isEliminated();
+			const bEliminated = pB.status.isEliminated();
 
-			if (playerAIncome < playerBIncome) return 1;
-			if (playerAIncome > playerBIncome) return -1;
+			// Alive players always above eliminated players
+			if (!aEliminated && bEliminated) return -1;
+			if (aEliminated && !bEliminated) return 1;
 
-			// Secondary sort by player ID for deterministic ordering across all clients
+			if (aEliminated && bEliminated) {
+				// Among eliminated: died later (higher turnDied) = higher on board
+				if (pA.trackedData.turnDied > pB.trackedData.turnDied) return -1;
+				if (pA.trackedData.turnDied < pB.trackedData.turnDied) return 1;
+				return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
+			}
+
+			// Among alive: sort by income desc
+			const incomeA = pA.trackedData.income.income;
+			const incomeB = pB.trackedData.income.income;
+			if (incomeA < incomeB) return 1;
+			if (incomeA > incomeB) return -1;
 			return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
 		});
 

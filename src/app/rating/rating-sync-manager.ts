@@ -575,6 +575,10 @@ export class RatingSyncManager {
 
 		this.isComplete = true;
 
+		// Extract self-reported entries (first entry from each player's payload is their own data)
+		// These are authoritative and will override any other data about the same player
+		const selfReportedData: Map<string, PlayerRatingData> = new Map();
+
 		// Flatten all received player data into a single array for batched processing
 		const allReceivedPlayers: PlayerRatingData[] = [];
 		debugPrint(`[RATING SYNC] Received data from ${this.receivedPlayerData.size} players:`);
@@ -582,12 +586,15 @@ export class RatingSyncManager {
 			const count = playersData ? playersData.length : 0;
 			debugPrint(`[RATING SYNC]   -> playerId=${playerId}: ${count} players`);
 			if (playersData && playersData.length > 0) {
+				// First entry is always the player's own self-reported data
+				selfReportedData.set(playersData[0].btag, playersData[0]);
 				for (let i = 0; i < playersData.length; i++) {
 					allReceivedPlayers.push(playersData[i]);
 				}
 			}
 		});
 		debugPrint(`[RATING SYNC] Total received players (before dedup): ${allReceivedPlayers.length}`);
+		debugPrint(`[RATING SYNC] Self-reported entries: ${selfReportedData.size}`);
 
 		// Map to track all players (btag -> PlayerRatingData)
 		// When duplicates exist, keep the one with newest lastUpdated timestamp
@@ -627,7 +634,7 @@ export class RatingSyncManager {
 				});
 			} else {
 				// All players processed, finalize sync
-				this.finalizeSyncAfterBatching(allPlayersMap, allReceivedPlayers.length);
+				this.finalizeSyncAfterBatching(allPlayersMap, allReceivedPlayers.length, selfReportedData);
 			}
 		};
 
@@ -635,7 +642,7 @@ export class RatingSyncManager {
 		if (allReceivedPlayers.length > 0) {
 			processBatch();
 		} else {
-			this.finalizeSyncAfterBatching(allPlayersMap, 0);
+			this.finalizeSyncAfterBatching(allPlayersMap, 0, selfReportedData);
 		}
 	}
 
@@ -643,36 +650,47 @@ export class RatingSyncManager {
 	 * Finalize sync after batched processing is complete
 	 * @param allPlayersMap Map of merged player data
 	 * @param totalPlayersReceived Total count of players received from sync
+	 * @param selfReportedData Self-reported entries from active game players (authoritative)
 	 */
-	private finalizeSyncAfterBatching(allPlayersMap: Map<string, PlayerRatingData>, totalPlayersReceived: number): void {
+	private finalizeSyncAfterBatching(allPlayersMap: Map<string, PlayerRatingData>, totalPlayersReceived: number, selfReportedData: Map<string, PlayerRatingData>): void {
 		debugPrint(`[RATING SYNC] ========== FINALIZE SYNC ==========`);
 		debugPrint(`[RATING SYNC] allPlayersMap size: ${allPlayersMap.size}, totalPlayersReceived: ${totalPlayersReceived}`);
 
-		// Add local player's own data (highest priority - most accurate)
+		// Override with self-reported data from active game players
+		// A player's own data is always authoritative over what others have about them
+		debugPrint(`[RATING SYNC] Applying ${selfReportedData.size} self-reported overrides...`);
+		selfReportedData.forEach((playerData, playerBtag) => {
+			const existing = allPlayersMap.get(playerBtag);
+			if (existing) {
+				debugPrint(`[RATING SYNC]   -> Override ${playerBtag}: rating ${existing.rating} -> ${playerData.rating} (self-reported)`);
+			} else {
+				debugPrint(`[RATING SYNC]   -> Adding ${playerBtag}: rating=${playerData.rating} (self-reported)`);
+			}
+			allPlayersMap.set(playerBtag, playerData);
+		});
+
+		// Ensure local player has data (from personal file or fresh default)
 		const localPlayer = GetLocalPlayer();
 		const nameManager = NameManager.getInstance();
 		const btag = nameManager.getBtag(localPlayer);
 		const isLocalObserver = IsPlayerObserver(localPlayer);
 		debugPrint(`[RATING SYNC] Local player: ${btag} (isObserver=${isLocalObserver})`);
 
-		if (btag) {
+		if (btag && !allPlayersMap.has(btag)) {
+			// Local player not in sync data at all - read personal file or create fresh default
 			const hash = this.sanitizePlayerName(btag);
 			const resetKey = RANKED_SEASON_RESET_KEY || '';
-			// Must use .txt extension - WC3 only supports .txt and .pld file extensions
 			const filePath = `risk/p${this.seasonId}${resetKey}_${hash}.txt`;
 			const ratingFile = readRatings(filePath);
-
-			// Validate checksum if file exists
 			const isValidFile = ratingFile && validateChecksum(ratingFile);
+
 			if (ratingFile && !isValidFile) {
 				print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
 			}
 
 			if (isValidFile) {
-				// Force override with local data (always most accurate for yourself)
 				allPlayersMap.set(ratingFile.player.btag, ratingFile.player);
-			} else if (!allPlayersMap.has(btag)) {
-				// No valid local file and not in sync data - add fresh default data
+			} else {
 				const timestamp = math.floor(os.time());
 				allPlayersMap.set(btag, {
 					btag: btag,
@@ -885,11 +903,13 @@ export class RatingSyncManager {
 		debugPrint(`[RATING SYNC] Initializing ${currentPlayers.length} current game players...`);
 		ratingManager.initializeCurrentGamePlayers(currentPlayers);
 
-		// Save local player's rating file immediately (creates file for new players)
-		// This ensures crash recovery works even if player leaves before game ends
+		// Ensure local player's personal file is loaded (finalizes any pending entry)
+		// This must happen before saving to prevent sync data from overwriting authoritative personal file data
 		const localPlayer = GetLocalPlayer();
 		const localBtag = NameManager.getInstance().getBtag(localPlayer);
 		if (localBtag) {
+			debugPrint(`[RATING SYNC] Ensuring personal file loaded for ${localBtag}...`);
+			ratingManager.loadPlayerRating(localBtag);
 			debugPrint(`[RATING SYNC] Saving personal rating file for ${localBtag}...`);
 			ratingManager.savePlayerRating(localBtag);
 		}
