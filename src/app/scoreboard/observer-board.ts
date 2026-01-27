@@ -96,6 +96,23 @@ export class ObserverBoard extends Scoreboard {
 			const data: TrackedData = player.trackedData;
 			const textColor: string = HexColors.WHITE;
 
+			// Rating/income column for eliminated players only updates on full update (turn end)
+			if (player.status.isEliminated()) {
+				const ratingManager = RatingManager.getInstance();
+				const btag = NameManager.getInstance().getBtag(player.getPlayer());
+				const ratingResult = ratingManager.getRatingResults().get(btag);
+
+				if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled()) {
+					const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
+					const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
+					const color = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
+					const sign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
+					this.setItemValue(`${color}${sign}${effectiveChange}|r`, row, this.INCOME_COL);
+				} else {
+					this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, this.INCOME_COL);
+				}
+			}
+
 			this.setColumns(player, row, textColor, data);
 			row++;
 		});
@@ -140,24 +157,7 @@ export class ObserverBoard extends Scoreboard {
 		const teamPrefix = this.getTeamPrefix(player.getPlayer());
 
 		// Name
-		const ratingManager = RatingManager.getInstance();
-		const btag = NameManager.getInstance().getBtag(player.getPlayer());
-		const ratingResult = ratingManager.getRatingResults().get(btag);
-		const playerName = NameManager.getInstance().getDisplayName(player.getPlayer());
-
-		this.setItemValue(`${grey}${teamPrefix}${playerName}`, row, this.PLAYER_COL);
-
-		// Show rating change in income column for eliminated players
-		if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled()) {
-			const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
-			// If effective change is 0 but total change was negative, player was protected by floor
-			const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
-			const color = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
-			const sign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
-			this.setItemValue(`${color}${sign}${effectiveChange}|r`, row, this.INCOME_COL);
-		} else {
-			this.setItemValue(`${grey}-`, row, this.INCOME_COL);
-		}
+		this.setItemValue(`${grey}${teamPrefix}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
 		// Gold
 		this.setItemValue(`${grey}-`, row, this.GOLD_COL);
