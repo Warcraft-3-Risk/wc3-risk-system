@@ -302,8 +302,10 @@ export class Quests {
 						const ratingResult = ratingManager.getRatingResults().get(btag);
 						if (ratingResult) {
 							const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
-							const changeColor = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
-							const changeSign = effectiveChange >= 0 ? '+' : '';
+							// If effective change is 0 but total change was negative, player was protected by floor
+							const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
+							const changeColor = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
+							const changeSign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
 							description += ` ${HexColors.TANGERINE}(${initialRating})|r ${changeColor}(${changeSign}${effectiveChange})|r`;
 						} else {
 							description += ` (${HexColors.GREEN}${initialRating}|r)`;

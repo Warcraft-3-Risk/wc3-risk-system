@@ -10,6 +10,7 @@
     "test:asia": "npm run test asia",
     "test:europe": "npm run test europe",
     "test:world": "npm run test world",
+    "test:unit": "ts-node --transpile-only scripts/test-rating-calculator.ts",
     "build": "ts-node --transpile-only scripts/build.ts",
     "build:asia": "npm run build asia",
     "build:europe": "npm run build europe",

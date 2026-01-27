@@ -52,8 +52,10 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 		if (ratingResult) {
 			// Show initial rating + effective change (accounting for floor)
 			const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
-			const changeColor = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
-			const changeSign = effectiveChange >= 0 ? '+' : '';
+			// If effective change is 0 but total change was negative, player was protected by floor
+			const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
+			const changeColor = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
+			const changeSign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
 			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${defeatedRating})|r ${changeColor}(${changeSign}${effectiveChange})|r`;
 		} else {
 			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${defeatedRating})|r`;
@@ -152,8 +154,10 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 		if (ratingResult) {
 			// Show initial rating + effective change (accounting for floor)
 			const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
-			const changeColor = effectiveChange >= 0 ? HexColors.GREEN : HexColors.RED;
-			const changeSign = effectiveChange >= 0 ? '+' : '';
+			// If effective change is 0 but total change was negative, player was protected by floor
+			const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
+			const changeColor = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
+			const changeSign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
 			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${leftRating})|r ${changeColor}(${changeSign}${effectiveChange})|r`;
 		} else {
 			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${leftRating})|r`;
