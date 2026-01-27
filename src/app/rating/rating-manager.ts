@@ -136,10 +136,12 @@ export class RatingManager {
 		}
 
 		const filePath = this.getPlayerFilePath(btag);
+		debugPrint(`[RatingManager] loadPlayerRating: Loading file for ${btag} from ${filePath}`);
 		const data = readRatings(filePath);
 
 		if (!data) {
 			// No file exists yet - player will start fresh
+			debugPrint(`[RatingManager] loadPlayerRating: No file found for ${btag}`);
 			this.loadedPlayers.add(btag);
 			return true;
 		}
@@ -147,6 +149,7 @@ export class RatingManager {
 		// Validate checksum
 		if (!validateChecksum(data)) {
 			// Corrupted file - create fresh data and overwrite immediately
+			debugPrint(`[RatingManager] loadPlayerRating: Checksum FAILED for ${btag}`);
 			print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
 			const timestamp = math.floor(os.time());
 			const freshData: PlayerRatingData = {
@@ -168,6 +171,8 @@ export class RatingManager {
 			return true;
 		}
 
+		debugPrint(`[RatingManager] loadPlayerRating: Checksum OK for ${btag}, rating=${data.player.rating}, hasPending=${data.player.pendingGame != null}`);
+
 		// Load valid data for this player
 		// Mark as synced since file-loaded data is authoritative
 		data.player._isSynced = true;
@@ -175,8 +180,10 @@ export class RatingManager {
 
 		// Finalize pending game if exists
 		if (data.player.pendingGame) {
+			debugPrint(`[RatingManager] loadPlayerRating: Found pending entry for ${btag} - gameId=${data.player.pendingGame.gameId}, pendingRating=${data.player.pendingGame.rating}, baseRating=${data.player.rating}`);
 			const playerData = this.ratingData.get(data.player.btag);
 			if (playerData && playerData.pendingGame) {
+				debugPrint(`[RatingManager] loadPlayerRating: Finalizing pending entry for ${btag} - ${playerData.rating} -> ${playerData.pendingGame.rating}`);
 				playerData.rating = playerData.pendingGame.rating;
 				playerData.wins = playerData.pendingGame.wins;
 				playerData.losses = playerData.pendingGame.losses;
@@ -188,8 +195,13 @@ export class RatingManager {
 				delete playerData.pendingGame;
 
 				// Save immediately to finalize
-				this.savePlayerRating(btag);
+				const saved = this.savePlayerRating(btag);
+				debugPrint(`[RatingManager] loadPlayerRating: Finalization save result=${saved} for ${btag}`);
+			} else {
+				debugPrint(`[RatingManager] loadPlayerRating: FAILED to retrieve playerData from map for ${btag} (playerData=${playerData != null}, pendingGame=${playerData?.pendingGame != null})`);
 			}
+		} else {
+			debugPrint(`[RatingManager] loadPlayerRating: No pending entry for ${btag}`);
 		}
 
 		this.loadedPlayers.add(btag);
@@ -461,8 +473,20 @@ export class RatingManager {
 	 * @param players Array of player rating data to load
 	 */
 	public loadPlayersFromSync(players: PlayerRatingData[]): void {
+		// Local player's personal file is always authoritative - never overwrite from sync
+		const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
+
 		for (let i = 0; i < players.length; i++) {
 			const player = players[i];
+
+			// Skip local player - their personal file data has priority over sync data
+			if (player.btag === localBtag) {
+				const existing = this.ratingData.get(player.btag);
+				if (existing) {
+					existing._isSynced = true;
+				}
+				continue;
+			}
 
 			// Mark as loaded
 			if (!this.loadedPlayers.has(player.btag)) {

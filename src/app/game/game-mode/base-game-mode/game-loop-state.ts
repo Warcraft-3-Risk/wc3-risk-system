@@ -35,6 +35,12 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		const ratingManager = RatingManager.getInstance();
 		if (ratingManager.isRankedGame()) {
 			ratingManager.captureInitialGameData(GlobalGameData.matchPlayers);
+
+			// Save initial pending entry immediately so crash recovery works
+			// even if a player crashes before the first turn ends
+			const statsModel = StatisticsController.getInstance().getModel();
+			statsModel.setData();
+			ratingManager.saveRatingsInProgress(statsModel.getRanks(), 0);
 		}
 
 		ReplayManager.getInstance().onRoundStart();
