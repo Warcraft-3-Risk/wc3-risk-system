@@ -26,8 +26,9 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 			PlayGlobalSound('Sound\\Interface\\ArrangedTeamInvitation.flac');
 
 			// Check if this is a ranked game (ratings will be loaded per-player when needed)
+			// Use initial player count to prevent early leavers from downgrading ranked status
 			const ratingManager = RatingManager.getInstance();
-			const humanPlayerCount = PlayerManager.getInstance().getHumanPlayersCount();
+			const humanPlayerCount = PlayerManager.getInstance().getInitialHumanPlayerCount();
 			const isFFA = SettingsContext.getInstance().isFFA();
 			const isRanked = ratingManager.checkRankedGameEligibility(humanPlayerCount, isFFA);
 
