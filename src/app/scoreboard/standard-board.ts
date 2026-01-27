@@ -90,14 +90,34 @@ export class StandardBoard extends Scoreboard {
 
 			let textColor: string = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 
-			// Income is now handled in updatePlayerData() to coordinate with column width changes
+			if (player.status.isEliminated()) {
+				// Show rating change in income column for eliminated players
+				const ratingManager = RatingManager.getInstance();
+				const btag = NameManager.getInstance().getBtag(player.getPlayer());
+				const ratingResult = ratingManager.getRatingResults().get(btag);
+				const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
+				const localShowRating = ratingManager.getShowRatingPreference(localBtag);
+
+				if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && localShowRating) {
+					const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
+					const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
+					const color = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
+					const sign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
+					this.setItemValue(`${color}${sign}${effectiveChange}|r`, row, this.INCOME_COL);
+				} else {
+					this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, this.INCOME_COL);
+				}
+			} else {
+				this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
+			}
+
 			this.updatePlayerData(player, row, textColor, data);
 			row++;
 		});
 	}
 
 	/**
-	 * Updates all columns on the scoreboard (without re-sorting).
+	 * Updates all columns except income on the scoreboard (without re-sorting).
 	 */
 	public updatePartial(): void {
 		let row: number = 2;
@@ -138,30 +158,8 @@ export class StandardBoard extends Scoreboard {
 
 		// --- Eliminated Player Formatting ---
 		if (player.status.isEliminated()) {
-			// Show rating change after player name if available (ranked game + local player has rating display enabled)
-			const ratingManager = RatingManager.getInstance();
-			const btag = NameManager.getInstance().getBtag(player.getPlayer());
-			const ratingResult = ratingManager.getRatingResults().get(btag);
-			const playerName = NameManager.getInstance().getDisplayName(player.getPlayer());
-
-			// Check if the LOCAL (viewing) player has rating display enabled
-			const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
-			const localShowRating = ratingManager.getShowRatingPreference(localBtag);
-
-			// Player name (no truncation needed since rating goes in income column)
-			this.setItemValue(`${grey}${playerName}`, row, this.PLAYER_COL);
-
-			// Show rating change in income column for eliminated players
-			if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && localShowRating) {
-				const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
-				// If effective change is 0 but total change was negative, player was protected by floor
-				const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
-				const color = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
-				const sign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
-				this.setItemValue(`${color}${sign}${effectiveChange}|r`, row, this.INCOME_COL);
-			} else {
-				this.setItemValue(`${grey}-`, row, this.INCOME_COL);
-			}
+			// Player name
+			this.setItemValue(`${grey}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
 			// Cities
 			this.setItemValue(`${grey}${data.cities.cities.length}`, row, this.CITIES_COL);
@@ -181,9 +179,6 @@ export class StandardBoard extends Scoreboard {
 		} else {
 			// Name
 			this.setItemValue(`${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
-
-			// Income
-			this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
 
 			// Cities
 			const requiredCities = VictoryManager.getCityCountWin();
