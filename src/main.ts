@@ -38,6 +38,7 @@ import { ClientManager } from './app/game/services/client-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 import { PlayerManager } from './app/player/player-manager';
 import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCreatorSaveEvent } from './app/triggers/country-creator-event';
+import { BaseVisibility } from './app/triggers/visuals/base-visibility';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -109,6 +110,7 @@ function tsMain() {
 		AntiSpam();
 		KeyEvents();
 		CitySelectedEvent();
+		BaseVisibility();
 
 		//if singleplayer
 		if (EDITOR_DEVELOPER_MODE && ReloadGameCachesFromDisk()) {
