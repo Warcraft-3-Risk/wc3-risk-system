@@ -1,73 +1,105 @@
 import { RegionToCity } from '../../city/city-map';
 import { PlayerManager } from '../../player/player-manager';
 import { debugPrint } from '../../utils/debug-print';
+import { File } from 'w3ts';
 
-export function BaseVisibility() {
-	const tDown: trigger = CreateTrigger();
-	const tUp: trigger = CreateTrigger();
+export class CityVisibilityManager {
+	private static instance: CityVisibilityManager;
+	private activePlayers: Set<player> = new Set<player>();
+	private permanentlyVisiblePlayers: Set<player> = new Set<player>();
+	private readonly FILE_PATH = 'risk/range-indicators.pld';
 
-	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-        // Register for all possible meta-key combinations (0-15) to ensure we catch the event
-        // This handles cases where other keys (Shift, Ctrl) might be held, or if the game considers Alt "active" during the press
-        for (let meta = 0; meta < 16; meta++) {
-            BlzTriggerRegisterPlayerKeyEvent(tDown, Player(i), OSKEY_LALT, meta, true);
-            BlzTriggerRegisterPlayerKeyEvent(tUp, Player(i), OSKEY_LALT, meta, false);
+	private constructor() {
+		const tDown: trigger = CreateTrigger();
+		const tUp: trigger = CreateTrigger();
 
-            BlzTriggerRegisterPlayerKeyEvent(tDown, Player(i), OSKEY_RALT, meta, true);
-            BlzTriggerRegisterPlayerKeyEvent(tUp, Player(i), OSKEY_RALT, meta, false);
-        }
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			// Register for all possible meta-key combinations (0-15) to ensure we catch the event
+			for (let meta = 0; meta < 16; meta++) {
+				BlzTriggerRegisterPlayerKeyEvent(tDown, Player(i), OSKEY_LALT, meta, true);
+				BlzTriggerRegisterPlayerKeyEvent(tUp, Player(i), OSKEY_LALT, meta, false);
+
+				BlzTriggerRegisterPlayerKeyEvent(tDown, Player(i), OSKEY_RALT, meta, true);
+				BlzTriggerRegisterPlayerKeyEvent(tUp, Player(i), OSKEY_RALT, meta, false);
+			}
+		}
+
+		TriggerAddAction(tDown, () => {
+			const player = GetTriggerPlayer();
+
+			if (PlayerManager.getInstance().isObserver(player)) return;
+			if (this.activePlayers.has(player)) return;
+
+			this.activePlayers.add(player);
+			debugPrint(`Key Down Event: Player ${GetPlayerName(player)}`);
+
+			this.updateVisibility(player);
+		});
+
+		TriggerAddAction(tUp, () => {
+			const player = GetTriggerPlayer();
+
+			if (PlayerManager.getInstance().isObserver(player)) return;
+			if (!this.activePlayers.has(player)) return;
+
+			this.activePlayers.delete(player);
+			debugPrint(`Key Up Event: Player ${GetPlayerName(player)}`);
+
+			this.updateVisibility(player);
+		});
+
+		// Initialize from local storage
+		this.loadSettings();
 	}
 
-	const playerEffects = new Map<player, effect[]>();
-	const visibleModel = 'war3mapImported\\TargetIndicatorThinner_TC_100.mdx';
-
-	TriggerAddAction(tDown, () => {
-		const player = GetTriggerPlayer();
-
-		if (PlayerManager.getInstance().isObserver(player)) return;
-		if (playerEffects.has(player)) return;
-
-		debugPrint(`Key Down Event: Player ${GetPlayerName(player)}`);
-
-		debugPrint(`Creating visual effects for ${GetPlayerName(player)}`);
-		const effects: effect[] = [];
-
-		for (const city of RegionToCity.values()) {
-			const x = GetUnitX(city.barrack.unit);
-			const y = GetUnitY(city.barrack.unit);
-
-			const eff = AddSpecialEffect(visibleModel, x, y);
-			BlzSetSpecialEffectColorByPlayer(eff, Player(19));
-			BlzSetSpecialEffectScale(eff, 7.5);
-			BlzSetSpecialEffectAlpha(eff, 0);
-
-			if (GetLocalPlayer() == player) {
-				BlzSetSpecialEffectAlpha(eff, 25);
-			}
-
-			effects.push(eff);
+	public static getInstance(): CityVisibilityManager {
+		if (!this.instance) {
+			this.instance = new CityVisibilityManager();
 		}
+		return this.instance;
+	}
 
-		playerEffects.set(player, effects);
-		debugPrint(`Visual effects added for ${GetPlayerName(player)}`);
-	});
-
-	TriggerAddAction(tUp, () => {
-		const player = GetTriggerPlayer();
-
-		if (PlayerManager.getInstance().isObserver(player)) return;
-
-		const effects = playerEffects.get(player);
-
-		if (effects) {
-			debugPrint(`Key Up Event: Player ${GetPlayerName(player)}`);
-			debugPrint(`Destroying visual effects for ${GetPlayerName(player)}`);
-			for (const eff of effects) {
-				DestroyEffect(eff);
-			}
-
-			playerEffects.delete(player);
-			debugPrint(`Visual effects cleaned up for ${GetPlayerName(player)}`);
+	public togglePermanentVisibility(player: player): boolean {
+		if (this.permanentlyVisiblePlayers.has(player)) {
+			this.permanentlyVisiblePlayers.delete(player);
+		} else {
+			this.permanentlyVisiblePlayers.add(player);
 		}
-	});
+		this.updateVisibility(player);
+		this.saveSettings(player);
+		return this.permanentlyVisiblePlayers.has(player);
+	}
+
+	public isPermanentlyVisible(player: player): boolean {
+		return this.permanentlyVisiblePlayers.has(player);
+	}
+
+	private updateVisibility(player: player) {
+		if (GetLocalPlayer() == player) {
+			const isVisible = this.activePlayers.has(player) || this.permanentlyVisiblePlayers.has(player);
+			const alpha = isVisible ? 25 : 0;
+			for (const city of RegionToCity.values()) {
+				BlzSetSpecialEffectAlpha(city.effect, alpha);
+			}
+		}
+	}
+
+	private loadSettings() {
+		const localPlayer = GetLocalPlayer();
+
+		if (PlayerManager.getInstance().isObserver(localPlayer)) return;
+
+		const content = File.read(this.FILE_PATH);
+		if (content === 'true') {
+			this.permanentlyVisiblePlayers.add(localPlayer);
+			this.updateVisibility(localPlayer);
+		}
+	}
+
+	private saveSettings(player: player) {
+		if (GetLocalPlayer() == player) {
+			const isVisible = this.permanentlyVisiblePlayers.has(player);
+			File.write(this.FILE_PATH, isVisible ? 'true' : 'false');
+		}
+	}
 }
