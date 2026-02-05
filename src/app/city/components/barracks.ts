@@ -50,11 +50,6 @@ export class Barracks implements Resetable {
 		SetUnitOwner(this._unit, ClientManager.getInstance().getOwner(player), true);
 	}
 
-	/** @returns The coordinate location of the barracks on the map. */
-	public get location(): location {
-		return Location(this._defaultX, this._defaultY);
-	}
-
 	/**
 	 * Gets the owner of the unit.
 	 * @returns The player object representing the owner.

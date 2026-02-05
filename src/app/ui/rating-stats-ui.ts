@@ -49,6 +49,7 @@ export class RatingStatsUI {
 	private totalPages: number = 1;
 	private readonly PLAYERS_PER_PAGE: number = 10;
 	private escTrigger: trigger | null = null;
+	private leaderboardDisabledTooltip: framehandle | null = null;
 
 	constructor(player: ActivePlayer) {
 		this.player = player;
@@ -394,8 +395,10 @@ export class RatingStatsUI {
 
 		// Visual feedback: make button look disabled when no data
 		if (!hasData) {
-			// Set tooltip or visual indication (optional)
-			BlzFrameSetTooltip(this.toggleButton, BlzCreateFrame('BoxedText', this.toggleButton, 0, 0));
+			if (!this.leaderboardDisabledTooltip) {
+				this.leaderboardDisabledTooltip = BlzCreateFrame('BoxedText', this.toggleButton, 0, 0);
+			}
+			BlzFrameSetTooltip(this.toggleButton, this.leaderboardDisabledTooltip);
 		}
 	}
 

@@ -1,0 +1,360 @@
+================================================================================
+WC3 RISK SYSTEM - HANDLE LEAK ANALYSE
+================================================================================
+Datum: 2026-01-30
+Referenz: https://www.hiveworkshop.com/threads/things-that-leak.35124/
+================================================================================
+
+
+================================================================================
+KRITISCH - Filter() Leaks in guard-filters.ts
+================================================================================
+
+Datei: src/app/utils/guard-filters.ts
+Zeilen: 28, 48
+
+Problem:
+  Filter() erstellt ein boolexpr-Handle, das nach GroupEnumUnitsInRange()
+  nicht zerstoert wird. Diese Funktion wird bei JEDEM Region-Enter und
+  Region-Leave Event aufgerufen - also sehr haeufig waehrend des Spiels.
+
+  // Zeile 23-29:
+  GroupEnumUnitsInRange(
+      g, x, y, radius,
+      Filter(() => city.isValidGuard(GetFilterUnit()) && ...)
+  );
+
+  // Zeile 43-51:
+  GroupEnumUnitsInRange(
+      g, x, y, radius,
+      Filter(() => city.isValidGuard(GetFilterUnit()) && ...)
+  );
+
+Aufgerufen von:
+  - enter-region-event.ts (Zeilen 29, 33, 37) - bei JEDEM Unit-Region-Enter
+  - leave-region-event.ts (Zeilen 23, 27) - bei JEDEM Unit-Region-Leave
+  - Potentiell hunderte Male pro Spielminute
+
+Schweregrad: KRITISCH
+  Jeder Aufruf erzeugt ein neues boolexpr-Handle das nie freigegeben wird.
+  Bei intensiven Kaempfen mit vielen Units kann das sehr schnell viele
+  Handles verbrauchen.
+
+Fix:
+  Filter-Referenz speichern und mit DestroyBoolExpr() aufraumen:
+
+  const f = Filter(() => ...);
+  GroupEnumUnitsInRange(g, x, y, radius, f);
+  DestroyBoolExpr(f);
+
+  Oder: Einen einzigen wiederverwendbaren Filter pro Allegiance-Typ erstellen.
+
+
+================================================================================
+KRITISCH - Location Leak in barracks.ts (Getter)
+================================================================================
+
+Datei: src/app/city/components/barracks.ts
+Zeile: 54-56
+
+Problem:
+  Der location-Getter erstellt bei JEDEM Zugriff ein neues Location-Handle:
+
+  public get location(): location {
+      return Location(this._defaultX, this._defaultY);
+  }
+
+  Der Aufrufer erhaelt das Handle, hat aber keine Moeglichkeit es freizugeben,
+  da die Semantik eines Property-Getters keinen Cleanup impliziert.
+
+Aufgerufen von:
+  - capitals-distribute-capitals-state.ts:72
+    PanCameraToTimedLocForPlayer(player, capital.barrack.location, 1);
+  - capitals-distribute-capitals-state.ts:80
+    PingMinimapLocForPlayer(player, city.barrack.location, 20);
+
+  PanCameraToTimedLocForPlayer und PingMinimapLocForPlayer sind BJ-Funktionen
+  die intern keine RemoveLocation() ausfuehren.
+
+Schweregrad: KRITISCH (Design-Problem)
+  Jeder Zugriff auf .location leaked ein Handle. Der Getter suggeriert einen
+  einfachen Wert-Zugriff, erzeugt aber ein Objekt mit Cleanup-Pflicht.
+
+Fix:
+  Option A - Getter entfernen, Koordinaten direkt verwenden:
+    PanCameraToTimedForPlayer(player, capital.barrack.defaultX, capital.barrack.defaultY, 1);
+
+  Option B - Temporaere Location mit sofortigem Cleanup:
+    const loc = capital.barrack.location;
+    PanCameraToTimedLocForPlayer(player, loc, 1);
+    RemoveLocation(loc);
+
+
+================================================================================
+HOCH - Endlos-Timer in Observer-Helper und Statistics Views
+================================================================================
+
+Datei: src/app/utils/observer-helper.ts
+Zeilen: 7-14
+
+Problem:
+  CreateObserverButton() erstellt einen REPEATING Timer (Intervall 1 Sekunde)
+  der NIEMALS pausiert oder zerstoert wird:
+
+  const t = CreateTimer();
+  TimerStart(t, 1, true, () => {
+      if (BlzFrameIsVisible(BlzFrameGetChild(button, 5))) {
+          if (isObserver) { action(); }
+      }
+  });
+
+Aufgerufen von (jeder Aufruf = 1 neuer Endlos-Timer):
+  - ranked-statistics-view.ts:236  (Minimize-Button)
+  - ranked-statistics-view.ts:298  (Leaderboard-Button)
+  - ranked-statistics-view.ts:188  (Footer-Button "Previous") [inline kopiert]
+  - ranked-statistics-view.ts:188  (Footer-Button "Next") [inline kopiert]
+  - unranked-statistics-view.ts:237 (Minimize-Button)
+  - unranked-statistics-view.ts:189 (Footer-Button "Previous") [inline kopiert]
+  - unranked-statistics-view.ts:189 (Footer-Button "Next") [inline kopiert]
+  - rating-stats-ui.ts:589 (Leaderboard Close)
+  - rating-stats-ui.ts:614 (Leaderboard Prev)
+  - rating-stats-ui.ts:636 (Leaderboard Next)
+  - rating-stats-ui.ts:655 (Leaderboard My Place)
+
+  Insgesamt: ~11 Endlos-Timer die 1x pro Sekunde feuern.
+  Diese Timer laufen das gesamte Spiel, auch wenn niemand Observer ist.
+
+Schweregrad: HOCH
+  11 Timer die jede Sekunde feuern. Nicht katastrophal fuer Handle-Verbrauch
+  (Handles werden nicht erzeugt), aber unnoetige CPU-Last. Der Timer selbst
+  leaked als Handle.
+
+Fix:
+  - Pruefen ob GetLocalPlayer() ein Observer ist BEVOR der Timer erstellt wird
+  - Timer-Referenz speichern und bei Bedarf zerstoeren
+  - Oder: Observer-Check einmalig ausfuehren statt kontinuierlich zu pollen
+
+
+================================================================================
+MITTEL - Location Leaks in console.ts
+================================================================================
+
+Datei: src/app/ui/console.ts
+Zeilen: 52, 58, 64
+
+Problem:
+  Drei Location(0, 0) Aufrufe ohne RemoveLocation():
+
+  if (GetHandleId(BlzGetFrameByName('ChatPlayerLabel', 0)) == 0) {
+      Location(0, 0);  // LEAK
+  }
+
+  Vermutlich ein Workaround um Handle-IDs zu "verbrauchen" oder Frame-
+  Existenz zu pruefen. Die erstellten Locations werden nie entfernt.
+
+Schweregrad: MITTEL
+  Nur 3 Handles, einmalig bei Spielstart. Minimaler Impact, aber
+  trotzdem unnoetiger Handle-Verbrauch.
+
+Fix:
+  const loc = Location(0, 0);
+  RemoveLocation(loc);
+
+  Oder den Zweck des Codes klaeren und ggf. ganz entfernen.
+
+
+================================================================================
+MITTEL - Frame Leak in rating-stats-ui.ts
+================================================================================
+
+Datei: src/app/ui/rating-stats-ui.ts
+Zeile: 398
+
+Problem:
+  updateLeaderboardButtonState() erstellt bei jedem Aufruf ein neues Frame
+  wenn keine Leaderboard-Daten vorhanden sind:
+
+  if (!hasData) {
+      BlzFrameSetTooltip(this.toggleButton,
+          BlzCreateFrame('BoxedText', this.toggleButton, 0, 0));
+  }
+
+  updateLeaderboardButtonState() wird von updateStatsFromManager() aufgerufen,
+  was bei show() und refresh() passiert. Bei jedem Aufruf ohne Daten wird
+  ein neues Frame erstellt ohne das alte zu zerstoeren.
+
+Schweregrad: MITTEL
+  Kann mehrere Frame-Handles leaken wenn die Funktion wiederholt aufgerufen
+  wird bevor Leaderboard-Daten vorhanden sind.
+
+Fix:
+  Frame einmalig erstellen und Referenz speichern:
+
+  private leaderboardTooltipFrame: framehandle | null = null;
+  ...
+  if (!hasData) {
+      if (!this.leaderboardTooltipFrame) {
+          this.leaderboardTooltipFrame = BlzCreateFrame('BoxedText', this.toggleButton, 0, 0);
+      }
+      BlzFrameSetTooltip(this.toggleButton, this.leaderboardTooltipFrame);
+  }
+
+
+================================================================================
+MITTEL - Bug + Leak in guard-button-factory.ts
+================================================================================
+
+Datei: src/app/factory/guard-button-factory.ts
+Zeilen: 65-79
+
+Problem 1 (BUG):
+  Zeile 75 registriert das Frame-Event auf dem FALSCHEN Trigger:
+
+  const hotkeyTrigger = CreateTrigger();            // Zeile 65
+  const buttonTrig = CreateTrigger();                // Zeile 73
+  BlzTriggerRegisterFrameEvent(hotkeyTrigger, ...);  // Zeile 75 - SOLLTE buttonTrig SEIN!
+
+  Das bedeutet: buttonTrig hat keine Events registriert, aber eine Condition.
+  hotkeyTrigger hat sowohl Hotkey- als auch Click-Events.
+
+Problem 2 (LEAK):
+  buttonTrig (Zeile 73) wird erstellt und mit einer Condition versehen,
+  aber nie benutzt (wegen Bug). Ein komplett verschwendetes Trigger-Handle.
+
+Schweregrad: MITTEL
+  Wird pro Guard-Button einmal aufgerufen (Initialisierung).
+  Ca. 3-4 Buttons pro Spieler = 3-4 verschwendete Trigger-Handles.
+  Funktional: Button-Klick funktioniert nur weil der Frame-Event
+  versehentlich auf hotkeyTrigger registriert wurde, der dieselbe
+  Action ausfuehrt. Kein funktionaler Bug, aber unbeabsichtigt.
+
+Fix:
+  Zeile 75 korrigieren:
+  BlzTriggerRegisterFrameEvent(buttonTrig, button, FRAMEEVENT_CONTROL_CLICK);
+
+
+================================================================================
+NIEDRIG - TextTag in announce.ts (Akzeptabel)
+================================================================================
+
+Datei: src/app/game/announcer/announce.ts
+Zeile: 11
+
+Status:
+  CreateTextTag() wird mit SetTextTagPermanent(text, false) und einer
+  Lifespan versehen. WC3 hat ein internes Limit von 100 TextTags und
+  recycled automatisch die aeltesten. Die Tags verschwinden nach der
+  angegebenen Lifespan.
+
+Schweregrad: NIEDRIG
+  Solange nicht mehr als 100 Tags gleichzeitig existieren, ist das
+  akzeptabel. Bei sehr schnellen Kaempfen koennten alte Tags vorzeitig
+  verschwinden, aber das ist ein visuelles Problem, kein Leak.
+
+
+================================================================================
+NIEDRIG - TextTag in country.ts (Akzeptabel)
+================================================================================
+
+Datei: src/app/country/country.ts
+Zeile: 80
+
+Status:
+  CreateTextTag() in createText() wird einmalig pro Country aufgerufen
+  und die Referenz wird in this.countryLabel gespeichert. Permanent = true.
+  Wird nie zerstoert, aber da Countries nur einmal erstellt werden und
+  die Labels das gesamte Spiel sichtbar bleiben sollen, ist das akzeptabel.
+
+  Einziges Problem: reset() in Zeile 34 zerstoert den TextTag nicht.
+  Falls Countries nach einem Restart neu erstellt werden, wuerden die
+  alten Tags leaked bleiben.
+
+Schweregrad: NIEDRIG
+  Nur relevant bei Game-Restart (-restart Command).
+
+Fix (optional):
+  In reset() hinzufuegen:
+  if (this.countryLabel) {
+      DestroyTextTag(this.countryLabel);
+      this.countryLabel = undefined;
+  }
+
+
+================================================================================
+OK - Korrekt aufgeraeumt (keine Leaks)
+================================================================================
+
+Die folgenden Stellen wurden geprueft und sind KORREKT:
+
+  + spawner.ts:84-100
+    GetUnitRallyPoint() -> RemoveLocation(loc) korrekt
+  + enter-region-event.ts:26-61
+    CreateGroup() -> DestroyGroup(g) korrekt
+  + leave-region-event.ts:19-42
+    CreateGroup() -> DestroyGroup(g) korrekt
+  + country.ts:105-111
+    AddSpecialEffect() -> DestroyEffect() korrekt
+  + commands/names.ts:24-49
+    CreateTimer() -> PauseTimer + DestroyTimer korrekt
+  + commands/max-handle.ts:5-7
+    Location() -> RemoveLocation() korrekt
+  + concrete-city-builder.ts:155-164
+    Rect() -> RemoveRect() korrekt
+  + messages.ts (alle Timer)
+    CreateTimer() -> DestroyTimer() korrekt
+  + mmd.ts:16-19
+    CreateTimer() -> DestroyTimer() korrekt
+  + rating-sync-manager.ts (alle Timer)
+    CreateTimer() -> DestroyTimer() korrekt
+  + transport-manager.ts:690-715
+    CreateGroup() -> DestroyGroup() korrekt
+  + transport-manager.ts (Effects)
+    AddSpecialEffectTarget() -> DestroyEffect() korrekt
+  + Trigger/Condition in UI-Setup-Code
+    Einmalige Initialisierung, Handles bleiben fuer die gesamte Spiellaufzeit
+    bestehen. Kein Leak im eigentlichen Sinne.
+
+
+================================================================================
+ZUSAMMENFASSUNG - NACH PRIORITAET
+================================================================================
+
+PRIO 1 (KRITISCH - Wiederholte Ausfuehrung):
+  [1] guard-filters.ts       Filter() Leak bei jedem Region-Event
+                              -> Hunderte Leaks pro Spiel moeglich
+
+PRIO 2 (KRITISCH - Design-Problem):
+  [2] barracks.ts             Location-Getter erzeugt immer neue Handles
+                              -> Aufrufer in capitals-distribute-capitals-state.ts
+                                 leaken die Locations
+
+PRIO 3 (HOCH):
+  [3] observer-helper.ts      11+ Endlos-Timer ohne Cleanup
+      + alle Aufrufer          Laufen das gesamte Spiel ueber
+
+PRIO 4 (MITTEL):
+  [4] console.ts              3 Location-Handles ohne Cleanup (einmalig)
+  [5] rating-stats-ui.ts:398  Frame-Erstellung bei jedem Aufruf ohne Daten
+  [6] guard-button-factory.ts Bug: Frame-Event auf falschem Trigger registriert
+                              + 1 verschwendetes Trigger-Handle pro Button
+
+PRIO 5 (NIEDRIG):
+  [7] country.ts              TextTag wird bei reset() nicht zerstoert
+  [8] announce.ts             TextTags ohne explizites Destroy (WC3 recycled)
+
+
+================================================================================
+GESCHAETZTE HANDLE-LEAKS PRO SPIEL
+================================================================================
+
+  Filter() in guard-filters.ts:    100-500+ (abhaengig von Spielaktivitaet)
+  Location in barracks.ts:          2-20    (abhaengig vom Spielmodus)
+  Timer in observer-helper.ts:      ~11     (einmalig, aber persistent)
+  Location in console.ts:           3       (einmalig)
+  Frames in rating-stats-ui.ts:     1-5     (abhaengig von Aufrufen)
+  Trigger in guard-button-factory:   3-4    (einmalig)
+  ----------------------------------------------------------
+  Gesamt:                           ~120-540+ Handles pro Spiel
+
+  Der groesste Verursacher ist mit Abstand der Filter()-Leak in
+  guard-filters.ts, da er bei jedem Region-Enter/Leave-Event auftritt.

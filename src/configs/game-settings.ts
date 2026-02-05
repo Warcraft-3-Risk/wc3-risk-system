@@ -6,13 +6,13 @@
 export const CITIES_TO_WIN_RATIO: number = 0.6;
 
 //This is the starting gold for each player. 4 gold by default.
-export const STARTING_INCOME: number = 4;
+export const STARTING_INCOME: number = 400;
 
 //This is the starting countdown for the game. 10 by default
-export const STARTING_COUNTDOWN: number = 10;
+export const STARTING_COUNTDOWN: number = 2;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
-export const TURN_DURATION_IN_SECONDS: number = 60;
+export const TURN_DURATION_IN_SECONDS: number = 10;
 
 //This is the duration of a tick in seconds. 1 second by default.
 export const TICK_DURATION_IN_SECONDS: number = 1;
@@ -81,10 +81,10 @@ export const RANKED_SEASON_ID: number = 1;
 // This allows you to "soft reset" the season by using new file paths.
 // Use 1-4 lowercase letters (e.g., "a", "ab", "abc", "abcd").
 // Leave empty string "" to disable (files will be named without a reset key).
-export const RANKED_SEASON_RESET_KEY: string = 'live';
+export const RANKED_SEASON_RESET_KEY: string = 'liveasdf';
 
 // This represents the minimum number of human players required for a ranked game.
-export const RANKED_MIN_PLAYERS: number = 16;
+export const RANKED_MIN_PLAYERS: number = 1;
 
 // This represents the starting rating for new players.
 export const RANKED_STARTING_RATING: number = 1000;

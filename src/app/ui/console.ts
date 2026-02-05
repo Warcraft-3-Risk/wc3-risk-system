@@ -49,19 +49,22 @@ export function SetConsoleUI() {
 	}
 
 	if (GetHandleId(BlzGetFrameByName('ChatPlayerLabel', 0)) == 0) {
-		Location(0, 0);
+		const loc1 = Location(0, 0);
+		RemoveLocation(loc1);
 	} else {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerLabel', 0), false);
 	}
 
 	if (GetHandleId(BlzGetFrameByName('ChatPlayerRadioButton', 0)) == 0) {
-		Location(0, 0);
+		const loc2 = Location(0, 0);
+		RemoveLocation(loc2);
 	} else {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerRadioButton', 0), false);
 	}
 
 	if (GetHandleId(BlzGetFrameByName('ChatPlayerMenu', 0)) == 0) {
-		Location(0, 0);
+		const loc3 = Location(0, 0);
+		RemoveLocation(loc3);
 	} else {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerMenu', 0), false);
 	}

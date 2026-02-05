@@ -14,6 +14,7 @@ import { UICommand } from './ui';
 import { W3CDrawCommand } from './w3c-draw';
 import { W3CGGCommand } from './w3c-gg';
 import { Advanced } from './advanced';
+import { MaxHandleCommand } from './max-handle';
 
 export function SetCommands() {
 	const chatManager: ChatManager = ChatManager.getInstance();
@@ -33,4 +34,5 @@ export function SetCommands() {
 	Advanced(chatManager);
 	W3CDrawCommand(chatManager);
 	W3CGGCommand(chatManager);
+//	MaxHandleCommand(chatManager);
 }

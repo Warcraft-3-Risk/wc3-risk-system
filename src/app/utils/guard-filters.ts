@@ -20,13 +20,9 @@ export function GetUnitsInRangeByAllegiance(
 	const x: number = !unit ? city.guard.defaultX : GetUnitX(unit);
 	const y: number = !unit ? city.guard.defaultY : GetUnitY(unit);
 
-	GroupEnumUnitsInRange(
-		g,
-		x,
-		y,
-		radius,
-		Filter(() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), city.getOwner()))
-	);
+	const filter = Filter(() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), city.getOwner()));
+	GroupEnumUnitsInRange(g, x, y, radius, filter);
+	DestroyBoolExpr(filter);
 }
 
 export function GetUnitsInRangeOfUnitByAllegiance(
@@ -40,13 +36,9 @@ export function GetUnitsInRangeOfUnitByAllegiance(
 	const x: number = GetUnitX(dyingUnit);
 	const y: number = GetUnitY(dyingUnit);
 
-	GroupEnumUnitsInRange(
-		g,
-		x,
-		y,
-		radius,
-		Filter(
-			() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), ClientManager.getInstance().getOwnerOfUnit(killingUnit))
-		)
+	const filter = Filter(
+		() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), ClientManager.getInstance().getOwnerOfUnit(killingUnit))
 	);
+	GroupEnumUnitsInRange(g, x, y, radius, filter);
+	DestroyBoolExpr(filter);
 }

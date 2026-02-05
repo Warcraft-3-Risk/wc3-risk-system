@@ -72,7 +72,7 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 
 	const buttonTrig = CreateTrigger();
 
-	BlzTriggerRegisterFrameEvent(hotkeyTrigger, button, FRAMEEVENT_CONTROL_CLICK);
+	BlzTriggerRegisterFrameEvent(buttonTrig, button, FRAMEEVENT_CONTROL_CLICK);
 	TriggerAddCondition(
 		buttonTrig,
 		Condition(() => config.action(config.createContext, config.textures, button))

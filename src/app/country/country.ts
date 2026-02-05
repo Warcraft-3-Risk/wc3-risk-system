@@ -38,6 +38,11 @@ export class Country implements Resetable {
 
 		this.spawn.reset();
 		this.owner = NEUTRAL_HOSTILE;
+
+		if (this.countryLabel) {
+			DestroyTextTag(this.countryLabel);
+			this.countryLabel = undefined;
+		}
 	}
 
 	/** @returns The name of the country. */
