@@ -446,9 +446,8 @@ export class MinimapIconManager {
 		}
 
 		// Default: Use player colors (mode 0)
-		// Use GetPlayerColor to get the actual color, then convert to integer
-		const playerColor = GetPlayerColor(owner);
-		const colorIndex = GetHandleId(playerColor); // Convert playercolor to integer
+		// Use GetPlayerId to get a reliable 0-23 color index
+		const colorIndex = GetPlayerId(owner);
 
 		// Validate color index (WC3 supports 24 player colors: 0-23)
 		if (colorIndex < 0 || colorIndex > 23) {
@@ -501,8 +500,7 @@ export class MinimapIconManager {
 		}
 
 		// Default: Use player colors
-		const playerColor = GetPlayerColor(owner as player);
-		const colorIndex = GetHandleId(playerColor);
+		const colorIndex = GetPlayerId(owner as player);
 
 		if (colorIndex < 0 || colorIndex > 23) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
