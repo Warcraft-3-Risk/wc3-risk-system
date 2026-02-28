@@ -492,6 +492,8 @@ export class ClientManager implements Resetable {
 	// This method checks if the provided unit is owned by the player or their client
 	public isPlayerOrClientOwnerOfUnit(unit: unit, player: player | client): boolean {
 		const unitOwner = GetOwningPlayer(unit);
+		// Check direct ownership (handles both real player and client slot cases)
+		if (unitOwner === player) return true;
 		// Check if any of the player's client slots own the unit
 		const slots = this.playerToClient.get(player);
 		const clientOwns = slots ? slots.includes(unitOwner) : false;

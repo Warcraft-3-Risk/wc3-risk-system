@@ -51,7 +51,6 @@ function tsMain() {
 		// Only load custom minimap texture if file exists
 		if (MAP_TYPE !== 'world' && !BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
 			print('Failed to load minimap file!');
-			return;
 		}
 
 		SetGameSpeed(MAP_SPEED_FASTEST);

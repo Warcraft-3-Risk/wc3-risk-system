@@ -1,5 +1,4 @@
 import { FORCE_CUSTOM_MINIMAP_ICONS } from 'src/configs/game-settings';
-import { UNIT_ID } from 'src/configs/unit-id';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { City } from '../city/city';
 import { debugPrint } from '../utils/debug-print';
@@ -102,7 +101,7 @@ export class MinimapIconManager {
 
 		debugPrint(`MinimapIconManager: Created ${this.cityIcons.size} icons`);
 
-		// Start update timer (update every 1 second)
+		// Start update timer (update every 0.2 seconds)
 		this.startUpdateTimer();
 
 		// Pre-populate frame pool to prevent lag spikes during gameplay

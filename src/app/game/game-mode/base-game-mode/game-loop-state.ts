@@ -176,7 +176,9 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		debugPrint(`[SlotCount] === Turn ${turn} Slot Summary ===`);
 		ClientManager.getInstance().debugPrintSlotCounts();
 
-		ScoreboardManager.getInstance().updateFull();
+		if (!changed) {
+			ScoreboardManager.getInstance().updateFull();
+		}
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		GlobalGameData.matchPlayers
 			.filter((x) => x.status.isActive())
