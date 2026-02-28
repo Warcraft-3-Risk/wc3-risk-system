@@ -74,13 +74,16 @@ export class Spawner implements Resetable, Ownable {
 		const amount: number = Math.min(this.spawnsPerStepWithMultiplier, this.maxSpawnsPerPlayerWithMultiplier - spawnCount);
 
 		for (let i = 0; i < amount; i++) {
+			const owningSlot = ClientManager.getInstance().getSlotWithLowestUnitCount(this.getOwner());
 			let u: unit = CreateUnit(
-				ClientManager.getInstance().getClientOrPlayer(this.getOwner()),
+				owningSlot,
 				this.spawnType,
 				GetUnitX(this.unit),
 				GetUnitY(this.unit),
 				270
 			);
+			debugPrint(`[SlotCount] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`);
+			ClientManager.getInstance().incrementUnitCount(owningSlot);
 			UnitLagManager.getInstance().trackUnit(u);
 			let loc: location = GetUnitRallyPoint(this.unit);
 

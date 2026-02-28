@@ -1,6 +1,7 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
+import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { PLAYER_COLORS } from 'src/app/utils/player-colors';
@@ -24,24 +25,374 @@ export class ClientManager implements Resetable {
 
 	private availableClients: client[];
 
-	// Keeps track of each player's client
-	private playerToClient: Map<player, client>;
+	// Keeps track of each player's client slots (one player can have multiple)
+	private playerToClient: Map<player, client[]>;
 
 	// Keeps track of client's player
 	private clientToPlayer: Map<client, player>;
 
-	// Flag to ensure allocation only happens once
-	private hasAllocated: boolean = false;
+	// Tracks the number of units owned by each WC3 player slot
+	private slotUnitCounts: Map<player, number> = new Map<player, number>();
+
+	// Slots of eliminated players that still have units alive
+	private pendingFreeSlots: Set<player> = new Set<player>();
 
 	private constructor() {
 		// Initialize player client manager
 		this.availableClients = [];
-		this.playerToClient = new Map<player, client>();
+		this.playerToClient = new Map<player, client[]>();
 		this.clientToPlayer = new Map<client, player>();
 	}
 
+	public incrementUnitCount(slot: player): void {
+		const oldCount = this.slotUnitCounts.get(slot) || 0;
+		const newCount = oldCount + 1;
+		this.slotUnitCounts.set(slot, newCount);
+		debugPrint(`[SlotCount] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
+	}
+
+	public decrementUnitCount(slot: player): void {
+		const oldCount = this.slotUnitCounts.get(slot) || 0;
+		const newCount = Math.max(0, oldCount - 1);
+		this.slotUnitCounts.set(slot, newCount);
+		debugPrint(`[SlotCount] Decrement slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
+	}
+
+	public getUnitCount(slot: player): number {
+		return this.slotUnitCounts.get(slot) || 0;
+	}
+
+	public getSlotWithLowestUnitCount(player: player): player {
+		const slots = this.playerToClient.get(player);
+		if (!slots || slots.length === 0) {
+			return player;
+		}
+
+		// Include the player's own handle as a candidate
+		let bestSlot = player;
+		let bestCount = this.getUnitCount(player);
+
+		for (const slot of slots) {
+			const count = this.getUnitCount(slot);
+			if (count < bestCount) {
+				bestCount = count;
+				bestSlot = slot;
+			}
+		}
+
+		debugPrint(`[SlotCount] Lowest slot for player ${GetPlayerId(player)}: slot ${GetPlayerId(bestSlot)} (count: ${bestCount})`);
+		return bestSlot;
+	}
+
+	public debugPrintSlotCounts(): void {
+		debugPrint(`[SlotCount] === Slot Summary ===`);
+		this.slotUnitCounts.forEach((count, slot) => {
+			if (count > 0) {
+				const realOwner = this.clientToPlayer.get(slot) || slot;
+				debugPrint(`[SlotCount] Slot ${GetPlayerId(slot)} (owner: ${GetPlayerId(realOwner)}): ${count} units`);
+			}
+		});
+	}
+
+	public getPendingFreeSlots(): Set<player> {
+		return this.pendingFreeSlots;
+	}
+
+	/**
+	 * General redistribution algorithm. Idempotent — safe to call from any event.
+	 * Frees slots from eliminated players (if unit count is 0), then redistributes
+	 * all available slots evenly among active players.
+	 * Returns true if any changes were made.
+	 */
+	public evaluateAndRedistribute(): boolean {
+		if (!CLIENT_ALLOCATION_ENABLED) {
+			debugPrint('[Redistribute] Client allocation disabled, skipping');
+			return false;
+		}
+
+		debugPrint('[Redistribute] === Running evaluateAndRedistribute() ===');
+
+		// 1. COLLECT: Build the current picture
+		const activePlayers: player[] = [];
+		const eliminatedPlayers: player[] = [];
+
+		for (const matchPlayer of GlobalGameData.matchPlayers) {
+			const p = matchPlayer.getPlayer();
+			if (matchPlayer.status.isActive()) {
+				activePlayers.push(p);
+			} else if (matchPlayer.status.isEliminated()) {
+				eliminatedPlayers.push(p);
+			}
+		}
+
+		debugPrint(`[Redistribute] Active players: ${activePlayers.map(p => GetPlayerId(p)).join(', ')}`);
+		debugPrint(`[Redistribute] Eliminated players: ${eliminatedPlayers.map(p => GetPlayerId(p)).join(', ')}`);
+
+		if (activePlayers.length === 0) {
+			debugPrint('[Redistribute] No active players, returning false');
+			return false;
+		}
+
+		if (activePlayers.length > ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
+			debugPrint(`[Redistribute] Too many active players (${activePlayers.length}), skipping`);
+			return false;
+		}
+
+		// 2. FREE: Identify reclaimable slots from eliminated players
+		const availablePool: client[] = [];
+
+		for (const elimPlayer of eliminatedPlayers) {
+			const clientSlots = this.playerToClient.get(elimPlayer);
+			if (clientSlots && clientSlots.length > 0) {
+				const remainingSlots: client[] = [];
+				for (const slot of clientSlots) {
+					if (this.getUnitCount(slot) === 0) {
+						debugPrint(`[Redistribute] Freed slot ${GetPlayerId(slot)} from eliminated player ${GetPlayerId(elimPlayer)} (unitCount was 0)`);
+						this.tearDownSlot(slot, elimPlayer);
+						this.clientToPlayer.delete(slot);
+						this.pendingFreeSlots.delete(slot);
+						availablePool.push(slot);
+					} else {
+						const count = this.getUnitCount(slot);
+						debugPrint(`[Redistribute] Slot ${GetPlayerId(slot)} marked pendingFree (unitCount: ${count})`);
+						this.pendingFreeSlots.add(slot);
+						remainingSlots.push(slot);
+					}
+				}
+				if (remainingSlots.length > 0) {
+					this.playerToClient.set(elimPlayer, remainingSlots);
+				} else {
+					this.playerToClient.delete(elimPlayer);
+				}
+			}
+
+			// Also check if the eliminated player's own handle has 0 units and is reclaimable
+			// (Only if it's not already assigned as a client to someone else)
+			if (this.getUnitCount(elimPlayer) === 0 && !this.clientToPlayer.has(elimPlayer)) {
+				// Check if this player slot is a valid client candidate (not an active player)
+				if (!activePlayers.includes(elimPlayer)) {
+					// Check if it's not already in the pool
+					if (!availablePool.includes(elimPlayer)) {
+						debugPrint(`[Redistribute] Freed eliminated player handle ${GetPlayerId(elimPlayer)} (unitCount was 0)`);
+						availablePool.push(elimPlayer);
+						this.pendingFreeSlots.delete(elimPlayer);
+					}
+				}
+			} else if (this.getUnitCount(elimPlayer) > 0 && !activePlayers.includes(elimPlayer)) {
+				this.pendingFreeSlots.add(elimPlayer);
+			}
+		}
+
+		// Also add unassigned empty player slots
+		const availableClientSlots = this.getAvailableClientSlots();
+		for (const slot of availableClientSlots) {
+			if (!availablePool.includes(slot) && !this.clientToPlayer.has(slot)) {
+				// Check this slot isn't already assigned to an active player
+				let alreadyAssigned = false;
+				for (const [, slots] of this.playerToClient) {
+					if (slots.includes(slot)) {
+						alreadyAssigned = true;
+						break;
+					}
+				}
+				if (!alreadyAssigned && !activePlayers.includes(slot)) {
+					availablePool.push(slot);
+				}
+			}
+		}
+
+		debugPrint(`[Redistribute] Available pool: ${availablePool.length} slots`);
+
+		// 3. CALCULATE: Determine optimal distribution
+		// Count currently assigned slots per active player
+		let totalAssignedSlots = 0;
+		for (const p of activePlayers) {
+			const slots = this.playerToClient.get(p);
+			totalAssignedSlots += slots ? slots.length : 0;
+		}
+
+		const totalSlots = totalAssignedSlots + availablePool.length;
+		if (totalSlots === 0) {
+			debugPrint('[Redistribute] No slots available at all, returning false');
+			return false;
+		}
+
+		const slotsPerPlayer = Math.floor(totalSlots / activePlayers.length);
+		const remainder = totalSlots % activePlayers.length;
+
+		debugPrint(`[Redistribute] Target: ${slotsPerPlayer} per player (+1 for first ${remainder})`);
+
+		// Sort active players by ID for deterministic remainder distribution
+		activePlayers.sort((a, b) => GetPlayerId(a) - GetPlayerId(b));
+
+		const donors: { player: player; slotsToGive: client[] }[] = [];
+		const receivers: { player: player; slotsNeeded: number }[] = [];
+		let anyChanges = false;
+
+		for (let i = 0; i < activePlayers.length; i++) {
+			const p = activePlayers[i];
+			const currentSlots = this.playerToClient.get(p) || [];
+			const target = slotsPerPlayer + (i < remainder ? 1 : 0);
+			const delta = target - currentSlots.length;
+
+			debugPrint(`[Redistribute] Player ${GetPlayerId(p)}: current=${currentSlots.length}, target=${target}, delta=${delta}`);
+
+			if (delta < 0) {
+				// Donor: give away slots with 0 units
+				const slotsToGive: client[] = [];
+				for (let j = currentSlots.length - 1; j >= 0 && slotsToGive.length < Math.abs(delta); j--) {
+					if (this.getUnitCount(currentSlots[j]) === 0) {
+						slotsToGive.push(currentSlots[j]);
+					}
+				}
+				if (slotsToGive.length > 0) {
+					donors.push({ player: p, slotsToGive });
+					anyChanges = true;
+				}
+			} else if (delta > 0) {
+				receivers.push({ player: p, slotsNeeded: delta });
+				anyChanges = true;
+			}
+		}
+
+		if (!anyChanges && availablePool.length === 0) {
+			debugPrint('[Redistribute] No changes needed, returning false');
+			return false;
+		}
+
+		// 4. EXECUTE: Perform the redistribution
+		// Collect donated slots
+		for (const donor of donors) {
+			for (const slot of donor.slotsToGive) {
+				debugPrint(`[Redistribute] Donor ${GetPlayerId(donor.player)}: donating slot ${GetPlayerId(slot)}`);
+				this.tearDownSlot(slot, donor.player);
+				this.clientToPlayer.delete(slot);
+				// Remove from donor's slot array
+				const donorSlots = this.playerToClient.get(donor.player);
+				const idx = donorSlots.indexOf(slot);
+				if (idx > -1) {
+					donorSlots.splice(idx, 1);
+				}
+				availablePool.push(slot);
+			}
+		}
+
+		// Sort receivers by fewest current slots first
+		receivers.sort((a, b) => {
+			const aSlots = this.playerToClient.get(a.player)?.length || 0;
+			const bSlots = this.playerToClient.get(b.player)?.length || 0;
+			return aSlots - bSlots;
+		});
+
+		// Assign from available pool to receivers
+		for (const receiver of receivers) {
+			for (let i = 0; i < receiver.slotsNeeded && availablePool.length > 0; i++) {
+				const slot = availablePool.shift();
+				// Don't assign a slot to itself
+				if (GetPlayerId(slot) === GetPlayerId(receiver.player)) {
+					availablePool.push(slot); // Put it back
+					// Try another
+					if (availablePool.length > 0) {
+						const altSlot = availablePool.shift();
+						if (GetPlayerId(altSlot) !== GetPlayerId(receiver.player)) {
+							this.assignSlotToPlayer(altSlot, receiver.player);
+							debugPrint(`[Redistribute] Receiver ${GetPlayerId(receiver.player)}: assigned slot ${GetPlayerId(altSlot)}`);
+						} else {
+							availablePool.push(altSlot);
+						}
+					}
+					continue;
+				}
+				this.assignSlotToPlayer(slot, receiver.player);
+				debugPrint(`[Redistribute] Receiver ${GetPlayerId(receiver.player)}: assigned slot ${GetPlayerId(slot)}`);
+			}
+		}
+
+		debugPrint(`[Redistribute] Complete. Leftover unassigned: ${availablePool.length}`);
+
+		// 5. FINALIZE: Update scoreboard
+		ScoreboardManager.getInstance().toggleVisibility(false);
+		ScoreboardManager.getInstance().toggleVisibility(true);
+		ScoreboardManager.getInstance().updateFull();
+
+		return true;
+	}
+
+	private tearDownSlot(slot: client, previousOwner: player): void {
+		debugPrint(`[Redistribute] Tearing down slot ${GetPlayerId(slot)} (prev owner: ${GetPlayerId(previousOwner)})`);
+		this.enableAdvancedControl(previousOwner, slot, false);
+		this.enableAdvancedControl(slot, previousOwner, false);
+
+		// Un-ally from all OTHER existing client slots of the same player
+		const siblingSlots = this.playerToClient.get(previousOwner) || [];
+		for (const siblingSlot of siblingSlots) {
+			if (siblingSlot !== slot) {
+				debugPrint(`[Redistribute] Un-allying sibling slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(siblingSlot)}`);
+				this.enableAdvancedControl(slot, siblingSlot, false);
+				this.enableAdvancedControl(siblingSlot, slot, false);
+			}
+		}
+
+		const team = TeamManager.getInstance().getTeamFromPlayer(previousOwner);
+		if (team) {
+			const members = team.getMembers();
+			if (members && members.length > 0) {
+				members.forEach((member) => {
+					if (member) {
+						const memberPlayer = member.getPlayer();
+						if (memberPlayer) {
+							this.enableAdvancedControl(memberPlayer, slot, false);
+							this.enableAdvancedControl(slot, memberPlayer, false);
+
+							// Un-ally from all of the teammate's client slots
+							const memberSlots = this.playerToClient.get(memberPlayer) || [];
+							for (const memberSlot of memberSlots) {
+								debugPrint(`[Redistribute] Un-allying cross-team slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(memberSlot)}`);
+								this.enableAdvancedControl(slot, memberSlot, false);
+								this.enableAdvancedControl(memberSlot, slot, false);
+							}
+						}
+					}
+				});
+			}
+		}
+
+		// Reset slot appearance
+		SetPlayerColor(slot, PLAYER_COLORS[GetPlayerId(slot)]);
+		NameManager.getInstance().setColor(slot, PLAYER_COLORS[GetPlayerId(slot)]);
+		NameManager.getInstance().setName(slot, 'color');
+	}
+
+	private assignSlotToPlayer(slot: client, newOwner: player): void {
+		debugPrint(`[Redistribute] Assigning slot ${GetPlayerId(slot)} to player ${GetPlayerId(newOwner)}`);
+
+		// Full alliance wipe before reassignment — ensures no stale alliances from previous owner
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			if (!IsPlayerObserver(Player(i))) {
+				this.enableAdvancedControl(slot, Player(i), false);
+				this.enableAdvancedControl(Player(i), slot, false);
+			}
+		}
+		debugPrint(`[Redistribute] Wiped all alliances for slot ${GetPlayerId(slot)} before reassignment`);
+
+		if (!this.playerToClient.has(newOwner)) {
+			this.playerToClient.set(newOwner, []);
+		}
+		this.playerToClient.get(newOwner).push(slot);
+		this.clientToPlayer.set(slot, newOwner);
+		this.givePlayerFullControlOfClient(newOwner, slot);
+
+		const slots = this.playerToClient.get(newOwner);
+		debugPrint(`[ClientManager] Player ${GetPlayerId(newOwner)} now has ${slots.length} client slots: [${slots.map(s => GetPlayerId(s)).join(', ')}]`);
+	}
+
 	public getClientByPlayer(player: player): player | undefined {
-		return this.playerToClient.get(player) as player;
+		const slots = this.playerToClient.get(player);
+		return slots && slots.length > 0 ? slots[0] : undefined;
+	}
+
+	public getClientSlotsByPlayer(player: player): client[] {
+		return this.playerToClient.get(player) || [];
 	}
 
 	// This method checks if there are less than MAX_PLAYERS_FOR_CLIENT_ALLOCATION players and then allocates one client to each player
@@ -63,101 +414,6 @@ export class ClientManager implements Resetable {
 		return clients;
 	}
 
-	// Allocates client slots to players if there are less than MAX_PLAYERS_FOR_CLIENT_ALLOCATION players
-	// This method can only be called once per game
-	// Returns true if allocation was successfully applied, false otherwise
-	public allocateClientSlot(): boolean {
-		if (!CLIENT_ALLOCATION_ENABLED) {
-			debugPrint('ClientManager: Client allocation is disabled, skipping');
-			return false;
-		}
-		debugPrint('ClientManager: Starting client allocation process');
-
-		//Debug list of current players that have left
-		const players = PlayerManager.getInstance()
-			.getHumanPlayers()
-			.filter((p) => p.status.isLeft());
-		debugPrint('PlayerManager: Players that have left: ' + players.map((p) => GetPlayerName(p.getPlayer())).join(', '));
-		debugPrint(
-			'GlobalMatchData: Players that have left: ' +
-				GlobalGameData.matchPlayers
-					.filter((x) => x.status.isLeft())
-					.map((p) => GetPlayerName(p.getPlayer()))
-					.join(', ')
-		);
-
-		// Check if allocation has already been done
-		if (this.hasAllocated) {
-			debugPrint('ClientManager: Client allocation already completed, skipping');
-			return false;
-		}
-
-		debugPrint('ClientManager: Client allocation not yet done, proceeding');
-
-		debugPrint('ClientManager: Checking number of active, dead or stfu players');
-		let playersThatHaveNotLeft = Array.from(PlayerManager.getInstance().activePlayersThatHaveNotLeft)
-			.map(([player, _]) => player)
-			.sort((a, b) => GetPlayerId(a) - GetPlayerId(b));
-
-		debugPrint(
-			`ClientManager: Found ${playersThatHaveNotLeft.length} active players slots: ${playersThatHaveNotLeft.map((c) => GetPlayerId(c)).join(', ')}`
-		);
-
-		// Only allocate a client slot if there are less than MAX_PLAYERS_FOR_CLIENT_ALLOCATION players
-		if (playersThatHaveNotLeft.length > ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
-			debugPrint(`ClientManager: Too many active players (${playersThatHaveNotLeft.length}), skipping allocation`);
-			return false;
-		} else {
-			debugPrint(`ClientManager: Active players within limit (${playersThatHaveNotLeft.length}), proceeding with allocation`);
-		}
-
-		debugPrint('ClientManager: Checking current client allocations');
-		if (this.clientToPlayer.size >= ClientManager.MAX_PLAYERS_FOR_CLIENT_ALLOCATION) {
-			debugPrint('ClientManager: Maximum client allocations already reached');
-			return false;
-		} else {
-			debugPrint(`ClientManager: Current client allocations: ${this.clientToPlayer.size}`);
-		}
-
-		debugPrint('ClientManager: Retrieving available client slots');
-		let availableClientSlots = this.getAvailableClientSlots();
-
-		debugPrint(`ClientManager: Found ${availableClientSlots.length} available client slots`);
-
-		debugPrint(`ClientManager: Available client slots: ${availableClientSlots.map((c) => GetPlayerId(c)).join(', ')}`);
-
-		if (availableClientSlots.length < playersThatHaveNotLeft.length) {
-			debugPrint('ClientManager: Insufficient client slots available for allocation');
-			return false;
-		}
-
-		debugPrint(`ClientManager: Attempting to allocate clients for ${playersThatHaveNotLeft.length} active players`);
-		availableClientSlots.forEach((client) => {
-			const player = playersThatHaveNotLeft.pop();
-
-			if (!player) {
-				debugPrint(`ClientManager: No player found for client ${GetPlayerId(client)}, skipping`);
-				return;
-			}
-
-			if (GetPlayerId(player) === GetPlayerId(client)) {
-				debugPrint(`ClientManager: Client ${GetPlayerId(client)} and Player ${GetPlayerId(player)} are identical, skipping`);
-				return;
-			}
-
-			debugPrint(`ClientManager: Allocating client slot ${GetPlayerId(client)} to player ${GetPlayerId(player)}`);
-			this.playerToClient.set(player, client);
-			this.clientToPlayer.set(client, player);
-			this.givePlayerFullControlOfClient(player, client);
-			debugPrint(`ClientManager: Successfully allocated client to player ${GetPlayerId(player)}`);
-		});
-
-		// Mark allocation as complete
-		this.hasAllocated = true;
-		debugPrint('ClientManager: Client allocation complete');
-		return true;
-	}
-
 	public givePlayerFullControlOfClient(player: player, client: client): void {
 		if (!player || !client) {
 			debugPrint('ClientManager: Invalid player or client in givePlayerFullControlOfClient');
@@ -177,6 +433,16 @@ export class ClientManager implements Resetable {
 		this.enableAdvancedControl(player, client, true);
 		this.enableAdvancedControl(client, player, true);
 
+		// Ally this slot with all OTHER existing client slots of the same player
+		const existingSlots = this.playerToClient.get(player) || [];
+		for (const existingSlot of existingSlots) {
+			if (existingSlot !== client) {
+				debugPrint(`ClientManager: Allying sibling slots ${GetPlayerId(client)} ↔ ${GetPlayerId(existingSlot)}`);
+				this.enableAdvancedControl(client, existingSlot, true);
+				this.enableAdvancedControl(existingSlot, client, true);
+			}
+		}
+
 		const team = TeamManager.getInstance().getTeamFromPlayer(player);
 		if (team) {
 			const members = team.getMembers();
@@ -187,6 +453,14 @@ export class ClientManager implements Resetable {
 						if (memberPlayer) {
 							this.enableAdvancedControl(memberPlayer, client, true);
 							this.enableAdvancedControl(client, memberPlayer, true);
+
+							// Also ally this slot with all of the teammate's client slots
+							const memberSlots = this.playerToClient.get(memberPlayer) || [];
+							for (const memberSlot of memberSlots) {
+								debugPrint(`ClientManager: Allying cross-team slots ${GetPlayerId(client)} ↔ ${GetPlayerId(memberSlot)}`);
+								this.enableAdvancedControl(client, memberSlot, true);
+								this.enableAdvancedControl(memberSlot, client, true);
+							}
 						}
 					}
 				});
@@ -217,7 +491,12 @@ export class ClientManager implements Resetable {
 
 	// This method checks if the provided unit is owned by the player or their client
 	public isPlayerOrClientOwnerOfUnit(unit: unit, player: player | client): boolean {
-		return this.clientToPlayer.get(player) == GetOwningPlayer(unit) || this.playerToClient.get(player) == GetOwningPlayer(unit);
+		const unitOwner = GetOwningPlayer(unit);
+		// Check if any of the player's client slots own the unit
+		const slots = this.playerToClient.get(player);
+		const clientOwns = slots ? slots.includes(unitOwner) : false;
+		// Check reverse: if the player is a client, check if the real player owns the unit
+		return this.clientToPlayer.get(player) == unitOwner || clientOwns;
 	}
 
 	// This method checks if the provided unit is owned by the provided client
@@ -236,7 +515,8 @@ export class ClientManager implements Resetable {
 	}
 
 	public getClientOrPlayer(player: player): client | player {
-		return this.playerToClient.get(player) || player;
+		const slots = this.playerToClient.get(player);
+		return slots && slots.length > 0 ? slots[0] : player;
 	}
 
 	reset(): void {
@@ -263,7 +543,8 @@ export class ClientManager implements Resetable {
 		this.playerToClient.clear();
 		this.clientToPlayer.clear();
 		this.availableClients = [];
-		this.hasAllocated = false;
-		debugPrint('ClientManager: Reset complete, allocation flag cleared');
+		this.slotUnitCounts.clear();
+		this.pendingFreeSlots.clear();
+		debugPrint('ClientManager: Reset complete');
 	}
 }

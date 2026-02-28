@@ -30,6 +30,18 @@ export function UnitDeathEvent() {
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
 			debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
+
+			// Decrement slot unit count using raw WC3 owner (not resolved real player)
+			const rawDyingUnitOwner = GetOwningPlayer(dyingUnit);
+			debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`);
+			ClientManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
+
+			// Check if this slot is pending free and now has 0 units
+			if (ClientManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) && ClientManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0) {
+				debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`);
+				ClientManager.getInstance().evaluateAndRedistribute();
+			}
+
 			const dyingUnitOwnerHandle: player = ClientManager.getInstance().getOwnerOfUnit(dyingUnit);
 			const killingUnitOwnerHandle: player = ClientManager.getInstance().getOwnerOfUnit(killingUnit);
 			const dyingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(dyingUnitOwnerHandle);

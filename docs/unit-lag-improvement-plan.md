@@ -16,74 +16,136 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 ---
 
-## Execution Plan
+## Execution Checklist
 
 ### Phase 1: Unit Counting Per Player Slot
 
 **Objective:** Track the number of units owned by each WC3 player slot (both real players and client slots) in real time.
 
-#### Task 1.1: Add unit count tracking to `ClientManager`
+- [x] **1.1 — Add unit count tracking to `ClientManager`**
+  
+  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  
+  - Add `slotUnitCounts: Map<player, number>` field.
+  - Initialize counts to `0` for all allocated slots.
+  - Implement methods:
+    - `incrementUnitCount(slot: player): void`
+    - `decrementUnitCount(slot: player): void` (floor at 0)
+    - `getUnitCount(slot: player): number`
+    - `getSlotWithLowestUnitCount(player: player): player`
+  - Clear `slotUnitCounts` in `reset()`.
+  
+  **Debug logging:**
+  ```
+  debugPrint(`[SlotCount] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
+  debugPrint(`[SlotCount] Decrement slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
+  debugPrint(`[SlotCount] Lowest slot for player ${GetPlayerId(player)}: slot ${GetPlayerId(result)} (count: ${count})`);
+  ```
+  
+  **Verify:** After city distribution, print all slot counts. Expect each real player to have a count equal to their number of owned guard units.
 
-**File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+---
 
-- Add a `Map<player, number>` field called `slotUnitCounts` to track how many active units each player slot (real player + all their client slots) currently owns.
-- Initialize counts to `0` for all allocated slots.
-- Add methods:
-  - `incrementUnitCount(slot: player): void` — increments the count for a given slot.
-  - `decrementUnitCount(slot: player): void` — decrements the count for a given slot (floor at 0).
-  - `getUnitCount(slot: player): number` — returns the current count.
-  - `getSlotWithLowestUnitCount(player: player): player` — given a real player, returns the player slot (real player handle or one of their client slots) with the **lowest unit count**. This replaces the current `getClientOrPlayer()` behavior.
+- [x] **1.2 — Increment count on city distribution (guards)**
+  
+  Guards are initially created under `NEUTRAL_HOSTILE` in `Guard.build()`. During city distribution, ownership is transferred via `SetUnitOwner()`.
+  
+  **File:** [src/app/game/services/distribution-service/standard-distribution-service.ts](src/app/game/services/distribution-service/standard-distribution-service.ts#L147)
+  - In `changeCityOwner()`, after `SetUnitOwner(city.guard.unit, player.getPlayer(), true)`:
+    - Call `ClientManager.getInstance().incrementUnitCount(player.getPlayer())`.
+  
+  **File:** [src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts](src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts#L88)
+  - In `changeCityOwner()`, after `SetUnitOwner(city.guard.unit, player.getPlayer(), true)`:
+    - Call `ClientManager.getInstance().incrementUnitCount(player.getPlayer())`.
+  
+  **Debug logging:**
+  ```
+  debugPrint(`[SlotCount] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`);
+  ```
+  
+  **Note on guard transitions at runtime:**
+  - `Guard.replace()` — reuses an existing unit (already counted), no additional increment needed. Ensure old DUMMY_GUARD removal triggers a decrement if it was counted.
+  - `Guard.reset()` — `RemoveUnit` on old guard (decrement old slot), new one created under `NEUTRAL_HOSTILE` (not counted).
+  
+  **Verify:** After distribution completes, use the debug summary from 1.1 to confirm guard counts match expected city ownership per player.
 
-#### Task 1.2: Increment count on city distribution (guards)
+---
 
-Guards are initially created under `NEUTRAL_HOSTILE` in `Guard.build()`. During city distribution, ownership is transferred to the real player via `SetUnitOwner()` in two places:
+- [x] **1.3 — Increment count on unit spawn**
+  
+  **File:** [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts#L77-L85)
+  
+  - In `Spawner.step()`, after `CreateUnit(...)`, call `ClientManager.getInstance().incrementUnitCount(owningSlot)`.
+  
+  **Debug logging:**
+  ```
+  debugPrint(`[SlotCount] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`);
+  ```
+  
+  **Verify:** After first spawn turn, print all slot counts. Expect counts to increase by spawn amounts.
 
-**File:** [src/app/game/services/distribution-service/standard-distribution-service.ts](src/app/game/services/distribution-service/standard-distribution-service.ts#L147)
+---
 
-- In `changeCityOwner()`, after `SetUnitOwner(city.guard.unit, player.getPlayer(), true)`:
-  - Call `ClientManager.getInstance().incrementUnitCount(player.getPlayer())`.
+- [x] **1.4 — Increment count on unit train**
+  
+  **File:** [src/app/triggers/unit-trained-event.ts](src/app/triggers/unit-trained-event.ts)
+  
+  - In `UnitTrainedEvent()`, after the trained unit is created:
+    - Call `ClientManager.getInstance().incrementUnitCount(GetOwningPlayer(trainedUnit))`.
+  
+  **Debug logging:**
+  ```
+  debugPrint(`[SlotCount] Trained unit on slot ${GetPlayerId(GetOwningPlayer(trainedUnit))}`);
+  ```
+  
+  **Verify:** Train a unit from a city. Confirm count on the owning slot increased by 1.
 
-**File:** [src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts](src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts#L88)
+---
 
-- In `changeCityOwner()`, after `SetUnitOwner(city.guard.unit, player.getPlayer(), true)`:
-  - Call `ClientManager.getInstance().incrementUnitCount(player.getPlayer())`.
+- [x] **1.5 — Decrement count on unit death**
+  
+  **File:** [src/app/triggers/unit_death/unit-death-event.ts](src/app/triggers/unit_death/unit-death-event.ts)
+  
+  - In the death event handler, call `ClientManager.getInstance().decrementUnitCount(GetOwningPlayer(dyingUnit))` (raw WC3 owner, not resolved real player).
+  
+  **Debug logging:**
+  ```
+  debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(GetOwningPlayer(dyingUnit))}`);
+  ```
+  
+  **Verify:** Kill a unit. Confirm slot count decreased by 1.
 
-**Note:** At distribution time, client slots have not been allocated yet (that happens on Turn 1). So guards are counted against the real player's slot. Once `evaluateAndRedistribute()` runs, it will see these counts and factor them in when distributing client slots.
+---
 
-Additionally, guards can transition between players at runtime via:
-- `Guard.replace()` — called from [replace-guard.ts](src/app/triggers/unit_death/replace-guard.ts), [land-city.ts](src/app/city/land-city.ts#L50), [port-city.ts](src/app/city/port-city.ts#L43), and [city.ts](src/app/city/city.ts#L125) (cast handler)
-- `Guard.reset()` → removes old guard + creates new one under `NEUTRAL_HOSTILE`
+- [x] **1.6 — Decrement count on unit removal**
+  
+  Ensure any code path that removes units also decrements the count. Key locations:
+  - [src/app/managers/transport-manager.ts](src/app/managers/transport-manager.ts) — load/unload
+  - [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts) `reset()` — spawner reset clears units
+  
+  **Debug logging:**
+  ```
+  debugPrint(`[SlotCount] Unit removed on slot ${GetPlayerId(GetOwningPlayer(unit))}`);
+  ```
+  
+  **Verify:** Trigger a game reset. Confirm all slot counts are 0 after `ClientManager.reset()` runs.
 
-For `replace()`: the old guard is released (decrement old slot) and the new guard is set (no new unit created — it's an existing unit getting the GUARD type). The unit was already counted when it was spawned/trained, so **no additional increment is needed** — just ensure the old DUMMY_GUARD removal triggers a decrement if it was counted.
+---
 
-For `reset()`: the old guard is `RemoveUnit`'d (decrement old slot) and a new one is created under `NEUTRAL_HOSTILE` (no increment — neutral units aren't counted).
-
-#### Task 1.3: Increment count on unit spawn
-
-**File:** [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts)
-
-- In `Spawner.step()` ([line 77-85](src/app/spawner/spawner.ts#L77-L85)), after `CreateUnit(...)`:
-  - Call `ClientManager.getInstance().incrementUnitCount(owningSlot)` where `owningSlot` is the slot returned by the new lowest-count method.
-
-#### Task 1.4: Increment count on unit train
-
-**File:** [src/app/triggers/unit-trained-event.ts](src/app/triggers/unit-trained-event.ts)
-
-- In `UnitTrainedEvent()`, after the trained unit is created:
-  - Call `ClientManager.getInstance().incrementUnitCount(GetOwningPlayer(trainedUnit))`.
-
-#### Task 1.5: Decrement count on unit death
-
-**File:** [src/app/triggers/unit_death/unit-death-event.ts](src/app/triggers/unit_death/unit-death-event.ts)
-
-- In the death event handler, when a unit dies:
-  - Call `ClientManager.getInstance().decrementUnitCount(GetOwningPlayer(dyingUnit))` (using the raw WC3 owner, not the resolved real player, since we're tracking per-slot).
-
-#### Task 1.6: Decrement count on unit removal
-
-- Ensure any other code path that removes units (`RemoveUnit`, transport loading, etc.) also decrements the count. Key locations:
-  - [src/app/managers/transport-manager.ts](src/app/managers/transport-manager.ts) — when units are loaded/unloaded from transports.
-  - [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts) `reset()` — when spawner is reset and units are cleared.
+- [x] **1.7 — Add a periodic count summary for debugging**
+  
+  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  
+  - Add method `debugPrintSlotCounts(): void` that prints all non-zero slot counts.
+  - Call this from `onStartTurn()` in [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) so counts are logged every turn.
+  
+  **Debug logging:**
+  ```
+  debugPrint(`[SlotCount] === Turn ${turn} Slot Summary ===`);
+  debugPrint(`[SlotCount] Slot ${GetPlayerId(slot)} (owner: ${GetPlayerId(realOwner)}): ${count} units`);
+  ```
+  
+  **Verify:** Play through a few turns. Confirm counts make sense — they should increase with spawns and decrease with deaths.
 
 ---
 
@@ -91,176 +153,276 @@ For `reset()`: the old guard is `RemoveUnit`'d (decrement old slot) and a new on
 
 **Objective:** Replace the current `getClientOrPlayer()` call with a method that picks the slot with the fewest units.
 
-#### Task 2.1: Change `playerToClient` from `Map<player, client>` to `Map<player, client[]>`
-
-**File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
-
-- Change the mapping so a single real player can have **multiple** client slots.
-- Update `clientToPlayer` to remain `Map<client, player>` (many-to-one is fine).
-- Update all existing methods that read `playerToClient` to handle arrays:
-  - `getClientByPlayer` — return the array or first element depending on usage.
-  - `getClientOrPlayer` → rename/replace with `getSlotWithLowestUnitCount(player)`.
-  - `isPlayerOrClientOwnerOfUnit` — check against all client slots.
-  - `reset()` — clear all arrays.
-
-#### Task 2.2: Update `Spawner.step()` to use lowest-count slot
-
-**File:** [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts#L78)
-
-- Replace:
-  ```typescript
-  ClientManager.getInstance().getClientOrPlayer(this.getOwner())
+- [x] **2.1 — Change `playerToClient` from `Map<player, client>` to `Map<player, client[]>`**
+  
+  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  
+  - Change the mapping so a single real player can have **multiple** client slots.
+  - Update `clientToPlayer` to remain `Map<client, player>` (many-to-one is fine).
+  - Update all methods that read `playerToClient`:
+    - `getClientByPlayer` — return the array or first element depending on usage.
+    - `getClientOrPlayer` → rename/replace with `getSlotWithLowestUnitCount(player)`.
+    - `isPlayerOrClientOwnerOfUnit` — check against all client slots (use `.includes()`).
+    - `reset()` — clear all arrays.
+  
+  **Debug logging:**
   ```
-  With:
-  ```typescript
-  ClientManager.getInstance().getSlotWithLowestUnitCount(this.getOwner())
+  debugPrint(`[ClientManager] Player ${GetPlayerId(player)} now has ${slots.length} client slots: [${slots.map(s => GetPlayerId(s)).join(', ')}]`);
   ```
+  
+  **Verify:** After initial allocation, print each player's client slot array. Should match existing 1:1 behavior initially.
 
-#### Task 2.3: Update `UnitTrainedEvent` to reassign trained unit if needed
+---
 
-**File:** [src/app/triggers/unit-trained-event.ts](src/app/triggers/unit-trained-event.ts)
+- [x] **2.2 — Update `Spawner.step()` to use lowest-count slot**
+  
+  **File:** [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts#L78)
+  
+  - Replace `ClientManager.getInstance().getClientOrPlayer(this.getOwner())` with `ClientManager.getInstance().getSlotWithLowestUnitCount(this.getOwner())`.
+  
+  **Debug logging:** (already covered by 1.3 and 1.1's `getSlotWithLowestUnitCount` log)
+  
+  **Verify:** With 1 real player + 1 client slot, spawn 10 units. Expect roughly 5 on each slot (±1). Check via turn summary from 1.7.
 
-- Trained units are created by the WC3 engine under the barracks' owner. After training, if the barracks owner isn't the optimal slot, call `SetUnitOwner(trainedUnit, optimalSlot, true)` to move it to the lowest-count slot.
-- **Important:** The barracks itself is owned by the client slot (set in `Spawner.setOwner()`). We need to decide whether to reassign ownership or leave trained units on the barracks' slot. The simplest approach is to reassign post-train.
+---
+
+- [x] **2.3 — Update `UnitTrainedEvent` to reassign trained unit if needed**
+  
+  **File:** [src/app/triggers/unit-trained-event.ts](src/app/triggers/unit-trained-event.ts)
+  
+  - After training, check if the barracks owner is the optimal slot. If not, call `SetUnitOwner(trainedUnit, optimalSlot, true)` to move it.
+  - Adjust increment count accordingly (decrement old slot, increment new slot).
+  
+  **Debug logging:**
+  ```
+  debugPrint(`[SlotCount] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(newSlot)}`);
+  ```
+  
+  **Verify:** Train a unit when the barracks slot has more units than another slot. Confirm the unit ends up on the lower-count slot.
 
 ---
 
 ### Phase 3: General Redistribution Algorithm
 
-**Objective:** Create a single, reusable algorithm that determines when slots can be freed and how to optimally distribute all available slots among active players. This replaces ad-hoc per-event logic with a unified routine.
+**Objective:** Create a single, reusable algorithm that determines when slots can be freed and how to optimally distribute all available slots among active players. Replaces ad-hoc per-event logic with a unified routine.
 
-#### Design: The `evaluateAndRedistribute()` Algorithm
+- [x] **3.1 — Implement `evaluateAndRedistribute()` in `ClientManager`**
+  
+  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  
+  The algorithm (single entry-point, idempotent):
+  
+  ```
+  evaluateAndRedistribute(): boolean
+  │
+  ├── 1. COLLECT: Build the current picture
+  │   ├── activePlayers[]        ← players with status ALIVE or NOMAD
+  │   ├── eliminatedPlayers[]    ← players with status DEAD, LEFT, or STFU
+  │   ├── assignedSlots          ← all slots currently in playerToClient
+  │   └── unassignedSlots[]      ← empty WC3 player slots not assigned to anyone
+  │
+  ├── 2. FREE: Identify reclaimable slots from eliminated players
+  │   ├── For each eliminated player:
+  │   │   ├── Get their client slots from playerToClient
+  │   │   ├── For each client slot:
+  │   │   │   ├── IF slotUnitCount[slot] == 0:
+  │   │   │   │   ├── Tear down alliances
+  │   │   │   │   ├── Remove from maps
+  │   │   │   │   └── Add to availablePool[]
+  │   │   │   └── ELSE:
+  │   │   │       └── Mark as "pendingFree"
+  │   │   └── Also free the eliminated player's OWN handle if count == 0
+  │   └── availablePool[] now has all reclaimable slots
+  │
+  ├── 3. CALCULATE: Determine optimal distribution
+  │   │  totalSlots = assignedSlots.count + availablePool.count
+  │   │  slotsPerPlayer = floor(totalSlots / activePlayers.count)
+  │   │  remainder = totalSlots % activePlayers.count
+  │   │
+  │   ├── For each active player:
+  │   │   ├── currentSlotCount = playerToClient[player].length
+  │   │   ├── targetSlotCount  = slotsPerPlayer (+ 1 if in remainder)
+  │   │   └── delta = target - current
+  │   │
+  │   ├── IF all deltas == 0 → return false
+  │   ├── delta < 0 → "donors" (only donate slots with 0 units)
+  │   └── delta > 0 → "receivers"
+  │
+  ├── 4. EXECUTE: Perform the redistribution
+  │   ├── Collect donated slots, tear down old alliances
+  │   ├── Merge into availablePool
+  │   ├── Assign to receivers (sorted by fewest slots first)
+  │   └── Leftover slots stay unassigned
+  │
+  └── 5. FINALIZE
+      ├── Update scoreboard
+      └── Return true
+  ```
+  
+  Fields to add:
+  - `pendingFreeSlots: Set<player>` — slots of eliminated players that still have units.
+  - Clear `pendingFreeSlots` in `reset()`.
+  
+  Helper methods:
+  - `getActivePlayers(): player[]`
+  - `getSlotsForPlayer(player): player[]` — returns `[player, ...playerToClient[player]]`
+  - `tearDownSlot(slot, previousOwner): void`
+  - `assignSlotToPlayer(slot, newOwner): void`
+  
+  **Debug logging:**
+  ```
+  debugPrint(`[Redistribute] === Running evaluateAndRedistribute() ===`);
+  debugPrint(`[Redistribute] Active players: ${activePlayers.map(p => GetPlayerId(p)).join(', ')}`);
+  debugPrint(`[Redistribute] Eliminated players: ${eliminatedPlayers.map(p => GetPlayerId(p)).join(', ')}`);
+  debugPrint(`[Redistribute] Available pool: ${availablePool.length} slots`);
+  debugPrint(`[Redistribute] Freed slot ${GetPlayerId(slot)} from eliminated player ${GetPlayerId(elimPlayer)} (unitCount was 0)`);
+  debugPrint(`[Redistribute] Slot ${GetPlayerId(slot)} marked pendingFree (unitCount: ${count})`);
+  debugPrint(`[Redistribute] Target: ${slotsPerPlayer} per player (+1 for first ${remainder})`);
+  debugPrint(`[Redistribute] Player ${GetPlayerId(player)}: current=${current}, target=${target}, delta=${delta}`);
+  debugPrint(`[Redistribute] Donor ${GetPlayerId(donor)}: donating slot ${GetPlayerId(slot)}`);
+  debugPrint(`[Redistribute] Receiver ${GetPlayerId(receiver)}: assigned slot ${GetPlayerId(slot)}`);
+  debugPrint(`[Redistribute] Complete. Leftover unassigned: ${leftover}`);
+  debugPrint(`[Redistribute] No changes needed, returning false`);
+  ```
+  
+  **Verify:** 
+  - Initial allocation: Call on Turn 1. Expect slots distributed equally.
+  - Elimination: Kill a player. Expect their empty slots to be freed and redistributed.
+  - Pending free: Kill a player who still has units. Expect slot marked pending. Then kill all their units — expect the next call to free and redistribute it.
 
-The core idea is a **single entry-point method** that can be called from any event (player elimination, unit death, turn start, etc.) and always produces the correct result. It is idempotent — calling it multiple times with no state change is a no-op.
+---
 
-```
-evaluateAndRedistribute(): boolean
-│
-├── 1. COLLECT: Build the current picture
-│   ├── activePlayers[]        ← players with status ALIVE or NOMAD
-│   ├── eliminatedPlayers[]    ← players with status DEAD, LEFT, or STFU
-│   ├── assignedSlots          ← all slots currently in playerToClient (across all players)
-│   └── unassignedSlots[]      ← empty WC3 player slots not assigned to anyone
-│
-├── 2. FREE: Identify reclaimable slots from eliminated players
-│   ├── For each eliminated player:
-│   │   ├── Get their client slots from playerToClient
-│   │   ├── For each client slot:
-│   │   │   ├── IF slotUnitCount[slot] == 0:
-│   │   │   │   ├── Tear down alliances with the eliminated player
-│   │   │   │   ├── Remove from playerToClient and clientToPlayer
-│   │   │   │   └── Add to availablePool[]
-│   │   │   └── ELSE:
-│   │   │       └── Mark as "pendingFree" (keep in maps, but flag for future check)
-│   │   └── Also free the eliminated player's OWN handle if slotUnitCount == 0
-│   │       (their real player slot becomes available as a client slot for others)
-│   └── availablePool[] now contains all immediately reclaimable slots
-│
-├── 3. CALCULATE: Determine optimal distribution
-│   │
-│   │  totalSlots = assignedSlots.count + availablePool.count
-│   │  slotsPerPlayer = floor(totalSlots / activePlayers.count)
-│   │  remainder = totalSlots % activePlayers.count
-│   │
-│   │  Target: each player gets slotsPerPlayer slots,
-│   │          the first `remainder` players (by ID) get slotsPerPlayer + 1
-│   │
-│   ├── For each active player, compute:
-│   │   ├── currentSlotCount = playerToClient[player].length
-│   │   ├── targetSlotCount  = slotsPerPlayer (+ 1 if in remainder group)
-│   │   └── delta = targetSlotCount - currentSlotCount
-│   │
-│   ├── IF all deltas == 0 → no redistribution needed → return false
-│   │
-│   ├── Players with delta < 0 are "donors" (have excess slots)
-│   │   └── Only donate slots where slotUnitCount == 0
-│   │       (slots with units CANNOT be moved — skip and accept imbalance)
-│   │
-│   └── Players with delta > 0 are "receivers"
-│
-├── 4. EXECUTE: Perform the redistribution
-│   ├── Collect donated slots from donors (tear down old alliances)
-│   ├── Merge donated slots into availablePool
-│   ├── For each receiver (sorted by fewest slots first):
-│   │   ├── Assign slots from availablePool up to their delta
-│   │   ├── Add to playerToClient[player] and clientToPlayer
-│   │   └── Call givePlayerFullControlOfClient(player, slot)
-│   └── Any leftover slots in availablePool remain unassigned
-│       (can happen when donors couldn't free slots due to living units)
-│
-└── 5. FINALIZE
-    ├── Update scoreboard (toggle off → on + full update)
-    └── Return true (redistribution occurred)
-```
+- [x] **3.2 — Hook into all relevant events**
+  
+  Replace/add `evaluateAndRedistribute()` calls:
+  
+  | Event | File | Where |
+  |-------|------|-------|
+  | Turn start | [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | `onStartTurn()` — replaces `allocateClientSlot()` |
+  | Player dead | [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | `onPlayerDead()` |
+  | Player left | [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | `onPlayerLeft()` |
+  | Unit death | [unit-death-event.ts](src/app/triggers/unit_death/unit-death-event.ts) | After decrement, if slot is in `pendingFreeSlots` and count == 0 |
+  
+  **Debug logging:**
+  ```
+  debugPrint(`[Redistribute] Triggered by: ${eventName}`);
+  ```
+  
+  **Verify:** Play a game, eliminate a player. Confirm debug logs show the algorithm running from both the elimination event and (if applicable) subsequent unit deaths.
 
-#### Properties of this algorithm
+---
 
-| Property | Description |
-|----------|-------------|
-| **Idempotent** | Safe to call repeatedly — if nothing changed, it returns `false` and does nothing |
-| **Event-agnostic** | Works for any trigger: player death, player leave, unit death, turn start, manual invocation |
-| **Respects unit constraint** | Never moves a slot that still has living units; accepts temporary imbalance instead |
-| **Self-healing** | When a "pendingFree" slot later reaches 0 units, the next call to `evaluateAndRedistribute()` will pick it up |
-| **Fair distribution** | Uses floor division + remainder to distribute as equally as possible |
+- [x] **3.3 — Remove `hasAllocated` flag**
+  
+  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  
+  - Remove `hasAllocated` field and all early-return checks that reference it.
+  - The algorithm's idempotency makes this guard unnecessary.
+  
+  **Verify:** Confirm the algorithm still only produces changes when the state actually differs.
 
-#### Task 3.1: Implement `evaluateAndRedistribute()` in `ClientManager`
+---
 
-**File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
-
-- Implement the algorithm above as a public method.
-- Add a `pendingFreeSlots: Set<player>` field to track slots that belong to eliminated players but still have units.
-- Add helper methods:
-  - `getActivePlayers(): player[]` — returns players with ALIVE or NOMAD status.
-  - `getSlotsForPlayer(player): player[]` — returns `[player, ...playerToClient[player]]` (all slots a player can use).
-  - `tearDownSlot(slot: player, previousOwner: player): void` — removes alliances and cleans up maps.
-  - `assignSlotToPlayer(slot: player, newOwner: player): void` — sets up alliances, adds to maps, syncs name/color.
-
-#### Task 3.2: Hook into all relevant events
-
-The algorithm is called from multiple places — each is a single `evaluateAndRedistribute()` call:
-
-| Event | File | When |
-|-------|------|------|
-| Turn start | [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | Replaces current `allocateClientSlot()` call — handles initial + ongoing redistribution |
-| Player dead | [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | `onPlayerDead()` — immediately attempt to free and redistribute |
-| Player left | [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | `onPlayerLeft()` — same |
-| Unit death | [unit-death-event.ts](src/app/triggers/unit_death/unit-death-event.ts) | After decrementing unit count, if the dying unit's slot is in `pendingFreeSlots` and count reached 0 → call `evaluateAndRedistribute()` |
-
-#### Task 3.3: Remove `hasAllocated` flag
-
-The `hasAllocated` one-shot guard is no longer needed since `evaluateAndRedistribute()` is idempotent and handles both initial allocation and subsequent redistributions. Remove the flag and the early-return check.
-
-#### Task 3.4: Update `allocateClientSlot()` → `evaluateAndRedistribute()`
-
-Rename or replace the existing method. The initial allocation on Turn 1 is now just the first invocation of the general algorithm (all slots are "available", no eliminated players, every active player is a receiver).
+- [x] **3.4 — Rename `allocateClientSlot()` → `evaluateAndRedistribute()`**
+  
+  Update all call sites. The initial allocation on Turn 1 is now the first invocation of the general algorithm.
+  
+  **Verify:** Build and test. No behavioral change — initial allocation should produce the same result as before.
 
 ---
 
 ### Phase 4: Update Ownership Resolution
 
-**Objective:** Ensure all existing code that resolves ownership still works correctly with multi-client mappings.
+**Objective:** Ensure all existing code that resolves ownership still works with multi-client mappings.
 
-#### Task 4.1: Audit `getOwner()` and `getOwnerOfUnit()` 
+- [x] **4.1 — Audit `getOwner()` and `getOwnerOfUnit()`**
+  
+  Reverse lookups via `clientToPlayer` — still `Map<client, player>`. Each client maps to exactly one real player. **No changes expected.**
+  
+  **Verify:** Spot-check in debug logs that ownership resolution returns correct real player after redistribution.
 
-These methods do reverse lookups (`clientToPlayer`) and should work unchanged since `clientToPlayer` remains a simple `Map<client, player>`. Each client still maps to exactly one real player. **No changes expected.**
+---
 
-#### Task 4.2: Audit `isPlayerOrClientOwnerOfUnit()`
+- [x] **4.2 — Update `isPlayerOrClientOwnerOfUnit()`**
+  
+  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  
+  - Change `playerToClient.get(player) == owner` → `playerToClient.get(player)?.includes(owner)`.
+  
+  **Verify:** Confirm city capture and guard replacement still work correctly with multi-client players.
 
-- Currently checks: `clientToPlayer.get(player) == owner || playerToClient.get(player) == owner`
-- With multi-client: `playerToClient.get(player)` returns an array → must check `playerToClient.get(player)?.includes(owner)`.
+---
 
-#### Task 4.3: Audit `isAnyClientOwnerOfUnit()`
+- [x] **4.3 — Audit `isAnyClientOwnerOfUnit()`**
+  
+  Checks `clientToPlayer.has(GetOwningPlayer(unit))` — no change needed.
+  
+  **Verify:** Confirm UnitLagManager tracking still works.
 
-- Checks `clientToPlayer.has(GetOwningPlayer(unit))` — no change needed since `clientToPlayer` still maps individual clients.
+---
 
-#### Task 4.4: Audit MinimapIconManager
+- [x] **4.4 — Audit MinimapIconManager**
+  
+  Uses `ClientManager.getOwnerOfUnit()` for color resolution — no change needed.
+  
+  **Verify:** Confirm units on all client slots show the correct player color on the minimap.
 
-- `MinimapIconManager` uses `ClientManager.getOwnerOfUnit()` for color resolution — no change needed.
+---
 
-#### Task 4.5: Audit UnitLagManager
+- [x] **4.5 — Audit UnitLagManager**
+  
+  - `trackUnit()` uses `isAnyClientOwnerOfUnit()` — no change needed.
+  - `IsUnitAlly`/`IsUnitEnemy` use native WC3 checks — no change needed (alliances are set per client slot).
+  
+  **Verify:** Confirm alliance checks still correctly exclude `MINIMAP_INDICATOR` units.
 
-- `UnitLagManager.trackUnit()` uses `isAnyClientOwnerOfUnit()` — no change needed.
-- `IsUnitAlly`/`IsUnitEnemy` static methods use native WC3 checks — no change needed (alliance flags are set per client slot).
+---
+
+### Phase 5: Inter-Slot Alliances
+
+**Objective:** Ensure all client slots belonging to the same player (and their teammates) are fully allied with each other so units on different slots don't fight.
+
+- [x] **5.1 — Ally sibling slots on assignment**
+
+  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+
+  - In `givePlayerFullControlOfClient()`, after setting up player↔client and teammate↔client alliances:
+    - Ally the new slot with all OTHER existing client slots of the same player.
+    - Ally the new slot with all client slots of each teammate.
+
+  **Verify:** Assign 2+ slots to a player. Confirm units on slot A don't attack units on slot B.
+
+---
+
+- [x] **5.2 — Un-ally sibling slots on teardown**
+
+  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+
+  - In `tearDownSlot()`, mirror the alliance setup:
+    - Un-ally the removed slot from all OTHER existing client slots of the same player.
+    - Un-ally the removed slot from all client slots of each teammate.
+
+  **Verify:** Tear down a slot. Confirm it no longer has alliances with the player's remaining slots.
+
+---
+
+- [x] **5.3 — Ensure `reset()` clears inter-slot alliances**
+
+  The existing `reset()` method already iterates over all `bj_MAX_PLAYERS × bj_MAX_PLAYERS` pairs and disables advanced control for every combination. This covers all inter-slot alliances. **No additional change needed.**
+
+  **Verify:** Trigger a game reset. Confirm no lingering alliances between previously-allied slots.
+
+---
+
+- [x] **5.4 — Full alliance wipe before slot reassignment**
+
+  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+
+  - In `assignSlotToPlayer()`, before setting up new alliances:
+    - Iterate over all `bj_MAX_PLAYERS` player indices and call `enableAdvancedControl(slot, Player(i), false)` and `enableAdvancedControl(Player(i), slot, false)`.
+    - This is a defensive/nuclear wipe that guarantees no stale alliances leak through from any source (previous owner, dissolved teams, etc.) before the slot is given to a new player.
+
+  **Verify:** Eliminate a player, confirm their freed slots have no lingering alliances when assigned to a different player.
 
 ---
 
@@ -268,12 +430,14 @@ These methods do reverse lookups (`clientToPlayer`) and should work unchanged si
 
 | File | Changes |
 |------|---------|
-| [client-manager.ts](src/app/game/services/client-manager.ts) | Core: multi-client mapping, unit counting, slot deallocation/redistribution |
+| [client-manager.ts](src/app/game/services/client-manager.ts) | Core: multi-client mapping, unit counting, slot deallocation/redistribution, `reset()` |
+| [standard-distribution-service.ts](src/app/game/services/distribution-service/standard-distribution-service.ts) | Increment guard count on city distribution |
+| [capitals-distribute-capitals-state.ts](src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts) | Increment guard count on capital distribution |
 | [spawner.ts](src/app/spawner/spawner.ts) | Use `getSlotWithLowestUnitCount()` instead of `getClientOrPlayer()` |
 | [unit-trained-event.ts](src/app/triggers/unit-trained-event.ts) | Reassign trained units to optimal slot, increment count |
 | [unit-death-event.ts](src/app/triggers/unit_death/unit-death-event.ts) | Decrement count, check for deferred slot freeing |
-| [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | Hook into elimination events for slot redistribution |
-| [transport-manager.ts](src/app/managers/transport-manager.ts) | Decrement/increment counts on load/unload (if units are removed/added) |
+| [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | Hook into elimination events, replace `allocateClientSlot()` |
+| [transport-manager.ts](src/app/managers/transport-manager.ts) | Decrement/increment counts on load/unload |
 
 ---
 
@@ -283,7 +447,7 @@ These methods do reverse lookups (`clientToPlayer`) and should work unchanged si
 
 2. **Barracks ownership**: Barracks are owned by client slots. When client slots are redistributed, barracks remains on the original slot. Trained units from that barrack will be created under the old slot's owner. The post-train reassignment (Task 2.3) handles this.
 
-3. **Race conditions on unit death**: When an eliminated player's units die, the deferred freeing logic (Task 3.4) must safely handle cases where multiple units die simultaneously.
+3. **Race conditions on unit death**: When an eliminated player's units die, the deferred freeing logic must safely handle cases where multiple units die simultaneously.
 
 4. **Scoreboard updates**: Each redistribution event needs a scoreboard toggle (off → on) + full update to prevent display glitches from shared control changes.
 
@@ -291,11 +455,11 @@ These methods do reverse lookups (`clientToPlayer`) and should work unchanged si
 
 6. **Testing**: The `MAX_PLAYERS_FOR_CLIENT_ALLOCATION = 11` threshold and the "below 11 players" condition for redistribution need to be verified with edge cases (e.g., exactly 11 players, player leaves immediately on turn 1, all but 1 player eliminated).
 
-7. **Game mode reset**: The game can reset between rounds (e.g., equalized promode Round 1 → Round 2). The reset flow in [reset-state.ts](src/app/game/game-mode/base-game-mode/reset-state.ts) calls `removeUnits()` first (wipes all units from the map), then `ClientManager.getInstance().reset()`. The existing `reset()` method already clears `playerToClient`, `clientToPlayer`, `availableClients`, and `hasAllocated`. The new fields introduced by this plan must also be cleared:
-   - `slotUnitCounts` — must be cleared (all units are already removed by `removeUnits()` so counts are stale)
-   - `pendingFreeSlots` — must be cleared (slots pending deferred freeing are irrelevant after a full reset)
+7. **Game mode reset**: The game can reset between rounds (e.g., equalized promode Round 1 → Round 2). The reset flow in [reset-state.ts](src/app/game/game-mode/base-game-mode/reset-state.ts) calls `removeUnits()` first (wipes all units from the map), then `ClientManager.getInstance().reset()`. The existing `reset()` method already clears `playerToClient`, `clientToPlayer`, `availableClients`, and `hasAllocated`. The new fields must also be cleared:
+   - `slotUnitCounts` — must be cleared (all units already removed by `removeUnits()`)
+   - `pendingFreeSlots` — must be cleared (irrelevant after full reset)
    
-   Since `removeUnits()` runs **before** `ClientManager.reset()`, counters will not be naturally decremented to zero via death events — they are forcibly wiped. This is correct because the entire game state is being rebuilt from scratch; cities will be redistributed again, client slots will be re-allocated on the next Turn 1, and guard counts will be re-incremented during the new city distribution phase.
+   Since `removeUnits()` runs **before** `ClientManager.reset()`, counters will not be naturally decremented to zero via death events — they are forcibly wiped. This is correct because the entire game state is rebuilt from scratch.
    
    **No additional hook is needed** — just ensure `ClientManager.reset()` clears the new fields alongside the existing ones.
 
@@ -303,7 +467,7 @@ These methods do reverse lookups (`clientToPlayer`) and should work unchanged si
 
 ## Execution Order
 
-1. **Phase 1** (unit counting) — can be implemented and tested independently
-2. **Phase 2** (lowest-count spawning) — depends on Phase 1
-3. **Phase 3** (general redistribution algorithm) — depends on Phases 1 + 2; replaces the one-shot `allocateClientSlot()` with idempotent `evaluateAndRedistribute()`
-4. **Phase 4** (audit) — done alongside Phases 2 + 3
+1. **Phase 1** (unit counting) — can be implemented and tested independently. Use `debugPrintSlotCounts()` each turn to verify.
+2. **Phase 2** (lowest-count spawning) — depends on Phase 1. Verify unit distribution across slots.
+3. **Phase 3** (general redistribution) — depends on Phases 1 + 2. Verify with elimination scenarios.
+4. **Phase 4** (audit) — done alongside Phases 2 + 3. Mostly verification, minimal code changes.
