@@ -3,6 +3,7 @@ import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Resetable } from 'src/app/interfaces/resetable';
 import { ClientManager } from 'src/app/game/services/client-manager';
+import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 
 /**
@@ -57,6 +58,7 @@ export class Guard implements Resetable {
 
 		// Hide the guard's minimap icon
 		BlzSetUnitBooleanFieldBJ(guard, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+		UnitLagManager.getInstance().untrackUnit(guard);
 	}
 
 	/**
@@ -70,6 +72,7 @@ export class Guard implements Resetable {
 
 		// Show the unit's minimap icon again
 		BlzSetUnitBooleanFieldBJ(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+		UnitLagManager.getInstance().trackUnit(this._unit);
 
 		this._unit = null;
 	}
