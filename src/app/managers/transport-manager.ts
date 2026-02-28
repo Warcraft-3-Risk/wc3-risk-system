@@ -692,6 +692,8 @@ export class TransportManager {
 
 		if (transport.cargo.length + transport.orderedUnits.length >= 10) return;
 
+		// Resolve real owner once (handles multi-client slots)
+		const transportRealOwner = ClientManager.getInstance().getOwnerOfUnit(transport.unit);
 		let group: group = CreateGroup();
 
 		GroupEnumUnitsInRange(
@@ -705,7 +707,7 @@ export class TransportManager {
 				if (IsUnitType(unit, UNIT_TYPE.SHIP)) return;
 				if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
 				if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
-				if (GetOwningPlayer(unit) != GetOwningPlayer(transport.unit)) return;
+				if (ClientManager.getInstance().getOwnerOfUnit(unit) != transportRealOwner) return;
 				
 				// Global check for already ordered units
 				if (this.allOrderedUnits.has(unit)) return;
