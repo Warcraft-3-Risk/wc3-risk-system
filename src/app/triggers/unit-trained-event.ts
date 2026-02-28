@@ -18,16 +18,29 @@ export function UnitTrainedEvent() {
 
 			const oldSlot = GetOwningPlayer(trainedUnit);
 			const realOwner = ClientManager.getInstance().getOwnerOfUnit(trainedUnit);
-			const optimalSlot = ClientManager.getInstance().getSlotWithLowestUnitCount(realOwner);
 
-			if (optimalSlot !== oldSlot) {
-				// Reassign the trained unit to the optimal (lowest-count) slot
-				debugPrint(`[SlotCount] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(optimalSlot)}`);
-				SetUnitOwner(trainedUnit, optimalSlot, true);
-				ClientManager.getInstance().incrementUnitCount(optimalSlot);
+			// Transports must always be owned by the real player so rally-loading works correctly
+			if (IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
+				if (oldSlot !== realOwner) {
+					debugPrint(`[SlotCount] Transport reassigned from client slot ${GetPlayerId(oldSlot)} to real owner ${GetPlayerId(realOwner)}`);
+					SetUnitOwner(trainedUnit, realOwner, true);
+					ClientManager.getInstance().incrementUnitCount(realOwner);
+				} else {
+					debugPrint(`[SlotCount] Transport trained on real owner slot ${GetPlayerId(oldSlot)}`);
+					ClientManager.getInstance().incrementUnitCount(oldSlot);
+				}
 			} else {
-				debugPrint(`[SlotCount] Trained unit on slot ${GetPlayerId(oldSlot)}`);
-				ClientManager.getInstance().incrementUnitCount(oldSlot);
+				const optimalSlot = ClientManager.getInstance().getSlotWithLowestUnitCount(realOwner);
+
+				if (optimalSlot !== oldSlot) {
+					// Reassign the trained unit to the optimal (lowest-count) slot
+					debugPrint(`[SlotCount] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(optimalSlot)}`);
+					SetUnitOwner(trainedUnit, optimalSlot, true);
+					ClientManager.getInstance().incrementUnitCount(optimalSlot);
+				} else {
+					debugPrint(`[SlotCount] Trained unit on slot ${GetPlayerId(oldSlot)}`);
+					ClientManager.getInstance().incrementUnitCount(oldSlot);
+				}
 			}
 
 			// Hide native minimap marker and use custom minimap icon (resolves real owner color)
