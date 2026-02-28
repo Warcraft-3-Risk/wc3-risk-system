@@ -9,6 +9,9 @@ import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
+import { ClientManager } from 'src/app/game/services/client-manager';
+import { UNIT_TYPE } from 'src/app/utils/unit-types';
+import { debugPrint } from 'src/app/utils/debug-print';
 import { Quests } from '../../../quests/quests';
 
 export function onPlayerAliveHandle(player: ActivePlayer): void {
@@ -24,6 +27,28 @@ export function onPlayerAliveHandle(player: ActivePlayer): void {
 export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): void {
 	if (player.status.isEliminated()) {
 		return;
+	}
+
+	// Kill remaining transport ships on all player slots (real player + client slots)
+	const transportsToKill: unit[] = [];
+	const playerHandle = player.getPlayer();
+	const slots = [playerHandle, ...ClientManager.getInstance().getClientSlotsByPlayer(playerHandle)];
+
+	slots.forEach((slot) => {
+		const g = CreateGroup();
+		GroupEnumUnitsOfPlayer(g, slot, null);
+		ForGroup(g, () => {
+			const u = GetEnumUnit();
+			if (IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
+				transportsToKill.push(u);
+			}
+		});
+		DestroyGroup(g);
+	});
+
+	if (transportsToKill.length > 0) {
+		debugPrint(`Killing ${transportsToKill.length} remaining transports for eliminated player ${GetPlayerId(playerHandle)}`);
+		transportsToKill.forEach((u) => KillUnit(u));
 	}
 
 	player.status.status = PLAYER_STATUS.DEAD;
