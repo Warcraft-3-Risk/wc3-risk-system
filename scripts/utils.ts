@@ -3,10 +3,10 @@ import { writeFileSync } from 'fs';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { createLogger, format, transports } from 'winston';
+import 'dotenv/config';
+
 const { combine, timestamp, printf } = format;
 const luamin = require('luamin');
-import 'dotenv/config';
-import { SHOW_DEBUG_PRINTS } from '../src/configs/game-settings';
 
 export interface IProjectConfig {
 	mapFolder: string;
@@ -149,8 +149,6 @@ export function compileMap(config: IProjectConfig) {
 	}
 
 	const mapLua = `./dist/${config.mapFolder}/war3map.lua`;
-	const handleRecyclerSrc = path.join(__dirname, "..", "src", "lua", "HandleRecycler.lua");
-	const handleRecyclerDst = path.join(`./dist/${config.mapFolder}`, "HandleRecycler.lua");
 
 	if (!fs.existsSync(mapLua)) {
 		logger.error(`Could not find "${mapLua}"`);
@@ -158,39 +156,17 @@ export function compileMap(config: IProjectConfig) {
 	}
 
 	try {
-		// --- Copy HandleRecycler.lua ---
-		fs.copySync(handleRecyclerSrc, handleRecyclerDst);
-
-		// --- Modify it if show_debug_prints is false ---
-		if (!SHOW_DEBUG_PRINTS) {
-			let handleContents = fs.readFileSync(handleRecyclerDst, "utf8");
-
-			// Remove specific debug print lines
-			handleContents = handleContents.replace(
-				/print\("\|cffff0000Warning:\|r HandleRecycler: Double deletion of .*?"\)\n?/g,
-				""
-			);
-
-			fs.writeFileSync(handleRecyclerDst, handleContents);
-		}
-
-
-
 		// --- Merge everything ---
-		let contents = "";
-		if (fs.existsSync(handleRecyclerDst)) {
-			contents += fs.readFileSync(handleRecyclerDst, "utf8") + "\n";
-			logger.info("Prepended HandleRecycler.lua to war3map.lua");
-		}
+		let contents = '';
 
-		let war3mapContents = fs.readFileSync(mapLua, "utf8");
-		const tstlOutput = fs.readFileSync(tsLua, "utf8");
+		let war3mapContents = fs.readFileSync(mapLua, 'utf8');
+		const tstlOutput = fs.readFileSync(tsLua, 'utf8');
 
-		contents += war3mapContents + "\n" + tstlOutput;
+		contents += war3mapContents + '\n' + tstlOutput;
 
 		// --- Optional minify ---
 		if (config.minifyScript) {
-			logger.info("Minifying script...");
+			logger.info('Minifying script...');
 			contents = luamin.minify(contents.toString());
 		}
 
@@ -207,6 +183,7 @@ export function compileMap(config: IProjectConfig) {
  * Formatter for log messages.
  */
 const loggerFormatFunc = printf(({ level, message, timestamp }) => {
+	// @ts-ignore
 	return `[${timestamp.replace('T', ' ').split('.')[0]}] ${level}: ${message}`;
 });
 
@@ -256,10 +233,7 @@ export function copyLoadingScreenFiles(mapFolder: string) {
 	const targetPath = path.join('dist', mapFolder);
 
 	// Loading screen files to copy
-	const loadingScreenFiles = [
-		'Fullscreen.dds',
-		'LoadingScreen.mdx',
-	];
+	const loadingScreenFiles = ['Fullscreen.dds', 'LoadingScreen.mdx'];
 
 	logger.info(`Checking for loading screen files in ${mapFolder}...`);
 
@@ -336,7 +310,5 @@ export function syncObjectEditorFiles(targetTerrain: string, mapFolder: string) 
 		}
 	}
 
-	logger.info(
-		`Object editor sync complete: ${syncedCount} files synced, ${skippedCount} files skipped`
-	);
+	logger.info(`Object editor sync complete: ${syncedCount} files synced, ${skippedCount} files skipped`);
 }

@@ -6,7 +6,6 @@ import { StatisticsModel } from './statistics-model';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { RatingManager } from '../rating/rating-manager';
 import { getRankIcon } from '../rating/rating-calculator';
-import { PlayerManager } from '../player/player-manager';
 import { HexColors } from '../utils/hex-colors';
 
 type TextFunction = (player: ActivePlayer) => string;
@@ -62,7 +61,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return 'N/A';
 				}
 
-				return truncateWithColorCode(name, 24);
+				return truncateWithColorCode(name, 14);
 			},
 		},
 		{
@@ -117,11 +116,14 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				const ratingResults = ratingManager.getRatingResults();
 				const result = ratingResults ? ratingResults.get(btag) : undefined;
 
-				if (result && result.newRating != undefined && result.totalChange != undefined) {
-					const change = result.totalChange;
-					const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
-					const sign = change >= 0 ? '+' : '';
-					return `${highlightIfOwnPlayer(player, result.newRating)} (${color}${sign}${change}|r)`;
+				if (result && result.newRating != undefined && result.oldRating != undefined) {
+					// Use effective change (newRating - oldRating) to account for rating floor
+					const effectiveChange = result.newRating - result.oldRating;
+					// If effective change is 0 but total change was negative, player was protected by floor
+					const wasFloorProtected = effectiveChange === 0 && result.totalChange < 0;
+					const color = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
+					const sign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
+					return `${highlightIfOwnPlayer(player, result.newRating)} (${color}${sign}${effectiveChange}|r)`;
 				}
 
 				return `${highlightIfOwnPlayer(player, ratingManager.getPlayerRating(btag))}`;
@@ -148,7 +150,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return highlightIfOwnPlayer(player, 'N/A');
 				}
 
-				return truncateWithColorCode(rivalName, 24);
+				return truncateWithColorCode(rivalName, 14);
 			},
 		},
 		{
@@ -220,7 +222,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				const max = gold.max != undefined ? gold.max : 0;
 				const end = gold.end != undefined ? gold.end : 0;
 				return highlightIfOwnPlayer(player, earned + '/' + max + '/' + end);
-			}
+			},
 		},
 		{
 			size: killsSize,
@@ -240,7 +242,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				return highlightIfOwnPlayer(player, killsDeaths.killValue);
-			}
+			},
 		},
 		{
 			size: deathSize,
@@ -260,7 +262,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				return highlightIfOwnPlayer(player, killsDeaths.deathValue);
-			}
+			},
 		},
 		{
 			size: 0.08,

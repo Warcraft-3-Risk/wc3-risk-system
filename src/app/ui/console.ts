@@ -69,6 +69,20 @@ export function SetConsoleUI() {
 	BlzCreateFrame('GlobalMessageFrame', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 	BlzCreateFrame('CountdownFrame', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 0, 0);
 
+	// Hide and disable save and load buttons (also blocks Alt+S shortcut)
+	const saveButton = BlzGetFrameByName('SaveGameButton', 0);
+	const loadButton = BlzGetFrameByName('LoadGameButton', 0);
+	const saveGameFileEditBox = BlzGetFrameByName('SaveGameFileEditBox', 0);
+	const FileListFrame = BlzGetFrameByName('FileListFrame', 0);
+
+	BlzFrameSetEnable(saveButton, false);
+	BlzFrameSetEnable(loadButton, false);
+	BlzFrameSetEnable(saveGameFileEditBox, false);
+
+	BlzFrameSetVisible(saveGameFileEditBox, false);
+	BlzFrameSetVisible(FileListFrame, false);
+	BlzFrameSetText(BlzGetFrameByName('SaveGameTitleText', 0), 'Saving the game has been disabled');
+
 	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 		const player = Player(i);
 
@@ -142,7 +156,7 @@ export function AllyMenuFFASetup() {
 	tempText += '|n|cffffffff-mute <player> - Mute a dead player for 300 seconds';
 	tempText += '|n|cffffffff-ui - Toggle UI buttons visibility';
 	tempText += '|n|n|cffffcc00Hotkeys:|r';
-	tempText += '|n|cffffffff F4 - Toggle rating stats window';
+	tempText += '|n|cffffffff F4 - Toggle ranked stats window';
 	tempText += '|n|cffffffff F6 - Toggle guard health preference';
 	tempText += '|n|cffffffff F7 - Toggle guard value preference';
 	tempText += '|n|cffffffff F8 - Toggle country labels';

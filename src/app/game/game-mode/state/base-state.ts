@@ -33,11 +33,11 @@ export abstract class BaseState<T extends StateData> {
 	}
 
 	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
-		onPlayerDeadHandle(player, forfeit);
-
-		// Immediately finalize rating for dead/forfeited player
+		// Finalize rating BEFORE displaying message so rating change is available
 		// This writes a REAL entry (not pending) so rating never changes after death
 		RatingManager.getInstance().finalizePlayerRating(player);
+
+		onPlayerDeadHandle(player, forfeit);
 	}
 
 	onPlayerNomad(player: ActivePlayer): void {
@@ -45,13 +45,12 @@ export abstract class BaseState<T extends StateData> {
 	}
 
 	onPlayerLeft(player: ActivePlayer): void {
-		onPlayerLeftHandle(player);
-		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
-
-		// Finalize rating for player who left/disconnected
-		// This ensures their rating change is calculated and shown on scoreboard
+		// Finalize rating BEFORE displaying message so rating change is available
 		// Note: finalizePlayerRating safely handles already-finalized players
 		RatingManager.getInstance().finalizePlayerRating(player);
+
+		onPlayerLeftHandle(player);
+		EventEmitter.getInstance().emit(EVENT_QUEST_UPDATE_PLAYER_STATUS);
 	}
 
 	onPlayerSTFU(player: ActivePlayer): void {

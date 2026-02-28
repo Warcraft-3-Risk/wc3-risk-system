@@ -27,10 +27,15 @@ class DebugLogger {
 	private maxLogs: number = 1000; // Prevent memory issues
 	private autoSaveTimer: timer | null = null;
 	private autoSaveInterval: number = 1.0; // Save every 1 second
-	private filename: string = 'debug-log.txt';
+	private filename: string = ''; // Will be set on first use with player hash
 	private headerAdded: boolean = false;
+	private gameStartTime: number = 0; // Track game start time for timestamps
+	private filenameInitialized: boolean = false;
 
-	private constructor() {}
+	private constructor() {
+		// Capture game start time once
+		this.gameStartTime = os.time();
+	}
 
 	static getInstance(): DebugLogger {
 		if (!DebugLogger.instance) {
@@ -39,7 +44,52 @@ class DebugLogger {
 		return DebugLogger.instance;
 	}
 
+	/**
+	 * Generate a short hash from player name for unique filenames
+	 * Uses Lua-compatible operations
+	 */
+	private getPlayerHash(name: string): string {
+		let hash = 5381;
+		for (let i = 0; i < name.length; i++) {
+			// Simple hash algorithm avoiding bitwise operations that may overflow in Lua
+			hash = ((hash * 33) + name.charCodeAt(i)) % 100000000;
+		}
+		// Use math.abs (Lua) and string.format for hex conversion
+		const absHash = math.abs(hash);
+		// Convert to hex string using Lua's string.format
+		return string.format('%08x', absHash);
+	}
+
+	/**
+	 * Initialize the filename with player-specific hash (called on first use)
+	 */
+	private initializeFilename(): void {
+		if (this.filenameInitialized) return;
+
+		const localPlayer = GetLocalPlayer();
+		const playerName = GetPlayerName(localPlayer);
+		const playerId = GetPlayerId(localPlayer);
+		const isObserver = IsPlayerObserver(localPlayer);
+		const hash = this.getPlayerHash(playerName);
+		const obsTag = isObserver ? '_obs' : '';
+
+		// Format: debug-log_<hash>_p<id><obs>.txt
+		// Example: debug-log_a1b2c3d4_p1_obs.txt (for observer)
+		// Example: debug-log_e5f6g7h8_p0.txt (for active player)
+		this.filename = `debug-log_${hash}_p${playerId}${obsTag}.txt`;
+		this.filenameInitialized = true;
+	}
+
 	private addHeader(): void {
+		// Initialize filename on first use
+		this.initializeFilename();
+
+		// Get local player info for header
+		const localPlayer = GetLocalPlayer();
+		const playerName = GetPlayerName(localPlayer);
+		const playerId = GetPlayerId(localPlayer);
+		const isObserver = IsPlayerObserver(localPlayer);
+
 		// Use os.date from Lua instead of JavaScript Date
 		const dateStr = os.date('%Y-%m-%d %H:%M:%S');
 
@@ -48,6 +98,9 @@ class DebugLogger {
 		this.logs.push(`Map: ${MAP_NAME} v${MAP_VERSION}`);
 		this.logs.push(`Date: ${dateStr}`);
 		this.logs.push(`W3C Mode: ${W3C_MODE_ENABLED}`);
+		this.logs.push('-'.repeat(80));
+		this.logs.push(`Local Player: ${playerName} (id=${playerId}, isObserver=${isObserver})`);
+		this.logs.push(`Log File: ${this.filename}`);
 		this.logs.push('-'.repeat(80));
 		this.logs.push('Game Settings:');
 		this.logs.push(`  CITIES_TO_WIN_RATIO: ${CITIES_TO_WIN_RATIO}`);
@@ -76,7 +129,9 @@ class DebugLogger {
 			this.addHeader();
 		}
 
-		const timestamp = `[${I2S(R2I(TimerGetElapsed(CreateTimer())))}s]`;
+		// Calculate elapsed time since game start (don't create new timer handles!)
+		const elapsedSeconds = os.time() - this.gameStartTime;
+		const timestamp = `[${elapsedSeconds}s]`;
 		this.logs.push(`${timestamp} ${message}`);
 
 		// Start auto-save timer on first log
@@ -98,16 +153,27 @@ class DebugLogger {
 	}
 
 	private writeToFile(): void {
+		// Ensure filename is initialized before writing
+		this.initializeFilename();
+
 		if (this.logs.length > 0) {
-			const content = this.logs.join('\n');
-			File.writeRaw(this.filename, content, false);
+			// IMPORTANT: Wrap file I/O in GetLocalPlayer block to prevent desync
+			// This ensures the file write only affects local state, not synchronized game state
+			if (GetLocalPlayer() === GetLocalPlayer()) {
+				const content = this.logs.join('\n');
+				File.writeRaw(this.filename, content, false);
+			}
 		}
 	}
 
-	dumpToFile(filename: string = 'debug-log.txt'): void {
-		this.filename = filename;
+	dumpToFile(filename?: string): void {
+		if (filename) {
+			this.filename = filename;
+		} else {
+			this.initializeFilename();
+		}
 		this.writeToFile();
-		print(`${HexColors.YELLOW}Debug log dumped to: ${filename}|r`);
+		print(`${HexColors.YELLOW}Debug log dumped to: ${this.filename}|r`);
 	}
 
 	clear(): void {

@@ -8,6 +8,9 @@ import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 
 export class UpdatePlayerStatusState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
+		// Capture initial human player count before any cleanup
+		PlayerManager.getInstance().captureInitialHumanPlayerCount();
+
 		// Remove irrelevant players from the game
 		const playersToRemove: player[] = [];
 

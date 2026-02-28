@@ -199,7 +199,7 @@ export class Quests {
 			  Example: -mute blue
 
 			${HexColors.YELLOW}Hotkeys:|r
-			F4 - Toggle rating stats window
+			F4 - Toggle ranked stats window
 			F6 - Toggle guard health bar preference
 			F7 - Toggle guard value display preference
 			F8 - Toggle country label visibility
@@ -285,7 +285,8 @@ export class Quests {
 					const btag = nameManager.getBtag(player.getPlayer());
 					description += `\n${btag}`;
 					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
-						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
+						// Show initial rating for active players (no change yet)
+						description += ` (${HexColors.GREEN}${ratingManager.getInitialPlayerRating(btag)}|r)`;
 					}
 					description += ` (${HexColors.GREEN + 'Active|r'})`;
 				});
@@ -296,7 +297,19 @@ export class Quests {
 					const btag = nameManager.getBtag(player.getPlayer());
 					description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())}`;
 					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
-						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
+						// Show initial rating + effective change for eliminated players
+						const initialRating = ratingManager.getInitialPlayerRating(btag);
+						const ratingResult = ratingManager.getRatingResults().get(btag);
+						if (ratingResult) {
+							const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
+							// If effective change is 0 but total change was negative, player was protected by floor
+							const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
+							const changeColor = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
+							const changeSign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
+							description += ` ${HexColors.TANGERINE}(${initialRating})|r ${changeColor}(${changeSign}${effectiveChange})|r`;
+						} else {
+							description += ` (${HexColors.GREEN}${initialRating}|r)`;
+						}
 					}
 					description += ` (${player.status ? player.status.status : 'Unknown'})`;
 

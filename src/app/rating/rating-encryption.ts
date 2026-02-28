@@ -17,15 +17,17 @@ export function base64Encode(data: string): string {
 
 	while (i < data.length) {
 		const a = data.charCodeAt(i++);
-		const b = i < data.length ? data.charCodeAt(i++) : 0;
-		const c = i < data.length ? data.charCodeAt(i++) : 0;
+		const hasB = i < data.length;
+		const b = hasB ? data.charCodeAt(i++) : 0;
+		const hasC = i < data.length;
+		const c = hasC ? data.charCodeAt(i++) : 0;
 
 		const bitmap = (a << 16) | (b << 8) | c;
 
 		result += BASE64_CHARS.charAt((bitmap >>> 18) & 63);
 		result += BASE64_CHARS.charAt((bitmap >>> 12) & 63);
-		result += i - 2 < data.length ? BASE64_CHARS.charAt((bitmap >>> 6) & 63) : '=';
-		result += i - 1 < data.length ? BASE64_CHARS.charAt(bitmap & 63) : '=';
+		result += hasB ? BASE64_CHARS.charAt((bitmap >>> 6) & 63) : '=';
+		result += hasC ? BASE64_CHARS.charAt(bitmap & 63) : '=';
 	}
 
 	return result;

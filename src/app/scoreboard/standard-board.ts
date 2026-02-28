@@ -2,7 +2,7 @@ import { NameManager } from '../managers/names/name-manager';
 import { TrackedData } from '../player/data/tracked-data';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { ShuffleArray, truncateWithColorCode } from '../utils/utils';
+import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { RatingManager } from '../rating/rating-manager';
@@ -61,13 +61,25 @@ export class StandardBoard extends Scoreboard {
 	 */
 	public updateFull(): void {
 		this.players.sort((pA, pB) => {
-			const playerAIncome: number = pA.trackedData.income.income;
-			const playerBIncome: number = pB.trackedData.income.income;
+			const aEliminated = pA.status.isEliminated();
+			const bEliminated = pB.status.isEliminated();
 
-			if (playerAIncome < playerBIncome) return 1;
-			if (playerAIncome > playerBIncome) return -1;
+			// Alive players always above eliminated players
+			if (!aEliminated && bEliminated) return -1;
+			if (aEliminated && !bEliminated) return 1;
 
-			// Secondary sort by player ID for deterministic ordering across all clients
+			if (aEliminated && bEliminated) {
+				// Among eliminated: died later (higher turnDied) = higher on board
+				if (pA.trackedData.turnDied > pB.trackedData.turnDied) return -1;
+				if (pA.trackedData.turnDied < pB.trackedData.turnDied) return 1;
+				return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
+			}
+
+			// Among alive: sort by income desc
+			const incomeA = pA.trackedData.income.income;
+			const incomeB = pB.trackedData.income.income;
+			if (incomeA < incomeB) return 1;
+			if (incomeA > incomeB) return -1;
 			return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
 		});
 
@@ -79,7 +91,22 @@ export class StandardBoard extends Scoreboard {
 			let textColor: string = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 
 			if (player.status.isEliminated()) {
-				this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, this.INCOME_COL);
+				// Show rating change in income column for eliminated players
+				const ratingManager = RatingManager.getInstance();
+				const btag = NameManager.getInstance().getBtag(player.getPlayer());
+				const ratingResult = ratingManager.getRatingResults().get(btag);
+				const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
+				const localShowRating = ratingManager.getShowRatingPreference(localBtag);
+
+				if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && localShowRating) {
+					const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
+					const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
+					const color = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
+					const sign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
+					this.setItemValue(`${color}${sign}${effectiveChange}|r`, row, this.INCOME_COL);
+				} else {
+					this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, this.INCOME_COL);
+				}
 			} else {
 				this.setItemValue(`${textColor}${data.income.income}`, row, this.INCOME_COL);
 			}
@@ -90,7 +117,7 @@ export class StandardBoard extends Scoreboard {
 	}
 
 	/**
-	 * Updates all columns except income on the scoreboard.
+	 * Updates all columns except income on the scoreboard (without re-sorting).
 	 */
 	public updatePartial(): void {
 		let row: number = 2;
@@ -131,26 +158,8 @@ export class StandardBoard extends Scoreboard {
 
 		// --- Eliminated Player Formatting ---
 		if (player.status.isEliminated()) {
-			// Show rating change after player name if available (ranked game + local player has rating display enabled)
-			const ratingManager = RatingManager.getInstance();
-			const btag = NameManager.getInstance().getBtag(player.getPlayer());
-			const ratingResult = ratingManager.getRatingResults().get(btag);
-			const playerName = NameManager.getInstance().getDisplayName(player.getPlayer());
-
-			// Check if the LOCAL (viewing) player has rating display enabled
-			const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
-			const localShowRating = ratingManager.getShowRatingPreference(localBtag);
-
-			if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && localShowRating) {
-				const change = ratingResult.totalChange;
-				const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
-				const sign = change >= 0 ? '+' : '';
-				const truncatedName = truncateWithColorCode(playerName, 17);
-				this.setItemValue(`${grey}${truncatedName}${color}(${sign}${change})|r`, row, this.PLAYER_COL);
-			} else {
-				const truncatedName = truncateWithColorCode(playerName, 20);
-				this.setItemValue(`${grey}${truncatedName}`, row, this.PLAYER_COL);
-			}
+			// Player name
+			this.setItemValue(`${grey}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
 			// Cities
 			this.setItemValue(`${grey}${data.cities.cities.length}`, row, this.CITIES_COL);

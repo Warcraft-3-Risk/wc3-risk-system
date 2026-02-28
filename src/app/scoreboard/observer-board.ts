@@ -2,7 +2,7 @@ import { NameManager } from '../managers/names/name-manager';
 import { TrackedData } from '../player/data/tracked-data';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { ShuffleArray, truncateWithColorCode } from '../utils/utils';
+import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
@@ -67,13 +67,25 @@ export class ObserverBoard extends Scoreboard {
 
 	public updateFull(): void {
 		this.players.sort((pA, pB) => {
-			const playerAIncome: number = pA.trackedData.income.income;
-			const playerBIncome: number = pB.trackedData.income.income;
+			const aEliminated = pA.status.isEliminated();
+			const bEliminated = pB.status.isEliminated();
 
-			if (playerAIncome < playerBIncome) return 1;
-			if (playerAIncome > playerBIncome) return -1;
+			// Alive players always above eliminated players
+			if (!aEliminated && bEliminated) return -1;
+			if (aEliminated && !bEliminated) return 1;
 
-			// Secondary sort by player ID for deterministic ordering across all clients
+			if (aEliminated && bEliminated) {
+				// Among eliminated: died later (higher turnDied) = higher on board
+				if (pA.trackedData.turnDied > pB.trackedData.turnDied) return -1;
+				if (pA.trackedData.turnDied < pB.trackedData.turnDied) return 1;
+				return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
+			}
+
+			// Among alive: sort by income desc
+			const incomeA = pA.trackedData.income.income;
+			const incomeB = pB.trackedData.income.income;
+			if (incomeA < incomeB) return 1;
+			if (incomeA > incomeB) return -1;
 			return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
 		});
 
@@ -83,6 +95,23 @@ export class ObserverBoard extends Scoreboard {
 			player.trackedData.income.delta = 0;
 			const data: TrackedData = player.trackedData;
 			const textColor: string = HexColors.WHITE;
+
+			// Rating/income column for eliminated players only updates on full update (turn end)
+			if (player.status.isEliminated()) {
+				const ratingManager = RatingManager.getInstance();
+				const btag = NameManager.getInstance().getBtag(player.getPlayer());
+				const ratingResult = ratingManager.getRatingResults().get(btag);
+
+				if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled()) {
+					const effectiveChange = ratingResult.newRating - ratingResult.oldRating;
+					const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
+					const color = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
+					const sign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
+					this.setItemValue(`${color}${sign}${effectiveChange}|r`, row, this.INCOME_COL);
+				} else {
+					this.setItemValue(`${HexColors.LIGHT_GRAY}-`, row, this.INCOME_COL);
+				}
+			}
 
 			this.setColumns(player, row, textColor, data);
 			row++;
@@ -128,25 +157,7 @@ export class ObserverBoard extends Scoreboard {
 		const teamPrefix = this.getTeamPrefix(player.getPlayer());
 
 		// Name
-		const ratingManager = RatingManager.getInstance();
-		const btag = NameManager.getInstance().getBtag(player.getPlayer());
-		const ratingResult = ratingManager.getRatingResults().get(btag);
-		const playerName = NameManager.getInstance().getDisplayName(player.getPlayer());
-
-		if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled()) {
-			const change = ratingResult.totalChange;
-			const color = change >= 0 ? HexColors.GREEN : HexColors.RED;
-			const sign = change >= 0 ? '+' : '';
-			const truncatedName = truncateWithColorCode(playerName, 17);
-			this.setItemValue(`${grey}${teamPrefix}${truncatedName}${color}(${sign}${change})|r`, row, this.PLAYER_COL);
-		} else {
-			const truncatedName = truncateWithColorCode(playerName, 20);
-			this.setItemValue(`${grey}${teamPrefix}${truncatedName}`, row, this.PLAYER_COL);
-		}
-
-
-		// Income
-		this.setItemValue(`${grey}-`, row, this.INCOME_COL);
+		this.setItemValue(`${grey}${teamPrefix}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
 		// Gold
 		this.setItemValue(`${grey}-`, row, this.GOLD_COL);

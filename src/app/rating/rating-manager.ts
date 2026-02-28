@@ -2,6 +2,7 @@ import { GameRatingResult, OthersRatingFileData, PlayerRatingData, RatingFileDat
 import { readRatings, validateChecksum, writeRatings } from './rating-file-handler';
 import { readOthersRatings, writeOthersRatings } from './global-rating-handler';
 import {
+	calculateKillAdjustment,
 	calculateOpponentStrengthModifier,
 	calculatePlacementPoints,
 	calculateRatingChange
@@ -39,6 +40,7 @@ export class RatingManager {
 	// Initial game state - captured at game start, never changes during the game
 	private initialPlayerCount: number = 0;
 	private initialPlayerRatings: Map<string, number> = new Map();
+	private initialPlayers: ActivePlayer[] = []; // Store initial players for kill value access
 	private eliminatedCount: number = 0;
 	private finalizedPlayers: Set<string> = new Set();
 
@@ -52,6 +54,7 @@ export class RatingManager {
 		this.isRankedGameFlag = false;
 		this.seasonId = RANKED_SEASON_ID;
 		this.initialPlayerRatings = new Map();
+		this.initialPlayers = [];
 		this.finalizedPlayers = new Set();
 	}
 
@@ -133,10 +136,12 @@ export class RatingManager {
 		}
 
 		const filePath = this.getPlayerFilePath(btag);
+		debugPrint(`[RatingManager] loadPlayerRating: Loading file for ${btag} from ${filePath}`);
 		const data = readRatings(filePath);
 
 		if (!data) {
 			// No file exists yet - player will start fresh
+			debugPrint(`[RatingManager] loadPlayerRating: No file found for ${btag}`);
 			this.loadedPlayers.add(btag);
 			return true;
 		}
@@ -144,6 +149,7 @@ export class RatingManager {
 		// Validate checksum
 		if (!validateChecksum(data)) {
 			// Corrupted file - create fresh data and overwrite immediately
+			debugPrint(`[RatingManager] loadPlayerRating: Checksum FAILED for ${btag}`);
 			print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
 			const timestamp = math.floor(os.time());
 			const freshData: PlayerRatingData = {
@@ -156,7 +162,7 @@ export class RatingManager {
 				totalKillValue: 0,
 				totalDeathValue: 0,
 				totalPlacement: 0,
-				showRating: true,
+				showRating: false, // Default to hiding rating for new players
 				_isSynced: false,
 			};
 			this.ratingData.set(btag, freshData);
@@ -165,6 +171,8 @@ export class RatingManager {
 			return true;
 		}
 
+		debugPrint(`[RatingManager] loadPlayerRating: Checksum OK for ${btag}, rating=${data.player.rating}, hasPending=${data.player.pendingGame != null}`);
+
 		// Load valid data for this player
 		// Mark as synced since file-loaded data is authoritative
 		data.player._isSynced = true;
@@ -172,8 +180,10 @@ export class RatingManager {
 
 		// Finalize pending game if exists
 		if (data.player.pendingGame) {
+			debugPrint(`[RatingManager] loadPlayerRating: Found pending entry for ${btag} - gameId=${data.player.pendingGame.gameId}, pendingRating=${data.player.pendingGame.rating}, baseRating=${data.player.rating}`);
 			const playerData = this.ratingData.get(data.player.btag);
 			if (playerData && playerData.pendingGame) {
+				debugPrint(`[RatingManager] loadPlayerRating: Finalizing pending entry for ${btag} - ${playerData.rating} -> ${playerData.pendingGame.rating}`);
 				playerData.rating = playerData.pendingGame.rating;
 				playerData.wins = playerData.pendingGame.wins;
 				playerData.losses = playerData.pendingGame.losses;
@@ -185,8 +195,13 @@ export class RatingManager {
 				delete playerData.pendingGame;
 
 				// Save immediately to finalize
-				this.savePlayerRating(btag);
+				const saved = this.savePlayerRating(btag);
+				debugPrint(`[RatingManager] loadPlayerRating: Finalization save result=${saved} for ${btag}`);
+			} else {
+				debugPrint(`[RatingManager] loadPlayerRating: FAILED to retrieve playerData from map for ${btag} (playerData=${playerData != null}, pendingGame=${playerData?.pendingGame != null})`);
 			}
+		} else {
+			debugPrint(`[RatingManager] loadPlayerRating: No pending entry for ${btag}`);
 		}
 
 		this.loadedPlayers.add(btag);
@@ -280,6 +295,7 @@ export class RatingManager {
 		this.eliminatedCount = 0;
 		this.finalizedPlayers.clear();
 		this.initialPlayerRatings.clear();
+		this.initialPlayers = eligiblePlayers; // Store players for kill value access
 
 		// Capture each player's rating at game start
 		eligiblePlayers.forEach((player) => {
@@ -313,6 +329,35 @@ export class RatingManager {
 	 */
 	public isPlayerFinalized(btag: string): boolean {
 		return this.finalizedPlayers.has(btag);
+	}
+
+	/**
+	 * Build an array of all players' current kill values
+	 * Used for calculating the kill modifier
+	 * @param players Optional array of players to use (defaults to initial players)
+	 * @returns Array of kill values for all players
+	 */
+	private buildAllKillValues(players?: ActivePlayer[]): number[] {
+		const playersToUse = players || this.initialPlayers;
+		const killValues: number[] = [];
+
+		for (const player of playersToUse) {
+			const killsDeaths = player.trackedData.killsDeaths.get(player.getPlayer());
+			const killValue = killsDeaths ? killsDeaths.killValue : 0;
+			killValues.push(killValue);
+		}
+
+		return killValues;
+	}
+
+	/**
+	 * Get a player's current kill value
+	 * @param player The player to get kill value for
+	 * @returns Player's current kill value
+	 */
+	private getPlayerKillValue(player: ActivePlayer): number {
+		const killsDeaths = player.trackedData.killsDeaths.get(player.getPlayer());
+		return killsDeaths ? killsDeaths.killValue : 0;
 	}
 
 	/**
@@ -362,7 +407,7 @@ export class RatingManager {
 	}
 
 	/**
-	 * Get player's showRating preference (default: true)
+	 * Get player's showRating preference (default: false)
 	 * Automatically loads player's rating file if not loaded yet
 	 * @param btag Player's BattleTag
 	 * @returns True if player wants to show rating, false to hide
@@ -375,9 +420,9 @@ export class RatingManager {
 
 		const data = this.ratingData.get(btag);
 		if (!data) {
-			return true; // Default to showing rating for new players
+			return false; // Default to hiding rating for new players
 		}
-		return data.showRating !== undefined ? data.showRating : true;
+		return data.showRating !== undefined ? data.showRating : false;
 	}
 
 	/**
@@ -428,8 +473,20 @@ export class RatingManager {
 	 * @param players Array of player rating data to load
 	 */
 	public loadPlayersFromSync(players: PlayerRatingData[]): void {
+		// Local player's personal file is always authoritative - never overwrite from sync
+		const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
+
 		for (let i = 0; i < players.length; i++) {
 			const player = players[i];
+
+			// Skip local player - their personal file data has priority over sync data
+			if (player.btag === localBtag) {
+				const existing = this.ratingData.get(player.btag);
+				if (existing) {
+					existing._isSynced = true;
+				}
+				continue;
+			}
 
 			// Mark as loaded
 			if (!this.loadedPlayers.has(player.btag)) {
@@ -478,7 +535,7 @@ export class RatingManager {
 				totalKillValue: 0,
 				totalDeathValue: 0,
 				totalPlacement: 0,
-				showRating: true, // Default to showing rating
+				showRating: false, // Default to hiding rating for new players
 				_isSynced: false, // Mark as NOT synced (default-initialized)
 			};
 
@@ -605,11 +662,30 @@ export class RatingManager {
 			}
 		});
 
-		// Calculate rating change using INITIAL player count
+		// Build kill values for kill modifier calculation
+		const allKillValues = this.buildAllKillValues();
+		const playerKillValue = this.getPlayerKillValue(player);
+
+		// Calculate rating change using INITIAL player count and kill adjustment
 		const basePlacementPoints = calculatePlacementPoints(placement, this.initialPlayerCount);
 		const isGain = basePlacementPoints >= 0;
 		const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, opponentRatings, isGain);
-		const totalChange = calculateRatingChange(placement, currentRating, opponentRatings, this.initialPlayerCount);
+		const killAdjustment = calculateKillAdjustment(playerKillValue, allKillValues);
+		let totalChange = calculateRatingChange(
+			placement,
+			currentRating,
+			opponentRatings,
+			this.initialPlayerCount,
+			playerKillValue,
+			allKillValues
+		);
+
+		// If game data wasn't captured yet (player left before game loop started),
+		// the calculation returns 0 due to playerCount <= 1 guard.
+		// Force negative so floor protection displays as -0 instead of +0.
+		if (this.initialPlayerCount === 0 && totalChange === 0) {
+			totalChange = -1;
+		}
 
 		// Get or create player rating data
 		let playerData = this.ratingData.get(btag);
@@ -668,6 +744,7 @@ export class RatingManager {
 			basePlacementPoints: basePlacementPoints,
 			lobbySizeMultiplier: 1.0, // No longer used - dynamic placement handles lobby size
 			opponentStrengthModifier: opponentStrengthModifier,
+			killAdjustment: killAdjustment,
 			totalChange: totalChange,
 			oldRating: oldRating,
 			newRating: newRating,
@@ -678,8 +755,10 @@ export class RatingManager {
 		this.finalizedPlayers.add(btag);
 
 		// Save to file immediately (REAL entry, not pending)
+		// Only save if this is the LOCAL player - each player saves only their own rating file
 		const isHuman = GetPlayerController(player.getPlayer()) === MAP_CONTROL_USER;
-		if (isHuman) {
+		const isLocalPlayer = player.getPlayer() === GetLocalPlayer();
+		if (isHuman && isLocalPlayer) {
 			const saved = this.savePlayerRating(btag);
 			if (!saved) {
 				print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
@@ -742,6 +821,9 @@ export class RatingManager {
 			opponentRatings.push(rating);
 		});
 
+		// Build all kill values from ranks (all players in the game)
+		const allKillValues = this.buildAllKillValues(ranks);
+
 		// Finalize each survivor - they get placements 0, 1, 2... (1st, 2nd, 3rd...)
 		// Since ranks is sorted, first survivor = winner
 		survivors.forEach((player, index) => {
@@ -759,11 +841,22 @@ export class RatingManager {
 				}
 			});
 
-			// Calculate rating change using INITIAL player count
+			// Get player's kill value for kill modifier
+			const playerKillValue = this.getPlayerKillValue(player);
+
+			// Calculate rating change using INITIAL player count and kill adjustment
 			const basePlacementPoints = calculatePlacementPoints(placement, this.initialPlayerCount);
 			const isGain = basePlacementPoints >= 0;
 			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, properOpponentRatings, isGain);
-			const totalChange = calculateRatingChange(placement, currentRating, properOpponentRatings, this.initialPlayerCount);
+			const killAdjustment = calculateKillAdjustment(playerKillValue, allKillValues);
+			const totalChange = calculateRatingChange(
+				placement,
+				currentRating,
+				properOpponentRatings,
+				this.initialPlayerCount,
+				playerKillValue,
+				allKillValues
+			);
 
 			// Get or create player rating data
 			let playerData = this.ratingData.get(btag);
@@ -822,6 +915,7 @@ export class RatingManager {
 				basePlacementPoints: basePlacementPoints,
 				lobbySizeMultiplier: 1.0, // No longer used - dynamic placement handles lobby size
 				opponentStrengthModifier: opponentStrengthModifier,
+				killAdjustment: killAdjustment,
 				totalChange: totalChange,
 				oldRating: oldRating,
 				newRating: newRating,
@@ -832,8 +926,10 @@ export class RatingManager {
 			this.finalizedPlayers.add(btag);
 
 			// Save to file immediately
+			// Only save if this is the LOCAL player - each player saves only their own rating file
 			const isHuman = GetPlayerController(player.getPlayer()) === MAP_CONTROL_USER;
-			if (isHuman) {
+			const isLocalPlayer = player.getPlayer() === GetLocalPlayer();
+			if (isHuman && isLocalPlayer) {
 				const saved = this.savePlayerRating(btag);
 				if (!saved) {
 					print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
@@ -920,6 +1016,9 @@ export class RatingManager {
 			opponentRatings.push(rating);
 		});
 
+		// Build all kill values for kill modifier calculation
+		const allKillValues = this.buildAllKillValues();
+
 		// Calculate and save pending entries for each alive player
 		// Pending entry simulates "what if this player disconnects NOW" - they'd be the NEXT eliminated
 		// All alive players get the same placement: they'd be last place among remaining players
@@ -941,11 +1040,21 @@ export class RatingManager {
 				}
 			});
 
-			// Calculate rating change using INITIAL player count
+			// Get player's kill value for kill modifier
+			const playerKillValue = this.getPlayerKillValue(player);
+
+			// Calculate rating change using INITIAL player count and kill modifier
 			const basePlacementPoints = calculatePlacementPoints(preliminaryPlacement, this.initialPlayerCount);
 			const isGain = basePlacementPoints >= 0;
 			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, properOpponentRatings, isGain);
-			const totalChange = calculateRatingChange(preliminaryPlacement, currentRating, properOpponentRatings, this.initialPlayerCount);
+			const totalChange = calculateRatingChange(
+				preliminaryPlacement,
+				currentRating,
+				properOpponentRatings,
+				this.initialPlayerCount,
+				playerKillValue,
+				allKillValues
+			);
 
 			// Get or create player rating data
 			let playerData = this.ratingData.get(btag);
@@ -996,13 +1105,17 @@ export class RatingManager {
 			};
 
 			// Save this player's rating with pending game
-			const saved = this.savePlayerRating(btag);
-			if (!saved) {
-				debugPrint(`[RatingManager] Failed to save pending rating for ${btag}`);
-			} else {
-				debugPrint(
-					`[RatingManager] Saved pending entry for ${btag}: turn=${currentTurn}, preliminaryPlacement=${preliminaryPlacement + 1}, preliminaryRating=${preliminaryRating}`
-				);
+			// Only save if this is the LOCAL player - each player saves only their own rating file
+			const isLocalPlayer = player.getPlayer() === GetLocalPlayer();
+			if (isLocalPlayer) {
+				const saved = this.savePlayerRating(btag);
+				if (!saved) {
+					debugPrint(`[RatingManager] Failed to save pending rating for ${btag}`);
+				} else {
+					debugPrint(
+						`[RatingManager] Saved pending entry for ${btag}: turn=${currentTurn}, preliminaryPlacement=${preliminaryPlacement + 1}, preliminaryRating=${preliminaryRating}`
+					);
+				}
 			}
 		});
 	}
