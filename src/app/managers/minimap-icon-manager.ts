@@ -186,12 +186,13 @@ export class MinimapIconManager {
 
 			let iconFrame: framehandle;
 
-			// Recycle frame if available, otherwise create new
+			// Recycle frame if available, otherwise expand pool in batch to avoid per-frame lag spikes
 			if (this.framePool.length > 0) {
 				iconFrame = this.framePool.pop();
 			} else {
-				// Create color icon frame
-				iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapUnitIcon', gameUI, '', 0);
+				debugPrint('MinimapIconManager: Pool exhausted, expanding by 200');
+				this.expandPool(200);
+				iconFrame = this.framePool.pop();
 			}
 
 			if (!iconFrame) {
