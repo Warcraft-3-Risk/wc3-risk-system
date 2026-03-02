@@ -1,9 +1,11 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
+import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
+import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { CLIENT_ALLOCATION_ENABLED } from 'src/configs/game-settings';
 import { GlobalGameData } from '../state/global-game-state';
 
@@ -34,6 +36,9 @@ export class ClientManager implements Resetable {
 
 	// Slots of eliminated players that still have units alive
 	private pendingFreeSlots: Set<player> = new Set<player>();
+
+	// Maps neutralized units to their original real player (for color resolution after transfer to NEUTRAL_HOSTILE)
+	private originalOwnerMap: Map<unit, player> = new Map<unit, player>();
 
 	private constructor() {
 		// Initialize player client manager
@@ -94,6 +99,82 @@ export class ClientManager implements Resetable {
 
 	public getPendingFreeSlots(): Set<player> {
 		return this.pendingFreeSlots;
+	}
+
+	/**
+	 * In FFA mode, immediately transfers all units/buildings of an eliminated player
+	 * (and their client slots) to NEUTRAL_HOSTILE so the slots can be reclaimed.
+	 * Units retain their original player color on-screen and minimap.
+	 */
+	public neutralizePlayerUnits(realPlayer: player): void {
+		if (!SettingsContext.getInstance().isFFA()) {
+			debugPrint(`[Neutralize] Skipping — not FFA mode`);
+			return;
+		}
+
+		debugPrint(`[Neutralize] Neutralizing all units for player ${GetPlayerId(realPlayer)}`);
+
+		const clientSlots = this.getClientSlotsByPlayer(realPlayer);
+		const slots = [realPlayer, ...clientSlots];
+		debugPrint(`[Neutralize] Processing ${slots.length} slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`);
+
+		const playerColor = GetPlayerColor(realPlayer);
+
+		// Handle cities FIRST (before enumerating general units) to avoid mid-iteration ownership changes
+		const matchPlayer = PlayerManager.getInstance().players.get(realPlayer);
+		if (matchPlayer) {
+			const citiesToNeutralize = [...matchPlayer.trackedData.cities.cities];
+			for (const city of citiesToNeutralize) {
+				// Store original owner for the guard unit (for minimap color resolution)
+				this.setOriginalOwner(city.guard.unit, realPlayer);
+				// Decrement guard unit count on its current slot
+				this.decrementUnitCount(GetOwningPlayer(city.guard.unit));
+				// Decrement barracks unit count
+				this.decrementUnitCount(GetOwningPlayer(city.barrack.unit));
+				// Decrement cop unit count
+				this.decrementUnitCount(GetOwningPlayer(city.cop));
+				// city.setOwner transfers cop, barracks, and triggers OwnershipChangeEvent
+				city.setOwner(NEUTRAL_HOSTILE);
+				// Retain original player color on all city components
+				SetUnitOwner(city.guard.unit, NEUTRAL_HOSTILE, false);
+				city.setColor(playerColor);
+				debugPrint(`[Neutralize] Reset city (cop owner changed via city.setOwner)`);
+			}
+		}
+
+		// Now enumerate and transfer all remaining units on each slot
+		for (const slot of slots) {
+			const unitsToTransfer: unit[] = [];
+			const g = CreateGroup();
+			GroupEnumUnitsOfPlayer(g, slot, null);
+			ForGroup(g, () => {
+				const u = GetEnumUnit();
+				// Skip city cops — already handled above via city.setOwner()
+				if (!IsUnitType(u, UNIT_TYPE.CITY)) {
+					unitsToTransfer.push(u);
+				}
+			});
+			DestroyGroup(g);
+
+			for (const u of unitsToTransfer) {
+				this.setOriginalOwner(u, realPlayer);
+				SetUnitOwner(u, NEUTRAL_HOSTILE, false);
+				SetUnitColor(u, playerColor);
+				this.decrementUnitCount(slot);
+				debugPrint(`[Neutralize] Transferred unit ${GetUnitName(u)} from slot ${GetPlayerId(slot)} to NEUTRAL_HOSTILE`);
+			}
+		}
+
+		// Clear client slot mappings — slots are now free
+		for (const clientSlot of clientSlots) {
+			this.clientToPlayer.delete(clientSlot);
+			this.pendingFreeSlots.delete(clientSlot);
+		}
+		this.playerToClient.delete(realPlayer);
+		this.pendingFreeSlots.delete(realPlayer);
+		debugPrint(`[Neutralize] Cleared ${clientSlots.length} client slot mappings for player ${GetPlayerId(realPlayer)}`);
+
+		debugPrint(`[Neutralize] Complete. All slots should now have 0 units.`);
 	}
 
 	/**
@@ -462,6 +543,19 @@ export class ClientManager implements Resetable {
 		this.debugPrintSlotCounts();
 	}
 
+	public setOriginalOwner(unit: unit, realPlayer: player): void {
+		this.originalOwnerMap.set(unit, realPlayer);
+		debugPrint(`[Neutralize] Stored original owner for unit: player ${GetPlayerId(realPlayer)}`);
+	}
+
+	public getOriginalOwner(unit: unit): player | undefined {
+		return this.originalOwnerMap.get(unit);
+	}
+
+	public clearOriginalOwner(unit: unit): void {
+		this.originalOwnerMap.delete(unit);
+	}
+
 	public getClientByPlayer(player: player): player | undefined {
 		const slots = this.playerToClient.get(player);
 		return slots && slots.length > 0 ? slots[0] : undefined;
@@ -553,7 +647,10 @@ export class ClientManager implements Resetable {
 	}
 
 	// This method returns the unit owner of the provided client. If no client is found then it returns the owner of the unit.
+	// Consults originalOwnerMap first for neutralized units.
 	public getOwnerOfUnit(unit: unit): client | player {
+		const original = this.originalOwnerMap.get(unit);
+		if (original) return original;
 		return this.getOwner(GetOwningPlayer(unit));
 	}
 
@@ -611,6 +708,7 @@ export class ClientManager implements Resetable {
 		this.availableClients = [];
 		this.slotUnitCounts.clear();
 		this.pendingFreeSlots.clear();
+		this.originalOwnerMap.clear();
 		debugPrint('ClientManager: Reset complete');
 	}
 }
