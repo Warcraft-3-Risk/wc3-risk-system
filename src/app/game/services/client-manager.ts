@@ -1,10 +1,7 @@
 import { Resetable } from 'src/app/interfaces/resetable';
-import { NameManager } from 'src/app/managers/names/name-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
-import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
-import { PLAYER_COLORS } from 'src/app/utils/player-colors';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { CLIENT_ALLOCATION_ENABLED } from 'src/configs/game-settings';
 import { GlobalGameData } from '../state/global-game-state';
@@ -125,8 +122,8 @@ export class ClientManager implements Resetable {
 			}
 		}
 
-		debugPrint(`[Redistribute] Active players: ${activePlayers.map(p => GetPlayerId(p)).join(', ')}`);
-		debugPrint(`[Redistribute] Eliminated players: ${eliminatedPlayers.map(p => GetPlayerId(p)).join(', ')}`);
+		debugPrint(`[Redistribute] Active players: ${activePlayers.map((p) => GetPlayerId(p)).join(', ')}`);
+		debugPrint(`[Redistribute] Eliminated players: ${eliminatedPlayers.map((p) => GetPlayerId(p)).join(', ')}`);
 
 		if (activePlayers.length === 0) {
 			debugPrint('[Redistribute] No active players, returning false');
@@ -147,7 +144,9 @@ export class ClientManager implements Resetable {
 				const remainingSlots: client[] = [];
 				for (const slot of clientSlots) {
 					if (this.getUnitCount(slot) === 0) {
-						debugPrint(`[Redistribute] Freed slot ${GetPlayerId(slot)} from eliminated player ${GetPlayerId(elimPlayer)} (unitCount was 0)`);
+						debugPrint(
+							`[Redistribute] Freed slot ${GetPlayerId(slot)} from eliminated player ${GetPlayerId(elimPlayer)} (unitCount was 0)`
+						);
 						this.tearDownSlot(slot, elimPlayer);
 						this.clientToPlayer.delete(slot);
 						this.pendingFreeSlots.delete(slot);
@@ -356,11 +355,6 @@ export class ClientManager implements Resetable {
 				});
 			}
 		}
-
-		// Reset slot appearance
-		SetPlayerColor(slot, PLAYER_COLORS[GetPlayerId(slot)]);
-		NameManager.getInstance().setColor(slot, PLAYER_COLORS[GetPlayerId(slot)]);
-		NameManager.getInstance().setName(slot, 'color');
 	}
 
 	private assignSlotToPlayer(slot: client, newOwner: player): void {
@@ -383,7 +377,9 @@ export class ClientManager implements Resetable {
 		this.givePlayerFullControlOfClient(newOwner, slot);
 
 		const slots = this.playerToClient.get(newOwner);
-		debugPrint(`[ClientManager] Player ${GetPlayerId(newOwner)} now has ${slots.length} client slots: [${slots.map(s => GetPlayerId(s)).join(', ')}]`);
+		debugPrint(
+			`[ClientManager] Player ${GetPlayerId(newOwner)} now has ${slots.length} client slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`
+		);
 	}
 
 	public getClientByPlayer(player: player): player | undefined {
@@ -422,14 +418,6 @@ export class ClientManager implements Resetable {
 
 		debugPrint(`ClientManager: Giving player ${GetPlayerName(player)} full control of client ${GetPlayerId(client)}`);
 
-		if (SettingsContext.getInstance().isPromode()) {
-			NameManager.getInstance().setName(client, 'acct');
-		} else {
-			NameManager.getInstance().setName(client, 'btag');
-		}
-
-		SetPlayerColor(client, GetPlayerColor(player));
-		SetPlayerName(client, GetPlayerName(player));
 		this.enableAdvancedControl(player, client, true);
 		this.enableAdvancedControl(client, player, true);
 
@@ -530,10 +518,6 @@ export class ClientManager implements Resetable {
 			if (IsPlayerObserver(p)) {
 				continue;
 			}
-
-			SetPlayerColor(p, PLAYER_COLORS[GetPlayerId(p)]);
-			NameManager.getInstance().setColor(p, PLAYER_COLORS[GetPlayerId(p)]);
-			NameManager.getInstance().setName(p, 'color');
 
 			for (let targetIndex = 0; targetIndex < bj_MAX_PLAYERS; targetIndex++) {
 				if (!IsPlayerObserver(Player(targetIndex))) {

@@ -38,6 +38,9 @@ import { ClientManager } from './app/game/services/client-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 import { PlayerManager } from './app/player/player-manager';
 import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCreatorSaveEvent } from './app/triggers/country-creator-event';
+import { debugPrint } from './app/utils/debug-print';
+import { TooltipManager } from './app/managers/tooltip-manager';
+import { ChatUIManager } from './app/managers/chat-ui-manager';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -65,6 +68,8 @@ function tsMain() {
 		NameManager.getInstance();
 		ClientManager.getInstance();
 		PlayerManager.getInstance();
+		ChatUIManager.getInstance();
+		TooltipManager.getInstance();
 
 		//Set up countries
 		SetCountries();

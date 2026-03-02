@@ -123,6 +123,14 @@ export class SettingsContext {
 	}
 
 	/**
+	 * Checks if the game setting for Diplomacy is set to Lobby Teams or Lobby Teams (Shared)
+	 * @returns true if Lobby Teams or Lobby Teams (Shared)
+	 */
+	public isLobbyTeams(): boolean {
+		return this.settings.Diplomacy.option == 1 || this.settings.Diplomacy.option == 2;
+	}
+
+	/**
 	 * Checks if the game type is set to Capitals
 	 */
 	public isCapitals(): boolean {

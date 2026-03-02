@@ -162,7 +162,21 @@ export function compileMap(config: IProjectConfig) {
 		let war3mapContents = fs.readFileSync(mapLua, 'utf8');
 		const tstlOutput = fs.readFileSync(tsLua, 'utf8');
 
-		contents += war3mapContents + '\n' + tstlOutput;
+		// Inject raw Lua files from src/lua/ before the tstl bundle.
+		// Must come before tstlOutput because tstl may end with a top-level
+		// `return`, after which Lua rejects any further statements.
+		let rawLuaInjection = '';
+		const luaDir = path.join(__dirname, '..', 'src', 'lua');
+		if (fs.existsSync(luaDir)) {
+			const luaFiles = fs.readdirSync(luaDir).filter((f) => f.endsWith('.lua'));
+			for (const luaFile of luaFiles) {
+				const luaContent = fs.readFileSync(path.join(luaDir, luaFile), 'utf8');
+				rawLuaInjection += luaContent + '\n';
+				logger.info(`Injected raw Lua: ${luaFile}`);
+			}
+		}
+
+		contents += war3mapContents + '\n' + rawLuaInjection + tstlOutput;
 
 		// --- Optional minify ---
 		if (config.minifyScript) {

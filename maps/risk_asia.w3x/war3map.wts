@@ -684,11 +684,6 @@ STRING 7252
 Produces every round spawns.
 }
 
-STRING 7259
-{
-Artillery
-}
-
 STRING 7263
 // Abilities: a003 (), Unhotkey (Hotkey - Turn Off)
 {
@@ -1006,5 +1001,10 @@ Force 1
 STRING 7531
 {
 Risk Asia
+}
+
+STRING 7532
+{
+ 
 }
 

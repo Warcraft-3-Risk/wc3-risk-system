@@ -27,7 +27,11 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 
 		// Hide match scoreboard and show score screen
 		ScoreboardManager.getInstance().destroyBoards();
+
 		GlobalGameData.matchPlayers.forEach((player) => {
+			// Undo observer state that was applied when this player died mid-game.
+			SetPlayerState(player.getPlayer(), PLAYER_STATE_OBSERVER, 0);
+
 			if (SettingsContext.getInstance().isPromode()) {
 				NameManager.getInstance().setName(player.getPlayer(), 'acct');
 			} else {

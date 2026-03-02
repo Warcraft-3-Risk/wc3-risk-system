@@ -366,6 +366,30 @@ Frame "BACKDROP" "BackdropTemplate" {
     BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-menu-border.blp",
 }
 
+Frame "SIMPLESTATUSBAR" "HoverTooltipBar" {
+    Width 0.08,
+    Height 0.020,
+    BarTexture "Replaceabletextures\Teamcolor\Teamcolor00.blp",
+
+    Layer "BACKGROUND" {
+        Texture "HoverTooltipBarBg" {
+            File "Replaceabletextures\Teamcolor\Teamcolor27.blp",
+        }
+    }
+
+    Frame "SIMPLEFRAME" "HoverTooltipBarFrame" {
+        DecorateFileNames,
+        SetPoint TOPLEFT, "HoverTooltipBar", TOPLEFT, 0.0, 0.0,
+        SetPoint BOTTOMRIGHT, "HoverTooltipBar", BOTTOMRIGHT, 0.0, 0.0,
+
+        Layer "ARTWORK" {
+            Texture "HoverTooltipBarBorder" {
+                File "ReplayTimelineBorder",
+            }
+        }
+    }
+}
+
 Frame "TEXT" "TextTemplate" {
     FrameFont "Fonts\BLQ55Web.ttf", 0.008, "",
     FontColor 1.0 1.0 1.0,

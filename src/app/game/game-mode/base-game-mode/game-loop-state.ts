@@ -326,11 +326,12 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
-		const killingUnitOwner = ClientManager.getInstance().getOwnerOfUnit(killingUnit);
+		const cm = ClientManager.getInstance();
+		const killingUnitOwner = cm.getOwnerOfUnit(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(killingUnitOwner));
 
 		if (
-			ClientManager.getInstance().getOwnerOfUnit(killingUnit) == GetOwningPlayer(dyingUnit) &&
+			killingUnitOwner == cm.getOwnerOfUnit(dyingUnit) &&
 			!IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)
 		) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {

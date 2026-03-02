@@ -10,6 +10,7 @@ import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
 import { ClientManager } from 'src/app/game/services/client-manager';
+import { SettingsContext } from 'src/app/settings/settings-context';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { Quests } from '../../../quests/quests';
