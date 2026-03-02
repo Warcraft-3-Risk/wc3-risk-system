@@ -1,3 +1,8 @@
+[FontHeights]
+UnitTipDesc=0.0
+UnitTipPlayerName=0.0
+UnitTipUnitName=0.0
+
 [Misc]
 AgiAttackSpeedBonus=0.0
 AgiDefenseBase=-2.0
@@ -29,7 +34,3 @@ StrRegenBonus=0.0
 TradingIncLarge=1
 TradingIncSmall=5
 
-[FontHeights]
-UnitTipPlayerName=0.0
-UnitTipUnitName=0.0
-UnitTipDesc=0.0
