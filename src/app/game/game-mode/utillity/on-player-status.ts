@@ -31,25 +31,28 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 	}
 
 	// Kill remaining transport ships on all player slots (real player + client slots)
-	const transportsToKill: unit[] = [];
-	const playerHandle = player.getPlayer();
-	const slots = [playerHandle, ...ClientManager.getInstance().getClientSlotsByPlayer(playerHandle)];
+	// In FFA, neutralizePlayerUnits() handles all units (including transports), so skip this
+	if (!SettingsContext.getInstance().isFFA()) {
+		const transportsToKill: unit[] = [];
+		const playerHandle = player.getPlayer();
+		const slots = [playerHandle, ...ClientManager.getInstance().getClientSlotsByPlayer(playerHandle)];
 
-	slots.forEach((slot) => {
-		const g = CreateGroup();
-		GroupEnumUnitsOfPlayer(g, slot, null);
-		ForGroup(g, () => {
-			const u = GetEnumUnit();
-			if (IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
-				transportsToKill.push(u);
-			}
+		slots.forEach((slot) => {
+			const g = CreateGroup();
+			GroupEnumUnitsOfPlayer(g, slot, null);
+			ForGroup(g, () => {
+				const u = GetEnumUnit();
+				if (IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
+					transportsToKill.push(u);
+				}
+			});
+			DestroyGroup(g);
 		});
-		DestroyGroup(g);
-	});
 
-	if (transportsToKill.length > 0) {
-		debugPrint(`Killing ${transportsToKill.length} remaining transports for eliminated player ${GetPlayerId(playerHandle)}`);
-		transportsToKill.forEach((u) => KillUnit(u));
+		if (transportsToKill.length > 0) {
+			debugPrint(`Killing ${transportsToKill.length} remaining transports for eliminated player ${GetPlayerId(playerHandle)}`);
+			transportsToKill.forEach((u) => KillUnit(u));
+		}
 	}
 
 	player.status.status = PLAYER_STATUS.DEAD;

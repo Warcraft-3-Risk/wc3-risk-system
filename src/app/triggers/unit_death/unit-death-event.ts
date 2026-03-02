@@ -36,6 +36,9 @@ export function UnitDeathEvent() {
 			debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`);
 			ClientManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
 
+			// Clean up originalOwnerMap entry for neutralized units
+			ClientManager.getInstance().clearOriginalOwner(dyingUnit);
+
 			// Check if this slot is pending free and now has 0 units
 			if (ClientManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) && ClientManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0) {
 				debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`);

@@ -359,6 +359,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		super.onPlayerLeft(player);
 
 		debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`);
+		ClientManager.getInstance().neutralizePlayerUnits(player.getPlayer());
 		ClientManager.getInstance().evaluateAndRedistribute();
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
@@ -380,6 +381,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		super.onPlayerDead(player, forfeit);
 
 		debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`);
+		ClientManager.getInstance().neutralizePlayerUnits(player.getPlayer());
 		ClientManager.getInstance().evaluateAndRedistribute();
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
