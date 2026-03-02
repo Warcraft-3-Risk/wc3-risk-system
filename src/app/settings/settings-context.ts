@@ -91,6 +91,14 @@ export class SettingsContext {
 	}
 
 	/**
+	 * Checks if the game setting is chaos promode
+	 * @returns true if game is "chaos promode"
+	 */
+	public isChaosPromode(): boolean {
+		return this.settings.Promode == 3;
+	}
+
+	/**
 	 * Checks if the game setting for Fog is on or off
 	 * @returns true if fog is off
 	 */

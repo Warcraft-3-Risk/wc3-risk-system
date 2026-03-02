@@ -231,6 +231,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 				MenuItem "Off",     -2,
 				MenuItem "On",     -2,
 				MenuItem "Equalized",     -2,
+				MenuItem "Chaos",     -2,
 			}
 		}
 	}

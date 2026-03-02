@@ -8,7 +8,7 @@ import { RatingManager } from 'src/app/rating/rating-manager';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
-import { NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
+import { CHAOS_STARTING_INCOME, NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
 import { ClientManager } from 'src/app/game/services/client-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
@@ -17,10 +17,10 @@ import { Quests } from '../../../quests/quests';
 
 export function onPlayerAliveHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.ALIVE;
-	player.trackedData.income.income = STARTING_INCOME;
+	player.trackedData.income.income = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
 
 	if (player.trackedData.income.max == 0) {
-		player.trackedData.income.max = STARTING_INCOME;
+		player.trackedData.income.max = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
 	}
 	ScoreboardManager.getInstance().updatePartial();
 }
