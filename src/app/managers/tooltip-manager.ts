@@ -73,6 +73,11 @@ export class TooltipManager {
 			return;
 		}
 
+		if (!IsUnitVisible(unit, GetLocalPlayer())) {
+			this.hide();
+			return;
+		}
+
 		const cm = ClientManager.getInstance();
 
 		// Don't show tooltip for units we own (directly or via client slot)
