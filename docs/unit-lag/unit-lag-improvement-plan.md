@@ -465,7 +465,99 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 ---
 
-## Execution Order
+### Phase 6: Custom Unit Hover Tooltips (Alternative to SetPlayerColor / SetPlayerName)
+
+**Objective:** Show the owning player's colored name when hovering a unit — without using `SetPlayerColor` or `SetPlayerName`, which corrupt the WC3 end-game match result screen (players appear with wrong colors and names).
+
+**Approach:** The WC3 native hover info box (uber tooltip) is replaced with a custom Frame API overlay. A matching visual backdrop is added behind the chat input box so the two areas have a consistent look.
+
+---
+
+- [ ] **6.1 — Set blank tooltip textures in the Editor Game Interface**
+
+  In the World Editor, open **Advanced → Game Interface** and set the following two fields to `UI\Widgets\EscMenu\Human\blank-background.blp`:
+
+  - **Image - Tooltip Background**
+  - **Image - Tooltip Border**
+
+  This makes the native WC3 uber tooltip invisible, so our custom overlay is the only visible element.
+
+  **Why:** The native uber tooltip renders on top of any custom frame; blanking its textures removes the double-render without disabling the frame itself.
+
+  **Verify:** Launch the map and hover a unit. The default yellow-bordered tooltip box should no longer appear. Only the custom overlay from `TooltipManager` should be visible.
+
+---
+
+- [ ] **6.2 — Add a backdrop behind the uber tooltip**
+
+  **File:** [src/app/managers/tooltip-manager.ts](src/app/managers/tooltip-manager.ts)
+
+  In `init()`, after obtaining `gameUI`:
+
+  ```typescript
+  const uberTooltip = BlzGetOriginFrame(ORIGIN_FRAME_UBERTOOLTIP, 0);
+  const uberTooltipBox = BlzCreateSimpleFrame('SimpleTasToolTipBox', uberTooltip, 0);
+  BlzFrameSetAllPoints(uberTooltipBox, uberTooltip);
+  BlzFrameSetLevel(uberTooltipBox, 0);
+  ```
+
+  `SimpleTasToolTipBox` is defined in `frames.fdf` and renders the standard WC3 tooltip backdrop texture. Parenting it to `uberTooltip` and anchoring it to all points means it fills and follows the native uber tooltip area exactly.
+
+  **Verify:** Hover a unit. The tooltip background should use the custom `SimpleTasToolTipBox` texture.
+
+---
+
+- [ ] **6.3 — Implement the custom hover tooltip**
+
+  **File:** [src/app/managers/tooltip-manager.ts](src/app/managers/tooltip-manager.ts)
+
+  - Create `TasToolTipBox` (backdrop) and `TasTooltipText` (text) frames parented to `gameUI`.
+  - On a `0.02s` repeating timer, read `BlzGetMouseFocusUnit()` and:
+    - If the focused unit changed, call `updateTooltip()`.
+    - If visible, reposition the text above the unit using `World2Screen()`.
+  - `updateTooltip()` resolves ownership via `ClientManager.getOwnerOfUnit()` and shows the player's `NameManager.getDisplayName()` (which includes their color code), or the unit's name for neutral units.
+  - Own units (and client-slot-owned units) are suppressed — no tooltip shown for friendly units.
+
+  **Why this approach instead of SetPlayerColor / SetPlayerName:**
+  - `SetPlayerColor` and `SetPlayerName` affect the WC3 match result screen shown after the game ends: players appear with incorrect colors and names in the lobby summary, which is confusing and breaks the post-game experience.
+  - The Frame API overlay is purely visual and local — it never modifies WC3's internal player data.
+
+  **Verify:** Hover an enemy unit. The colored player name should appear above the unit. Hover a friendly unit — no tooltip. Hover a neutral/creep — unit name shown.
+
+---
+
+- [ ] **6.4 — Add a backdrop behind the chat input box**
+
+  **File:** [src/app/managers/chat-ui-manager.ts](src/app/managers/chat-ui-manager.ts)
+
+  The chat input frame is not present in `ORIGIN_FRAME_GAME_UI` at game start — it is added later. Use a deferred timer and find it by structural fingerprint instead of a fixed index (which shifts whenever custom prio(0) frames are inserted before it):
+
+  ```
+  Fingerprint:
+    frame      → 2 children
+      [1]      → 4 children
+        [1][0] → 5 children
+  ```
+
+  Once found, parent a `TasToolTipBox` behind it:
+
+  ```typescript
+  const timer = CreateTimer();
+  TimerStart(timer, 5, false, () => {
+      this.chatInput = this.findChatInput(gameUI);
+      if (this.chatInput) {
+          this.chatInputBox = BlzCreateFrame('TasToolTipBox', this.chatInput, 0, 0);
+          BlzFrameSetLevel(this.chatInputBox, -2);
+          BlzFrameSetAllPoints(this.chatInputBox, this.chatInput);
+      }
+  });
+  ```
+
+  **Why deferred:** Searching at game start risks matching a different frame that shares the same child-count structure (e.g. the minimap parent at GameUI index [5]), which causes the minimap to disappear.
+
+  **Verify:** Press Enter in-game. The chat input area should have a consistent backdrop matching the tooltip style. The minimap must remain visible.
+
+---
 
 1. **Phase 1** (unit counting) — can be implemented and tested independently. Use `debugPrintSlotCounts()` each turn to verify.
 2. **Phase 2** (lowest-count spawning) — depends on Phase 1. Verify unit distribution across slots.
