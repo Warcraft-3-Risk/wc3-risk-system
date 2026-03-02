@@ -32,14 +32,14 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 			// Undo observer state that was applied when this player died mid-game.
 			SetPlayerState(player.getPlayer(), PLAYER_STATE_OBSERVER, 0);
 
-			if (SettingsContext.getInstance().isPromode()) {
+			if (SettingsContext.getInstance().isPromode() || SettingsContext.getInstance().isChaosPromode()) {
 				NameManager.getInstance().setName(player.getPlayer(), 'acct');
 			} else {
 				NameManager.getInstance().setName(player.getPlayer(), 'btag');
 				player.trackedData.bonus.hideUI();
 			}
 		});
-		if (SettingsContext.getInstance().isPromode()) {
+		if (SettingsContext.getInstance().isPromode() || SettingsContext.getInstance().isChaosPromode()) {
 			VictoryManager.getInstance().addWinToLeader();
 			VictoryManager.getInstance().showScore();
 		} else {
