@@ -3,6 +3,7 @@ import { NameManager } from './names/name-manager';
 import { PlayerManager } from '../player/player-manager';
 import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
 import { ChatUIManager } from './chat-ui-manager';
+import { debugPrint } from '../utils/debug-print';
 
 declare function World2Screen(x: number, y: number, z: number): LuaMultiReturn<[number, number, boolean]>;
 
@@ -33,7 +34,7 @@ export class TooltipManager {
 		BlzFrameSetAllPoints(uberTooltipBox, uberTooltip);
 		BlzFrameSetLevel(uberTooltipBox, 0);
 
-		this.tooltipBox = BlzCreateFrame('TasToolTipBox', gameUI, 0, 0);
+		this.tooltipBox = BlzCreateFrame('TasToolTipBox',  BlzGetFrameByName("ConsoleUIBackdrop",0), 0, 0);
 		this.tooltipText = BlzCreateFrame('TasTooltipText', this.tooltipBox, 0, 0);
 
 		BlzFrameSetPoint(this.tooltipBox, FRAMEPOINT_BOTTOMLEFT, this.tooltipText, FRAMEPOINT_BOTTOMLEFT, -0.01, -0.01);
@@ -61,7 +62,10 @@ export class TooltipManager {
 				GetUnitY(this.lastFocusUnit),
 				BlzGetUnitZ(this.lastFocusUnit) || 0
 			);
+
 			if (onScreen) {
+				debugPrint("x:" + sx);
+				debugPrint("y:"  + sy);
 				BlzFrameSetAbsPoint(this.tooltipText, FRAMEPOINT_BOTTOM, sx, sy + 0.025);
 			}
 		}
