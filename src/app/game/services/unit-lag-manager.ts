@@ -51,10 +51,10 @@ export class UnitLagManager {
 	}
 
 	public static IsUnitAlly(unit: unit, player: player): boolean {
-		return IsUnitAlly(unit, player) && !IsUnitType(unit, UNIT_TYPE.MINIMAP_INDICATOR);
+		return IsUnitAlly(unit, player);
 	}
 
 	public static IsUnitEnemy(unit: unit, player: player): boolean {
-		return IsUnitEnemy(unit, player) && !IsUnitType(unit, UNIT_TYPE.MINIMAP_INDICATOR);
+		return IsUnitEnemy(unit, player);
 	}
 }

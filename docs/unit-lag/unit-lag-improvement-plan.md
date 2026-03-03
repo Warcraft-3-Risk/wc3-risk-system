@@ -373,8 +373,6 @@ Improve the client slot allocation system so that **multiple client slots can be
   
   - `trackUnit()` uses `isAnyClientOwnerOfUnit()` — no change needed.
   - `IsUnitAlly`/`IsUnitEnemy` use native WC3 checks — no change needed (alliances are set per client slot).
-  
-  **Verify:** Confirm alliance checks still correctly exclude `MINIMAP_INDICATOR` units.
 
 ---
 

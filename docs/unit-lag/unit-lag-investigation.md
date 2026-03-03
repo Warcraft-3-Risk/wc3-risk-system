@@ -79,15 +79,13 @@ The `UnitLagManager` provides static wrappers around WC3's native `IsUnitAlly`/`
 
 ```typescript
 public static IsUnitAlly(unit: unit, player: player): boolean {
-    return IsUnitAlly(unit, player) && !IsUnitType(unit, UNIT_TYPE.MINIMAP_INDICATOR);
+    return IsUnitAlly(unit, player)
 }
 
 public static IsUnitEnemy(unit: unit, player: player): boolean {
-    return IsUnitEnemy(unit, player) && !IsUnitType(unit, UNIT_TYPE.MINIMAP_INDICATOR);
+    return IsUnitEnemy(unit, player)
 }
 ```
-
-These exclude `MINIMAP_INDICATOR` type units from alliance checks, preventing legacy dummy minimap units from interfering with game logic like city captures and guard replacement.
 
 These wrappers are used in guard death handling ([replace-guard.ts](src/app/triggers/unit_death/replace-guard.ts), [allied-kill-handler.ts](src/app/triggers/unit_death/allied-kill-handler.ts), [invalid-guard-handler.ts](src/app/triggers/unit_death/invalid-guard-handler.ts)) to correctly resolve ownership across client slot boundaries.
 
@@ -143,7 +141,7 @@ Unit Dies → UnitDeathEvent
     ▼
 Alliance Checks (city capture, guard replacement, etc.)
     └── UnitLagManager.IsUnitAlly / IsUnitEnemy
-        └── Native check + exclude MINIMAP_INDICATOR type
+        └── Native check
 ```
 
 ---

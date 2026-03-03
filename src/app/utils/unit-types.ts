@@ -15,7 +15,5 @@ export const UNIT_TYPE = {
 	/** Type identifier for transport units. */
 	TRANSPORT: UNIT_TYPE_ANCIENT,
 	/** Type identifier for artillery units. */
-	ARTILLERY: UNIT_TYPE_TAUREN,
-	/** Type identifier for minimap indicator units. */
-	MINIMAP_INDICATOR: UNIT_TYPE_SUMMONED,
+	ARTILLERY: UNIT_TYPE_TAUREN
 };

@@ -490,8 +490,7 @@ export class ClientManager implements Resetable {
 				if (
 					!IsUnitType(u, UNIT_TYPE.TRANSPORT) &&
 					!IsUnitType(u, UNIT_TYPE.GUARD) &&
-					!IsUnitType(u, UNIT_TYPE.BUILDING) &&
-					!IsUnitType(u, UNIT_TYPE.MINIMAP_INDICATOR)
+					!IsUnitType(u, UNIT_TYPE.BUILDING)
 					&& GetUnitCurrentOrder(u) === 0 // Unit is currently not moving (changing ownership would cancel their current action)
 				) {
 					movableUnits.push(u);
