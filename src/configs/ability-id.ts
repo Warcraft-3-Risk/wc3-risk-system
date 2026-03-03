@@ -8,6 +8,8 @@ export const ABILITY_ID = {
 	BERSERK: FourCC('a005'),
 	//City Ability
 	SWAP: FourCC('a030'),
+	//Guard Ability
+	GUARD_INDICATOR: FourCC("A006"),
 	//Spawner Abilities
 	SPWN_3000: FourCC('a031'),
 	SPWN_6000: FourCC('a032'),
