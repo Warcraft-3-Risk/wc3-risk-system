@@ -8,6 +8,8 @@ import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { CLIENT_ALLOCATION_ENABLED } from 'src/configs/game-settings';
 import { GlobalGameData } from '../state/global-game-state';
+import { PLAYER_COLORS } from '../../utils/player-colors';
+import { NameManager } from '../../managers/names/name-manager';
 
 interface client extends player {}
 
@@ -490,8 +492,8 @@ export class ClientManager implements Resetable {
 				if (
 					!IsUnitType(u, UNIT_TYPE.TRANSPORT) &&
 					!IsUnitType(u, UNIT_TYPE.GUARD) &&
-					!IsUnitType(u, UNIT_TYPE.BUILDING)
-					&& GetUnitCurrentOrder(u) === 0 // Unit is currently not moving (changing ownership would cancel their current action)
+					!IsUnitType(u, UNIT_TYPE.BUILDING) &&
+					GetUnitCurrentOrder(u) === 0 // Unit is currently not moving (changing ownership would cancel their current action)
 				) {
 					movableUnits.push(u);
 				}
@@ -506,7 +508,9 @@ export class ClientManager implements Resetable {
 		const unitsPerSlot = Math.floor(movableUnits.length / numSlots);
 		const remainder = movableUnits.length % numSlots;
 
-		debugPrint(`[Redistribute] Spreading ${movableUnits.length} units for player ${GetPlayerId(realPlayer)} across ${numSlots} slots (${unitsPerSlot} each, +1 for first ${remainder})`);
+		debugPrint(
+			`[Redistribute] Spreading ${movableUnits.length} units for player ${GetPlayerId(realPlayer)} across ${numSlots} slots (${unitsPerSlot} each, +1 for first ${remainder})`
+		);
 
 		// Lazy import to avoid circular dependency (UnitLagManager imports ClientManager)
 		const { UnitLagManager } = require('./unit-lag-manager') as { UnitLagManager: typeof import('./unit-lag-manager').UnitLagManager };
@@ -697,6 +701,10 @@ export class ClientManager implements Resetable {
 			if (IsPlayerObserver(p)) {
 				continue;
 			}
+
+			SetPlayerColor(p, PLAYER_COLORS[GetPlayerId(p)]);
+			NameManager.getInstance().setColor(p, PLAYER_COLORS[GetPlayerId(p)]);
+			NameManager.getInstance().setName(p, 'color');
 
 			for (let targetIndex = 0; targetIndex < bj_MAX_PLAYERS; targetIndex++) {
 				if (!IsPlayerObserver(Player(targetIndex))) {

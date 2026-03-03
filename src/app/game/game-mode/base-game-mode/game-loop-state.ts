@@ -223,10 +223,6 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onTick(tick: number): void {
 		VictoryManager.getInstance().updateAndGetGameState();
 
-		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
-			GlobalGameData.matchState = 'postMatch';
-		}
-
 		ScoreboardManager.getInstance().updatePartial();
 	}
 
@@ -335,10 +331,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		const killingUnitOwner = cm.getOwnerOfUnit(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(killingUnitOwner));
 
-		if (
-			killingUnitOwner == cm.getOwnerOfUnit(dyingUnit) &&
-			!IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)
-		) {
+		if (killingUnitOwner == cm.getOwnerOfUnit(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
 				AnnounceOnLocation(`${colorString}Denied`, GetUnitX(dyingUnit), GetUnitY(dyingUnit) + 20, 2.0, 3.0);
 			}
@@ -350,7 +343,10 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	// GameLoopState uses GlobalGameData.matchState to determine if the match is over
 	// This is preferable as it allows the state to clean up and transition to the next state
 	onPlayerRestart(player: ActivePlayer) {
-		GlobalGameData.matchState = 'postMatch';
+		const humanPlayersCount: number = PlayerManager.getInstance().getHumanPlayersCount();
+		if (humanPlayersCount === 1) {
+			GlobalGameData.matchState = 'postMatch';
+		}
 	}
 
 	onSwapGuard(targetedUnit: unit, city: City, triggerPlayer: player): void {
