@@ -112,6 +112,13 @@ export class Guard implements Resetable {
 	 * @param guard - The new guard unit.
 	 */
 	public replace(guard: unit): void {
+		// If the same unit is being re-assigned as guard, just reposition — no need to
+		// release/set which causes unnecessary untrack→track→untrack minimap churn.
+		if (guard === this._unit) {
+			this.reposition();
+			return;
+		}
+
 		if (GetUnitTypeId(this._unit) == UNIT_ID.DUMMY_GUARD) {
 			this.remove();
 		} else {
