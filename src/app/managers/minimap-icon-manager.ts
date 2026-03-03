@@ -26,7 +26,7 @@ export class MinimapIconManager {
 	// Minimap constants (corner minimap dimensions)
 	private readonly MINIMAP_WIDTH = 0.140; // Minimap width in screen coordinates
 	private readonly MINIMAP_HEIGHT = 0.140; // Minimap height in screen coordinates
-	private readonly BUILDING_ICON_SIZE = 0.0035; // Icon size for regular cities
+	private readonly BUILDING_ICON_SIZE = 0.0040; // Icon size for regular cities
 	private readonly UNIT_ICON_SIZE = 0.0020; // Icon size for regular units
 	private readonly CAPITAL_ICON_SIZE = 0.0025; // Capital colored center size (smaller to show borders)
 	private readonly CAPITAL_BORDER_INNER = 0.0035; // Capital inner border size (black ring)
@@ -76,6 +76,15 @@ export class MinimapIconManager {
 
 		// Get minimap frame
 		this.minimapFrame = BlzGetFrameByName('Minimap', 0);
+
+		// Skip ally color mode 2 — only allow toggling between 0 and 1
+		// Poll the native button state and correct mode 2 back to 0
+		const allyModeTimer = CreateTimer();
+		TimerStart(allyModeTimer, 0.03, true, () => {
+			if (GetAllyColorFilterState() === 2) {
+				SetAllyColorFilterState(0);
+			}
+		});
 
 		debugPrint('World bounds: ' + this.worldMinX + ', ' + this.worldMinY + ' to ' + this.worldMaxX + ', ' + this.worldMaxY);
 		debugPrint('World size: ' + this.worldWidth + 'x' + this.worldHeight);
@@ -313,9 +322,9 @@ export class MinimapIconManager {
 	private startUpdateTimer(): void {
 		this.updateTimer = CreateTimer();
 
-		TimerStart(this.updateTimer, 0.2, true, () => {
+		TimerStart(this.updateTimer, 0.1, true, () => {
 			// Update all icon positions and colors
-			// This runs every 0.2 seconds for smooth updates
+			// This runs every 0.1 seconds for smooth updates
 			this.updateAllIcons();
 		});
 	}
@@ -421,7 +430,10 @@ export class MinimapIconManager {
 			return;
 		}
 
-		// If ally color mode is enabled (mode 1 or 2)
+		// Ally Color 2 is not allowed
+		if(allyColorMode == 2) {
+			SetAllyColorFilterState(0);
+		}
 		if (allyColorMode > 0) {
 			// Check if owner is a neutral player (Player 24+)
 			const ownerId = GetPlayerId(owner);
@@ -433,8 +445,8 @@ export class MinimapIconManager {
 
 			// Check if owner is ally or enemy
 			if (IsPlayerAlly(owner, localPlayer)) {
-				// Ally = White/Light gray
-				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
+				// Ally = Yellow
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor04.blp', 0, true);
 			} else if (IsPlayerEnemy(owner, localPlayer)) {
 				// Enemy = Red (Player 0 color)
 				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor00.blp', 0, true);
@@ -491,10 +503,13 @@ export class MinimapIconManager {
 			}
 
 			if (IsPlayerAlly(owner as player, localPlayer)) {
-				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
+				// Ally = Yellow
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor02.blp', 0, true);
 			} else if (IsPlayerEnemy(owner as player, localPlayer)) {
+				// Enemy = Red
 				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor00.blp', 0, true);
 			} else {
+				// Neutral = Gray
 				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
 			}
 			return;

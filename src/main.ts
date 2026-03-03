@@ -63,6 +63,7 @@ function tsMain() {
 		SetTimeOfDay(12.0);
 		SetTimeOfDayScale(0.0);
 		SetAllyColorFilterState(0);
+		SetCreepCampFilterState(false);
 
 		//Handle names to prevent namebug
 		NameManager.getInstance();

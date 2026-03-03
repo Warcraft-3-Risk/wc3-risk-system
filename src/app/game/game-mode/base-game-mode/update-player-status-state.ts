@@ -51,7 +51,6 @@ export class UpdatePlayerStatusState<T extends StateData> extends BaseState<T> {
 		});
 
 		// Disable the creep minimap filter button, keep ally filter as player preference
-		SetCreepCampFilterState(false);
 		EnableMinimapFilterButtons(true, false);
 
 		this.nextState(this.stateData);

@@ -35,9 +35,10 @@ export class UnitLagManager {
 		}
 
 		// Color the unit to match the real owner instead of using SetPlayerColor (which corrupts WC3 native End-Game screen)
-		const realOwner = ClientManager.getInstance().getOwnerOfUnit(unit);
+		//const realOwner = ClientManager.getInstance().getOwnerOfUnit(unit);
 
-		SetUnitColor(unit, GetPlayerColor(realOwner));
+		//SetUnitColor(unit, GetPlayerColor(realOwner));
+		//BlzShowUnitTeamGlow(unit, false);
 
 		// Use MinimapIconManager to handle the visual representation
 		debugPrint(`UnitLagManager: Tracking ${GetUnitName(unit)} via MinimapIconManager.`);

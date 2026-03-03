@@ -593,6 +593,8 @@ export class ClientManager implements Resetable {
 
 		debugPrint(`ClientManager: Giving player ${GetPlayerName(player)} full control of client ${GetPlayerId(client)}`);
 
+		SetPlayerColor(client, GetPlayerColor(player));
+
 		this.enableAdvancedControl(player, client, true);
 		this.enableAdvancedControl(client, player, true);
 
