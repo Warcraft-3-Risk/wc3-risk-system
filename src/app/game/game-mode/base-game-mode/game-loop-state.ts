@@ -222,6 +222,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onTick(tick: number): void {
 		VictoryManager.getInstance().updateAndGetGameState();
+
+		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
+			GlobalGameData.matchState = 'postMatch';
+		}
+
 		ScoreboardManager.getInstance().updatePartial();
 	}
 
@@ -345,10 +350,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	// GameLoopState uses GlobalGameData.matchState to determine if the match is over
 	// This is preferable as it allows the state to clean up and transition to the next state
 	onPlayerRestart(player: ActivePlayer) {
-		const humanPlayersCount: number = PlayerManager.getInstance().getHumanPlayersCount();
-		if (humanPlayersCount === 1) {
-			GlobalGameData.matchState = 'postMatch';
-		}
+		GlobalGameData.matchState = 'postMatch';
 	}
 
 	onSwapGuard(targetedUnit: unit, city: City, triggerPlayer: player): void {

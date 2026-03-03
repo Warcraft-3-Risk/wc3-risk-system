@@ -2,9 +2,9 @@
 
 ## Bugs
 
-- [ ] **Bug 1 — Promode 1v1**: `-ff` works, but `-ng` doesn't always restart the game
-- [ ] **Bug 2 — Promode 1v1**: `-ng` doesn't work at all when someone wins by city condition
-- [ ] **Bug 3 — Promode 2v2 (teams)**: City condition win message displays but the game doesn't end
+- [x] **Bug 1 — Promode 1v1**: `-ff` works, but `-ng` doesn't always restart the game
+- [x] **Bug 2 — Promode 1v1**: `-ng` doesn't work at all when someone wins by city condition
+- [x] **Bug 3 — Promode 2v2 (teams)**: City condition win message displays but the game doesn't end
 
 Root causes:
 - The disconnect between `GAME_VICTORY_STATE` being set to `DECIDED` and `matchState` being set to `postMatch`
@@ -16,7 +16,7 @@ Root causes:
 
 ### Bug 1 & 2: `-ng` doesn't restart (or is inconsistent)
 
-- [ ] Confirm `GameLoopState.onPlayerRestart()` only fires for single-player (`humanPlayersCount === 1`)
+- [x] Confirm `GameLoopState.onPlayerRestart()` only fires for single-player (`humanPlayersCount === 1`)
 
 **File:** `src/app/game/game-mode/base-game-mode/game-loop-state.ts` (lines 341–346)
 
@@ -31,7 +31,7 @@ onPlayerRestart(player: ActivePlayer) {
 
 In a 1v1 with 2 humans, this is a no-op — typing `-ng` during the game loop does nothing.
 
-- [ ] Confirm `GameOverState.onPlayerRestart()` is the only working handler, but requires precise timing
+- [x] Confirm `GameOverState.onPlayerRestart()` is the only working handler, but requires precise timing
 
 **File:** `src/app/game/game-mode/base-game-mode/game-over-state.ts` (lines 61–66)
 
@@ -49,7 +49,7 @@ The "sometimes works" behavior is a timing race — player must type `-ng` durin
 
 ### Bug 3: City condition win doesn't end the game in 2v2
 
-- [ ] Confirm `onTick()` sets `GAME_VICTORY_STATE = 'DECIDED'` but does NOT set `matchState = 'postMatch'`
+- [x] Confirm `onTick()` sets `GAME_VICTORY_STATE = 'DECIDED'` but does NOT set `matchState = 'postMatch'`
 
 **File:** `src/app/game/game-mode/base-game-mode/game-loop-state.ts` (lines 222–224, 197–200)
 
@@ -60,7 +60,7 @@ Timer loop flow:
 
 Gap: victory is detected mid-tick, message is shown, but `matchState` isn't updated until the turn ends.
 
-- [ ] Confirm `updateAndGetGameState()` does NOT set `GlobalGameData.leader` for city victories
+- [x] Confirm `updateAndGetGameState()` does NOT set `GlobalGameData.leader` for city victories
 
 **File:** `src/app/managers/victory-manager.ts` (lines 100–108)
 
@@ -79,8 +79,8 @@ This means `addWinToLeader()` in `GameOverState` may use a stale/incorrect leade
 
 ### Fix 1: Set `matchState` immediately when victory is decided
 
-- [ ] Edit `onTick()` in `src/app/game/game-mode/base-game-mode/game-loop-state.ts`
-- [ ] After `updateAndGetGameState()`, check if `DECIDED` and set `matchState = 'postMatch'`
+- [x] Edit `onTick()` in `src/app/game/game-mode/base-game-mode/game-loop-state.ts`
+- [x] After `updateAndGetGameState()`, check if `DECIDED` and set `matchState = 'postMatch'`
 
 ```typescript
 onTick(tick: number): void {
@@ -98,8 +98,8 @@ Fixes **Bug 3** — game ends on the same tick the city victory is detected.
 
 ### Fix 2: Set `GlobalGameData.leader` on city victory
 
-- [ ] Edit `updateAndGetGameState()` in `src/app/managers/victory-manager.ts`
-- [ ] When a single city victor is found, set them as leader
+- [x] Edit `updateAndGetGameState()` in `src/app/managers/victory-manager.ts`
+- [x] When a single city victor is found, set them as leader
 
 ```typescript
 } else if (playerWinCandidates.length == 1) {
@@ -112,8 +112,8 @@ Ensures `addWinToLeader()` uses the correct winner for promode best-of series tr
 
 ### Fix 3: Make `-ng` work reliably regardless of state
 
-- [ ] Edit `onPlayerRestart()` in `src/app/game/game-mode/base-game-mode/game-loop-state.ts`
-- [ ] Remove the `humanPlayersCount === 1` guard
+- [x] Edit `onPlayerRestart()` in `src/app/game/game-mode/base-game-mode/game-loop-state.ts`
+- [x] Remove the `humanPlayersCount === 1` guard
 
 ```typescript
 onPlayerRestart(player: ActivePlayer) {
@@ -129,8 +129,8 @@ Fixes **Bug 1** and **Bug 2** — `-ng` works during the game loop, not just dur
 
 ## Files to Change
 
-- [ ] `src/app/game/game-mode/base-game-mode/game-loop-state.ts` — Update `onTick()` to set `matchState` when `DECIDED`; update `onPlayerRestart()` to remove single-player guard
-- [ ] `src/app/managers/victory-manager.ts` — Set `GlobalGameData.leader` in `updateAndGetGameState()` for city victories
+- [x] `src/app/game/game-mode/base-game-mode/game-loop-state.ts` — Update `onTick()` to set `matchState` when `DECIDED`; update `onPlayerRestart()` to remove single-player guard
+- [x] `src/app/managers/victory-manager.ts` — Set `GlobalGameData.leader` in `updateAndGetGameState()` for city victories
 
 ---
 

@@ -104,6 +104,7 @@ export class VictoryManager {
 			VictoryManager.GAME_VICTORY_STATE = 'UNDECIDED';
 		} else if (playerWinCandidates.length == 1) {
 			debugPrint(ParticipantEntityManager.getDisplayName(playerWinCandidates[0]) + ' has met the city count victory condition!');
+			GlobalGameData.leader = playerWinCandidates[0];
 			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
 		} else {
 			VictoryManager.GAME_VICTORY_STATE = 'TIE';
