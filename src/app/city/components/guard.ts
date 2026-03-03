@@ -5,6 +5,7 @@ import { Resetable } from 'src/app/interfaces/resetable';
 import { ClientManager } from 'src/app/game/services/client-manager';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { ABILITY_ID } from 'src/configs/ability-id';
 
 /**
  * Represents a Guard entity in the game, implementing the `Resetable` interface.
@@ -53,12 +54,13 @@ export class Guard implements Resetable {
 		}
 
 		this._unit = guard;
-		UnitAddAbility(guard, FourCC("A006"));
+		UnitAddAbility(guard, ABILITY_ID.GUARD_INDICATOR);
 		UnitAddType(this._unit, UNIT_TYPE.GUARD);
 
-		// Hide the guard's minimap icon
-		BlzSetUnitBooleanFieldBJ(guard, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+		// Untrack from MinimapIconManager FIRST (this re-enables native minimap display internally),
+		// then hide the native minimap icon. Order matters — reversing these causes the native dot to leak through.
 		UnitLagManager.getInstance().untrackUnit(guard);
+		BlzSetUnitBooleanFieldBJ(guard, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 	}
 
 	/**
@@ -68,7 +70,7 @@ export class Guard implements Resetable {
 		if (this._unit == null) return;
 
 		UnitRemoveType(this._unit, UNIT_TYPE.GUARD);
-		UnitRemoveAbility(this._unit, FourCC("A006"));
+		UnitRemoveAbility(this._unit, ABILITY_ID.GUARD_INDICATOR);
 
 		// Show the unit's minimap icon again
 		BlzSetUnitBooleanFieldBJ(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);

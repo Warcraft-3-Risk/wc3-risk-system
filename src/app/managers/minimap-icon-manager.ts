@@ -245,6 +245,9 @@ export class MinimapIconManager {
 			// Hide the default minimap display for the city's barrack unit
 			BlzSetUnitBooleanField(city.barrack.unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 
+			// Hide the Circle of Power's native minimap display (prevents stray dots on bases)
+			BlzSetUnitBooleanField(city.cop, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+
 			// Create color icon frame
 			const iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCityIcon', gameUI, '', 0);
 
