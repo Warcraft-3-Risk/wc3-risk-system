@@ -25,8 +25,6 @@ export function UnitDeathEvent() {
 	TriggerAddCondition(
 		t,
 		Condition(() => {
-			if (GlobalGameData.matchState === 'postMatch') return false;
-
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
 			debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
