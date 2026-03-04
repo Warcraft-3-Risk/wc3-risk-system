@@ -1,6 +1,5 @@
 [Categories]
 GiantClass=TRIGSTR_3080
-TaurenClass=
 UndeadClass=TRIGSTR_3081
 
 [CustomSkin]
@@ -11,6 +10,8 @@ IdlePeon=ReplaceableTextures\CommandButtons\BTNHumanCaptureFlag.blp
 LumberIcon=war3mapImported\clock4.tga
 MinimapNeutralTexture=UI\Minimap\MiniMap-Entrance.blp
 SupplyIcon=war3mapImported\sandclock2.tga
+ToolTipBackground=UI\Widgets\EscMenu\Human\blank-background.blp
+ToolTipBorder=UI\Widgets\EscMenu\Human\blank-background.blp
 
 [Errors]
 Cantland=TRIGSTR_3042

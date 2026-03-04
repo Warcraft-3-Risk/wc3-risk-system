@@ -302,6 +302,7 @@ export function syncObjectEditorFiles(targetTerrain: string, mapFolder: string) 
 		'war3mapSkin.w3a',
 		'war3mapSkin.w3b',
 		'war3mapSkin.w3h',
+		'war3mapSkin.txt',
 	];
 
 	logger.info(`Syncing object editor files from risk_europe.w3x to dist/${mapFolder}...`);
