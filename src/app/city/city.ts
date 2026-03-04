@@ -64,6 +64,15 @@ export abstract class City implements Resetable, Ownable {
 		IssuePointOrder(this._barrack.unit, 'setrally', this._barrack.defaultX - 70, this._barrack.defaultY - 155);
 	}
 
+	/**
+	 * Sets the color of all city components (guard, barracks, cop) to the specified player color.
+	 * @param color The player color to apply
+	 */
+	public setColor(color: playercolor): void {
+		SetUnitColor(this._guard.unit, color);
+		SetUnitColor(this._barrack.unit, color);
+	}
+
 	/** @returns The current owner of the city */
 	public getOwner(): player {
 		return this.owner;
