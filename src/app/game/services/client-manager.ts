@@ -50,7 +50,6 @@ export class ClientManager implements Resetable {
 	}
 
 	public incrementUnitCount(slot: player): void {
-		if (!slot) return;
 		const oldCount = this.slotUnitCounts.get(slot) || 0;
 		const newCount = oldCount + 1;
 		this.slotUnitCounts.set(slot, newCount);
@@ -58,7 +57,6 @@ export class ClientManager implements Resetable {
 	}
 
 	public decrementUnitCount(slot: player): void {
-		if (!slot) return;
 		const oldCount = this.slotUnitCounts.get(slot) || 0;
 		const newCount = Math.max(0, oldCount - 1);
 		this.slotUnitCounts.set(slot, newCount);

@@ -11,7 +11,6 @@ export class ApplyFogState<T extends StateData> extends BaseState<T> {
 
 	async runAsync(): Promise<void> {
 		FogManager.getInstance().turnFogOff();
-		await Wait.forSeconds(3);
 		SettingsContext.getInstance().applyStrategy('Fog');
 
 		this.nextState(this.stateData);
