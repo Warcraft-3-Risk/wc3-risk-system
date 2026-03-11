@@ -64,6 +64,7 @@ export class Quests {
 		High/Low Health Guard: Moy
 		High Value Guard: The Panda
 		Low Value Guard: NemoVonFish
+		Frames: Tasyen
 		SS Ship Model: Unknown
 		Special Thanks: The Risk Community, Priwin, PsycoMarauder, RodOfNod, goble-r1sk, Saran, and all the devs before us!
 	`;

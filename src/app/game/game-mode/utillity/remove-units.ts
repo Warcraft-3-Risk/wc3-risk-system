@@ -13,7 +13,7 @@ export function removeUnits(): void {
 			player,
 			Filter(() => {
 				const unit: unit = GetFilterUnit();
-				if (!IsUnitType(unit, UNIT_TYPE.BUILDING) && !IsUnitType(unit, UNIT_TYPE.GUARD) && !IsUnitType(unit, UNIT_TYPE.MINIMAP_INDICATOR)) {
+				if (!IsUnitType(unit, UNIT_TYPE.BUILDING) && !IsUnitType(unit, UNIT_TYPE.GUARD)) {
 					UnitLagManager.getInstance().untrackUnit(unit);
 					RemoveUnit(unit);
 				}

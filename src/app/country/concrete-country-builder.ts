@@ -11,6 +11,7 @@ import { SpawnerData } from '../spawner/spawner-data';
 import { PlayerManager } from '../player/player-manager';
 import { File } from 'w3ts';
 import { HexColors } from '../utils/hex-colors';
+import { MinimapIconManager } from '../managers/minimap-icon-manager';
 
 /**
  * ConcreteCountryBuilder is an implementation of the CountryBuilder interface.
@@ -134,6 +135,10 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 						);
 					}
 				}
+
+				// Initialize custom minimap icons for cities
+				const allCities = Array.from(CityToCountry.keys());
+				MinimapIconManager.getInstance().initializeCityIcons(allCities);
 			}
 		});
 	}
