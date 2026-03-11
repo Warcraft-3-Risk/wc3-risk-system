@@ -11,6 +11,8 @@ import { TeamManager } from 'src/app/teams/team-manager';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { GlobalGameData } from '../../state/global-game-state';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
+import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
+import { CityToCountry } from 'src/app/country/country-map';
 import { debugPrint } from '../../../utils/debug-print';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
@@ -39,6 +41,8 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			await Wait.forSeconds(1);
 			print('Resetting kill tracker...');
 			UnitKillTracker.getInstance().reset();
+			print('Resetting minimap icons...');
+			MinimapIconManager.getInstance().reinitialize(Array.from(CityToCountry.keys()));
 			print('Resetting trees...');
 			TreeManager.getInstance().reset();
 			await Wait.forSeconds(1);

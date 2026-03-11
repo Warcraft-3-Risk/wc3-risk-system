@@ -92,28 +92,24 @@ export class MinimapIconManager {
 	}
 
 	/**
-	 * Initializes minimap icons for all cities.
+	 * Initializes the entire minimap icon system: creates city icons, starts
+	 * the periodic update timer, and pre-populates the frame pool.
 	 * Should be called after all cities are created.
-	 * NOTE: Should only be called for the local player (caller's responsibility).
 	 */
-	public initializeCityIcons(cities: City[]): void {
+	public initialize(cities: City[]): void {
 		if (!this.isActive) {
 			return;
 		}
 
 		debugPrint(`MinimapIconManager: Creating icons for ${cities.length} cities`);
 
-		// Create icons for all cities
 		cities.forEach((city) => {
 			this.createCityIcon(city);
 		});
 
 		debugPrint(`MinimapIconManager: Created ${this.cityIcons.size} icons`);
 
-		// Start update timer (update every 0.2 seconds)
 		this.startUpdateTimer();
-
-		// Pre-populate frame pool to prevent lag spikes during gameplay
 		this.expandPool(this.INITIAL_POOL_SIZE);
 	}
 
@@ -624,9 +620,22 @@ export class MinimapIconManager {
 	}
 
 	/**
-	 * Cleans up all icons (call on game reset).
+	 * Destroys and fully re-creates all minimap icons, timer, and frame pool.
+	 * Call on game reset (-ng) to start fresh.
 	 */
-	public cleanup(): void {
+	public reinitialize(cities: City[]): void {
+		if (!this.isActive) {
+			return;
+		}
+
+		this.destroy();
+		this.initialize(cities);
+	}
+
+	/**
+	 * Destroys all frames, timers, and clears all state.
+	 */
+	public destroy(): void {
 		if (!this.isActive) {
 			return;
 		}

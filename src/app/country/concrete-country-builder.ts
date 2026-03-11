@@ -138,7 +138,7 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 
 				// Initialize custom minimap icons for cities
 				const allCities = Array.from(CityToCountry.keys());
-				MinimapIconManager.getInstance().initializeCityIcons(allCities);
+				MinimapIconManager.getInstance().initialize(allCities);
 			}
 		});
 	}
