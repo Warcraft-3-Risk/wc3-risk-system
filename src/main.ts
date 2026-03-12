@@ -141,6 +141,7 @@ function tsMain() {
 			CameraManager.getInstance();
 			ChatManager.getInstance();
 			TransportManager.getInstance();
+			TransportManager.getInstance().initializeEPAS();
 			TimedEventManager.getInstance();
 			SetCommands();
 
