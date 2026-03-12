@@ -903,7 +903,7 @@ export class TransportManager {
 				if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
 				if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
 				if (ClientManager.getInstance().getOwnerOfUnit(unit) != transportRealOwner) return;
-				
+
 				// Global check for already ordered units
 				if (this.allOrderedUnits.has(unit)) return;
 

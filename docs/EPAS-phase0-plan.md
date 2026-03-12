@@ -38,7 +38,7 @@ epasPortCenterY: number;
 epasSafeRadius: number;
 epasOriginalDestX: number;
 epasOriginalDestY: number;
-epasPortName: string;          // for debug messages
+epasPortName: string; // for debug messages
 ```
 
 Initialize all EPAS fields in `TransportManager.add()`:
@@ -65,13 +65,13 @@ Define a minimal Phase 0 `PortData`:
 
 ```ts
 type PortData = {
-    city: City;
-    portUnit: unit;       // city barrack building (detection center + owner check)
-    centerX: number;
-    centerY: number;
-    safeRadius: number;
-    enterTrigger: trigger;
-    portName: string;      // for debug messages
+	city: City;
+	portUnit: unit; // city barrack building (detection center + owner check)
+	centerX: number;
+	centerY: number;
+	safeRadius: number;
+	enterTrigger: trigger;
+	portName: string; // for debug messages
 };
 ```
 
@@ -80,6 +80,7 @@ The `portUnit` is the city's barrack building (`city.barrack.unit`) — this is 
 Build an `AllPortData: PortData[]` array. Populate it by iterating `CityToCountry.keys()` and filtering for `city.isPort()`.
 
 **Debug prints:**
+
 - `"[EPAS] Initializing EPAS for {portCount} port cities"`
 - For each port: `"[EPAS] Registered port: {portName} at ({cx}, {cy}), safeRadius={R}"`
 - `"[EPAS] EPAS initialization complete"`
@@ -95,8 +96,9 @@ For each `PortData`, create a trigger using `TriggerRegisterUnitInRange(trig, po
 The callback (`onPortRangeEnter`) will be wired up in Task 4.
 
 Compute `safeRadius` using a fixed constant for the port guard attack range (all port guards have the same range):
+
 ```ts
-const PORT_GUARD_ATTACK_RANGE = 600;  // verify in editor
+const PORT_GUARD_ATTACK_RANGE = 600; // verify in editor
 const EPAS_BUFFER = 300;
 const safeRadius = PORT_GUARD_ATTACK_RANGE + EPAS_BUFFER;
 ```
@@ -104,6 +106,7 @@ const safeRadius = PORT_GUARD_ATTACK_RANGE + EPAS_BUFFER;
 Note: We use a constant instead of reading from the guard unit because the guard is irrelevant to this system — we only care about the port city building as a static detection center.
 
 **Debug prints:**
+
 - `"[EPAS] Trigger registered for port: {portName}, safeRadius={safeRadius}"`
 
 ---
@@ -124,6 +127,7 @@ When any unit enters a port's safe radius, run the following filter chain. Log e
 If all checks pass → activate EPAS (Task 5).
 
 **Debug prints:**
+
 - `"[EPAS] Unit entered range of port: {portName}"`
 - `"[EPAS] >> Not a tracked transport — ignoring"`
 - `"[EPAS] >> Transport not patrolling — ignoring"`
@@ -151,17 +155,18 @@ transport.epasPortName = portData.portName;
 
 // Save the original destination so we can resume it on exit
 if (transport.patrolState === PatrolState.MOVING) {
-    transport.epasOriginalDestX = transport.patrolDestX;
-    transport.epasOriginalDestY = transport.patrolDestY;
+	transport.epasOriginalDestX = transport.patrolDestX;
+	transport.epasOriginalDestY = transport.patrolDestY;
 } else {
-    transport.epasOriginalDestX = transport.patrolOriginX;
-    transport.epasOriginalDestY = transport.patrolOriginY;
+	transport.epasOriginalDestX = transport.patrolOriginX;
+	transport.epasOriginalDestY = transport.patrolOriginY;
 }
 ```
 
 **Do NOT issue any new move orders.** The transport continues on its current path. Phase 0 is detection-only.
 
 **Debug prints:**
+
 - `"[EPAS] ACTIVATED for port: {portName}"`
 - `"[EPAS] >> Transport position: ({tx}, {ty})"`
 - `"[EPAS] >> Patrol state: {MOVING|RETURNING}"`
@@ -178,23 +183,24 @@ In the `MOVING` and `RETURNING` cases of `handlePatrol()`, add a check at the to
 
 ```ts
 if (transport.epasActive) {
-    const edx = GetUnitX(transport.unit) - transport.epasPortCenterX;
-    const edy = GetUnitY(transport.unit) - transport.epasPortCenterY;
-    const eDist = SquareRoot(edx * edx + edy * edy);
+	const edx = GetUnitX(transport.unit) - transport.epasPortCenterX;
+	const edy = GetUnitY(transport.unit) - transport.epasPortCenterY;
+	const eDist = SquareRoot(edx * edx + edy * edy);
 
-    debugPrint(`[EPAS] Tick — dist to port ${transport.epasPortName}: ${eDist} / ${transport.epasSafeRadius}`);
+	debugPrint(`[EPAS] Tick — dist to port ${transport.epasPortName}: ${eDist} / ${transport.epasSafeRadius}`);
 
-    if (eDist > transport.epasSafeRadius) {
-        // Exited the safe radius — deactivate and resume patrol
-        deactivateEPAS(transport);
-    }
-    // Phase 0: fall through to normal patrol logic regardless
+	if (eDist > transport.epasSafeRadius) {
+		// Exited the safe radius — deactivate and resume patrol
+		deactivateEPAS(transport);
+	}
+	// Phase 0: fall through to normal patrol logic regardless
 }
 ```
 
 This is a **non-blocking** check — normal patrol logic still runs below it. The transport paths normally; we're only detecting the moment it leaves.
 
 **Debug prints:**
+
 - `"[EPAS] Tick — dist to port {portName}: {eDist} / {safeRadius}"` (every tick while active)
 - On exit: see Task 7.
 
@@ -206,16 +212,17 @@ This is a **non-blocking** check — normal patrol logic still runs below it. Th
 
 ```ts
 function deactivateEPAS(transport: Transport): void {
-    transport.epasActive = false;
+	transport.epasActive = false;
 
-    // Resume original patrol destination
-    transport.isScriptOrdering = true;
-    IssuePointOrder(transport.unit, 'move', transport.epasOriginalDestX, transport.epasOriginalDestY);
-    transport.isScriptOrdering = false;
+	// Resume original patrol destination
+	transport.isScriptOrdering = true;
+	IssuePointOrder(transport.unit, 'move', transport.epasOriginalDestX, transport.epasOriginalDestY);
+	transport.isScriptOrdering = false;
 }
 ```
 
 **Debug prints:**
+
 - `"[EPAS] DEACTIVATED — exited safe radius of port: {portName}"`
 - `"[EPAS] >> Resuming patrol to original destination: ({destX}, {destY})"`
 
@@ -226,6 +233,7 @@ function deactivateEPAS(transport: Transport): void {
 **File:** `src/app/managers/transport-manager.ts`
 
 In `stopPatrol()`, add:
+
 ```ts
 transport.epasActive = false;
 ```
@@ -233,6 +241,7 @@ transport.epasActive = false;
 In `onDeath()` (if transport cleanup exists), ensure `epasActive` is cleared.
 
 **Debug prints:**
+
 - `"[EPAS] Cleared — patrol stopped or transport died"`
 
 ---
@@ -244,6 +253,7 @@ In `onDeath()` (if transport cleanup exists), ensure `epasActive` is cleared.
 Call the EPAS initialization function **after** all cities have been constructed (i.e., after `ConcreteCountryBuilder` has finished).
 
 **Debug prints:**
+
 - Already covered in Task 2/3.
 
 ---
@@ -318,6 +328,7 @@ Tasks 8–9 are cleanup and integration.
 ## Next Iteration (Phase 1)
 
 Once Phase 0 is validated, the next iteration will layer on:
+
 - 12-point navigation ring computation
 - Z-height water/land validation of nav points
 - Entry/exit point calculation (ray-circle intersection)
