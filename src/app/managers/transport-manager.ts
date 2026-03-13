@@ -48,6 +48,8 @@ type Transport = {
 	epasOriginalDestX: number;
 	epasOriginalDestY: number;
 	epasPortName: string;
+	epasLastX: number;
+	epasLastY: number;
 };
 
 const AUTO_LOAD_DISTANCE: number = 450;
@@ -58,6 +60,8 @@ const MAX_UNLOAD_DISTANCE: number = 300;
 const PORT_GUARD_ATTACK_RANGE: number = 600;
 const EPAS_BUFFER: number = 300;
 const EPAS_SAFE_RADIUS: number = PORT_GUARD_ATTACK_RANGE + EPAS_BUFFER;
+const EPAS_ARC_STEP_ANGLE: number = bj_PI / 4; // 45° — how far ahead on the arc to target each tick
+const EPAS_EXIT_OVERSHOOT: number = 300; // how far past the safe radius to target the exit waypoint
 
 type PortData = {
 	city: City;
@@ -219,15 +223,25 @@ export class TransportManager {
 			return false;
 		}
 
-		// 6. Heading-toward-port check (dot product)
+		// 6. Heading-toward-port check (dot product using destination vector)
 		const tx = GetUnitX(transport.unit);
 		const ty = GetUnitY(transport.unit);
-		const facingRad = GetUnitFacing(transport.unit) * bj_DEGTORAD;
-		const hx = Cos(facingRad);
-		const hy = Sin(facingRad);
+		const destX = transport.patrolState === PatrolState.MOVING ? transport.patrolDestX : transport.patrolOriginX;
+		const destY = transport.patrolState === PatrolState.MOVING ? transport.patrolDestY : transport.patrolOriginY;
+
+		// 6a. Skip if destination is inside this port's safe area (ship needs to reach it)
+		const destToPortDx = destX - portData.centerX;
+		const destToPortDy = destY - portData.centerY;
+		if (destToPortDx * destToPortDx + destToPortDy * destToPortDy <= portData.safeRadius * portData.safeRadius) {
+			debugPrint(`[EPAS] >> Destination is inside this port's safe area — ignoring`);
+			return false;
+		}
+
+		const toDestX = destX - tx;
+		const toDestY = destY - ty;
 		const toPortX = portData.centerX - tx;
 		const toPortY = portData.centerY - ty;
-		const dot = hx * toPortX + hy * toPortY;
+		const dot = toDestX * toPortX + toDestY * toPortY;
 
 		debugPrint(`[EPAS] >> Heading check: dot=${dot}`);
 
@@ -266,6 +280,13 @@ export class TransportManager {
 		debugPrint(`[EPAS] >> Patrol state: ${transport.patrolState === PatrolState.MOVING ? 'MOVING' : 'RETURNING'}`);
 		debugPrint(`[EPAS] >> Original destination saved: (${transport.epasOriginalDestX}, ${transport.epasOriginalDestY})`);
 		debugPrint(`[EPAS] >> Safe radius: ${portData.safeRadius}`);
+
+		// Seed position tracking for velocity computation
+		transport.epasLastX = tx;
+		transport.epasLastY = ty;
+
+		// Issue first avoidance move
+		this.issueEPASMoveOrder(transport);
 	}
 
 	private deactivateEPAS(transport: Transport): void {
@@ -280,17 +301,157 @@ export class TransportManager {
 		transport.isScriptOrdering = false;
 	}
 
+	private issueEPASMoveOrder(transport: Transport): void {
+		const tx = GetUnitX(transport.unit);
+		const ty = GetUnitY(transport.unit);
+
+		// Current angle from port center to ship
+		const angleToShip = Atan2(ty - transport.epasPortCenterY, tx - transport.epasPortCenterX);
+
+		// Compute actual velocity from position delta (updated each tick)
+		let vx = tx - transport.epasLastX;
+		let vy = ty - transport.epasLastY;
+		const speed = vx * vx + vy * vy;
+
+		// If ship hasn't moved (first tick or stuck), fall back to ship→dest direction
+		if (speed < 1) {
+			vx = transport.epasOriginalDestX - tx;
+			vy = transport.epasOriginalDestY - ty;
+		}
+
+		const toShipX = tx - transport.epasPortCenterX;
+		const toShipY = ty - transport.epasPortCenterY;
+
+		// 2D cross product: positive = ship moving CCW around port, negative = CW
+		const cross = toShipX * vy - toShipY * vx;
+		const step = cross >= 0 ? EPAS_ARC_STEP_ANGLE : -EPAS_ARC_STEP_ANGLE;
+
+		const targetAngle = angleToShip + step;
+
+		// Waypoint just outside the safe radius so the ship exits the zone
+		const exitRadius = transport.epasSafeRadius + EPAS_EXIT_OVERSHOOT;
+		const wpX = transport.epasPortCenterX + exitRadius * Cos(targetAngle);
+		const wpY = transport.epasPortCenterY + exitRadius * Sin(targetAngle);
+
+		transport.isScriptOrdering = true;
+		IssuePointOrder(transport.unit, 'move', wpX, wpY);
+		transport.isScriptOrdering = false;
+
+		debugPrint(
+			`[EPAS] Arc move: cross=${R2I(cross)} dir=${cross >= 0 ? 'CCW' : 'CW'} angle=${R2I(targetAngle * bj_RADTODEG)}° → (${R2I(wpX)}, ${R2I(wpY)})`
+		);
+	}
+
+	private isPathClearOfPort(
+		shipX: number,
+		shipY: number,
+		destX: number,
+		destY: number,
+		portX: number,
+		portY: number,
+		safeRadius: number
+	): boolean {
+		const segDx = destX - shipX;
+		const segDy = destY - shipY;
+		const lenSq = segDx * segDx + segDy * segDy;
+
+		if (lenSq < 1) return true;
+
+		// Project port center onto the line segment [ship → dest]
+		const t = ((portX - shipX) * segDx + (portY - shipY) * segDy) / lenSq;
+		const tClamped = t < 0 ? 0 : t > 1 ? 1 : t;
+
+		const closestX = shipX + tClamped * segDx;
+		const closestY = shipY + tClamped * segDy;
+
+		const distX = portX - closestX;
+		const distY = portY - closestY;
+		const distSq = distX * distX + distY * distY;
+
+		return distSq > safeRadius * safeRadius;
+	}
+
 	private checkEPASTick(transport: Transport): void {
 		if (!transport.epasActive) return;
 
-		const edx = GetUnitX(transport.unit) - transport.epasPortCenterX;
-		const edy = GetUnitY(transport.unit) - transport.epasPortCenterY;
+		const tx = GetUnitX(transport.unit);
+		const ty = GetUnitY(transport.unit);
+		const edx = tx - transport.epasPortCenterX;
+		const edy = ty - transport.epasPortCenterY;
 		const eDist = SquareRoot(edx * edx + edy * edy);
 
-		debugPrint(`[EPAS] Tick — dist to port ${transport.epasPortName}: ${eDist} / ${transport.epasSafeRadius}`);
+		debugPrint(`[EPAS] Tick — dist to port ${transport.epasPortName}: ${R2I(eDist)} / ${transport.epasSafeRadius}`);
 
+		// Primary exit: straight-line path to destination is now clear of the port
+		if (
+			this.isPathClearOfPort(
+				tx,
+				ty,
+				transport.epasOriginalDestX,
+				transport.epasOriginalDestY,
+				transport.epasPortCenterX,
+				transport.epasPortCenterY,
+				transport.epasSafeRadius
+			)
+		) {
+			debugPrint(`[EPAS] Path to destination is clear — deactivating`);
+			this.deactivateEPAS(transport);
+			return;
+		}
+
+		// Fallback exit: ship reached outside the safe radius
 		if (eDist > transport.epasSafeRadius) {
 			this.deactivateEPAS(transport);
+			return;
+		}
+
+		// Update position tracking for velocity computation
+		transport.epasLastX = tx;
+		transport.epasLastY = ty;
+
+		// Only re-issue arc move if ship has stopped (hit land, reached waypoint, etc.)
+		// Order 851986 = move. If the ship is still moving, let it finish reaching its current waypoint.
+		if (GetUnitCurrentOrder(transport.unit) !== 851986) {
+			debugPrint(`[EPAS] Ship stopped (order=${GetUnitCurrentOrder(transport.unit)}) — issuing new arc move`);
+			this.issueEPASMoveOrder(transport);
+		}
+	}
+
+	private checkEPASProximity(transport: Transport): void {
+		if (transport.epasActive) return;
+
+		const tx = GetUnitX(transport.unit);
+		const ty = GetUnitY(transport.unit);
+		const owner = GetOwningPlayer(transport.unit);
+		const destX = transport.patrolState === PatrolState.MOVING ? transport.patrolDestX : transport.patrolOriginX;
+		const destY = transport.patrolState === PatrolState.MOVING ? transport.patrolDestY : transport.patrolOriginY;
+
+		for (const portData of AllPortData) {
+			if (!IsUnitEnemy(portData.portUnit, owner)) continue;
+
+			const pdx = tx - portData.centerX;
+			const pdy = ty - portData.centerY;
+			const distSq = pdx * pdx + pdy * pdy;
+
+			if (distSq > portData.safeRadius * portData.safeRadius) continue;
+
+			// Skip if destination is inside this port's safe area (ship needs to reach it)
+			const destToPortDx = destX - portData.centerX;
+			const destToPortDy = destY - portData.centerY;
+			if (destToPortDx * destToPortDx + destToPortDy * destToPortDy <= portData.safeRadius * portData.safeRadius) continue;
+
+			// Check if destination is roughly toward the port
+			const toDestX = destX - tx;
+			const toDestY = destY - ty;
+			const toPortX = portData.centerX - tx;
+			const toPortY = portData.centerY - ty;
+			const dot = toDestX * toPortX + toDestY * toPortY;
+
+			if (dot <= 0) continue;
+
+			debugPrint(`[EPAS] Proximity check — inside safe radius of port: ${portData.portName}, activating`);
+			this.activateEPAS(transport, portData);
+			return;
 		}
 	}
 
@@ -329,6 +490,8 @@ export class TransportManager {
 			epasOriginalDestX: 0,
 			epasOriginalDestY: 0,
 			epasPortName: '',
+			epasLastX: 0,
+			epasLastY: 0,
 		};
 
 		this.transports.set(unit, transport);
@@ -1009,6 +1172,8 @@ export class TransportManager {
 
 			case PatrolState.MOVING:
 				this.checkEPASTick(transport);
+				if (!transport.epasActive) this.checkEPASProximity(transport);
+				if (transport.epasActive) break;
 
 				const dx = GetUnitX(transport.unit) - transport.patrolDestX;
 				const dy = GetUnitY(transport.unit) - transport.patrolDestY;
@@ -1045,6 +1210,8 @@ export class TransportManager {
 
 			case PatrolState.RETURNING:
 				this.checkEPASTick(transport);
+				if (!transport.epasActive) this.checkEPASProximity(transport);
+				if (transport.epasActive) break;
 
 				const rdx = GetUnitX(transport.unit) - transport.patrolOriginX;
 				const rdy = GetUnitY(transport.unit) - transport.patrolOriginY;

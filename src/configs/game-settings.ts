@@ -30,7 +30,7 @@ export const OVERTIME_MODIFIER: number = 1;
 export const CITIES_TO_WIN_WARNING_RATIO: number = 0.7;
 
 //This represents the upper bound of cities a player starts with. Default is 22.
-export const CITIES_PER_PLAYER_UPPER_BOUND: number = 1;
+export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 
 //This represents the duration a player can be muted for in seconds. Default is 300 seconds.
 export const STFU_DURATION: number = 300;
