@@ -1,6 +1,7 @@
 import { EDITOR_DEVELOPER_MODE, SHOW_PLAYER_CAMERA_POSITIONS } from 'src/configs/game-settings';
 import { PlayerManager } from '../player/player-manager';
 import { debugPrint } from '../utils/debug-print';
+import { CreateObserverButton } from '../utils/observer-helper';
 import { NameManager } from './names/name-manager';
 
 export type CamPositionData = {
@@ -16,6 +17,8 @@ export default class PlayerCameraPositionManager {
 	private displayPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
 	private frames: Map<player, { box: framehandle; text: framehandle }> = new Map();
 	private syncTrigger: trigger;
+	private overlayVisible: boolean = false;
+	private toggleButton: framehandle;
 
 	public static getInstance() {
 		if (this.instance == null) {
@@ -36,6 +39,8 @@ export default class PlayerCameraPositionManager {
 
 		if (!SHOW_PLAYER_CAMERA_POSITIONS) return;
 
+		this.createToggleButton();
+
 		// Network sync timer — keeps the 1s interval to avoid desync
 		const syncTimer = CreateTimer();
 		TimerStart(syncTimer, 1.0, true, () => this.syncLocalPlayerPosition());
@@ -47,6 +52,43 @@ export default class PlayerCameraPositionManager {
 		// Render timer — repositions frames on screen every frame so they track the observer's camera
 		const renderTimer = CreateTimer();
 		TimerStart(renderTimer, 0.02, true, () => this.renderFrames());
+	}
+
+	private createToggleButton(): void {
+		const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0);
+		const ctx = 500; // unique context to avoid collision with player frames
+
+		// Use ScriptDialogButton — same template as the leaderboard button, proven to work with observer hover detection
+		this.toggleButton = BlzCreateFrameByType('GLUETEXTBUTTON', 'CamToggleButton', gameUI, 'ScriptDialogButton', ctx);
+		BlzFrameSetPoint(this.toggleButton, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.092, -0.025);
+		BlzFrameSetSize(this.toggleButton, 0.1, 0.03);
+		BlzFrameSetText(this.toggleButton, 'Cameras: Off');
+		BlzFrameSetVisible(this.toggleButton, true);
+
+		// Only visible for observers (or dev mode)
+		BlzFrameSetVisible(this.toggleButton, false);
+		if (EDITOR_DEVELOPER_MODE || IsPlayerObserver(GetLocalPlayer())) {
+			BlzFrameSetVisible(this.toggleButton, true);
+		} else {
+			// Disable for non-observers so it cannot capture keyboard focus
+			BlzFrameSetEnable(this.toggleButton, false);
+		}
+
+		// Observer hover-click — same pattern as leaderboard button in ranked-statistics-view
+		CreateObserverButton(this.toggleButton, IsPlayerObserver(GetLocalPlayer()), () => {
+			this.overlayVisible = !this.overlayVisible;
+			BlzFrameSetText(this.toggleButton, this.overlayVisible ? 'Cameras: On' : 'Cameras: Off');
+
+			if (!this.overlayVisible) {
+				this.frames.forEach((frame) => {
+					BlzFrameSetVisible(frame.box, false);
+					BlzFrameSetVisible(frame.text, false);
+				});
+			}
+
+			BlzFrameSetEnable(this.toggleButton, false);
+			BlzFrameSetEnable(this.toggleButton, true);
+		});
 	}
 
 	private createPlayerFrame(p: player): { box: framehandle; text: framehandle } {
@@ -104,7 +146,7 @@ export default class PlayerCameraPositionManager {
 			const frame = this.createPlayerFrame(p);
 			this.frames.set(p, frame);
 
-			if (SHOW_PLAYER_CAMERA_POSITIONS || IsPlayerObserver(GetLocalPlayer())) {
+			if (this.overlayVisible && (EDITOR_DEVELOPER_MODE || IsPlayerObserver(GetLocalPlayer()))) {
 				const name = NameManager.getInstance().getDisplayName(p);
 				this.setFrameText(frame, name);
 
@@ -152,7 +194,8 @@ export default class PlayerCameraPositionManager {
 	 * Runs every 0.02s so frames track the observer's camera smoothly.
 	 */
 	private renderFrames() {
-		if (!SHOW_PLAYER_CAMERA_POSITIONS && !IsPlayerObserver(GetLocalPlayer())) return;
+		if (!EDITOR_DEVELOPER_MODE && !IsPlayerObserver(GetLocalPlayer())) return;
+		if (!this.overlayVisible) return;
 
 		this.displayPositionData.forEach((display, p) => {
 			const frame = this.frames.get(p);
