@@ -158,16 +158,19 @@ export class StandardBoard extends Scoreboard {
 
 		// --- Eliminated Player Formatting ---
 		if (player.status.isEliminated()) {
-			// Player name
-			this.setItemValue(`${grey}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
+			const elimColor = GetLocalPlayer() == player.getPlayer() ? textColor : grey;
+
+			// Player name — always in original player color
+			const nameColor = NameManager.getInstance().getOriginalColorCode(player.getPlayer());
+			this.setItemValue(`${nameColor}${NameManager.getInstance().getAcct(player.getPlayer())}`, row, this.PLAYER_COL);
 
 			// Cities
-			this.setItemValue(`${grey}${data.cities.cities.length}`, row, this.CITIES_COL);
+			this.setItemValue(`${elimColor}${data.cities.cities.length}`, row, this.CITIES_COL);
 
 			// Kills & Deaths
 			const kd = data.killsDeaths.get(player.getPlayer());
-			this.setItemValue(`${grey}${kd.killValue}`, row, this.KILLS_COL);
-			this.setItemValue(`${grey}${kd.deathValue}`, row, this.DEATHS_COL);
+			this.setItemValue(`${elimColor}${kd.killValue}`, row, this.KILLS_COL);
+			this.setItemValue(`${elimColor}${kd.deathValue}`, row, this.DEATHS_COL);
 
 			// Status
 			if (player.status.isSTFU()) {

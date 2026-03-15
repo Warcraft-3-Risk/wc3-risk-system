@@ -6,7 +6,7 @@ import { GamePlayer } from './game-player';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PLAYER_STATUS } from '../status/status-enum';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
-import { PLAYER_COLOR_CODES_MAP } from '../../utils/player-colors';
+
 
 //Use lowercase for simplicity here
 const adminList: string[] = [];
@@ -101,7 +101,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			EnableDragSelect(false, false);
 		}
 
-		SetPlayerName(handle, `${PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(handle))}${NameManager.getInstance().getColor(handle)} (${NameManager.getInstance().getAcct(handle)})|r`);
+		NameManager.getInstance().setName(handle, 'obs');
 	}
 
 	public get trackedData(): TrackedData {

@@ -55,13 +55,15 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return 'N/A';
 				}
 
-				let name = ParticipantEntityManager.getParticipantNamePrefixedWithOptionalTeamNumber(player.getPlayer());
+				const nm = NameManager.getInstance();
+				const colorCode = nm.getOriginalColorCode(player.getPlayer());
+				const acct = nm.getAcct(player.getPlayer());
 
-				if (!name) {
+				if (!acct) {
 					return 'N/A';
 				}
 
-				return truncateWithColorCode(name, 14);
+				return `${colorCode}${acct}|r`;
 			},
 		},
 		{
@@ -145,12 +147,15 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return highlightIfOwnPlayer(player, 'N/A');
 				}
 
-				let rivalName = NameManager.getInstance().getDisplayName(rival.getPlayer());
-				if (!rivalName) {
+				const nm = NameManager.getInstance();
+				const rivalColorCode = nm.getOriginalColorCode(rival.getPlayer());
+				const rivalAcct = nm.getAcct(rival.getPlayer());
+
+				if (!rivalAcct) {
 					return highlightIfOwnPlayer(player, 'N/A');
 				}
 
-				return truncateWithColorCode(rivalName, 14);
+				return truncateWithColorCode(`${rivalColorCode}${rivalAcct}|r`, 14);
 			},
 		},
 		{

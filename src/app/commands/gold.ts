@@ -5,7 +5,6 @@ import { PlayerManager } from '../player/player-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { HexColors } from '../utils/hex-colors';
 import { ErrorMsg } from '../utils/messages';
-import { isNonEmptySubstring } from '../utils/utils';
 
 export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) {
 	chatManager.addCmd(['-g', '-gold'], () => {
@@ -43,7 +42,7 @@ export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) 
 
 		if (!goldQty) return ErrorMsg(player, 'Invalid gold quantity!');
 
-		const players: player[] = GetAllyByAnyName(splitStr[1], player, nameManager);
+		const players: player[] = nameManager.getAllyPlayersByAnyName(splitStr[1], player);
 
 		if (players.length >= 2) return ErrorMsg(player, 'Multiple players found, be more specific!');
 		if (players.length <= 0) return ErrorMsg(player, 'Player not found!');
@@ -59,25 +58,4 @@ export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) 
 			`You received ${HexColors.TANGERINE}${goldQty}|r gold from ${nameManager.getDisplayName(player)}|r!`
 		);
 	});
-}
-
-function GetAllyByAnyName(string: string, sender: player, nameManager: NameManager): player[] {
-	const foundPlayers: Set<player> = new Set<player>();
-
-	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-		const player = Player(i);
-
-		if (!IsPlayerAlly(sender, player)) continue;
-		if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_PLAYING) continue;
-
-		if (isNonEmptySubstring(string, nameManager.getColor(player))) {
-			foundPlayers.add(player);
-		}
-
-		if (isNonEmptySubstring(string, nameManager.getBtag(player))) {
-			foundPlayers.add(player);
-		}
-	}
-
-	return [...foundPlayers];
 }

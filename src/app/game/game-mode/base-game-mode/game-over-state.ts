@@ -14,6 +14,7 @@ import { PlayerManager } from 'src/app/player/player-manager';
 import { LocalMessage } from 'src/app/utils/messages';
 import { HexColors } from 'src/app/utils/hex-colors';
 
+
 export class GameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
 		GlobalGameData.matchState = 'postMatch';
@@ -28,18 +29,26 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 		// Hide match scoreboard and show score screen
 		ScoreboardManager.getInstance().destroyBoards();
 
+		const nameManager = NameManager.getInstance();
+		const isPromode = SettingsContext.getInstance().isPromode() || SettingsContext.getInstance().isChaosPromode();
+
+		// Phase 1: Reset colors and set proper display names for the statistics board
 		GlobalGameData.matchPlayers.forEach((player) => {
-			// Undo observer state that was applied when this player died mid-game.
 			SetPlayerState(player.getPlayer(), PLAYER_STATE_OBSERVER, 0);
 
-			if (SettingsContext.getInstance().isPromode() || SettingsContext.getInstance().isChaosPromode()) {
-				NameManager.getInstance().setName(player.getPlayer(), 'acct');
-			} else {
-				NameManager.getInstance().setName(player.getPlayer(), 'btag');
+			const handle = player.getPlayer();
+
+			// Reset to original color (before client-manager overrides)
+			nameManager.setColor(handle, nameManager.getOriginalColor(handle));
+			nameManager.setName(handle, isPromode ? 'acct' : 'btag');
+
+			if (!isPromode) {
 				player.trackedData.bonus.hideUI();
 			}
 		});
-		if (SettingsContext.getInstance().isPromode() || SettingsContext.getInstance().isChaosPromode()) {
+
+		// Phase 2: Show statistics board (uses display names set above)
+		if (isPromode) {
 			VictoryManager.getInstance().addWinToLeader();
 			VictoryManager.getInstance().showScore();
 		} else {
@@ -47,6 +56,11 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 			StatisticsController.getInstance().setViewVisibility(true);
 			StatisticsController.getInstance().writeStatisticsData();
 		}
+
+		// Phase 3: Set chat names to "ColorName (RealName)" observer format
+		GlobalGameData.matchPlayers.forEach((player) => {
+			nameManager.setName(player.getPlayer(), 'obs');
+		});
 
 		FogManager.getInstance().turnFogOff();
 

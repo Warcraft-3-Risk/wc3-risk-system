@@ -82,7 +82,7 @@ export class TooltipManager {
 
 		// Don't show tooltip for units we own (directly or via client slot)
 		// Exception: in developer mode, show our own units' owner name too
-		if (cm.isPlayerOrClientOwnerOfUnit(unit, GetLocalPlayer())) {
+		if (cm.canPlayerSeeUnitTooltip(unit, GetLocalPlayer())) {
 			if (!EDITOR_DEVELOPER_MODE) {
 				this.hide();
 				return;

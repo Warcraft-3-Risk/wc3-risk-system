@@ -301,9 +301,8 @@ export class ClientManager implements Resetable {
 		}
 
 		const slotsPerPlayer = Math.floor(totalSlots / activePlayers.length);
-		const remainder = totalSlots % activePlayers.length;
 
-		debugPrint(`[Redistribute] Target: ${slotsPerPlayer} per player (+1 for first ${remainder})`);
+		debugPrint(`[Redistribute] Target: ${slotsPerPlayer} per player (${totalSlots % activePlayers.length} leftover unassigned)`);
 
 		// Sort active players by ID for deterministic remainder distribution
 		activePlayers.sort((a, b) => GetPlayerId(a) - GetPlayerId(b));
@@ -315,7 +314,7 @@ export class ClientManager implements Resetable {
 		for (let i = 0; i < activePlayers.length; i++) {
 			const p = activePlayers[i];
 			const currentSlots = this.playerToClient.get(p) || [];
-			const target = slotsPerPlayer + (i < remainder ? 1 : 0);
+			const target = slotsPerPlayer;
 			const delta = target - currentSlots.length;
 
 			debugPrint(`[Redistribute] Player ${GetPlayerId(p)}: current=${currentSlots.length}, target=${target}, delta=${delta}`);
@@ -596,7 +595,7 @@ export class ClientManager implements Resetable {
 
 		debugPrint(`ClientManager: Giving player ${GetPlayerName(player)} full control of client ${GetPlayerId(client)}`);
 
-		SetPlayerColor(client, GetPlayerColor(player));
+		NameManager.getInstance().setColor(client, NameManager.getInstance().getOriginalColor(player));
 
 		this.enableAdvancedControl(player, client, true);
 		this.enableAdvancedControl(client, player, true);
@@ -660,16 +659,18 @@ export class ClientManager implements Resetable {
 		return this.getOwner(GetOwningPlayer(unit));
 	}
 
-	// This method checks if the provided unit is owned by the player or their client
-	public isPlayerOrClientOwnerOfUnit(unit: unit, player: player | client): boolean {
+	// Checks if the player can interact with the unit (owns it, owns it via client slot, or is an eliminated observer)
+	public canPlayerSeeUnitTooltip(unit: unit, player: player | client): boolean {
+		// Dead players are observers — allow them to see tooltips for all units
+		const matchPlayer = PlayerManager.getInstance().players.get(player);
+		if (matchPlayer && matchPlayer.status.isEliminated()) return true;
+
 		const unitOwner = GetOwningPlayer(unit);
 		// Check direct ownership (handles both real player and client slot cases)
 		if (unitOwner === player) return true;
 		// Check if any of the player's client slots own the unit
 		const slots = this.playerToClient.get(player);
-		const clientOwns = slots ? slots.includes(unitOwner) : false;
-		// Check reverse: if the player is a client, check if the real player owns the unit
-		return this.clientToPlayer.get(player) == unitOwner || clientOwns;
+		return slots ? slots.includes(unitOwner) : false;
 	}
 
 	// This method checks if the provided unit is owned by the provided client
@@ -695,6 +696,7 @@ export class ClientManager implements Resetable {
 	reset(): void {
 		// Reset all player colors and names to default
 		debugPrint('ClientManager: Resetting all player colors and names to default');
+		NameManager.getInstance().resetOriginalColors();
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p = Player(i);
 
@@ -702,7 +704,6 @@ export class ClientManager implements Resetable {
 				continue;
 			}
 
-			SetPlayerColor(p, PLAYER_COLORS[GetPlayerId(p)]);
 			NameManager.getInstance().setColor(p, PLAYER_COLORS[GetPlayerId(p)]);
 			NameManager.getInstance().setName(p, 'color');
 
