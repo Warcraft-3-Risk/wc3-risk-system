@@ -44,7 +44,7 @@ export class ProModeGameLoopState extends GameLoopState<StateData> {
 					},
 					(team) => {
 						debugPrint(`Setting status of ${ParticipantEntityManager.getDisplayName(team)} to DEAD due to city count.`);
-						team.getMembers().forEach((activePlayer) => activePlayer.status.set(PLAYER_STATUS.DEAD));
+						[...team.getMembers()].forEach((activePlayer) => activePlayer.status.set(PLAYER_STATUS.DEAD));
 					}
 				);
 			} else if (opponentCityCounts >= participantCityCount * 2 * CITIES_TO_WIN_WARNING_RATIO) {
