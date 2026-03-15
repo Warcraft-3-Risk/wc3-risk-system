@@ -50,6 +50,9 @@ export class UpdatePlayerStatusState<T extends StateData> extends BaseState<T> {
 			player.trackedData.bonus.repositon();
 		});
 
+		// Disable the creep minimap filter button, keep ally filter as player preference
+		EnableMinimapFilterButtons(true, false);
+
 		this.nextState(this.stateData);
 	}
 }

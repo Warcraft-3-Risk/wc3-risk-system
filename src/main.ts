@@ -1,5 +1,5 @@
 import { addScriptHook, W3TS_HOOK } from 'w3ts/hooks';
-import { MAP_NAME } from './app/utils/map-info';
+import { MAP_NAME, MAP_TYPE } from './app/utils/map-info';
 import { ConcreteCityBuilder } from './app/city/concrete-city-builder';
 import { ConcreteCountryBuilder } from './app/country/concrete-country-builder';
 import { CountrySettings } from './app/country/countries';
@@ -19,6 +19,7 @@ import { UnitTrainedEvent } from './app/triggers/unit-trained-event';
 import { KeyEvents } from './app/triggers/key-events';
 import { Quests } from './app/quests/quests';
 import CameraManager from './app/managers/camera-manager';
+import PlayerCameraPositionManager from './app/managers/player-camera-position-manager';
 import { TimedEventManager } from './app/libs/timer/timed-event-manager';
 import { AntiSpam } from './app/triggers/anti-spam';
 import { SetCommands } from './app/commands/commands';
@@ -38,6 +39,9 @@ import { ClientManager } from './app/game/services/client-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 import { PlayerManager } from './app/player/player-manager';
 import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCreatorSaveEvent } from './app/triggers/country-creator-event';
+import { debugPrint } from './app/utils/debug-print';
+import { TooltipManager } from './app/managers/tooltip-manager';
+import { ChatUIManager } from './app/managers/chat-ui-manager';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -48,7 +52,8 @@ function tsMain() {
 			return;
 		}
 
-		if (!BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
+		// Only load custom minimap texture if file exists
+		if (MAP_TYPE !== 'world' && !BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
 			print('Failed to load minimap file!');
 		}
 
@@ -59,11 +64,14 @@ function tsMain() {
 		SetTimeOfDay(12.0);
 		SetTimeOfDayScale(0.0);
 		SetAllyColorFilterState(0);
+		SetCreepCampFilterState(false);
 
 		//Handle names to prevent namebug
 		NameManager.getInstance();
 		ClientManager.getInstance();
 		PlayerManager.getInstance();
+		ChatUIManager.getInstance();
+		TooltipManager.getInstance();
 
 		//Set up countries
 		SetCountries();
@@ -131,6 +139,7 @@ function tsMain() {
 			FogMaskEnable(false);
 			SetConsoleUI();
 			// UnitKillDisplay.getInstance(); // Removed - using button tooltip instead
+			PlayerCameraPositionManager.getInstance();
 			CameraManager.getInstance();
 			ChatManager.getInstance();
 			TransportManager.getInstance();

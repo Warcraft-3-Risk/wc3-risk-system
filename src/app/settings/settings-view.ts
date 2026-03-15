@@ -200,8 +200,8 @@ export class SettingsView {
 
 				SettingsContext.getInstance().getSettings().Promode = frameValue;
 
-				// ProMode On (1) or Equalized (2): lock other settings
-				if (frameValue === 1 || frameValue === 2) {
+				// ProMode On (1), Equalized (2), or Chaos (3): lock other settings
+				if (frameValue === 1 || frameValue === 2 || frameValue === 3) {
 					SettingsContext.getInstance().getSettings().GameType = 0;
 					SettingsContext.getInstance().getSettings().Fog = 1;
 					SettingsContext.getInstance().getSettings().Diplomacy.option = 2;

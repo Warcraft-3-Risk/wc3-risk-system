@@ -91,6 +91,14 @@ export class SettingsContext {
 	}
 
 	/**
+	 * Checks if the game setting is chaos promode
+	 * @returns true if game is "chaos promode"
+	 */
+	public isChaosPromode(): boolean {
+		return this.settings.Promode == 3;
+	}
+
+	/**
 	 * Checks if the game setting for Fog is on or off
 	 * @returns true if fog is off
 	 */
@@ -120,6 +128,14 @@ export class SettingsContext {
 	 */
 	public isFFA(): boolean {
 		return this.settings.Diplomacy.option == 0;
+	}
+
+	/**
+	 * Checks if the game setting for Diplomacy is set to Lobby Teams or Lobby Teams (Shared)
+	 * @returns true if Lobby Teams or Lobby Teams (Shared)
+	 */
+	public isLobbyTeams(): boolean {
+		return this.settings.Diplomacy.option == 1 || this.settings.Diplomacy.option == 2;
 	}
 
 	/**
