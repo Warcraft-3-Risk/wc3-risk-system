@@ -122,8 +122,8 @@ export class Team {
 		}
 	}
 
-	public reset() {
-		this.income = this.teamMembers.length * STARTING_INCOME;
+	public reset(startingIncome: number = STARTING_INCOME) {
+		this.income = this.teamMembers.length * startingIncome;
 		this.cities = 0;
 		this.kills = 0;
 		this.deaths = 0;

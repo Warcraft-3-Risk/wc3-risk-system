@@ -1424,12 +1424,6 @@ STRING 7525
 Produces units for your armies.
 }
 
-STRING 7526
-// Units: u00A (|cffff8000MinimapIndicator|r), Name (Name)
-{
-|cffff8000MinimapIndicator|r
-}
-
 STRING 7528
 {
  
@@ -1521,5 +1515,15 @@ STRING 7545
 // Abilities: A008 (Auto Transport), Tip (Tooltip - Normal)
 {
 Auto Transport
+}
+
+STRING 7546
+{
+ 
+}
+
+STRING 7548
+{
+This option cycles through two different unit color modes.|N|N|Cfffed312Mode 1:|R All units use Player Colors. |N|Cfffed312Mode 2:|R Minimap colors display |CFFFFFF00Allies|R and |CFFFF0000Enemies|R. |N
 }
 

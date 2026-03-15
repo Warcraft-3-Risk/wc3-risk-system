@@ -169,18 +169,16 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onStartTurn(turn: number): void {
 		this.updateFogSettings(turn);
-		const allocated = ClientManager.getInstance().allocateClientSlot();
-		debugPrint(`GameLoopState: Client allocation on turn start: ${allocated ? 'successful' : 'not needed or failed'}`);
-		// If a client was allocated, we need to update the scoreboard visibility and do a full update
-		// This is to ensure that the scoreboard is correctly displayed for the newly allocated client
-		if (allocated) {
-			debugPrint('GameLoopState: Client allocated, updating scoreboard visibility and full update');
-			ScoreboardManager.getInstance().toggleVisibility(false); // Required to prevent shared control clients from overriding the scoreboard
-			ScoreboardManager.getInstance().toggleVisibility(true); // ^
+		debugPrint(`[Redistribute] Triggered by: turn start (turn ${turn})`);
+		const changed = ClientManager.getInstance().evaluateAndRedistribute();
+		debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`);
+
+		debugPrint(`[SlotCount] === Turn ${turn} Slot Summary ===`);
+		ClientManager.getInstance().debugPrintSlotCounts();
+
+		if (!changed) {
 			ScoreboardManager.getInstance().updateFull();
-			debugPrint('GameLoopState: Scoreboard updated after client allocation');
 		}
-		ScoreboardManager.getInstance().updateFull();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		GlobalGameData.matchPlayers
 			.filter((x) => x.status.isActive())
@@ -224,6 +222,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onTick(tick: number): void {
 		VictoryManager.getInstance().updateAndGetGameState();
+
 		ScoreboardManager.getInstance().updatePartial();
 	}
 
@@ -328,13 +327,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
-		const killingUnitOwner = ClientManager.getInstance().getOwnerOfUnit(killingUnit);
+		const cm = ClientManager.getInstance();
+		const killingUnitOwner = cm.getOwnerOfUnit(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(killingUnitOwner));
 
-		if (
-			ClientManager.getInstance().getOwnerOfUnit(killingUnit) == GetOwningPlayer(dyingUnit) &&
-			!IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)
-		) {
+		if (killingUnitOwner == cm.getOwnerOfUnit(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
 				AnnounceOnLocation(`${colorString}Denied`, GetUnitX(dyingUnit), GetUnitY(dyingUnit) + 20, 2.0, 3.0);
 			}
@@ -359,6 +356,10 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerLeft(player: ActivePlayer): void {
 		super.onPlayerLeft(player);
 
+		debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`);
+		ClientManager.getInstance().neutralizePlayerUnits(player.getPlayer());
+		ClientManager.getInstance().evaluateAndRedistribute();
+
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
 			GlobalGameData.matchState = 'postMatch';
@@ -376,6 +377,10 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
 		super.onPlayerDead(player, forfeit);
+
+		debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`);
+		ClientManager.getInstance().neutralizePlayerUnits(player.getPlayer());
+		ClientManager.getInstance().evaluateAndRedistribute();
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
