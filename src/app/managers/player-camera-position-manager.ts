@@ -1,6 +1,7 @@
-import { PlayerManager } from "../player/player-manager";
-import { debugPrint } from "../utils/debug-print";
-import { NameManager } from "./names/name-manager";
+import { EDITOR_DEVELOPER_MODE, SHOW_PLAYER_CAMERA_POSITIONS } from 'src/configs/game-settings';
+import { PlayerManager } from '../player/player-manager';
+import { debugPrint } from '../utils/debug-print';
+import { NameManager } from './names/name-manager';
 
 export type CamPositionData = {
 	x: number;
@@ -13,7 +14,7 @@ export default class PlayerCameraPositionManager {
 	private static instance: PlayerCameraPositionManager;
 	private camPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
 	private displayPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
-	private texttags: Map<player, texttag> = new Map<player, texttag>();
+	private frames: Map<player, { box: framehandle; text: framehandle }> = new Map();
 	private syncTrigger: trigger;
 
 	public static getInstance() {
@@ -33,13 +34,35 @@ export default class PlayerCameraPositionManager {
 
 		TriggerAddAction(this.syncTrigger, () => this.onSync());
 
+		if (!SHOW_PLAYER_CAMERA_POSITIONS) return;
+
 		// Network sync timer — keeps the 1s interval to avoid desync
 		const syncTimer = CreateTimer();
 		TimerStart(syncTimer, 1.0, true, () => this.syncLocalPlayerPosition());
 
-		// Local lerp timer — smoothly moves texttags toward the synced target position (observer-only)
+		// Local lerp timer — smoothly interpolates world positions toward synced targets (observer-only)
 		const lerpTimer = CreateTimer();
-		TimerStart(lerpTimer, 0.1, true, () => this.lerpTextTags());
+		TimerStart(lerpTimer, 0.1, true, () => this.lerpPositions());
+
+		// Render timer — repositions frames on screen every frame so they track the observer's camera
+		const renderTimer = CreateTimer();
+		TimerStart(renderTimer, 0.02, true, () => this.renderFrames());
+	}
+
+	private createPlayerFrame(p: player): { box: framehandle; text: framehandle } {
+		const ctx = GetPlayerId(p) + 1; // offset to avoid context 0 used by TooltipManager
+		const box = BlzCreateFrame('TasToolTipBox', BlzGetFrameByName('ConsoleUIBackdrop', 0), 0, ctx);
+		const text = BlzCreateFrame('TasTooltipText', box, 0, ctx);
+
+		BlzFrameSetPoint(box, FRAMEPOINT_BOTTOMLEFT, text, FRAMEPOINT_BOTTOMLEFT, -0.01, -0.01);
+		BlzFrameSetPoint(box, FRAMEPOINT_TOPRIGHT, text, FRAMEPOINT_TOPRIGHT, 0.01, 0.01);
+		BlzFrameSetAlpha(box, 255);
+		BlzFrameSetAlpha(text, 255);
+		BlzFrameSetEnable(text, false);
+		BlzFrameSetVisible(box, false);
+		BlzFrameSetVisible(text, false);
+
+		return { box, text };
 	}
 
 	private syncLocalPlayerPosition() {
@@ -48,7 +71,7 @@ export default class PlayerCameraPositionManager {
 		if (GetPlayerController(p) == MAP_CONTROL_USER) {
 			const x = GetCameraTargetPositionX();
 			const y = GetCameraTargetPositionY();
-			
+
 			// Potential optimization: check if moved significantly before sending
 			BlzSendSyncData('cam', `${x}:${y}`);
 		}
@@ -56,11 +79,12 @@ export default class PlayerCameraPositionManager {
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
 			if (!PlayerManager.getInstance().isActive(player)) {
-				this.removePlayerTextTag(player);
+				this.removePlayerFrame(player);
 			} else {
-				const tag = this.texttags.get(player);
-				if (tag) {
-					SetTextTagText(tag, NameManager.getInstance().getDisplayName(player), 0.028);
+				const frame = this.frames.get(player);
+				if (frame) {
+					const name = NameManager.getInstance().getDisplayName(player);
+					this.setFrameText(frame, name);
 				}
 			}
 		}
@@ -76,15 +100,20 @@ export default class PlayerCameraPositionManager {
 		if (!this.camPositionData.has(p)) {
 			this.camPositionData.set(p, { x, y });
 			this.displayPositionData.set(p, { x, y });
-			this.texttags.set(p, CreateTextTag());
 
-			if (IsPlayerObserver(GetLocalPlayer())) {
-				const tag = this.texttags.get(p);
-				SetTextTagText(tag, NameManager.getInstance().getDisplayName(p), 0.028);
-				SetTextTagPos(tag, x, y, 16.0);
-				SetTextTagColor(tag, 255, 255, 255, 128);
-				SetTextTagVisibility(tag, true);
-				SetTextTagPermanent(tag, true);
+			const frame = this.createPlayerFrame(p);
+			this.frames.set(p, frame);
+
+			if (SHOW_PLAYER_CAMERA_POSITIONS || IsPlayerObserver(GetLocalPlayer())) {
+				const name = NameManager.getInstance().getDisplayName(p);
+				this.setFrameText(frame, name);
+
+				const [sx, sy, onScreen] = World2Screen(x, y, 0);
+				if (onScreen) {
+					BlzFrameSetAbsPoint(frame.text, FRAMEPOINT_BOTTOM, sx, sy + 0.025);
+				}
+				BlzFrameSetVisible(frame.box, true);
+				BlzFrameSetVisible(frame.text, true);
 			}
 		} else {
 			const pos = this.camPositionData.get(p);
@@ -96,12 +125,10 @@ export default class PlayerCameraPositionManager {
 	}
 
 	/**
-	 * Locally lerps each player's texttag toward their latest synced camera position.
-	 * Runs every 0.1s and is only visible for observers.
+	 * Lerps each player's display position toward their latest synced camera position.
+	 * Runs every 0.1s. World-space only — no screen positioning here.
 	 */
-	private lerpTextTags() {
-		if (!IsPlayerObserver(GetLocalPlayer())) return;
-
+	private lerpPositions() {
 		this.displayPositionData.forEach((display, p) => {
 			const target = this.camPositionData.get(p);
 			if (!target) return;
@@ -117,21 +144,66 @@ export default class PlayerCameraPositionManager {
 				display.x += dx * LERP_SPEED;
 				display.y += dy * LERP_SPEED;
 			}
+		});
+	}
 
-			const tag = this.texttags.get(p);
-			if (tag) {
-				SetTextTagText(tag, NameManager.getInstance().getDisplayName(p), 0.028);
-				SetTextTagPos(tag, display.x, display.y, 16.0);
-				SetTextTagVisibility(tag, true);
+	/**
+	 * Converts world positions to screen coordinates and repositions frames.
+	 * Runs every 0.02s so frames track the observer's camera smoothly.
+	 */
+	private renderFrames() {
+		if (!SHOW_PLAYER_CAMERA_POSITIONS && !IsPlayerObserver(GetLocalPlayer())) return;
+
+		this.displayPositionData.forEach((display, p) => {
+			const frame = this.frames.get(p);
+			if (!frame) return;
+
+			const [sx, sy, onScreen] = World2Screen(display.x, display.y, 0);
+			if (onScreen) {
+				BlzFrameSetAbsPoint(frame.text, FRAMEPOINT_BOTTOM, sx, sy + 0.025);
+				BlzFrameSetVisible(frame.box, true);
+				BlzFrameSetVisible(frame.text, true);
+			} else {
+				BlzFrameSetVisible(frame.box, false);
+				BlzFrameSetVisible(frame.text, false);
 			}
 		});
 	}
 
-	private removePlayerTextTag(p: player) {
-		const tag = this.texttags.get(p);
-		if (tag) {
-			DestroyTextTag(tag);
-			this.texttags.delete(p);
+	private setFrameText(frame: { box: framehandle; text: framehandle }, name: string): void {
+		const visLen = this.visibleLength(name);
+		BlzFrameSetSize(frame.text, Math.max(0.02, visLen * 0.005 + 0.01), 0.0058);
+		BlzFrameSetText(frame.text, name);
+	}
+
+	// Returns the number of visible characters, stripping |cFFRRGGBB (10 chars) and |r (2 chars)
+	private visibleLength(text: string): number {
+		let overhead = 0;
+		let i = 0;
+		while (i < text.length) {
+			if (text.charAt(i) === '|' && i + 1 < text.length) {
+				const next = text.charAt(i + 1);
+				if (next === 'c' || next === 'C') {
+					overhead += 10;
+					i += 10;
+				} else if (next === 'r') {
+					overhead += 2;
+					i += 2;
+				} else {
+					i++;
+				}
+			} else {
+				i++;
+			}
+		}
+		return text.length - overhead;
+	}
+
+	private removePlayerFrame(p: player) {
+		const frame = this.frames.get(p);
+		if (frame) {
+			BlzDestroyFrame(frame.box);
+			this.frames.delete(p);
 		}
 
 		this.camPositionData.delete(p);
