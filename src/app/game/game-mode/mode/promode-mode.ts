@@ -19,8 +19,8 @@ export class PromodeMode extends BaseMode<PromodeData> {
 		return [
 			new UpdatePlayerStatusState(),
 			new SetupState(),
-			new ApplyFogState(),
 			new CityDistributeState(),
+			new ApplyFogState(),
 			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),
 			new EnableControlsState(),
