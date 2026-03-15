@@ -11,6 +11,7 @@ import { GlobalMessage } from 'src/app/utils/messages';
 import { CHAOS_STARTING_INCOME, NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
 import { ClientManager } from 'src/app/game/services/client-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
+import { TeamManager } from 'src/app/teams/team-manager';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { Quests } from '../../../quests/quests';
@@ -33,14 +34,23 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 
 	player.status.status = PLAYER_STATUS.DEAD;
 	player.killedBy = player.trackedData.lastUnitKilledBy;
-	player.setEndData();
-	player.trackedData.income.income = 1;
 
-	// Disable player controls
-	if (player.getPlayer() == GetLocalPlayer()) {
-		EnableSelect(false, false);
-		EnableDragSelect(false, false);
+	const isFFA = SettingsContext.getInstance().isFFA();
+
+	// Always disable controls; only reveal name immediately in FFA
+	player.setEndData(isFFA);
+
+	// In team mode, reveal names for all members when entire team is eliminated
+	if (!isFFA) {
+		const team = TeamManager.getInstance().getTeamFromPlayer(player.getPlayer());
+		if (team && !team.getMembers().find((m) => m.status.isActive())) {
+			team.getMembers().forEach((member) => {
+				NameManager.getInstance().setName(member.getPlayer(), 'obs');
+			});
+		}
 	}
+
+	player.trackedData.income.income = 1;
 
 	// Build display name with optional rating (local player check for display customization)
 	const ratingManager = RatingManager.getInstance();

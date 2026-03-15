@@ -6,6 +6,7 @@ import { HexColors } from '../utils/hex-colors';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { ObserverBoard } from './observer-board';
 import { Scoreboard } from './scoreboard';
+import { SessionBoard } from './session-board';
 import { StandardBoard } from './standard-board';
 import { TeamBoard } from './team-board';
 
@@ -14,6 +15,7 @@ export type ScoreboardTypes = 'standard' | 'obs';
 export class ScoreboardManager {
 	private static instance: ScoreboardManager;
 	private scoreboards: Record<ScoreboardTypes, Scoreboard>;
+	private sessionBoard: SessionBoard | null = null;
 
 	private constructor() {
 		this.scoreboards = {
@@ -72,6 +74,28 @@ export class ScoreboardManager {
 	public destroyBoards() {
 		this.iterateBoards((board) => board.destroy());
 		this.scoreboards = { standard: undefined, obs: undefined };
+	}
+
+	public sessionSetup(players: ActivePlayer[]): void {
+		if (!this.sessionBoard) {
+			this.sessionBoard = new SessionBoard(players);
+		}
+	}
+
+	public showSessionBoard(): void {
+		if (this.sessionBoard) {
+			this.sessionBoard.setVisibility(true);
+		}
+	}
+
+	public hideSessionBoard(): void {
+		if (this.sessionBoard) {
+			this.sessionBoard.setVisibility(false);
+		}
+	}
+
+	public getSessionBoard(): SessionBoard | null {
+		return this.sessionBoard;
 	}
 
 	private iterateBoards(callback: (board: Scoreboard) => void) {

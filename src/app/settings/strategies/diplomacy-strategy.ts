@@ -1,4 +1,5 @@
 import { TeamManager } from 'src/app/teams/team-manager';
+import { RandomTeamManager } from 'src/app/teams/random-team-manager';
 import { SettingsStrategy } from './settings-strategy';
 import { AllyMenuFFASetup } from 'src/app/ui/console';
 import { HexColors } from 'src/app/utils/hex-colors';
@@ -13,7 +14,7 @@ export const DiplomacyStrings: Record<number, string> = {
 	1: `Lobby Teams`,
 	2: `Lobby Teams (Shared)`,
 	3: `Random Teams`,
-	4: `Free Ally`,
+	4: `Random Teams (Shared)`,
 };
 
 export const DiplomacyStringsColorFormatted: Record<number, string> = {
@@ -31,7 +32,7 @@ export class DiplomacyStrategy implements SettingsStrategy {
 		[1, this.handleLobbyTeams],
 		[2, this.handleLobbyTeamsShared],
 		[3, this.handleRandomTeams],
-		[4, this.handleFreeAlly],
+		[4, this.handleRandomTeamsShared],
 	]);
 
 	constructor(diplomacy: DiplomacyOptions) {
@@ -63,12 +64,19 @@ export class DiplomacyStrategy implements SettingsStrategy {
 	}
 
 	private handleRandomTeams(): void {
-		//TODO
+		TeamManager.breakTeams();
+		const teams = RandomTeamManager.getInstance().assignRandomTeams();
+		TeamManager.createWithPresetTeams(teams);
+		TeamManager.getInstance().getTeams().forEach((team) => team.giveTeamAlliance());
+		TeamManager.getInstance().disableSharedControl();
+		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, true);
 	}
 
-	private handleFreeAlly(): void {
-		//TODO
-
-		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, false);
+	private handleRandomTeamsShared(): void {
+		TeamManager.breakTeams();
+		const teams = RandomTeamManager.getInstance().assignRandomTeams();
+		TeamManager.createWithPresetTeams(teams);
+		TeamManager.getInstance().allowFullSharedControl();
+		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, true);
 	}
 }

@@ -80,7 +80,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		}
 	}
 
-	public setEndData() {
+	public setEndData(revealName: boolean = true) {
 		const handle: player = this.getPlayer();
 
 		this.trackedData.income.end = this.trackedData.income.income;
@@ -97,11 +97,12 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		this.trackedData.gold.end = GetPlayerState(handle, PLAYER_STATE_RESOURCE_GOLD);
 
 		if (handle == GetLocalPlayer()) {
-			EnableSelect(false, false);
-			EnableDragSelect(false, false);
+			BlzEnableSelections(false, false);
 		}
 
-		NameManager.getInstance().setName(handle, 'obs');
+		if (revealName) {
+			NameManager.getInstance().setName(handle, 'obs');
+		}
 	}
 
 	public get trackedData(): TrackedData {

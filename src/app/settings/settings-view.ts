@@ -143,7 +143,15 @@ export class SettingsView {
 		TriggerAddCondition(
 			t,
 			Condition(() => {
-				const frameValue: number = R2I(BlzGetTriggerFrameValue());
+				let frameValue: number = R2I(BlzGetTriggerFrameValue());
+				const diploFrame: framehandle = BlzGetFrameByName('DiplomacyPopup', 0);
+
+				// FFA is incompatible with promode — force Lobby Teams (Shared) instead
+				const promode = SettingsContext.getInstance().getSettings().Promode;
+				if (frameValue === 0 && (promode === 1 || promode === 2 || promode === 3)) {
+					frameValue = 2;
+					BlzFrameSetValue(diploFrame, 2);
+				}
 
 				SettingsContext.getInstance().getSettings().Diplomacy.option = frameValue;
 				this.colorizeDiplomacyText(frameValue);
@@ -200,19 +208,22 @@ export class SettingsView {
 
 				SettingsContext.getInstance().getSettings().Promode = frameValue;
 
-				// ProMode On (1), Equalized (2), or Chaos (3): lock other settings
+				// ProMode On (1), Equalized (2), or Chaos (3): lock other settings but keep diplomacy selectable
 				if (frameValue === 1 || frameValue === 2 || frameValue === 3) {
 					SettingsContext.getInstance().getSettings().GameType = 0;
 					SettingsContext.getInstance().getSettings().Fog = 1;
-					SettingsContext.getInstance().getSettings().Diplomacy.option = 2;
 					SettingsContext.getInstance().getSettings().Overtime.option = 3;
+
+					// If diplomacy is FFA, switch to Lobby Teams (Shared) — promode requires teams
+					if (SettingsContext.getInstance().getSettings().Diplomacy.option === 0) {
+						SettingsContext.getInstance().getSettings().Diplomacy.option = 2;
+						BlzFrameSetValue(diploFrame, 2);
+					}
 
 					BlzFrameSetValue(gameTypeFrame, 0);
 					BlzFrameSetEnable(gameTypeFrame, false);
 					BlzFrameSetValue(fogFrame, 1);
 					BlzFrameSetEnable(fogFrame, false);
-					BlzFrameSetValue(diploFrame, 2);
-					BlzFrameSetEnable(diploFrame, false);
 					BlzFrameSetValue(overtimeFrame, 3);
 					BlzFrameSetEnable(overtimeFrame, false);
 				} else {

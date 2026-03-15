@@ -153,6 +153,14 @@ export class SettingsContext {
 		return this.settings.Overtime.option != 3;
 	}
 
+	/**
+	 * Checks if the game setting for Diplomacy is set to Random Teams or Random Teams (Shared)
+	 * @returns true if Random Teams or Random Teams (Shared)
+	 */
+	public isRandomTeams(): boolean {
+		return this.settings.Diplomacy.option == 3 || this.settings.Diplomacy.option == 4;
+	}
+
 	public isW3CMode(): boolean {
 		return W3C_MODE_ENABLED;
 	}
