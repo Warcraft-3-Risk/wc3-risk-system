@@ -4,6 +4,8 @@ import { City } from '../city/city';
 import { debugPrint } from '../utils/debug-print';
 import { ClientManager } from '../game/services/client-manager';
 import { MAP_TYPE } from '../utils/map-info';
+import { PlayerManager } from '../player/player-manager';
+import { SettingsContext } from '../settings/settings-context';
 
 /**
  * Manages custom minimap icons using SimpleFrames for cities.
@@ -444,8 +446,12 @@ export class MinimapIconManager {
 
 			// Check if owner is ally or enemy
 			if (IsPlayerAlly(owner, localPlayer)) {
-				// Ally = Yellow
-				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor04.blp', 0, true);
+				// In FFA, dead players may be assigned as clients to another player,
+				// so show allies as red to avoid confusion with the client's units
+				const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
+				const isDeadInFFA = localActivePlayer && localActivePlayer.status.isDead() && SettingsContext.getInstance().isFFA();
+				const allyColor = isDeadInFFA ? 'TeamColor00' : 'TeamColor04';
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\' + allyColor + '.blp', 0, true);
 			} else if (IsPlayerEnemy(owner, localPlayer)) {
 				// Enemy = Red (Player 0 color)
 				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor00.blp', 0, true);
@@ -502,8 +508,12 @@ export class MinimapIconManager {
 			}
 
 			if (IsPlayerAlly(owner as player, localPlayer)) {
-				// Ally = Yellow
-				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor02.blp', 0, true);
+				// In FFA, dead players may be assigned as clients to another player,
+				// so show allies as red to avoid confusion with the client's units
+				const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
+				const isDeadInFFA = localActivePlayer && localActivePlayer.status.isDead() && SettingsContext.getInstance().isFFA();
+				const allyColor = isDeadInFFA ? 'TeamColor00' : 'TeamColor04';
+				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\' + allyColor + '.blp', 0, true);
 			} else if (IsPlayerEnemy(owner as player, localPlayer)) {
 				// Enemy = Red
 				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor00.blp', 0, true);
