@@ -8,9 +8,17 @@ export class TeamManager {
 	private playersTeam: Map<player, Team>;
 	private static instance: TeamManager;
 
+	private static presetTeams: ActivePlayer[][] | null = null;
+
 	private constructor() {
 		this.playersTeam = new Map<player, Team>();
 		this.teams = new Map<number, Team>();
+
+		if (TeamManager.presetTeams) {
+			this.initFromPreset(TeamManager.presetTeams);
+			return;
+		}
+
 		const tempTeams: Map<number, ActivePlayer[]> = new Map<number, ActivePlayer[]>();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
@@ -52,12 +60,40 @@ export class TeamManager {
 		});
 	}
 
+	private initFromPreset(teamArrays: ActivePlayer[][]): void {
+		for (let i = 0; i < teamArrays.length; i++) {
+			const players = teamArrays[i];
+			const teamNum = i + 1;
+			const team = new Team(players, teamNum);
+			this.teams.set(teamNum, team);
+
+			players.forEach((p) => {
+				this.playersTeam.set(p.getPlayer(), team);
+			});
+		}
+	}
+
 	public static getInstance(): TeamManager {
 		if (TeamManager.instance == null) {
 			this.instance = new TeamManager();
 		}
 
 		return this.instance;
+	}
+
+	public static resetInstance(): void {
+		TeamManager.instance = null;
+	}
+
+	/**
+	 * Creates a TeamManager from pre-defined team arrays, bypassing GetPlayerTeam() detection.
+	 * Used by random teams where we control the assignments directly.
+	 */
+	public static createWithPresetTeams(teamArrays: ActivePlayer[][]): void {
+		TeamManager.presetTeams = teamArrays;
+		TeamManager.instance = null;
+		TeamManager.getInstance();
+		TeamManager.presetTeams = null;
 	}
 
 	public getTeams(): Team[] {

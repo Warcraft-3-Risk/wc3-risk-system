@@ -101,6 +101,25 @@ export class Team {
 		return this.getMembersSortedByIncome()[0];
 	}
 
+	public giveTeamAlliance() {
+		for (let i = 0; i < this.teamMembers.length; i++) {
+			const playerA = this.teamMembers[i].getPlayer();
+
+			for (let j = 0; j < this.teamMembers.length; j++) {
+				const playerB = this.teamMembers[j].getPlayer();
+
+				if (playerA == playerB) continue;
+
+				SetPlayerAlliance(playerA, playerB, ALLIANCE_PASSIVE, true);
+				SetPlayerAlliance(playerA, playerB, ALLIANCE_HELP_REQUEST, true);
+				SetPlayerAlliance(playerA, playerB, ALLIANCE_HELP_RESPONSE, true);
+				SetPlayerAlliance(playerA, playerB, ALLIANCE_SHARED_XP, true);
+				SetPlayerAlliance(playerA, playerB, ALLIANCE_SHARED_SPELLS, true);
+				SetPlayerAlliance(playerA, playerB, ALLIANCE_SHARED_VISION, true);
+			}
+		}
+	}
+
 	public giveTeamFullControl() {
 		for (let i = 0; i < this.teamMembers.length; i++) {
 			const playerA = this.teamMembers[i].getPlayer();
@@ -122,8 +141,8 @@ export class Team {
 		}
 	}
 
-	public reset() {
-		this.income = this.teamMembers.length * STARTING_INCOME;
+	public reset(startingIncome: number = STARTING_INCOME) {
+		this.income = this.teamMembers.length * startingIncome;
 		this.cities = 0;
 		this.kills = 0;
 		this.deaths = 0;

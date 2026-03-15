@@ -1,5 +1,6 @@
 import { debugPrint } from 'src/app/utils/debug-print';
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
+import { W3C_MODE_ENABLED } from 'src/app/utils/map-info';
 
 interface EntityData {
 	entity: player;
@@ -81,6 +82,10 @@ export class WinTracker {
 	}
 
 	private updateUI() {
+		// Only update the mapInfo frame score display in W3C mode
+		// In non-W3C modes, the mapInfo frame shows the version number
+		if (!W3C_MODE_ENABLED) return;
+
 		const mapInfo: framehandle = BlzGetFrameByName('mapInfo', 0);
 		const leader: EntityData = this.entityData.get(this.currentLeader);
 		let otherEntity: EntityData;

@@ -7,6 +7,7 @@ import { NameManager } from 'src/app/managers/names/name-manager';
 import { PLAYER_STATUS } from '../status/status-enum';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
 
+
 //Use lowercase for simplicity here
 const adminList: string[] = [];
 
@@ -79,7 +80,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		}
 	}
 
-	public setEndData() {
+	public setEndData(revealName: boolean = true) {
 		const handle: player = this.getPlayer();
 
 		this.trackedData.income.end = this.trackedData.income.income;
@@ -96,11 +97,12 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		this.trackedData.gold.end = GetPlayerState(handle, PLAYER_STATE_RESOURCE_GOLD);
 
 		if (handle == GetLocalPlayer()) {
-			EnableSelect(false, false);
-			EnableDragSelect(false, false);
+			BlzEnableSelections(false, false);
 		}
 
-		NameManager.getInstance().setName(handle, 'btag');
+		if (revealName) {
+			NameManager.getInstance().setName(handle, 'obs');
+		}
 	}
 
 	public get trackedData(): TrackedData {

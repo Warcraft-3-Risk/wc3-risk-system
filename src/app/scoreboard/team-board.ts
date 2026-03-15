@@ -175,27 +175,54 @@ export class TeamBoard extends Scoreboard {
 			teamPrefix = `${HexColors.TANGERINE}[${TeamManager.getInstance().getTeamNumberFromPlayer(playerHandle)}]|r`;
 		}
 
-		// Name
-		this.setItemValue(`${teamPrefix}${NameManager.getInstance().getDisplayName(playerHandle)}`, row, this.PLAYER_COL);
+		// Only show eliminated formatting when the entire team is out, not just individual players
+		const team = TeamManager.getInstance().getTeamFromPlayer(playerHandle);
+		const teamEliminated = player.status.isEliminated() && team && !team.getMembers().find((m) => m.status.isActive());
 
-		// Cities
-		const requiredCities = VictoryManager.getCityCountWin();
-		const cities = data.cities.cities.length;
-		const isCityCountHighlighted = cities >= requiredCities;
-		const cityTextColor = isCityCountHighlighted ? HexColors.RED : textColor;
-		this.setItemValue(`${cityTextColor}${cities}`, row, this.CITIES_COL);
+		if (teamEliminated) {
+			const grey = HexColors.LIGHT_GRAY;
+			const elimColor = GetLocalPlayer() == playerHandle ? textColor : grey;
 
-		// Kills
-		this.setItemValue(`${textColor}${data.killsDeaths.get(playerHandle).killValue}`, row, this.KILLS_COL);
+			// Name — show account name in original player color (same as standard board)
+			const nameColor = NameManager.getInstance().getOriginalColorCode(playerHandle);
+			this.setItemValue(`${teamPrefix}${nameColor}${NameManager.getInstance().getAcct(playerHandle)}`, row, this.PLAYER_COL);
 
-		// Deaths
-		this.setItemValue(`${textColor}${data.killsDeaths.get(playerHandle).deathValue}`, row, this.DEATHS_COL);
+			// Cities
+			this.setItemValue(`${elimColor}${data.cities.cities.length}`, row, this.CITIES_COL);
 
-		// Status
-		if (player.status.isNomad() || player.status.isSTFU()) {
-			this.setItemValue(`${player.status.status} ${player.status.statusDuration}`, row, this.STATUS_COL);
+			// Kills & Deaths
+			this.setItemValue(`${elimColor}${data.killsDeaths.get(playerHandle).killValue}`, row, this.KILLS_COL);
+			this.setItemValue(`${elimColor}${data.killsDeaths.get(playerHandle).deathValue}`, row, this.DEATHS_COL);
+
+			// Status
+			if (player.status.isSTFU()) {
+				this.setItemValue(`${grey}${player.status.status} ${player.status.statusDuration}`, row, this.STATUS_COL);
+			} else {
+				this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
+			}
 		} else {
-			this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
+			// Name
+			this.setItemValue(`${teamPrefix}${NameManager.getInstance().getDisplayName(playerHandle)}`, row, this.PLAYER_COL);
+
+			// Cities
+			const requiredCities = VictoryManager.getCityCountWin();
+			const cities = data.cities.cities.length;
+			const isCityCountHighlighted = cities >= requiredCities;
+			const cityTextColor = isCityCountHighlighted ? HexColors.RED : textColor;
+			this.setItemValue(`${cityTextColor}${cities}`, row, this.CITIES_COL);
+
+			// Kills
+			this.setItemValue(`${textColor}${data.killsDeaths.get(playerHandle).killValue}`, row, this.KILLS_COL);
+
+			// Deaths
+			this.setItemValue(`${textColor}${data.killsDeaths.get(playerHandle).deathValue}`, row, this.DEATHS_COL);
+
+			// Status
+			if (player.status.isNomad() || player.status.isSTFU()) {
+				this.setItemValue(`${player.status.status} ${player.status.statusDuration}`, row, this.STATUS_COL);
+			} else {
+				this.setItemValue(`${player.status.status}`, row, this.STATUS_COL);
+			}
 		}
 	}
 }

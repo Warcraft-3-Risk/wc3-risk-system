@@ -8,6 +8,9 @@ export const CITIES_TO_WIN_RATIO: number = 0.6;
 //This is the starting gold for each player. 4 gold by default.
 export const STARTING_INCOME: number = 4;
 
+//This is the starting gold for each player in Chaos promode. 50 gold by default.
+export const CHAOS_STARTING_INCOME: number = 25;
+
 //This is the starting countdown for the game. 10 by default
 export const STARTING_COUNTDOWN: number = 10;
 
@@ -53,14 +56,14 @@ export const CAPITALS_SELECTION_PHASE: number = 30;
 // This represents whether the game should terminate if there is only one human player left
 export const W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER: boolean = true;
 
-// This represents the duration of the W3C draw vote in seconds. Default is 30 seconds.
+// This represents the duration of the W3C draw vote in seconds. Default is 120 seconds.
 export const W3C_DRAW_DURATION: number = 120;
 
 // Enable/disable emitting player statistics to W3MMD (MMD) during the match and on game end.
 export const MMD_ENABLED: boolean = true;
 
 // Enable/disable player client allocation. Default is false.
-export const CLIENT_ALLOCATION_ENABLED = false;
+export const CLIENT_ALLOCATION_ENABLED = true;
 
 // This represents whether the ban list is active. Is set to true by default.
 export const BAN_LIST_ACTIVE: boolean = true;
@@ -112,3 +115,6 @@ export const RATING_SYNC_TIMEOUT: number = 10.0;
 // All current game players are always synced regardless of this limit.
 // Note: Lower values reduce lag during sync (100 = ~10KB per player vs 250 = ~25KB)
 export const RATING_SYNC_TOP_PLAYERS: number = 100;
+
+// Force the use of custom minimap icons even if the map is not world map.
+export const FORCE_CUSTOM_MINIMAP_ICONS: boolean = true;

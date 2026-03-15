@@ -2,6 +2,10 @@ import { UNIT_ID } from 'src/configs/unit-id';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Resetable } from 'src/app/interfaces/resetable';
+import { ClientManager } from 'src/app/game/services/client-manager';
+import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
+import { debugPrint } from 'src/app/utils/debug-print';
+import { ABILITY_ID } from 'src/configs/ability-id';
 
 /**
  * Represents a Guard entity in the game, implementing the `Resetable` interface.
@@ -50,8 +54,13 @@ export class Guard implements Resetable {
 		}
 
 		this._unit = guard;
-		UnitAddAbility(guard, FourCC("A006"));
+		UnitAddAbility(guard, ABILITY_ID.GUARD_INDICATOR);
 		UnitAddType(this._unit, UNIT_TYPE.GUARD);
+
+		// Untrack from MinimapIconManager FIRST (this re-enables native minimap display internally),
+		// then hide the native minimap icon. Order matters — reversing these causes the native dot to leak through.
+		UnitLagManager.getInstance().untrackUnit(guard);
+		BlzSetUnitBooleanFieldBJ(guard, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 	}
 
 	/**
@@ -61,7 +70,12 @@ export class Guard implements Resetable {
 		if (this._unit == null) return;
 
 		UnitRemoveType(this._unit, UNIT_TYPE.GUARD);
-		UnitRemoveAbility(this._unit, FourCC("A006"));
+		UnitRemoveAbility(this._unit, ABILITY_ID.GUARD_INDICATOR);
+
+		// Show the unit's minimap icon again
+		BlzSetUnitBooleanFieldBJ(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+		UnitLagManager.getInstance().trackUnit(this._unit);
+
 		this._unit = null;
 	}
 
@@ -69,6 +83,11 @@ export class Guard implements Resetable {
 	 * Removes the guard unit from the game entirely.
 	 */
 	public remove(): void {
+		if (this._unit) {
+			const owner = GetOwningPlayer(this._unit);
+			debugPrint(`[SlotCount] Unit removed on slot ${GetPlayerId(owner)}`);
+			ClientManager.getInstance().decrementUnitCount(owner);
+		}
 		RemoveUnit(this._unit);
 		this._unit = null;
 	}
@@ -93,6 +112,13 @@ export class Guard implements Resetable {
 	 * @param guard - The new guard unit.
 	 */
 	public replace(guard: unit): void {
+		// If the same unit is being re-assigned as guard, just reposition — no need to
+		// release/set which causes unnecessary untrack→track→untrack minimap churn.
+		if (guard === this._unit) {
+			this.reposition();
+			return;
+		}
+
 		if (GetUnitTypeId(this._unit) == UNIT_ID.DUMMY_GUARD) {
 			this.remove();
 		} else {

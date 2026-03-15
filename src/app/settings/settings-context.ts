@@ -91,6 +91,14 @@ export class SettingsContext {
 	}
 
 	/**
+	 * Checks if the game setting is chaos promode
+	 * @returns true if game is "chaos promode"
+	 */
+	public isChaosPromode(): boolean {
+		return this.settings.Promode == 3;
+	}
+
+	/**
 	 * Checks if the game setting for Fog is on or off
 	 * @returns true if fog is off
 	 */
@@ -123,6 +131,14 @@ export class SettingsContext {
 	}
 
 	/**
+	 * Checks if the game setting for Diplomacy is set to Lobby Teams or Lobby Teams (Shared)
+	 * @returns true if Lobby Teams or Lobby Teams (Shared)
+	 */
+	public isLobbyTeams(): boolean {
+		return this.settings.Diplomacy.option == 1 || this.settings.Diplomacy.option == 2;
+	}
+
+	/**
 	 * Checks if the game type is set to Capitals
 	 */
 	public isCapitals(): boolean {
@@ -135,6 +151,14 @@ export class SettingsContext {
 	 */
 	public isOvertimeOn(): boolean {
 		return this.settings.Overtime.option != 3;
+	}
+
+	/**
+	 * Checks if the game setting for Diplomacy is set to Random Teams or Random Teams (Shared)
+	 * @returns true if Random Teams or Random Teams (Shared)
+	 */
+	public isRandomTeams(): boolean {
+		return this.settings.Diplomacy.option == 3 || this.settings.Diplomacy.option == 4;
 	}
 
 	public isW3CMode(): boolean {
