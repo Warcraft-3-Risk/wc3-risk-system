@@ -15,12 +15,12 @@
 
 ### Step 0.1 — Create `ComputerPlayer` class (empty shell)
 
-- [ ] Create `src/app/player/types/computer-player.ts`
-- [ ] Extend `ActivePlayer` (same base as `HumanPlayer`)
-- [ ] Implement the abstract `onKill` / `onDeath` methods with minimal logic
+- [x] Create `src/app/player/types/computer-player.ts`
+- [x] Extend `ActivePlayer` (same base as `HumanPlayer`)
+- [x] Implement the abstract `onKill` / `onDeath` methods with minimal logic
       (track kills/deaths in `trackedData` like `HumanPlayer`, but skip bounty,
       announcements, and combat timestamps — bots don't need UI feedback)
-- [ ] Add a `debugPrint('ComputerPlayer created for slot ' + GetPlayerId(player), DC.bot)`
+- [x] Add a `debugPrint('ComputerPlayer created for slot ' + GetPlayerId(player), DC.bot)`
       in the constructor
 
 **Test:** Build compiles with no errors. The class exists but is not instantiated
@@ -73,16 +73,16 @@ export class ComputerPlayer extends ActivePlayer {
 
 ### Step 0.2 — Register computer slots in `PlayerManager`
 
-- [ ] Modify `PlayerManager` constructor: when
+- [x] Modify `PlayerManager` constructor: when
       `GetPlayerController(player) == MAP_CONTROL_COMPUTER`, create a
       `ComputerPlayer` instead of `HumanPlayer`
-- [ ] Store the controller type accurately:
+- [x] Store the controller type accurately:
       `this._playerControllerHandle.set(player, MAP_CONTROL_COMPUTER)`
-- [ ] Add `debugPrint` on registration:
+- [x] Add `debugPrint` on registration:
       `debugPrint('[Bot] Registered computer player slot ' + i, DC.bot)`
-- [ ] Add a helper method `isComputerPlayer(player: player): boolean` that
+- [x] Add a helper method `isComputerPlayer(player: player): boolean` that
       checks the controller map
-- [ ] Skip UI button creation (health, value, label, rating) for computer
+- [x] Skip UI button creation (health, value, label, rating) for computer
       players — they have no local screen
 
 **Test:** In the WC3 map editor, set 1–2 slots to "Computer" in the player
@@ -99,11 +99,11 @@ Confirm the game doesn't crash and human players still work normally.
 
 ### Step 0.3 — Exclude computer slots from client redistribution
 
-- [ ] In `ClientManager`, check if a slot belongs to a computer player before
+- [x] In `ClientManager`, check if a slot belongs to a computer player before
       including it in the redistribution pool
-- [ ] Use `PlayerManager.getInstance().isComputerPlayer(player)` as the guard
-- [ ] Add `debugPrint('[Bot] Excluding computer slot ' + GetPlayerId(player) + ' from client redistribution', DC.bot)`
-- [ ] Verify `getPlayersThatLeftWithNoUnitsOrCities()` also skips computer slots
+- [x] Use `PlayerManager.getInstance().isComputerPlayer(player)` as the guard
+- [x] Add `debugPrint('[Bot] Excluding computer slot ' + GetPlayerId(player) + ' from client redistribution', DC.bot)`
+- [x] Verify `getPlayersThatLeftWithNoUnitsOrCities()` also skips computer slots
       (it already filters on `PLAYER_SLOT_STATE_LEFT`, so computer slots that are
       active should naturally be excluded, but add explicit check to be safe)
 
@@ -115,12 +115,12 @@ multi-client slots are unaffected.
 
 ### Step 0.4 — Verify bot survives the full game state machine
 
-- [ ] Confirm bot slot passes through all game states without crashing:
+- [x] Confirm bot slot passes through all game states without crashing:
       `ResetState` → `SetupState` → `CityDistributeState` → `VisionState` →
       `CountdownState` → `EnableControlsState` → `GameLoopState`
-- [ ] The bot should receive cities from `CityDistributeState`, get income from
+- [x] The bot should receive cities from `CityDistributeState`, get income from
       `IncomeManager.giveIncome()`, and appear on the scoreboard
-- [ ] Add `debugPrint('[Bot] Slot ' + GetPlayerId(player) + ' has ' + trackedData.cities.cities.length + ' cities', DC.bot)`
+- [x] Add `debugPrint('[Bot] Slot ' + GetPlayerId(player) + ' has ' + trackedData.cities.cities.length + ' cities', DC.bot)`
       after city distribution (e.g., listen for an event, or add a one-shot timer
       check in `GameLoopState.onStartTurn` for turn 0)
 
@@ -138,12 +138,12 @@ the game loop. Confirm:
 
 ### Step 1.1 — Create `BotManager` singleton
 
-- [ ] Create `src/app/managers/bot-manager.ts`
-- [ ] Singleton pattern (matching existing managers)
-- [ ] `private bots: ComputerPlayer[]` — list of registered bots
-- [ ] `registerBot(bot: ComputerPlayer)` — add to list
-- [ ] `getBots(): ComputerPlayer[]` — return list
-- [ ] `debugPrint('[BotManager] Initialized with ' + bots.length + ' bots', DC.bot)`
+- [x] Create `src/app/managers/bot-manager.ts`
+- [x] Singleton pattern (matching existing managers)
+- [x] `private bots: ComputerPlayer[]` — list of registered bots
+- [x] `registerBot(bot: ComputerPlayer)` — add to list
+- [x] `getBots(): ComputerPlayer[]` — return list
+- [x] `debugPrint('[BotManager] Initialized with ' + bots.length + ' bots', DC.bot)`
       after all bots are registered
 
 **Test:** Build compiles. BotManager is instantiated but has no tick yet.
@@ -152,15 +152,15 @@ the game loop. Confirm:
 
 ### Step 1.2 — Wire up the think loop timer
 
-- [ ] In `BotManager`, add a `start()` method that creates a WC3 timer
+- [x] In `BotManager`, add a `start()` method that creates a WC3 timer
       ticking every 1 second (matching `TICK_DURATION_IN_SECONDS`)
-- [ ] Track per-bot think counters: `Map<ComputerPlayer, number>`
-- [ ] Each bot gets an initial offset to stagger them (bot 0 starts at 0,
+- [x] Track per-bot think counters: `Map<ComputerPlayer, number>`
+- [x] Each bot gets an initial offset to stagger them (bot 0 starts at 0,
       bot 1 starts at 1, etc.)
-- [ ] Think interval: 2 seconds (configurable constant `BOT_THINK_INTERVAL`)
-- [ ] On each timer tick, decrement counters. When a bot's counter reaches 0,
+- [x] Think interval: 2 seconds (configurable constant `BOT_THINK_INTERVAL`)
+- [x] On each timer tick, decrement counters. When a bot's counter reaches 0,
       call `bot.think()` and reset counter
-- [ ] Add `think()` method to `ComputerPlayer` — for now it only prints:
+- [x] Add `think()` method to `ComputerPlayer` — for now it only prints:
       `debugPrint('[Bot] Slot ' + GetPlayerId(player) + ' THINK — cities: ' + cities + ', gold: ' + gold, DC.bot)`
 
 ```typescript
@@ -194,7 +194,7 @@ public start(): void {
 }
 ```
 
-- [ ] Call `BotManager.getInstance().start()` from `GameLoopState.onEnterState()`
+- [x] Call `BotManager.getInstance().start()` from `GameLoopState.onEnterState()`
       (after the match timer is set up)
 
 **Test:** Launch with 2 bots. Watch debug output — should see think messages
