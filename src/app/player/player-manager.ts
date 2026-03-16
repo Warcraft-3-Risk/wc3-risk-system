@@ -1,5 +1,6 @@
 import { ActivePlayer } from './types/active-player';
 import { HumanPlayer } from './types/human-player';
+import { ComputerPlayer } from './types/computer-player';
 import {
 	buildGuardHealthButton,
 	buildGuardValueButton,
@@ -62,9 +63,18 @@ export class PlayerManager {
 			}
 
 			if (GetPlayerController(player) == MAP_CONTROL_USER || GetPlayerController(player) == MAP_CONTROL_COMPUTER) {
-				const humanPlayer = new HumanPlayer(player);
-				this._playerFromHandle.set(player, humanPlayer);
-				this._playerControllerHandle.set(player, MAP_CONTROL_USER);
+				const isComputer = GetPlayerController(player) == MAP_CONTROL_COMPUTER;
+				const activePlayer = isComputer ? new ComputerPlayer(player) : new HumanPlayer(player);
+				this._playerFromHandle.set(player, activePlayer);
+				this._playerControllerHandle.set(player, isComputer ? MAP_CONTROL_COMPUTER : MAP_CONTROL_USER);
+
+				if (isComputer) {
+					debugPrint(`[Bot] Registered computer player slot ${i}`, DC.bot);
+					continue;
+				}
+
+				// Human player UI setup below — skip for computer players
+				const humanPlayer = activePlayer as HumanPlayer;
 
 				// Create and inject RatingStatsUI after player creation (only if rating system is enabled)
 				if (RATING_SYSTEM_ENABLED) {
@@ -235,6 +245,10 @@ export class PlayerManager {
 	 */
 	public getInitialHumanPlayerCount(): number {
 		return this._initialHumanPlayerCount > 0 ? this._initialHumanPlayerCount : this.getHumanPlayersCount();
+	}
+
+	public isComputerPlayer(player: player): boolean {
+		return this._playerControllerHandle.get(player) === MAP_CONTROL_COMPUTER;
 	}
 
 	public isObserver(player: player) {

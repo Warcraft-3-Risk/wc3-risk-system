@@ -203,6 +203,10 @@ export class ClientManager implements Resetable {
 
 		for (const matchPlayer of GlobalGameData.matchPlayers) {
 			const p = matchPlayer.getPlayer();
+
+			// Skip computer players — they manage their own slots, not part of redistribution
+			if (PlayerManager.getInstance().isComputerPlayer(p)) continue;
+
 			if (matchPlayer.status.isActive()) {
 				activePlayers.push(p);
 			} else if (matchPlayer.status.isEliminated()) {
@@ -599,6 +603,15 @@ export class ClientManager implements Resetable {
 		if (leftPlayers && leftPlayers.length > 0) {
 			clients.push(...leftPlayers.filter((p) => p !== null && p !== undefined));
 		}
+
+		// Exclude computer player slots — they are active bot players, not available for redistribution
+		clients = clients.filter((c) => {
+			if (PlayerManager.getInstance().isComputerPlayer(c)) {
+				debugPrint(`[Bot] Excluding computer slot ${GetPlayerId(c)} from client redistribution`, DC.bot);
+				return false;
+			}
+			return true;
+		});
 
 		return clients;
 	}

@@ -26,6 +26,7 @@ import { ClientManager } from '../../services/client-manager';
 import { IncomeManager } from 'src/app/managers/income-manager';
 import { RatingManager } from 'src/app/rating/rating-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
+import { BotManager } from 'src/app/managers/bot-manager';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -45,6 +46,9 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		}
 
 		ReplayManager.getInstance().onRoundStart();
+
+		// Start bot AI think loop if there are any computer players
+		BotManager.getInstance().start();
 
 		this.onStartTurn(GlobalGameData.turnCount);
 

@@ -122,7 +122,7 @@ export const FORCE_CUSTOM_MINIMAP_ICONS: boolean = true;
 // Per-category toggles for debug output. Set individual categories to false to silence them.
 // master = global kill switch (overrides all others).
 export const DEBUG_PRINTS = {
-	master: false,
+	master: true,
 	ratingSync: false,
 	ratingManager: false,
 	slotCount: false,
@@ -142,6 +142,7 @@ export const DEBUG_PRINTS = {
 	minimap: false,
 	winTracker: false,
 	distribution: false,
+	bot: true,
 };
 
 export type DebugCategory = keyof typeof DEBUG_PRINTS;
