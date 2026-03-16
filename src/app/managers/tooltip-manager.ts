@@ -25,8 +25,6 @@ export class TooltipManager {
 	}
 
 	private init(): void {
-		const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0);
-
 		const uberTooltip = BlzGetOriginFrame(ORIGIN_FRAME_UBERTOOLTIP, 0);
 		const uberTooltipBox = BlzCreateSimpleFrame('SimpleTasToolTipBox', uberTooltip, 0);
 		BlzFrameSetAllPoints(uberTooltipBox, uberTooltip);
@@ -35,8 +33,8 @@ export class TooltipManager {
 		this.tooltipBox = BlzCreateFrame('TasToolTipBox', BlzGetFrameByName('ConsoleUIBackdrop', 0), 0, 0);
 		this.tooltipText = BlzCreateFrame('TasTooltipText', this.tooltipBox, 0, 0);
 
-		BlzFrameSetPoint(this.tooltipBox, FRAMEPOINT_BOTTOMLEFT, this.tooltipText, FRAMEPOINT_BOTTOMLEFT, -0.01, -0.01);
-		BlzFrameSetPoint(this.tooltipBox, FRAMEPOINT_TOPRIGHT, this.tooltipText, FRAMEPOINT_TOPRIGHT, 0.01, 0.01);
+		BlzFrameSetPoint(this.tooltipBox, FRAMEPOINT_BOTTOMLEFT, this.tooltipText, FRAMEPOINT_BOTTOMLEFT, -0.004, -0.008);
+		BlzFrameSetPoint(this.tooltipBox, FRAMEPOINT_TOPRIGHT, this.tooltipText, FRAMEPOINT_TOPRIGHT, 0.004, 0.008);
 		BlzFrameSetAlpha(this.tooltipBox, 255);
 		BlzFrameSetAlpha(this.tooltipText, 255);
 		BlzFrameSetEnable(this.tooltipText, false);
