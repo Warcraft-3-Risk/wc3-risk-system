@@ -1,5 +1,4 @@
 import { UNIT_ID } from 'src/configs/unit-id';
-import { debugPrint } from 'src/app/utils/debug-print';
 
 export function UnitUpgradeEvent() {
 	const t: trigger = CreateTrigger();

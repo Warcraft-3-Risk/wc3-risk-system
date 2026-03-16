@@ -4,6 +4,7 @@ import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { debugPrint } from '../utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 
 export const UnitTrainedTrigger: trigger = CreateTrigger();
@@ -22,11 +23,11 @@ export function UnitTrainedEvent() {
 			// Transports must always be owned by the real player so rally-loading works correctly
 			if (IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
 				if (oldSlot !== realOwner) {
-					debugPrint(`[SlotCount] Transport reassigned from client slot ${GetPlayerId(oldSlot)} to real owner ${GetPlayerId(realOwner)}`);
+					debugPrint(`[SlotCount] Transport reassigned from client slot ${GetPlayerId(oldSlot)} to real owner ${GetPlayerId(realOwner)}`, DC.slotCount);
 					SetUnitOwner(trainedUnit, realOwner, true);
 					ClientManager.getInstance().incrementUnitCount(realOwner);
 				} else {
-					debugPrint(`[SlotCount] Transport trained on real owner slot ${GetPlayerId(oldSlot)}`);
+					debugPrint(`[SlotCount] Transport trained on real owner slot ${GetPlayerId(oldSlot)}`, DC.slotCount);
 					ClientManager.getInstance().incrementUnitCount(oldSlot);
 				}
 			} else {
@@ -34,11 +35,11 @@ export function UnitTrainedEvent() {
 
 				if (optimalSlot !== oldSlot) {
 					// Reassign the trained unit to the optimal (lowest-count) slot
-					debugPrint(`[SlotCount] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(optimalSlot)}`);
+					debugPrint(`[SlotCount] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(optimalSlot)}`, DC.slotCount);
 					SetUnitOwner(trainedUnit, optimalSlot, true);
 					ClientManager.getInstance().incrementUnitCount(optimalSlot);
 				} else {
-					debugPrint(`[SlotCount] Trained unit on slot ${GetPlayerId(oldSlot)}`);
+					debugPrint(`[SlotCount] Trained unit on slot ${GetPlayerId(oldSlot)}`, DC.slotCount);
 					ClientManager.getInstance().incrementUnitCount(oldSlot);
 				}
 			}

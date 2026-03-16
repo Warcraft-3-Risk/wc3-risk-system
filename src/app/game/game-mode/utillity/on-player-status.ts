@@ -13,7 +13,6 @@ import { ClientManager } from 'src/app/game/services/client-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
-import { debugPrint } from 'src/app/utils/debug-print';
 import { Quests } from '../../../quests/quests';
 import { UNIT_ID } from '../../../../configs/unit-id';
 
@@ -56,7 +55,8 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 	const ratingManager = RatingManager.getInstance();
 	const localPlayer = GetLocalPlayer();
 	const localBtag = NameManager.getInstance().getBtag(localPlayer);
-	const showRatings = ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && ratingManager.getShowRatingPreference(localBtag);
+	const showRatings =
+		ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && ratingManager.getShowRatingPreference(localBtag);
 
 	let playerDisplayName = NameManager.getInstance().getDisplayName(player.getPlayer());
 	if (showRatings) {
@@ -70,7 +70,7 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 			// If effective change is 0 but total change was negative, player was protected by floor
 			const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
 			const changeColor = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
-			const changeSign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
+			const changeSign = wasFloorProtected ? '-' : effectiveChange >= 0 ? '+' : '';
 			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${defeatedRating})|r ${changeColor}(${changeSign}${effectiveChange})|r`;
 		} else {
 			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${defeatedRating})|r`;
@@ -85,10 +85,7 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 			'Sound\\Interface\\SecretFound.flac'
 		);
 	} else {
-		GlobalMessage(
-			`${playerDisplayName} has been defeated!`,
-			'Sound\\Interface\\SecretFound.flac'
-		);
+		GlobalMessage(`${playerDisplayName} has been defeated!`, 'Sound\\Interface\\SecretFound.flac');
 	}
 
 	Quests.getInstance().updatePlayersQuest();
@@ -158,7 +155,8 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 	const ratingManager = RatingManager.getInstance();
 	const localPlayer = GetLocalPlayer();
 	const localBtag = NameManager.getInstance().getBtag(localPlayer);
-	const showRatings = ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && ratingManager.getShowRatingPreference(localBtag);
+	const showRatings =
+		ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && ratingManager.getShowRatingPreference(localBtag);
 
 	let playerDisplayName = NameManager.getInstance().getDisplayName(player.getPlayer());
 	if (showRatings) {
@@ -172,7 +170,7 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 			// If effective change is 0 but total change was negative, player was protected by floor
 			const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
 			const changeColor = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
-			const changeSign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
+			const changeSign = wasFloorProtected ? '-' : effectiveChange >= 0 ? '+' : '';
 			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${leftRating})|r ${changeColor}(${changeSign}${effectiveChange})|r`;
 		} else {
 			playerDisplayName = `${playerDisplayName} ${HexColors.TANGERINE}(${leftRating})|r`;
@@ -201,7 +199,7 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 	const event: TimedEvent = timedEventManager.registerTimedEvent(player.status.statusDuration, () => {
 		// Decrement first
 		player.status.statusDuration--;
-		
+
 		// Then check exit conditions
 		if (GetPlayerSlotState(player.getPlayer()) == PLAYER_SLOT_STATE_LEFT) {
 			player.status.set(PLAYER_STATUS.LEFT);
@@ -216,7 +214,7 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 			player.status.statusDuration = -1;
 			timedEventManager.removeTimedEvent(event);
 		}
-		
+
 		ScoreboardManager.getInstance().updatePartial();
 	});
 

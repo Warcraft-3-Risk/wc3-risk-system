@@ -35,9 +35,6 @@ export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 //This represents the duration a player can be muted for in seconds. Default is 300 seconds.
 export const STFU_DURATION: number = 300;
 
-//This represents whether debug messages should be printed. Default is false.
-export const SHOW_DEBUG_PRINTS = false;
-
 // This represents whether debug logs should be saved to a file. Default is true.
 export const SAVE_DEBUG_LOGS_TO_FILE = false;
 
@@ -118,3 +115,39 @@ export const RATING_SYNC_TOP_PLAYERS: number = 100;
 
 // Force the use of custom minimap icons even if the map is not world map.
 export const FORCE_CUSTOM_MINIMAP_ICONS: boolean = true;
+
+// ============================================
+// Debug Print Categories
+// ============================================
+// Per-category toggles for debug output. Set individual categories to false to silence them.
+// master = global kill switch (overrides all others).
+export const DEBUG_PRINTS = {
+	master: false,
+	ratingSync: false,
+	ratingManager: false,
+	slotCount: false,
+	redistribute: false,
+	neutralize: false,
+	clientManager: false,
+	killTracker: false,
+	victory: false,
+	drawManager: false,
+	gameMode: false,
+	transport: false,
+	spawner: false,
+	events: false,
+	city: false,
+	player: false,
+	unitLag: false,
+	minimap: false,
+	winTracker: false,
+	distribution: false,
+};
+
+export type DebugCategory = keyof typeof DEBUG_PRINTS;
+
+// Compile-time verified constants — use DC.ratingSync instead of 'ratingSync' string literals.
+export const DC: { readonly [K in DebugCategory]: K } = Object.keys(DEBUG_PRINTS).reduce((acc, key) => {
+	acc[key as DebugCategory] = key;
+	return acc;
+}, {} as any);

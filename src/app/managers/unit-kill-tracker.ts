@@ -1,4 +1,5 @@
 import { debugPrint } from '../utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 
 /**
  * Manager for tracking kill counts per unit.
@@ -54,7 +55,7 @@ export class UnitKillTracker {
 	 */
 	public addKillValue(killingUnit: unit, value: number): number {
 		if (!killingUnit) {
-			debugPrint(`[TRACKER] Killing unit is null, returning 0`);
+			debugPrint(`[TRACKER] Killing unit is null, returning 0`, DC.killTracker);
 			return 0;
 		}
 		const currentValue = this.killValues.get(killingUnit) || 0;

@@ -10,6 +10,7 @@ import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
 import { debugPrint } from '../utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { NameManager } from '../managers/names/name-manager';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 import { BAN_LIST_ACTIVE, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
@@ -147,14 +148,15 @@ export class PlayerManager {
 
 			// If the player has no units and no cities, consider them for client allocation
 			debugPrint(
-				`Player ${GetPlayerId(player)} has left. Units: ${activePlayer.trackedData.units.size}, Cities: ${activePlayer.trackedData.cities.cities.length}`
+				`Player ${GetPlayerId(player)} has left. Units: ${activePlayer.trackedData.units.size}, Cities: ${activePlayer.trackedData.cities.cities.length}`,
+				DC.player
 			);
 
 			if (activePlayer.trackedData.units.size === 0 && activePlayer.trackedData.cities.cities.length === 0) {
-				debugPrint(`Player ${GetPlayerId(player)} added to left players list for potential client allocation.`);
+				debugPrint(`Player ${GetPlayerId(player)} added to left players list for potential client allocation.`, DC.player);
 				players.push(player);
 			} else {
-				debugPrint(`Player ${GetPlayerId(player)} not added to left players list (has units or cities).`);
+				debugPrint(`Player ${GetPlayerId(player)} not added to left players list (has units or cities).`, DC.player);
 			}
 		}
 		return players;

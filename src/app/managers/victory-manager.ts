@@ -10,6 +10,7 @@ import { OvertimeManager } from './overtime-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { ParticipantEntity, ParticipantEntityManager } from '../utils/participant-entity';
 import { debugPrint } from '../utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { GlobalMessage } from '../utils/messages';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
@@ -43,8 +44,7 @@ export class VictoryManager {
 		}
 
 		// If current leader is eliminated, always replace them
-		const currentLeaderEliminated =
-			GlobalGameData.leader instanceof ActivePlayer && GlobalGameData.leader.status.isEliminated();
+		const currentLeaderEliminated = GlobalGameData.leader instanceof ActivePlayer && GlobalGameData.leader.status.isEliminated();
 
 		if (GlobalGameData.leader == undefined || currentLeaderEliminated) {
 			GlobalGameData.leader = participant;
@@ -92,7 +92,7 @@ export class VictoryManager {
 		});
 
 		if (eliminationVictory) {
-			debugPrint('No opponents remain!');
+			debugPrint('No opponents remain!', DC.victory);
 			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
 			return VictoryManager.GAME_VICTORY_STATE;
 		}
@@ -103,7 +103,10 @@ export class VictoryManager {
 		if (playerWinCandidates.length == 0) {
 			VictoryManager.GAME_VICTORY_STATE = 'UNDECIDED';
 		} else if (playerWinCandidates.length == 1) {
-			debugPrint(ParticipantEntityManager.getDisplayName(playerWinCandidates[0]) + ' has met the city count victory condition!');
+			debugPrint(
+				ParticipantEntityManager.getDisplayName(playerWinCandidates[0]) + ' has met the city count victory condition!',
+				DC.victory
+			);
 			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
 		} else {
 			VictoryManager.GAME_VICTORY_STATE = 'TIE';
@@ -145,9 +148,9 @@ export class VictoryManager {
 			GlobalGameData.leader,
 			(activePlayer) => this.winTracker.addWinForEntity(activePlayer.getPlayer()),
 			(team) => {
-				debugPrint(`Adding win for team ${team.getNumber()}`);
+				debugPrint(`Adding win for team ${team.getNumber()}`, DC.victory);
 				this.winTracker.addWinForEntity(team.getMemberWithHighestIncome().getPlayer());
-				debugPrint('Win added for team member with highest income');
+				debugPrint('Win added for team member with highest income', DC.victory);
 			}
 		);
 	}

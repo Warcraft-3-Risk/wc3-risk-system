@@ -9,6 +9,7 @@ import { PromodeCountdownState } from '../promode-game-mode/promode-countdown-st
 import { W3CGameOverState } from '../w3c-mode/w3c-game-over-state';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { Wait } from 'src/app/utils/wait';
 import { GlobalMessage, LocalMessage } from 'src/app/utils/messages';
@@ -50,19 +51,19 @@ export class W3CMode extends BaseMode<W3CData> {
 		const originalOnPlayerForfeit = state.onPlayerForfeit.bind(state);
 
 		state.onPlayerLeft = async (player: ActivePlayer) => {
-			debugPrint(`[W3CMode] onPlayerLeft`);
+			debugPrint(`[W3CMode] onPlayerLeft`, DC.gameMode);
 			const terminate = await this.checkAndHandleVictoryAsync('All human opponents have left. Victory by default!');
 			if (!terminate) originalOnPlayerLeft(player);
 		};
 
 		state.onEnterState = async () => {
-			debugPrint(`[W3CMode] onEnterState)`);
+			debugPrint(`[W3CMode] onEnterState)`, DC.gameMode);
 			const terminate = await this.checkAndHandleVictoryAsync('No human opponents found. Victory by default!');
 			if (!terminate) originalOnEnterState();
 		};
 
 		state.onPlayerForfeit = async (player: ActivePlayer) => {
-			debugPrint(`[W3CMode] onPlayerForfeit`);
+			debugPrint(`[W3CMode] onPlayerForfeit`, DC.gameMode);
 			const terminate = await this.checkAndHandleVictoryAsync('All human opponents have forfeited. Victory by default!');
 			if (!terminate) originalOnPlayerForfeit(player);
 		};

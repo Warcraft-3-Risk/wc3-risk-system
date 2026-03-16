@@ -1,5 +1,5 @@
 import {
-	SHOW_DEBUG_PRINTS,
+	DEBUG_PRINTS,
 	CITIES_TO_WIN_RATIO,
 	STARTING_INCOME,
 	STARTING_COUNTDOWN,
@@ -17,6 +17,7 @@ import {
 	W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER,
 	SAVE_DEBUG_LOGS_TO_FILE,
 } from 'src/configs/game-settings';
+import type { DebugCategory } from 'src/configs/game-settings';
 import { HexColors } from './hex-colors';
 import { File } from 'w3ts/system/file';
 import { MAP_NAME, MAP_VERSION, W3C_MODE_ENABLED } from './map-info';
@@ -52,7 +53,7 @@ class DebugLogger {
 		let hash = 5381;
 		for (let i = 0; i < name.length; i++) {
 			// Simple hash algorithm avoiding bitwise operations that may overflow in Lua
-			hash = ((hash * 33) + name.charCodeAt(i)) % 100000000;
+			hash = (hash * 33 + name.charCodeAt(i)) % 100000000;
 		}
 		// Use math.abs (Lua) and string.format for hex conversion
 		const absHash = math.abs(hash);
@@ -190,14 +191,14 @@ class DebugLogger {
 	}
 }
 
-export function debugPrint(message: string, ...args: any[]): void {
-	if (SHOW_DEBUG_PRINTS) {
-		const fullMessage = args.length > 0 ? `${message} ${args.join(' ')}` : message;
-		print(`${HexColors.RED}DEBUG:|r ${fullMessage}`);
+export function debugPrint(message: string, category?: DebugCategory): void {
+	if (!DEBUG_PRINTS.master) return;
+	if (category && !DEBUG_PRINTS[category]) return;
 
-		if (SAVE_DEBUG_LOGS_TO_FILE) {
-			DebugLogger.getInstance().addLog(fullMessage);
-		}
+	print(`${HexColors.RED}DEBUG:|r ${message}`);
+
+	if (SAVE_DEBUG_LOGS_TO_FILE) {
+		DebugLogger.getInstance().addLog(message);
 	}
 }
 

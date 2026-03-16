@@ -3,6 +3,7 @@
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { ClientManager } from './client-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 
 // Players may experience unit lag when too many orders are issued simultaneously.
@@ -30,7 +31,7 @@ export class UnitLagManager {
 	public trackUnit(unit: unit): void {
 		// Only clients need their units tracked/fixed
 		if (!ClientManager.getInstance().isAnyClientOwnerOfUnit(unit)) {
-			// debugPrint(`UnitLagManager: Not tracking ${GetUnitName(unit)} as its owner is not a client.`);
+			// debugPrint(`UnitLagManager: Not tracking ${GetUnitName(unit)} as its owner is not a client.`, DC.unitLag);
 			return;
 		}
 
@@ -41,12 +42,12 @@ export class UnitLagManager {
 		//BlzShowUnitTeamGlow(unit, false);
 
 		// Use MinimapIconManager to handle the visual representation
-		debugPrint(`UnitLagManager: Tracking ${GetUnitName(unit)} via MinimapIconManager.`);
+		debugPrint(`UnitLagManager: Tracking ${GetUnitName(unit)} via MinimapIconManager.`, DC.unitLag);
 		MinimapIconManager.getInstance().registerTrackedUnit(unit);
 	}
 
 	public untrackUnit(unit: unit): void {
-		debugPrint(`UnitLagManager: Untracking ${GetUnitName(unit)}.`);
+		debugPrint(`UnitLagManager: Untracking ${GetUnitName(unit)}.`, DC.unitLag);
 		MinimapIconManager.getInstance().unregisterTrackedUnit(unit);
 	}
 
