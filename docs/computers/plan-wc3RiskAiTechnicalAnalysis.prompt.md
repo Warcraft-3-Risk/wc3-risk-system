@@ -549,7 +549,7 @@ VM's capacity for a single tick.
 
 | Component                            | Purpose                                                     | Complexity       |
 | ------------------------------------ | ----------------------------------------------------------- | ---------------- |
-| **BotManager**                       | Register bots, jittered timer scheduling, global stats      | Low              |
+| **BotManager**                       | Register bots, staggered timer scheduling, global stats     | Low              |
 | **BotPlayer** (extends ActivePlayer) | Per-bot brain with think cycle                              | High             |
 | **AdjacencyGraph**                   | Static land connections per map (separate, expandable data) | Low (data entry) |
 | **TerritoryTracker**                 | Connected-territory model per bot                           | Medium           |
