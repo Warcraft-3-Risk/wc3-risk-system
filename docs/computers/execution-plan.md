@@ -2,7 +2,9 @@
 
 > Incremental, testable implementation plan. Each step builds on the previous
 > one and can be verified in-game before moving to the next. Every step includes
-> `debugPrint` statements so you can visually confirm each increment works.
+> `debugPrint` statements (using the `DC.bot` category) so you can visually
+> confirm each increment works. Enable bot debug output by setting `bot: true`
+> in `DEBUG_PRINTS` in `game-settings.ts`.
 >
 > **Scope:** Land-only FFA bot for the Europe map. No naval transport, no
 > alliances, no leaver takeover. Bots respect fog of war.
@@ -18,7 +20,7 @@
 - [ ] Implement the abstract `onKill` / `onDeath` methods with minimal logic
       (track kills/deaths in `trackedData` like `HumanPlayer`, but skip bounty,
       announcements, and combat timestamps — bots don't need UI feedback)
-- [ ] Add a `debugPrint('ComputerPlayer created for slot ' + GetPlayerId(player))`
+- [ ] Add a `debugPrint('ComputerPlayer created for slot ' + GetPlayerId(player), DC.bot)`
       in the constructor
 
 **Test:** Build compiles with no errors. The class exists but is not instantiated
@@ -28,11 +30,12 @@ anywhere yet.
 // src/app/player/types/computer-player.ts
 import { ActivePlayer } from './active-player';
 import { debugPrint } from '../../utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 
 export class ComputerPlayer extends ActivePlayer {
 	constructor(player: player) {
 		super(player);
-		debugPrint(`[Bot] ComputerPlayer created for slot ${GetPlayerId(player)}`);
+		debugPrint(`[Bot] ComputerPlayer created for slot ${GetPlayerId(player)}`, DC.bot);
 	}
 
 	onKill(victim: player, unit: unit, isPlayerCombat: boolean): void {
@@ -76,7 +79,7 @@ export class ComputerPlayer extends ActivePlayer {
 - [ ] Store the controller type accurately:
       `this._playerControllerHandle.set(player, MAP_CONTROL_COMPUTER)`
 - [ ] Add `debugPrint` on registration:
-      `debugPrint('[Bot] Registered computer player slot ' + i)`
+      `debugPrint('[Bot] Registered computer player slot ' + i, DC.bot)`
 - [ ] Add a helper method `isComputerPlayer(player: player): boolean` that
       checks the controller map
 - [ ] Skip UI button creation (health, value, label, rating) for computer
@@ -99,7 +102,7 @@ Confirm the game doesn't crash and human players still work normally.
 - [ ] In `ClientManager`, check if a slot belongs to a computer player before
       including it in the redistribution pool
 - [ ] Use `PlayerManager.getInstance().isComputerPlayer(player)` as the guard
-- [ ] Add `debugPrint('[Bot] Excluding computer slot ' + GetPlayerId(player) + ' from client redistribution')`
+- [ ] Add `debugPrint('[Bot] Excluding computer slot ' + GetPlayerId(player) + ' from client redistribution', DC.bot)`
 - [ ] Verify `getPlayersThatLeftWithNoUnitsOrCities()` also skips computer slots
       (it already filters on `PLAYER_SLOT_STATE_LEFT`, so computer slots that are
       active should naturally be excluded, but add explicit check to be safe)
@@ -117,7 +120,7 @@ multi-client slots are unaffected.
       `CountdownState` → `EnableControlsState` → `GameLoopState`
 - [ ] The bot should receive cities from `CityDistributeState`, get income from
       `IncomeManager.giveIncome()`, and appear on the scoreboard
-- [ ] Add `debugPrint('[Bot] Slot ' + GetPlayerId(player) + ' has ' + trackedData.cities.cities.length + ' cities')`
+- [ ] Add `debugPrint('[Bot] Slot ' + GetPlayerId(player) + ' has ' + trackedData.cities.cities.length + ' cities', DC.bot)`
       after city distribution (e.g., listen for an event, or add a one-shot timer
       check in `GameLoopState.onStartTurn` for turn 0)
 
@@ -140,7 +143,7 @@ the game loop. Confirm:
 - [ ] `private bots: ComputerPlayer[]` — list of registered bots
 - [ ] `registerBot(bot: ComputerPlayer)` — add to list
 - [ ] `getBots(): ComputerPlayer[]` — return list
-- [ ] `debugPrint('[BotManager] Initialized with ' + bots.length + ' bots')`
+- [ ] `debugPrint('[BotManager] Initialized with ' + bots.length + ' bots', DC.bot)`
       after all bots are registered
 
 **Test:** Build compiles. BotManager is instantiated but has no tick yet.
@@ -158,7 +161,7 @@ the game loop. Confirm:
 - [ ] On each timer tick, decrement counters. When a bot's counter reaches 0,
       call `bot.think()` and reset counter
 - [ ] Add `think()` method to `ComputerPlayer` — for now it only prints:
-      `debugPrint('[Bot] Slot ' + GetPlayerId(player) + ' THINK — cities: ' + cities + ', gold: ' + gold)`
+      `debugPrint('[Bot] Slot ' + GetPlayerId(player) + ' THINK — cities: ' + cities + ', gold: ' + gold, DC.bot)`
 
 ```typescript
 // BotManager.start() — core loop
@@ -187,7 +190,7 @@ public start(): void {
     }
   });
 
-  debugPrint(`[BotManager] Think loop started. ${this.bots.length} bots, interval=${BotManager.THINK_INTERVAL}s`);
+  debugPrint(`[BotManager] Think loop started. ${this.bots.length} bots, interval=${BotManager.THINK_INTERVAL}s`, DC.bot);
 }
 ```
 
@@ -228,7 +231,7 @@ Confirm no desync in multiplayer (both clients show same messages).
       exceptions documented in the technical analysis)
 
 **Test:** Build compiles. Import the map in a test or in `BotManager.start()`
-and print: `debugPrint('[Adjacency] Europe map loaded: ' + Object.keys(map).length + ' countries')`
+and print: `debugPrint('[Adjacency] Europe map loaded: ' + Object.keys(map).length + ' countries', DC.bot)`
 
 ---
 
@@ -241,10 +244,10 @@ and print: `debugPrint('[Adjacency] Europe map loaded: ' + Object.keys(map).leng
     (empty array if country not in map)
   - `areAdjacent(a: string, b: string): boolean`
   - `hasData(): boolean` — returns false if no adjacency data was provided
-- [ ] `debugPrint('[AdjacencyGraph] Loaded with ' + countryCount + ' countries')` on construction
+- [ ] `debugPrint('[AdjacencyGraph] Loaded with ' + countryCount + ' countries', DC.bot)` on construction
 - [ ] Validate symmetry on construction: if A→B exists, B→A must also exist.
       Log warnings for mismatches:
-      `debugPrint('[AdjacencyGraph] WARNING: asymmetric adjacency: ' + a + ' → ' + b)`
+      `debugPrint('[AdjacencyGraph] WARNING: asymmetric adjacency: ' + a + ' → ' + b, DC.bot)`
 
 **Test:** AdjacencyGraph is constructed in BotManager.start(). Debug output
 confirms country count and no asymmetry warnings.
@@ -258,7 +261,7 @@ confirms country count and no asymmetry warnings.
 - [ ] Load the correct adjacency data (europe for Europe map, or `null` for
       maps without adjacency data yet)
 - [ ] Store as `BotManager.adjacencyGraph`
-- [ ] `debugPrint('[BotManager] Adjacency data loaded: ' + (graph.hasData() ? 'yes' : 'NO — bots will play suboptimally'))`
+- [ ] `debugPrint('[BotManager] Adjacency data loaded: ' + (graph.hasData() ? 'yes' : 'NO — bots will play suboptimally'), DC.bot)`
 
 **Test:** Build for Europe → shows adjacency loaded. Build for World/Asia →
 shows "NO — bots will play suboptimally".
@@ -279,7 +282,7 @@ shows "NO — bots will play suboptimally".
   5. Issue train order: `IssueImmediateOrderById(barracks.unit, trainOrderId)`
   6. Cap at **1 train order per barracks per think** to avoid overqueuing
   7. Cap at a **global max trains per think** (`BOT_MAX_TRAINS_PER_THINK = 5`)
-- [ ] `debugPrint('[Bot] Slot ' + id + ' economy: gold=' + gold + ', trained=' + trainCount + '/' + maxTrain)`
+- [ ] `debugPrint('[Bot] Slot ' + id + ' economy: gold=' + gold + ', trained=' + trainCount + '/' + maxTrain, DC.bot)`
 
 **Test:** Launch with 1 bot. Watch debug output showing train counts. Visually
 confirm units appearing at bot-owned cities over time. Confirm bot's gold
@@ -293,7 +296,7 @@ decreases as it trains.
       `trackedData.cities.cities`)
 - [ ] Verify that bot-trained units are correctly tracked in
       `trackedData.units` (the existing unit-train trigger should handle this)
-- [ ] `debugPrint('[Bot] Slot ' + id + ' unit count: ' + this.trackedData.units.size)`
+- [ ] `debugPrint('[Bot] Slot ' + id + ' unit count: ' + this.trackedData.units.size, DC.bot)`
 
 **Test:** Let the bot accumulate units for several turns. Confirm unit count
 in debug output increases. Confirm units have the correct player color on the
@@ -323,7 +326,7 @@ map.
       same landmass?
 - [ ] If `adjacencyGraph.hasData()` is false, treat all owned countries as one
       single landmass (graceful degradation)
-- [ ] `debugPrint('[Territory] Slot ' + id + ': ' + landmasses.length + ' landmasses, mainland=' + mainlandSize + ' countries')`
+- [ ] `debugPrint('[Territory] Slot ' + id + ': ' + landmasses.length + ' landmasses, mainland=' + mainlandSize + ' countries', DC.bot)`
 
 **Test:** Add `BotTerritoryTracker` to `ComputerPlayer`. Call
 `tracker.update()` at the start of each think. Watch debug output showing
@@ -340,7 +343,7 @@ landmass).
 - [ ] Add `getInteriorCountries(): string[]` — countries the bot owns where
       ALL adjacent countries are also owned by the bot
 - [ ] These are derived from the adjacency graph + ownership data
-- [ ] `debugPrint('[Territory] Slot ' + id + ': borders=' + borders.length + ', interior=' + interior.length)`
+- [ ] `debugPrint('[Territory] Slot ' + id + ': borders=' + borders.length + ', interior=' + interior.length, DC.bot)`
 
 **Test:** Watch debug output. Confirm that as the bot (passively via spawners)
 captures more territory, border/interior counts change logically.
@@ -357,7 +360,7 @@ captures more territory, border/interior counts change logically.
 - [ ] Track `largestPlayer`, `largestCityCount`, `totalActivePlayers`
 - [ ] Also compute per-player relative strength:
       `strength[p] = cityCount / totalCities`
-- [ ] `debugPrint('[Stats] Largest: slot ' + id + ' with ' + count + ' cities (' + pct + '%)')`
+- [ ] `debugPrint('[Stats] Largest: slot ' + id + ' with ' + count + ' cities (' + pct + '%)', DC.bot)`
 
 **Test:** Watch debug output. Confirm the largest player is correctly
 identified and updates as the game progresses.
@@ -377,7 +380,7 @@ identified and updates as the game progresses.
   - **Prefer targets with fewer defending units** (if visible via fog of war)
   - **Avoid attacking the strongest player** unless no other option
 - [ ] Select the top-scoring target as the current campaign target
-- [ ] `debugPrint('[Bot] Slot ' + id + ' target: ' + targetCountry + ' (score=' + score + ', owner=slot ' + ownerId + ')')`
+- [ ] `debugPrint('[Bot] Slot ' + id + ' target: ' + targetCountry + ' (score=' + score + ', owner=slot ' + ownerId + ')', DC.bot)`
 - [ ] If no adjacency data, pick a random enemy neighbor from any border
       region (fallback)
 
@@ -397,7 +400,7 @@ capturing a country).
       or spawner coordinates
 - [ ] A unit is "idle" if `GetUnitCurrentOrder(unit) == 0` (no current order)
       or if it has 0 movement left (standing still)
-- [ ] `debugPrint('[Bot] Slot ' + id + ': found ' + idle.length + ' idle units near ' + country.getName())`
+- [ ] `debugPrint('[Bot] Slot ' + id + ': found ' + idle.length + ' idle units near ' + country.getName(), DC.bot)`
 
 **Test:** Let the bot train units for a few turns without moving them. Confirm
 debug output shows idle units accumulating near owned cities.
@@ -414,7 +417,7 @@ debug output shows idle units accumulating near owned cities.
   3. Issue `IssuePointOrder(unit, 'attack', destX, destY)` for each idle unit
   4. Cap at `BOT_MAX_ORDERS_PER_THINK = 20` to avoid lag spikes
   5. Track which units have been ordered this think (don't re-order next think)
-- [ ] `debugPrint('[Bot] Slot ' + id + ': attacking ' + target + ' with ' + count + ' units')`
+- [ ] `debugPrint('[Bot] Slot ' + id + ': attacking ' + target + ' with ' + count + ' units', DC.bot)`
 
 **Test:** Watch the bot's units start moving toward enemy territory. Visually
 confirm on the map that units attack-move toward the target city. Confirm
@@ -429,7 +432,7 @@ guard replacement happens automatically when they arrive (existing trigger).
 - [ ] Maintain a `pendingOrders: { unit: unit, x: number, y: number }[]` queue
 - [ ] At the start of each think, drain up to `BOT_MAX_ORDERS_PER_THINK` from
       the queue before computing new orders
-- [ ] `debugPrint('[Bot] Slot ' + id + ': ' + pending.length + ' orders queued for next think')`
+- [ ] `debugPrint('[Bot] Slot ' + id + ': ' + pending.length + ' orders queued for next think', DC.bot)`
 
 **Test:** Give the bot many cities (via map editor) so it has lots of units.
 Confirm orders are spread across multiple think ticks instead of issuing 100+
@@ -446,7 +449,7 @@ orders in one frame.
 - [ ] Move them toward the nearest border country (using adjacency graph to
       find the closest border, then target that country's barracks position)
 - [ ] Cap at `BOT_MAX_REINFORCE_ORDERS_PER_THINK = 10`
-- [ ] `debugPrint('[Bot] Slot ' + id + ': reinforcing border, moving ' + count + ' units from interior')`
+- [ ] `debugPrint('[Bot] Slot ' + id + ': reinforcing border, moving ' + count + ' units from interior', DC.bot)`
 
 **Test:** Give the bot a large connected territory. Confirm units in the
 center gradually move outward toward the borders. Interior empties over time.
@@ -459,7 +462,7 @@ center gradually move outward toward the borders. Interior empties over time.
       specifically toward the staging country (the owned country adjacent to the
       target)
 - [ ] Prefer moving units from non-threatened borders first
-- [ ] `debugPrint('[Bot] Slot ' + id + ': concentrating ' + count + ' units toward ' + staging + ' for campaign vs ' + target)`
+- [ ] `debugPrint('[Bot] Slot ' + id + ': concentrating ' + count + ' units toward ' + staging + ' for campaign vs ' + target, DC.bot)`
 
 **Test:** Watch the bot build up a staging force near its target before
 attacking, rather than spreading units evenly.
@@ -482,8 +485,8 @@ attacking, rather than spreading units evenly.
   - (b) No progress for `CAMPAIGN_STALL_THRESHOLD` thinks (abandon + pick new)
 - [ ] Track progress: if the bot's unit count near the target decreases (or
       remains 0) for too many ticks, it's stalled
-- [ ] `debugPrint('[Bot] Slot ' + id + ': campaign vs ' + target + ' — tick ' + ticks + '/' + threshold)`
-- [ ] `debugPrint('[Bot] Slot ' + id + ': campaign STALLED, picking new target')`
+- [ ] `debugPrint('[Bot] Slot ' + id + ': campaign vs ' + target + ' — tick ' + ticks + '/' + threshold, DC.bot)`
+- [ ] `debugPrint('[Bot] Slot ' + id + ': campaign STALLED, picking new target', DC.bot)`
 
 **Test:** Watch the bot commit to one target for multiple think cycles. If
 it's struggling (enemy is stronger), confirm it eventually abandons and picks
@@ -499,8 +502,8 @@ a new target.
   - If the target country has more cities: continue pushing
   - If the bot is severely weakened (lost >50% of staging units): consolidate
     (stop attacking, train up)
-- [ ] `debugPrint('[Bot] Slot ' + id + ': captured city in ' + country + ', continuing push')`
-- [ ] `debugPrint('[Bot] Slot ' + id + ': campaign complete! ' + country + ' fully captured')`
+- [ ] `debugPrint('[Bot] Slot ' + id + ': captured city in ' + country + ', continuing push', DC.bot)`
+- [ ] `debugPrint('[Bot] Slot ' + id + ': campaign complete! ' + country + ' fully captured', DC.bot)`
 
 **Test:** Watch the bot capture a multi-city country city by city. After full
 capture, confirm it picks a new adjacent target.
@@ -521,7 +524,7 @@ capture, confirm it picks a new adjacent target.
     const cities = this.trackedData.cities.cities.length;
     const units = this.trackedData.units.size;
 
-    debugPrint(`[Bot] Slot ${GetPlayerId(this.getPlayer())} THINK — cities=${cities}, units=${units}, gold=${gold}`);
+    debugPrint(`[Bot] Slot ${GetPlayerId(this.getPlayer())} THINK — cities=${cities}, units=${units}, gold=${gold}`, DC.bot);
 
     // 1. Update territory awareness
     this.territoryTracker.update(this.getOwnedCountries(), adjacencyGraph);
@@ -564,7 +567,7 @@ Visually confirm:
 - [ ] If a potential target is in fog, the bot can still select it (it knows
       the country exists from the adjacency graph) but cannot assess its defense
       strength — use a default/pessimistic estimate
-- [ ] `debugPrint('[Bot] Slot ' + id + ': target ' + country + ' is in fog, using default threat estimate')`
+- [ ] `debugPrint('[Bot] Slot ' + id + ': target ' + country + ' is in fog, using default threat estimate', DC.bot)`
 
 **Test:** Enable night fog. Confirm bots still function but cannot see inside
 fogged territories. Their debug output should show fog-based estimates for
@@ -594,7 +597,7 @@ when estimated vs actual defending units differ after combat).
 - [ ] Verify `BotManager` stops calling `think()` for dead bots (the
       `isAlive()` / `isNomad()` check at the start of think handles this)
 - [ ] Verify dead bot slots don't corrupt the client redistribution system
-- [ ] `debugPrint('[Bot] Slot ' + id + ' eliminated — stopping think loop')`
+- [ ] `debugPrint('[Bot] Slot ' + id + ' eliminated — stopping think loop', DC.bot)`
 
 **Test:** Give one bot very few starting cities. Let a human or other bot
 eliminate it. Confirm clean elimination with no crashes.
@@ -608,7 +611,7 @@ eliminate it. Confirm clean elimination with no crashes.
 - [ ] In `think()`, detect nomad state and switch to "survival mode":
   - Pick the nearest enemy city as target
   - Send all remaining units to attack it
-- [ ] `debugPrint('[Bot] Slot ' + id + ' is NOMAD — survival mode, targeting nearest city')`
+- [ ] `debugPrint('[Bot] Slot ' + id + ' is NOMAD — survival mode, targeting nearest city', DC.bot)`
 
 **Test:** Reduce a bot to 0 cities (via manual kill in debug or letting enemy
 overrun). Confirm nomad units try to capture a city.
@@ -635,7 +638,7 @@ overrun). Confirm nomad units try to capture a city.
 - [ ] In `ScoreboardManager` (or wherever player names are rendered), check
       if the player is a computer player and append/prepend a "[Computer]" tag
       to their display name
-- [ ] `debugPrint('[Bot] Scoreboard label set for slot ' + id)`
+- [ ] `debugPrint('[Bot] Scoreboard label set for slot ' + id, DC.bot)`
 
 **Test:** Launch with bots. Confirm the scoreboard shows "[Computer]" next to
 bot player names, clearly distinguishing them from humans.
@@ -652,7 +655,7 @@ bot player names, clearly distinguishing them from humans.
   const start = os.clock();
   bot.think();
   const elapsed = os.clock() - start;
-  debugPrint(`[Bot] Slot ${id} think took ${elapsed * 1000}ms`);
+  debugPrint(`[Bot] Slot ${id} think took ${elapsed * 1000}ms`, DC.bot);
   ```
 - [ ] Target: each think cycle under 10ms
 
