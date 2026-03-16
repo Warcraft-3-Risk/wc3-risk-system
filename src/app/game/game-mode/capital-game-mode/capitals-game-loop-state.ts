@@ -8,6 +8,7 @@ import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
 import { LocalMessage } from 'src/app/utils/messages';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 
 export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 	onEnterState() {
@@ -49,7 +50,7 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 	}
 
 	override onSwapGuard(targetedUnit: unit, city: City, triggerPlayer: player): void {
-		debugPrint('onSwapGuard');
+		debugPrint('onSwapGuard', DC.gameMode);
 		city.onCast(targetedUnit, triggerPlayer);
 	}
 }

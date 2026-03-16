@@ -4,6 +4,7 @@ import { StateData } from '../state/state-data';
 import { EVENT_SET_GAME_MODE } from 'src/app/utils/events/event-constants';
 import { GlobalGameData } from '../../state/global-game-state';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 
 export class BaseData implements StateData {}
 
@@ -24,14 +25,14 @@ export abstract class BaseMode<T extends StateData> {
 
 		// If there are no more states, restart the game mode, else enter the next state
 		if (!this.currentState) {
-			debugPrint(`Restarting ${GlobalGameData.gameMode}, state length: ${this.states.length}`);
+			debugPrint(`Restarting ${GlobalGameData.gameMode}, state length: ${this.states.length}`, DC.gameMode);
 			EventEmitter.getInstance().emit(EVENT_SET_GAME_MODE, GlobalGameData.gameMode);
 			return;
 		}
 
 		this.currentState.stateData = stateData;
 
-		debugPrint(`${this.currentState.constructor.name}`);
+		debugPrint(`${this.currentState.constructor.name}`, DC.gameMode);
 		this.currentState.onEnterState();
 	}
 

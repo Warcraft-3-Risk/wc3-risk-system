@@ -14,6 +14,7 @@ import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 import { CityToCountry } from 'src/app/country/country-map';
 import { debugPrint } from '../../../utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -70,7 +71,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 
 			this.nextState(this.stateData);
 		} catch (e) {
-			debugPrint(e as string);
+			debugPrint(e as string, DC.gameMode);
 		}
 	}
 }

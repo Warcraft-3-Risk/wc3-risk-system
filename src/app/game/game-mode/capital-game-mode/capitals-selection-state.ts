@@ -10,6 +10,7 @@ import { LandCity } from 'src/app/city/land-city';
 import { CityToCountry } from 'src/app/country/country-map';
 import { CapitalsData } from '../mode/capitals-mode';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { FogManager } from 'src/app/managers/fog-manager';
 
 export class CapitalsSelectionState extends BaseState<CapitalsData> {
@@ -20,17 +21,17 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 	run(): void {
 		FogManager.getInstance().turnFogOff();
 		BlzEnableSelections(true, false);
-		debugPrint('1. Capitals Selection');
-		debugPrint('this.stateData is ' + this.stateData);
+		debugPrint('1. Capitals Selection', DC.gameMode);
+		debugPrint('this.stateData is ' + this.stateData, DC.gameMode);
 		// Initialize the player capital cities map with empty capitals
 		this.stateData.capitals = new Map();
 		this.stateData.playerCapitalSelections = new Map();
 
-		debugPrint('2. Capitals Selection');
+		debugPrint('2. Capitals Selection', DC.gameMode);
 		GlobalGameData.matchPlayers.forEach((player) => {
 			this.stateData.playerCapitalSelections.set(player.getPlayer(), undefined);
 		});
-		debugPrint('3. Capitals Selection');
+		debugPrint('3. Capitals Selection', DC.gameMode);
 		try {
 			PlayGlobalSound('Sound\\Interface\\ArrangedTeamInvitation.flac');
 			const startDelayTimer: timer = CreateTimer();
@@ -40,7 +41,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 			CountdownMessage(`Left click on a city to\nchoose your capital\n\nSelection closes in\n${duration}`);
 			BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 
-			debugPrint('6. Capitals Selection');
+			debugPrint('6. Capitals Selection', DC.gameMode);
 			TimerStart(startDelayTimer, 1, true, () => {
 				// Clears capital selection and resets selected city if player is eliminated
 				this.resetCapitalsForEliminatedPlayers();
@@ -69,7 +70,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 	resetCapitalsForEliminatedPlayers(): void {
 		const playersEliminated = GlobalGameData.matchPlayers.filter((player) => player.status.isEliminated());
 		if (playersEliminated.length === 0) {
-			debugPrint('No players are eliminated, skipping capital reset.');
+			debugPrint('No players are eliminated, skipping capital reset.', DC.gameMode);
 			return;
 		}
 
@@ -78,13 +79,13 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 			city?.reset();
 
 			this.stateData.playerCapitalSelections.delete(player.getPlayer());
-			debugPrint(`Player ${NameManager.getInstance().getDisplayName(player.getPlayer())} is eliminated.`);
+			debugPrint(`Player ${NameManager.getInstance().getDisplayName(player.getPlayer())} is eliminated.`, DC.gameMode);
 		});
 	}
 
 	// Remove player from the capital selection phase if they leave the game
 	onPlayerLeft(player: ActivePlayer): void {
-		debugPrint(`Player ${NameManager.getInstance().getDisplayName(player.getPlayer())} has left the game during capital selection.`);
+		debugPrint(`Player ${NameManager.getInstance().getDisplayName(player.getPlayer())} has left the game during capital selection.`, DC.gameMode);
 		const city = this.stateData.playerCapitalSelections.get(player.getPlayer());
 		city?.reset();
 		this.stateData.playerCapitalSelections.delete(player.getPlayer());

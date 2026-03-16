@@ -4,6 +4,7 @@ import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { TimedEvent } from '../libs/timer/timed-event';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { debugPrint } from '../utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { ORDER_ID } from '../../configs/order-id';
@@ -358,7 +359,7 @@ export class TransportManager {
 						TransportManager.delayedTrackTimerRunning = true;
 						TimerStart(TransportManager.delayedTrackTimer, 0.1, false, () => {
 							TransportManager.delayedTrackQueue.forEach((unit) => {
-								debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
+								debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`, DC.transport);
 								UnitLagManager.getInstance().trackUnit(unit);
 								MinimapIconManager.getInstance().registerIfValid(unit);
 							});
@@ -441,7 +442,7 @@ export class TransportManager {
 		TriggerAddCondition(
 			t,
 			Condition(() => {
-				debugPrint('Transport Patrol Casted');
+				debugPrint('Transport Patrol Casted', DC.transport);
 				const transport: Transport = this.transports.get(GetTriggerUnit());
 
 				if (!transport || GetSpellAbilityId() !== ABILITY_ID.TRANSPORT_PATROL) {
@@ -454,14 +455,14 @@ export class TransportManager {
 					return false;
 				}
 
-				debugPrint('Transport Patrol Valid');
+				debugPrint('Transport Patrol Valid', DC.transport);
 
 				if (transport.patrolEnabled) {
-					debugPrint('Transport Patrol Already Enabled - Stopping Previous Patrol');
+					debugPrint('Transport Patrol Already Enabled - Stopping Previous Patrol', DC.transport);
 					this.stopPatrol(transport);
 				}
 
-				debugPrint('Transport Patrol Starting');
+				debugPrint('Transport Patrol Starting', DC.transport);
 
 				transport.patrolEnabled = true;
 				transport.patrolState = PatrolState.LOADING;
@@ -472,16 +473,16 @@ export class TransportManager {
 				transport.patrolOriginY = GetUnitY(u);
 				transport.patrolLoadTimer = 0;
 
-				debugPrint(`Patrol Origin: (${transport.patrolOriginX}, ${transport.patrolOriginY})`);
-				debugPrint(`Patrol Destination: (${transport.patrolDestX}, ${transport.patrolDestY})`);
+				debugPrint(`Patrol Origin: (${transport.patrolOriginX}, ${transport.patrolOriginY})`, DC.transport);
+				debugPrint(`Patrol Destination: (${transport.patrolDestX}, ${transport.patrolDestY})`, DC.transport);
 
 				this.addAutoLoadEffect(transport);
 
 				const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
 
-				debugPrint('Registering Patrol Timed Event');
+				debugPrint('Registering Patrol Timed Event', DC.transport);
 				transport.patrolEvent = timedEventManager.registerTimedEvent(1000000, () => {
-					debugPrint('Transport Patrol Tick');
+					debugPrint('Transport Patrol Tick', DC.transport);
 					this.handlePatrol(transport);
 				});
 

@@ -11,7 +11,6 @@ import { HexColors } from '../utils/hex-colors';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { ShuffleArray } from '../utils/utils';
 import { RatingManager } from '../rating/rating-manager';
-import { debugPrint } from '../utils/debug-print';
 
 /**
  * Responsible for creating in-game quests.
@@ -259,7 +258,7 @@ export class Quests {
 
 					description += `\n${btag}`;
 
-					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
+					if (ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
 						description += ` (${HexColors.GREEN}${ratingManager.getPlayerRating(btag)}|r)`;
 					}
 				});
@@ -285,7 +284,7 @@ export class Quests {
 				activePlayers.forEach((player) => {
 					const btag = nameManager.getBtag(player.getPlayer());
 					description += `\n${btag}`;
-					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
+					if (ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
 						// Show initial rating for active players (no change yet)
 						description += ` (${HexColors.GREEN}${ratingManager.getInitialPlayerRating(btag)}|r)`;
 					}
@@ -297,7 +296,7 @@ export class Quests {
 				eliminatedPlayers.forEach((player) => {
 					const btag = nameManager.getBtag(player.getPlayer());
 					description += `\n${ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.getPlayer())}`;
-					if(ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
+					if (ratingManager.isRatingSystemEnabled() && ratingManager.isRankedGame() && showRating) {
 						// Show initial rating + effective change for eliminated players
 						const initialRating = ratingManager.getInitialPlayerRating(btag);
 						const ratingResult = ratingManager.getRatingResults().get(btag);
@@ -306,7 +305,7 @@ export class Quests {
 							// If effective change is 0 but total change was negative, player was protected by floor
 							const wasFloorProtected = effectiveChange === 0 && ratingResult.totalChange < 0;
 							const changeColor = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected) ? HexColors.GREEN : HexColors.RED;
-							const changeSign = wasFloorProtected ? '-' : (effectiveChange >= 0 ? '+' : '');
+							const changeSign = wasFloorProtected ? '-' : effectiveChange >= 0 ? '+' : '';
 							description += ` ${HexColors.TANGERINE}(${initialRating})|r ${changeColor}(${changeSign}${effectiveChange})|r`;
 						} else {
 							description += ` (${HexColors.GREEN}${initialRating}|r)`;
@@ -321,7 +320,8 @@ export class Quests {
 						if (killedByActivePlayer.status.isActive()) {
 							description += ' killed by ' + NameManager.getInstance().getDisplayName(player.killedBy);
 						} else {
-							description += ' killed by ' + ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.killedBy);
+							description +=
+								' killed by ' + ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.killedBy);
 						}
 
 						description += ' (' + (killedByActivePlayer.status ? killedByActivePlayer.status.status : 'Unknown') + ')';

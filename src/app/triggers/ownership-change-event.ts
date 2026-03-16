@@ -17,7 +17,6 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_CITY_CAPTURE } from '../utils/events/event-constants';
 import { ParticipantEntityManager } from '../utils/participant-entity';
-import { debugPrint } from '../utils/debug-print';
 
 export function OwnershipChangeEvent() {
 	const t: trigger = CreateTrigger();

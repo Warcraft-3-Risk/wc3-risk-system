@@ -1,4 +1,5 @@
 import { debugPrint } from './debug-print';
+import { DC } from 'src/configs/game-settings';
 
 /**
  * Updates a unit's name to include its kill value as a suffix.
@@ -60,7 +61,7 @@ function removeKillValueSuffix(name: string): string {
 
 export function updateUnitNameWithKillValue(unit: unit, killValue: number): void {
 	if (!unit) {
-		debugPrint(`[NAME HELPER] Unit is null, returning`);
+		debugPrint(`[NAME HELPER] Unit is null, returning`, DC.killTracker);
 		return;
 	}
 

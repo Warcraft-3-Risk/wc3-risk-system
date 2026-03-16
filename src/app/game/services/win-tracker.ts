@@ -1,4 +1,5 @@
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
 import { W3C_MODE_ENABLED } from 'src/app/utils/map-info';
 
@@ -56,7 +57,7 @@ export class WinTracker {
 			}
 		});
 
-		debugPrint(`Played matches: ${playedMatchCount}`, 'WinTracker');
+		debugPrint(`Played matches: ${playedMatchCount}`, DC.winTracker);
 
 		return playedMatchCount;
 	}

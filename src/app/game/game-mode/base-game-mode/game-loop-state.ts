@@ -17,6 +17,7 @@ import { OvertimeManager } from 'src/app/managers/overtime-manager';
 import { Team } from 'src/app/teams/team';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { FogManager } from 'src/app/managers/fog-manager';
 import { AnnounceOnLocation } from '../../announcer/announce';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
@@ -90,7 +91,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				updateTickUI();
 			} catch (error) {
 				File.write('errors', error as string);
-				debugPrint('Error in Timer ' + error);
+				debugPrint('Error in Timer ' + error, DC.gameMode);
 			}
 		});
 	}
@@ -124,7 +125,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		// First turn should always be half day
 		if (turn === 0) {
-			debugPrint('first turn, turning off fog');
+			debugPrint('first turn, turning off fog', DC.gameMode);
 			SetTimeOfDay(12.0);
 			FogManager.getInstance().turnFogOff();
 			return;
@@ -139,28 +140,28 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		// dusk
 		if (phase == 0) {
-			debugPrint('Phase is dusk (0), turning on fog');
+			debugPrint('Phase is dusk (0), turning on fog', DC.gameMode);
 			SetTimeOfDay(18.0);
 			FogManager.getInstance().turnFogOn();
 			return;
 		}
 
 		if (phase == 1) {
-			debugPrint('Phase is night (1), turning on fog');
+			debugPrint('Phase is night (1), turning on fog', DC.gameMode);
 			SetTimeOfDay(0.0);
 			FogManager.getInstance().turnFogOn();
 			return;
 		}
 
 		if (phase == 2) {
-			debugPrint('Phase is dawn (2), turning off fog');
+			debugPrint('Phase is dawn (2), turning off fog', DC.gameMode);
 			SetTimeOfDay(6.0);
 			FogManager.getInstance().turnFogOff();
 			return;
 		}
 
 		if (phase == 3) {
-			debugPrint('Phase is day (3), turning off fog');
+			debugPrint('Phase is day (3), turning off fog', DC.gameMode);
 			SetTimeOfDay(12.0);
 			FogManager.getInstance().turnFogOff();
 			return;
@@ -169,11 +170,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onStartTurn(turn: number): void {
 		this.updateFogSettings(turn);
-		debugPrint(`[Redistribute] Triggered by: turn start (turn ${turn})`);
+		debugPrint(`[Redistribute] Triggered by: turn start (turn ${turn})`, DC.redistribute);
 		const changed = ClientManager.getInstance().evaluateAndRedistribute();
-		debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`);
+		debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`, DC.gameMode);
 
-		debugPrint(`[SlotCount] === Turn ${turn} Slot Summary ===`);
+		debugPrint(`[SlotCount] === Turn ${turn} Slot Summary ===`, DC.slotCount);
 		ClientManager.getInstance().debugPrintSlotCounts();
 
 		if (!changed) {
@@ -212,7 +213,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		// Refresh rating stats UI for all players to show updated K/D values
 		// This runs REGARDLESS of ranked status so players can see their current game stats
-		debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`);
+		debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`, DC.gameMode);
 		GlobalGameData.matchPlayers.forEach((player) => {
 			if (player.ratingStatsUI && player.ratingStatsUI.refresh) {
 				player.ratingStatsUI.refresh();
@@ -356,7 +357,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerLeft(player: ActivePlayer): void {
 		super.onPlayerLeft(player);
 
-		debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`);
+		debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
 		ClientManager.getInstance().neutralizePlayerUnits(player.getPlayer());
 		ClientManager.getInstance().evaluateAndRedistribute();
 
@@ -378,7 +379,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
 		super.onPlayerDead(player, forfeit);
 
-		debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`);
+		debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
 		ClientManager.getInstance().neutralizePlayerUnits(player.getPlayer());
 		ClientManager.getInstance().evaluateAndRedistribute();
 

@@ -12,6 +12,7 @@ import { FogManager } from 'src/app/managers/fog-manager';
 import { Wait } from 'src/app/utils/wait';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 
 export class W3CGameOverState<T extends StateData> extends BaseState<T> {
@@ -60,7 +61,8 @@ export class W3CGameOverState<T extends StateData> extends BaseState<T> {
 		const player: player = VictoryManager.getInstance().wonBestOf(2);
 		if (player) {
 			debugPrint(
-				`${ParticipantEntityManager.getDisplayName(PlayerManager.getInstance().players.get(player))} has won the best of 2 series.`
+				`${ParticipantEntityManager.getDisplayName(PlayerManager.getInstance().players.get(player))} has won the best of 2 series.`,
+				DC.gameMode
 			);
 			CustomVictoryBJ(player, true, true);
 			ClearTextMessages();

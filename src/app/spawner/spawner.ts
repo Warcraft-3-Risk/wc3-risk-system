@@ -5,6 +5,7 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
 import { debugPrint } from '../utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 import { MinimapIconManager } from '../managers/minimap-icon-manager';
@@ -82,7 +83,7 @@ export class Spawner implements Resetable, Ownable {
 				GetUnitY(this.unit),
 				270
 			);
-			debugPrint(`[SlotCount] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`);
+			debugPrint(`[SlotCount] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`, DC.slotCount);
 			ClientManager.getInstance().incrementUnitCount(owningSlot);
 			UnitLagManager.getInstance().trackUnit(u);
 			let loc: location = GetUnitRallyPoint(this.unit);

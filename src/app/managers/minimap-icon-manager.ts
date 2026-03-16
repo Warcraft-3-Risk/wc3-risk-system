@@ -2,6 +2,7 @@ import { FORCE_CUSTOM_MINIMAP_ICONS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { City } from '../city/city';
 import { debugPrint } from '../utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { ClientManager } from '../game/services/client-manager';
 import { MAP_TYPE } from '../utils/map-info';
 import { PlayerManager } from '../player/player-manager';
@@ -26,10 +27,10 @@ export class MinimapIconManager {
 	private isActive: boolean; // Whether custom icons are active (only for world terrain)
 
 	// Minimap constants (corner minimap dimensions)
-	private readonly MINIMAP_WIDTH = 0.140; // Minimap width in screen coordinates
-	private readonly MINIMAP_HEIGHT = 0.140; // Minimap height in screen coordinates
-	private readonly BUILDING_ICON_SIZE = 0.0040; // Icon size for regular cities
-	private readonly UNIT_ICON_SIZE = 0.0020; // Icon size for regular units
+	private readonly MINIMAP_WIDTH = 0.14; // Minimap width in screen coordinates
+	private readonly MINIMAP_HEIGHT = 0.14; // Minimap height in screen coordinates
+	private readonly BUILDING_ICON_SIZE = 0.004; // Icon size for regular cities
+	private readonly UNIT_ICON_SIZE = 0.002; // Icon size for regular units
 	private readonly CAPITAL_ICON_SIZE = 0.0025; // Capital colored center size (smaller to show borders)
 	private readonly CAPITAL_BORDER_INNER = 0.0035; // Capital inner border size (black ring)
 	private readonly CAPITAL_BORDER_OUTER = 0.0045; // Capital outer border size (white ring)
@@ -60,8 +61,8 @@ export class MinimapIconManager {
 		// Only activate for world terrain
 		this.isActive = FORCE_CUSTOM_MINIMAP_ICONS || MAP_TYPE === 'world';
 
-		debugPrint('MinimapIconManager: Initialized for terrain: ' + MAP_TYPE);
-		debugPrint('MinimapIconManager: Active: ' + this.isActive);
+		debugPrint('MinimapIconManager: Initialized for terrain: ' + MAP_TYPE, DC.minimap);
+		debugPrint('MinimapIconManager: Active: ' + this.isActive, DC.minimap);
 
 		if (!this.isActive) {
 			return;
@@ -88,9 +89,9 @@ export class MinimapIconManager {
 			}
 		});
 
-		debugPrint('World bounds: ' + this.worldMinX + ', ' + this.worldMinY + ' to ' + this.worldMaxX + ', ' + this.worldMaxY);
-		debugPrint('World size: ' + this.worldWidth + 'x' + this.worldHeight);
-		debugPrint('Minimap frame handle: ' + (this.minimapFrame ? 'FOUND' : 'NULL'));
+		debugPrint('World bounds: ' + this.worldMinX + ', ' + this.worldMinY + ' to ' + this.worldMaxX + ', ' + this.worldMaxY, DC.minimap);
+		debugPrint('World size: ' + this.worldWidth + 'x' + this.worldHeight, DC.minimap);
+		debugPrint('Minimap frame handle: ' + (this.minimapFrame ? 'FOUND' : 'NULL'), DC.minimap);
 	}
 
 	/**
@@ -103,13 +104,13 @@ export class MinimapIconManager {
 			return;
 		}
 
-		debugPrint(`MinimapIconManager: Creating icons for ${cities.length} cities`);
+		debugPrint(`MinimapIconManager: Creating icons for ${cities.length} cities`, DC.minimap);
 
 		cities.forEach((city) => {
 			this.createCityIcon(city);
 		});
 
-		debugPrint(`MinimapIconManager: Created ${this.cityIcons.size} icons`);
+		debugPrint(`MinimapIconManager: Created ${this.cityIcons.size} icons`, DC.minimap);
 
 		this.startUpdateTimer();
 		this.expandPool(this.INITIAL_POOL_SIZE);
@@ -132,9 +133,9 @@ export class MinimapIconManager {
 					this.framePool.push(iconFrame);
 				}
 			}
-			debugPrint(`MinimapIconManager: Expanded pool by ${count}. Total size: ${this.framePool.length}`);
+			debugPrint(`MinimapIconManager: Expanded pool by ${count}. Total size: ${this.framePool.length}`, DC.minimap);
 		} catch (e) {
-			debugPrint('MinimapIconManager: Error expanding pool - ' + e);
+			debugPrint('MinimapIconManager: Error expanding pool - ' + e, DC.minimap);
 		}
 	}
 
@@ -197,13 +198,13 @@ export class MinimapIconManager {
 			if (this.framePool.length > 0) {
 				iconFrame = this.framePool.pop();
 			} else {
-				debugPrint('MinimapIconManager: Pool exhausted, expanding by 200');
+				debugPrint('MinimapIconManager: Pool exhausted, expanding by 200', DC.minimap);
 				this.expandPool(200);
 				iconFrame = this.framePool.pop();
 			}
 
 			if (!iconFrame) {
-				debugPrint('MinimapIconManager: Failed to create/recycle frame for unit');
+				debugPrint('MinimapIconManager: Failed to create/recycle frame for unit', DC.minimap);
 				return;
 			}
 
@@ -225,9 +226,9 @@ export class MinimapIconManager {
 			} else {
 				BlzFrameSetVisible(iconFrame, false);
 			}
-			debugPrint(`MinimapIconManager: Count of tracked units: ${this.trackedUnits.size}, Pool size: ${this.framePool.length}`);
+			debugPrint(`MinimapIconManager: Count of tracked units: ${this.trackedUnits.size}, Pool size: ${this.framePool.length}`, DC.minimap);
 		} catch (e) {
-			debugPrint('MinimapIconManager: Error registering unit - ' + e);
+			debugPrint('MinimapIconManager: Error registering unit - ' + e, DC.minimap);
 		}
 	}
 
@@ -250,7 +251,7 @@ export class MinimapIconManager {
 			const iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCityIcon', gameUI, '', 0);
 
 			if (!iconFrame) {
-				debugPrint('MinimapIconManager: Failed to create frame for city');
+				debugPrint('MinimapIconManager: Failed to create frame for city', DC.minimap);
 				return;
 			}
 
@@ -276,7 +277,7 @@ export class MinimapIconManager {
 			// Make it visible
 			BlzFrameSetVisible(iconFrame, true);
 		} catch (e) {
-			debugPrint('MinimapIconManager: Error creating icon - ' + e);
+			debugPrint('MinimapIconManager: Error creating icon - ' + e, DC.minimap);
 		}
 	}
 
@@ -304,16 +305,16 @@ export class MinimapIconManager {
 		const minimapBaseY = 0.004; // Shift up from bottom (reduce to move icons down)
 
 		// Calculate position within minimap bounds
-		const iconX = minimapBaseX + (coords.x * this.MINIMAP_WIDTH);
-		const iconY = minimapBaseY + (coords.y * this.MINIMAP_HEIGHT);
+		const iconX = minimapBaseX + coords.x * this.MINIMAP_WIDTH;
+		const iconY = minimapBaseY + coords.y * this.MINIMAP_HEIGHT;
 
 		// Position absolutely on screen
 		BlzFrameSetAbsPoint(iconFrame, FRAMEPOINT_CENTER, iconX, iconY);
 
 		// Debug first few icons
 		if (this.cityIcons.size <= 2) {
-			debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' normalized: ' + coords.x + ', ' + coords.y);
-			debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' absolute: ' + iconX + ', ' + iconY);
+			debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' normalized: ' + coords.x + ', ' + coords.y, DC.minimap);
+			debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' absolute: ' + iconX + ', ' + iconY, DC.minimap);
 		}
 	}
 
@@ -432,7 +433,7 @@ export class MinimapIconManager {
 		}
 
 		// Ally Color 2 is not allowed
-		if(allyColorMode == 2) {
+		if (allyColorMode == 2) {
 			SetAllyColorFilterState(0);
 		}
 		if (allyColorMode > 0) {
@@ -558,12 +559,12 @@ export class MinimapIconManager {
 			const worldX = city.barrack.defaultX;
 			const worldY = city.barrack.defaultY;
 
-			debugPrint('MinimapIconManager: Adding double-ring border for capital city');
+			debugPrint('MinimapIconManager: Adding double-ring border for capital city', DC.minimap);
 
 			// Create outer border (white, largest)
 			const outerBorderFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCapitalOuterBorder', gameUI, '', 0);
 			if (!outerBorderFrame) {
-				debugPrint('MinimapIconManager: Failed to create outer border frame for capital');
+				debugPrint('MinimapIconManager: Failed to create outer border frame for capital', DC.minimap);
 				return;
 			}
 
@@ -585,7 +586,7 @@ export class MinimapIconManager {
 			// Create inner border (black, medium size)
 			const innerBorderFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCapitalInnerBorder', gameUI, '', 0);
 			if (!innerBorderFrame) {
-				debugPrint('MinimapIconManager: Failed to create inner border frame for capital');
+				debugPrint('MinimapIconManager: Failed to create inner border frame for capital', DC.minimap);
 				return;
 			}
 
@@ -623,9 +624,9 @@ export class MinimapIconManager {
 				this.updateIconColor(iconFrame, city, isVisible);
 			}
 
-			debugPrint('MinimapIconManager: Capital double-ring border created successfully');
+			debugPrint('MinimapIconManager: Capital double-ring border created successfully', DC.minimap);
 		} catch (e) {
-			debugPrint('MinimapIconManager: Error adding capital border - ' + e);
+			debugPrint('MinimapIconManager: Error adding capital border - ' + e, DC.minimap);
 		}
 	}
 

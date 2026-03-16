@@ -11,6 +11,7 @@ import { EVENT_ON_UNIT_KILLED } from 'src/app/utils/events/event-constants';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { ClientManager } from 'src/app/game/services/client-manager';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { updateUnitNameWithKillValue } from '../../utils/unit-name-helper';
@@ -27,19 +28,22 @@ export function UnitDeathEvent() {
 		Condition(() => {
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
-			debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
+			debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`, DC.events);
 
 			// Decrement slot unit count using raw WC3 owner (not resolved real player)
 			const rawDyingUnitOwner = GetOwningPlayer(dyingUnit);
-			debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`);
+			debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.slotCount);
 			ClientManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
 
 			// Clean up originalOwnerMap entry for neutralized units
 			ClientManager.getInstance().clearOriginalOwner(dyingUnit);
 
 			// Check if this slot is pending free and now has 0 units
-			if (ClientManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) && ClientManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0) {
-				debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`);
+			if (
+				ClientManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) &&
+				ClientManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0
+			) {
+				debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.redistribute);
 				ClientManager.getInstance().evaluateAndRedistribute();
 			}
 
@@ -64,13 +68,13 @@ export function UnitDeathEvent() {
 						const totalKillValue = UnitKillTracker.getInstance().addKillValue(killingUnit, pointValue);
 						updateUnitNameWithKillValue(killingUnit, totalKillValue);
 					} else {
-						debugPrint(`[KILL TRACKER] Skipping deny - unit killed its own unit`);
+						debugPrint(`[KILL TRACKER] Skipping deny - unit killed its own unit`, DC.killTracker);
 					}
 				} else if (killingUnit) {
-					debugPrint(`[KILL TRACKER] Skipping name update - killing unit is a building`);
+					debugPrint(`[KILL TRACKER] Skipping name update - killing unit is a building`, DC.killTracker);
 				}
 			} catch (e) {
-				debugPrint(`[KILL TRACKER ERROR] Exception: ${e}`);
+				debugPrint(`[KILL TRACKER ERROR] Exception: ${e}`, DC.killTracker);
 			}
 
 			// Remove the dying unit from kill tracking

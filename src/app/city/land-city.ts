@@ -9,6 +9,7 @@ import { UNIT_ID } from 'src/configs/unit-id';
 import { CityToCountry } from '../country/country-map';
 import { TeamManager } from '../teams/team-manager';
 import { debugPrint } from '../utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { LocalMessage } from '../utils/messages';
 import { ClientManager } from '../game/services/client-manager';
 
@@ -70,14 +71,14 @@ export class LandCity extends City {
 		// city.onCast(targetedUnit, triggerPlayer);
 		// Not a capital then swap
 		if (!this.isCapital()) {
-			debugPrint('Not a capital then swap');
+			debugPrint('Not a capital then swap', DC.city);
 			this.castHandler(targetedUnit);
 			return;
 		}
 
 		// If owner then swap
 		if (ClientManager.getInstance().getOwnerOfUnit(targetedUnit) === this.getOwner()) {
-			debugPrint('If same owner then swap');
+			debugPrint('If same owner then swap', DC.city);
 			this.castHandler(targetedUnit);
 			return;
 		}
@@ -87,7 +88,7 @@ export class LandCity extends City {
 			.getTeamFromPlayer(ClientManager.getInstance().getOwnerOfUnit(targetedUnit))
 			.playerIsInTeam(this.getOwner());
 		if (!shareTeam) {
-			debugPrint("If enemy team then don't swap");
+			debugPrint("If enemy team then don't swap", DC.city);
 			LocalMessage(triggerPlayer, `You can only switch guards with an ally unit!`, 'Sound\\Interface\\Error.flac');
 			return;
 		}
@@ -101,7 +102,7 @@ export class LandCity extends City {
 
 		// Owner of capital is alive
 		if (unitTypeId == UNIT_ID.CAPITAL) {
-			debugPrint('You can not swap the guard of an allied capital!');
+			debugPrint('You can not swap the guard of an allied capital!', DC.city);
 			LocalMessage(triggerPlayer, `You can not swap the guard of an allied capital!`, 'Sound\\Interface\\Error.flac');
 			return;
 		}

@@ -5,6 +5,7 @@ import { Resetable } from 'src/app/interfaces/resetable';
 import { ClientManager } from 'src/app/game/services/client-manager';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { ABILITY_ID } from 'src/configs/ability-id';
 
 /**
@@ -85,7 +86,7 @@ export class Guard implements Resetable {
 	public remove(): void {
 		if (this._unit) {
 			const owner = GetOwningPlayer(this._unit);
-			debugPrint(`[SlotCount] Unit removed on slot ${GetPlayerId(owner)}`);
+			debugPrint(`[SlotCount] Unit removed on slot ${GetPlayerId(owner)}`, DC.slotCount);
 			ClientManager.getInstance().decrementUnitCount(owner);
 		}
 		RemoveUnit(this._unit);
