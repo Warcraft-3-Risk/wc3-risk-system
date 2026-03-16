@@ -9,17 +9,17 @@
 
 ## 1. Engine Comparison at a Glance
 
-| Capability     | Unreal Engine (Stand Alone)                    | Warcraft III (Our Game)                                          |
-| -------------- | ---------------------------------------------- | ---------------------------------------------------------------- |
-| Language       | C++                                            | TypeScript → Lua (transpiled)                                    |
-| Tick model     | Per-frame tick (~60–120 Hz)                    | Timer callbacks (1s base)                                        |
-| Networking     | Dedicated server / P2P with authority          | Deterministic lockstep (all clients must agree)                  |
-| Player model   | Dynamic controller spawning                    | Fixed 24 player slots (`Player(0)` – `Player(23)`)               |
-| Data access    | ECS component storage (direct array iteration) | Object-handle queries + Lua tracking tables                      |
-| Pathfinding    | Flowfield grid with land/naval cost layers     | WC3 built-in pathing (no programmatic access to navmesh)         |
-| Unit orders    | C++ intention system → ECS executes            | `IssuePointOrder()` / `IssueImmediateOrderById()` natives        |
-| Random numbers | `FMath::FRandRange` (replicated)               | `GetRandomReal()` / `GetRandomInt()` (sync-safe in game context) |
-| Memory budget  | Gigabytes                                      | ~16,000 Lua locals; practical unit ceiling ~2,000                |
+| Capability     | Unreal Engine (Stand Alone)                    | Warcraft III (Our Game)                                                            |
+| -------------- | ---------------------------------------------- | ---------------------------------------------------------------------------------- |
+| Language       | C++                                            | TypeScript → Lua (transpiled)                                                      |
+| Tick model     | Per-frame tick (~60–120 Hz)                    | Timer callbacks (1s base)                                                          |
+| Networking     | Dedicated server / P2P with authority          | Deterministic lockstep (all clients must agree)                                    |
+| Player model   | Dynamic controller spawning                    | Fixed 24 player slots (`Player(0)` – `Player(23)`); slot 23 reserved for observers |
+| Data access    | ECS component storage (direct array iteration) | Object-handle queries + Lua tracking tables                                        |
+| Pathfinding    | Flowfield grid with land/naval cost layers     | WC3 built-in pathing (no programmatic access to navmesh)                           |
+| Unit orders    | C++ intention system → ECS executes            | `IssuePointOrder()` / `IssueImmediateOrderById()` natives                          |
+| Random numbers | `FMath::FRandRange` (replicated)               | `GetRandomReal()` / `GetRandomInt()` (sync-safe in game context)                   |
+| Memory budget  | Gigabytes                                      | ~16,000 Lua locals; practical unit ceiling ~2,000                                  |
 
 ---
 
@@ -38,9 +38,19 @@ control multiple WC3 player slots. When a human player is eliminated, their
 slots are freed and redistributed. This means:
 
 - Player slots are a **shared, finite resource**.
+- **Slot 23 is reserved for observers** — so we can have at most 23 actual
+  players and computers (indices 0–22).
 - Every slot given to a bot is one fewer slot available for human multi-client
   distribution (which reduces unit lag for humans).
 - Bots need **at least one dedicated slot each** to own cities and units.
+
+### Interaction with the Unit-Lag Shared Player Slot Mechanic
+
+The existing unit-lag system only allocates **empty, dead, and leaver** slots.
+It already treats active human and computer slots as active and non-eliminated,
+so they are never candidates for redistribution. **No special changes are needed
+to the multi-client pool logic to accommodate computer players.** The bot slots
+simply stay active and the unit-lag system ignores them naturally.
 
 ### Proposed Solution
 
@@ -51,8 +61,9 @@ redistribution algorithm.
 
 ```
 Total slots: 24 (indices 0–23)
+Slot 23: reserved for observers
 Minus neutral slots: ~2 (NEUTRAL_HOSTILE, NEUTRAL_PASSIVE)
-Available: ~22
+Available: ~21
 
 Example: 4 humans + 2 bots
   → Humans get slots 0–3 (+ multi-client extras from pool)
@@ -141,49 +152,54 @@ The Stand Alone bot's **entire strategic model** depends on knowing:
 Without this data, the bot cannot distinguish "expand by land" from "launch a
 naval invasion" — the core of its decision-making.
 
-### Proposed Solutions
+### Decision: Static Adjacency Graph (Option A)
 
-#### Option A: Build a Static Adjacency Graph (Recommended)
+We are going with **Option A — manually defined adjacency per map.** It's a
+small, well-bounded task and gives us full control.
 
-Define adjacency data per map in the terrain configs:
+#### Design: Separate, Expandable Adjacency Data
+
+Adjacency data is defined as a **separate data file per map** that developers
+can add to and expand over time. If adjacency data is missing for a map (or
+incomplete), the AI will simply play suboptimally — it won't crash or break.
+This is an acceptable trade-off that lets us ship a working bot before all maps
+have complete adjacency data.
 
 ```typescript
-// src/configs/terrains/world-adjacency.ts
-export const WorldAdjacency: Record<string, { land: string[]; sea: string[] }> = {
-	'Western Europe': {
-		land: ['Eastern Europe', 'Scandinavia', 'Southern Europe'],
-		sea: ['Eastern US', 'North Africa'], // Reachable by transport only
+// src/configs/adjacency/europe-adjacency.ts
+export const EuropeAdjacency: Record<string, { land: string[] }> = {
+	France: {
+		land: ['Spain', 'Belgium', 'Germany', 'Switzerland', 'Italy'],
+	},
+	UK: {
+		land: ['Normandy'], // Land bridge
 	},
 	// ...
 };
 ```
 
-This is a one-time manual effort per map. We have 3 maps (world, europe, asia).
-The data could also be auto-generated from the WC3 map editor's region layout.
+If a map has no adjacency file, the bot falls back to a naive strategy (e.g.,
+attack any enemy territory it owns units near, without strategic pathfinding).
 
-**Pros:** Simple, fast to query, no runtime cost.
-**Cons:** Must be maintained when maps change; manual work upfront.
+#### Europe Map: Known Adjacency Exceptions
 
-#### Option B: Runtime Path Probing
+The Europe map adjacency should be based on real-world geography with the
+following **non-obvious land bridge connections** that exist in our map:
 
-Create invisible dummy units and try to move them between territory centers.
-Check if they arrive within a timeout.
+| Connection                   | Type        |
+| ---------------------------- | ----------- |
+| UK ↔ Normandy               | Land bridge |
+| Malta ↔ Italy               | Land bridge |
+| Northern Ireland ↔ Scotland | Land bridge |
+| Sweden ↔ Denmark            | Land bridge |
+| Spain ↔ Morocco             | Land bridge |
+| Sardegna ↔ Corse ↔ Italy   | Land bridge |
 
-**Pros:** No manual data entry.
-**Cons:** Slow, fragile, consumes unit slots, timing-dependent, difficult to
-make deterministic across clients.
+And one **notable non-connection:**
 
-#### Option C: Derive from Conversation JSON / Map Regions
-
-The `.w3x` map files contain WC3 region definitions. We could parse these at
-build time to auto-generate adjacency.
-
-**Pros:** Authoritative source.
-**Cons:** Requires build-time tooling; region data doesn't directly encode
-adjacency (regions can overlap or have gaps).
-
-**Recommendation:** Option A. Manually define adjacency for each map. It's a
-small, well-bounded task and gives us full control.
+| Non-connection   | Note                                     |
+| ---------------- | ---------------------------------------- |
+| Libya ↔ Tunisia | **Not connected** despite real proximity |
 
 ---
 
@@ -230,7 +246,12 @@ without needing to query the build queue.
 
 ---
 
-## 6. Challenge: Naval Transport
+## 6. Challenge: Naval Transport _(Deferred — Not in First Draft)_
+
+> **Status:** Low priority. Transport is a critical aspect of the full
+> implementation, but it is explicitly excluded from the first draft. The bot
+> will initially operate as a land-only AI. Naval transport support will be
+> added in a later iteration.
 
 ### Stand Alone
 
@@ -294,13 +315,13 @@ We can create additional WC3 timers with sub-second intervals, but:
 ### Proposed Approach
 
 Use the **existing `TimedEventManager`** with a 2–3 second duration per bot
-think event. To stagger bots, register each bot's think event with a different
-initial offset:
+think event. We will **not go below 1-second timer intervals** for bot ticks,
+and we will **not use jitter.** Simple round-second staggering is sufficient:
 
 ```
 Bot 0: fires at t=0, t=2, t=4, ...
-Bot 1: fires at t=0.5 (rounded to next 1s tick = t=1), t=3, t=5, ...
-Bot 2: fires at t=1, t=3, t=5, ...  (jitter avoids exact collision with Bot 1)
+Bot 1: fires at t=1, t=3, t=5, ...
+Bot 2: fires at t=2, t=4, t=6, ...
 ```
 
 Since `TimedEventManager` fires callbacks every 1 second, we can track
@@ -315,7 +336,7 @@ onTick() {
   for (const [bot, counter] of this.botThinkCounters) {
     if (counter <= 0) {
       bot.think();
-      this.botThinkCounters.set(bot, THINK_INTERVAL + jitter());
+      this.botThinkCounters.set(bot, this.THINK_INTERVAL);
     } else {
       this.botThinkCounters.set(bot, counter - 1);
     }
@@ -323,10 +344,8 @@ onTick() {
 }
 ```
 
-**Limitation:** We lose the ±10% sub-second jitter that Stand Alone uses.
-Our jitter will be in whole-second increments. This is fine — the purpose of
-jitter is to avoid all bots thinking on the same tick, and whole-second offsets
-achieve that.
+Each bot is registered with a different initial offset (e.g., bot 0 starts at 0,
+bot 1 starts at 1) to ensure they don't all think on the same tick.
 
 ---
 
@@ -528,27 +547,27 @@ VM's capacity for a single tick.
 
 ### New Components
 
-| Component                            | Purpose                                                | Complexity       |
-| ------------------------------------ | ------------------------------------------------------ | ---------------- |
-| **BotManager**                       | Register bots, jittered timer scheduling, global stats | Low              |
-| **BotPlayer** (extends ActivePlayer) | Per-bot brain with think cycle                         | High             |
-| **AdjacencyGraph**                   | Static land/sea connections per map                    | Low (data entry) |
-| **TerritoryTracker**                 | Connected-territory model per bot                      | Medium           |
-| **InvasionPlanner**                  | Target scoring, campaign commitment, stall detection   | High             |
-| **BotEconomy**                       | Train orders with per-barracks budget                  | Low              |
-| **BotNavalManager**                  | Programmatic transport route creation                  | Medium           |
-| **BotOrderBatcher**                  | Rate-limit orders to avoid lag spikes                  | Low              |
+| Component                            | Purpose                                                     | Complexity       |
+| ------------------------------------ | ----------------------------------------------------------- | ---------------- |
+| **BotManager**                       | Register bots, jittered timer scheduling, global stats      | Low              |
+| **BotPlayer** (extends ActivePlayer) | Per-bot brain with think cycle                              | High             |
+| **AdjacencyGraph**                   | Static land connections per map (separate, expandable data) | Low (data entry) |
+| **TerritoryTracker**                 | Connected-territory model per bot                           | Medium           |
+| **InvasionPlanner**                  | Target scoring, campaign commitment, stall detection        | High             |
+| **BotEconomy**                       | Train orders with per-barracks budget                       | Low              |
+| ~~**BotNavalManager**~~              | ~~Programmatic transport route creation~~ _(Deferred)_      | ~~Medium~~       |
+| **BotOrderBatcher**                  | Rate-limit orders to avoid lag spikes                       | Low              |
 
 ### Modifications to Existing Code
 
-| File               | Change                                                      |
-| ------------------ | ----------------------------------------------------------- |
-| `ClientManager`    | Exclude reserved bot slots from redistribution              |
-| `PlayerManager`    | Support bot player type; skip bot slots in human logic      |
-| `TransportManager` | Add programmatic patrol API for bots                        |
-| `GameLoopState`    | Hook bot manager into the game loop (or use separate timer) |
-| Terrain configs    | Add adjacency data per map                                  |
-| Mode setup states  | Allow selecting number of computer players                  |
+| File                   | Change                                                      |
+| ---------------------- | ----------------------------------------------------------- |
+| `ClientManager`        | Exclude reserved bot slots from redistribution              |
+| `PlayerManager`        | Support bot player type; skip bot slots in human logic      |
+| ~~`TransportManager`~~ | ~~Add programmatic patrol API for bots~~ _(Deferred)_       |
+| `GameLoopState`        | Hook bot manager into the game loop (or use separate timer) |
+| Terrain configs        | Add separate adjacency data files per map (expandable)      |
+| Mode setup states      | Allow selecting number of computer players                  |
 
 ### What We Get for Free
 
@@ -571,16 +590,15 @@ VM's capacity for a single tick.
    difficulty presets — how many trains per think, how aggressive the target
    scoring, how quickly to abandon stalled invasions.
 
-3. **Alliance behavior:** Should bots honor alliances or truces with humans?
-   The Stand Alone system has each bot independent. If we want diplomacy, the
-   chat manager access pattern (which Stand Alone includes but doesn't deeply
-   use) would need significant expansion.
+3. **~~Alliance behavior:~~** ✅ **Decided: FFA only.** Bots do not respect
+   alliances or truces. They treat every other player as an enemy. Diplomacy
+   support may be added in a future iteration, but is out of scope for now.
 
-4. **Fog of war:** Do bots get perfect information or respect fog? Stand Alone
-   bots read all ECS data (perfect vision). In WC3, we could either share
-   vision with a neutral "omniscient" slot or query only visible state. Perfect
-   information is simpler and traditional for Risk AI.
+4. **~~Fog of war:~~** ✅ **Decided: Bots respect fog of war.** Bots will only
+   act on information visible to their player slot, not omniscient game state.
+   This means the bot must query only units/territories it has vision of. This
+   is more challenging than perfect information but more fair to human players.
 
-5. **Leaver replacement:** Should a bot take over for a human who leaves?
-   This would require "adopting" the leaver's units and slots —
-   significantly more complex than starting fresh.
+5. **~~Leaver replacement:~~** ✅ **Decided: No.** Bots will **not** take over
+   for a human who leaves. Leaver slots are handled by the existing unit-lag
+   system. A bot is always a fresh computer player from game start.
