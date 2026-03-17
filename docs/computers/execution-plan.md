@@ -514,7 +514,7 @@ capture, confirm it picks a new adjacent target.
 
 ### Step 9.1 — Assemble the full think cycle
 
-- [ ] Wire all steps together in `ComputerPlayer.think()`:
+- [x] Wire all steps together in `ComputerPlayer.think()`:
 
   ```typescript
   think(): void {
@@ -543,7 +543,7 @@ capture, confirm it picks a new adjacent target.
   }
   ```
 
-- [ ] Ensure each sub-step has its own `debugPrint` output (already done in
+- [x] Ensure each sub-step has its own `debugPrint` output (already done in
       prior steps)
 
 **Test:** Full end-to-end. Launch with 2 humans and 2 bots on Europe. Let it
