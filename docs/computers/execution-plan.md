@@ -308,25 +308,25 @@ map.
 
 ### Step 4.1 — Build `BotTerritoryTracker`
 
-- [ ] Create `src/app/bot/territory-tracker.ts`
-- [ ] Stores per-bot connectivity info: which owned countries are connected
+- [x] Create `src/app/bot/territory-tracker.ts`
+- [x] Stores per-bot connectivity info: which owned countries are connected
       by land through owned territory
-- [ ] The "mainland" (largest connected group) also serves as the bot's
+- [x] The "mainland" (largest connected group) also serves as the bot's
       strategic expansion center — equivalent to the HQ selection concept from
       the Stand Alone analysis (Section 11). No separate HQ algorithm is needed;
       the bot naturally expands from its densest cluster.
-- [ ] `update(ownedCountries: Country[], adjacencyGraph: AdjacencyGraph)`:
+- [x] `update(ownedCountries: Country[], adjacencyGraph: AdjacencyGraph)`:
   - BFS/DFS from each owned country, only following land adjacencies through
     owned countries
   - Groups connected countries into "landmasses" (sets)
   - Identifies the "mainland" as the largest connected group
-- [ ] `getMainland(): Set<string>` — largest connected group of owned countries
-- [ ] `getLandmasses(): Set<string>[]` — all connected groups
-- [ ] `isLandReachable(from: string, to: string): boolean` — are both in the
+- [x] `getMainland(): Set<string>` — largest connected group of owned countries
+- [x] `getLandmasses(): Set<string>[]` — all connected groups
+- [x] `isLandReachable(from: string, to: string): boolean` — are both in the
       same landmass?
-- [ ] If `adjacencyGraph.hasData()` is false, treat all owned countries as one
+- [x] If `adjacencyGraph.hasData()` is false, treat all owned countries as one
       single landmass (graceful degradation)
-- [ ] `debugPrint('[Territory] Slot ' + id + ': ' + landmasses.length + ' landmasses, mainland=' + mainlandSize + ' countries', DC.bot)`
+- [x] `debugPrint('[Territory] Slot ' + id + ': ' + landmasses.length + ' landmasses, mainland=' + mainlandSize + ' countries', DC.bot)`
 
 **Test:** Add `BotTerritoryTracker` to `ComputerPlayer`. Call
 `tracker.update()` at the start of each think. Watch debug output showing
@@ -338,12 +338,12 @@ landmass).
 
 ### Step 4.2 — Identify border countries and interior countries
 
-- [ ] Add `getBorderCountries(): string[]` — countries the bot owns that are
+- [x] Add `getBorderCountries(): string[]` — countries the bot owns that are
       adjacent to at least one country it does NOT own
-- [ ] Add `getInteriorCountries(): string[]` — countries the bot owns where
+- [x] Add `getInteriorCountries(): string[]` — countries the bot owns where
       ALL adjacent countries are also owned by the bot
-- [ ] These are derived from the adjacency graph + ownership data
-- [ ] `debugPrint('[Territory] Slot ' + id + ': borders=' + borders.length + ', interior=' + interior.length, DC.bot)`
+- [x] These are derived from the adjacency graph + ownership data
+- [x] `debugPrint('[Territory] Slot ' + id + ': borders=' + borders.length + ', interior=' + interior.length, DC.bot)`
 
 **Test:** Watch debug output. Confirm that as the bot (passively via spawners)
 captures more territory, border/interior counts change logically.

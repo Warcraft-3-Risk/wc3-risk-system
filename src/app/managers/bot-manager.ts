@@ -80,7 +80,7 @@ export class BotManager {
 				if (!bot.status.isAlive() && !bot.status.isNomad()) continue;
 
 				if (counter <= 0) {
-					bot.think();
+					bot.think(this.adjacencyGraph);
 					this.thinkCounters.set(bot, BOT_THINK_INTERVAL);
 				} else {
 					this.thinkCounters.set(bot, counter - 1);

@@ -2,20 +2,27 @@ import { ActivePlayer } from './active-player';
 import { debugPrint } from '../../utils/debug-print';
 import { DC } from 'src/configs/game-settings';
 import { UNIT_ID } from 'src/configs/unit-id';
+import { BotTerritoryTracker } from '../../bot/territory-tracker';
+import { AdjacencyGraph } from '../../bot/adjacency-graph';
 
 const BOT_MAX_TRAINS_PER_THINK = 5;
 
 export class ComputerPlayer extends ActivePlayer {
+	public readonly territory: BotTerritoryTracker = new BotTerritoryTracker();
+
 	constructor(player: player) {
 		super(player);
 		debugPrint(`[Bot] ComputerPlayer created for slot ${GetPlayerId(player)}`, DC.bot);
 	}
 
-	public think(): void {
+	public think(adjacencyGraph: AdjacencyGraph): void {
 		const p = this.getPlayer();
 		const cities = this.trackedData.cities.cities.length;
 		const units = this.trackedData.units.size;
 		const gold = GetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD);
+
+		// Update territory awareness before any decisions
+		this.territory.update(this.trackedData.cities.cities, adjacencyGraph, GetPlayerId(p));
 
 		debugPrint(`[Bot] Slot ${GetPlayerId(p)} THINK — cities=${cities}, units=${units}, gold=${gold}`, DC.bot);
 
