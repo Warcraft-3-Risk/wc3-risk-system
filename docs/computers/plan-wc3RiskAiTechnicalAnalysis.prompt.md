@@ -189,7 +189,7 @@ following **non-obvious land bridge connections** that exist in our map:
 | Connection                   | Type        |
 | ---------------------------- | ----------- |
 | UK ↔ Normandy               | Land bridge |
-| Malta ↔ Italy               | Land bridge |
+| Sicily ↔ Southern Italy     | Land bridge |
 | Northern Ireland ↔ Scotland | Land bridge |
 | Sweden ↔ Denmark            | Land bridge |
 | Spain ↔ Morocco             | Land bridge |

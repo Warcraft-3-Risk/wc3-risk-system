@@ -215,7 +215,7 @@ Confirm no desync in multiplayer (both clients show same messages).
 
 ### Step 2.1 — Define the adjacency data structure
 
-- [ ] Create `src/configs/adjacency/adjacency-types.ts` with the type:
+- [x] Create `src/configs/adjacency/adjacency-types.ts` with the type:
 
   ```typescript
   export type AdjacencyMap = Record<string, { land: string[] }>;
@@ -226,7 +226,7 @@ Confirm no desync in multiplayer (both clients show same messages).
   array matches the analysis and allows adding `sea: string[]` later when
   naval transport is implemented.
 
-- [ ] Create `src/configs/adjacency/europe-adjacency.ts` with the full Europe
+- [x] Create `src/configs/adjacency/europe-adjacency.ts` with the full Europe
       adjacency map (81 countries — based on real geography + the land bridge
       exceptions documented in the technical analysis)
 
@@ -237,15 +237,15 @@ and print: `debugPrint('[Adjacency] Europe map loaded: ' + Object.keys(map).leng
 
 ### Step 2.2 — Build the `AdjacencyGraph` runtime class
 
-- [ ] Create `src/app/bot/adjacency-graph.ts`
-- [ ] Constructor takes an `AdjacencyMap` (or `null` if no data for this map)
-- [ ] Methods:
+- [x] Create `src/app/bot/adjacency-graph.ts`
+- [x] Constructor takes an `AdjacencyMap` (or `null` if no data for this map)
+- [x] Methods:
   - `getNeighbors(country: string): string[]` — returns adjacent country names
     (empty array if country not in map)
   - `areAdjacent(a: string, b: string): boolean`
   - `hasData(): boolean` — returns false if no adjacency data was provided
-- [ ] `debugPrint('[AdjacencyGraph] Loaded with ' + countryCount + ' countries', DC.bot)` on construction
-- [ ] Validate symmetry on construction: if A→B exists, B→A must also exist.
+- [x] `debugPrint('[AdjacencyGraph] Loaded with ' + countryCount + ' countries', DC.bot)` on construction
+- [x] Validate symmetry on construction: if A→B exists, B→A must also exist.
       Log warnings for mismatches:
       `debugPrint('[AdjacencyGraph] WARNING: asymmetric adjacency: ' + a + ' → ' + b, DC.bot)`
 
@@ -256,12 +256,12 @@ confirms country count and no asymmetry warnings.
 
 ### Step 2.3 — Wire adjacency to the right map
 
-- [ ] Detect which map is currently being played (from build config or map
+- [x] Detect which map is currently being played (from build config or map
       name detection — check how terrain configs are selected)
-- [ ] Load the correct adjacency data (europe for Europe map, or `null` for
+- [x] Load the correct adjacency data (europe for Europe map, or `null` for
       maps without adjacency data yet)
-- [ ] Store as `BotManager.adjacencyGraph`
-- [ ] `debugPrint('[BotManager] Adjacency data loaded: ' + (graph.hasData() ? 'yes' : 'NO — bots will play suboptimally'), DC.bot)`
+- [x] Store as `BotManager.adjacencyGraph`
+- [x] `debugPrint('[BotManager] Adjacency data loaded: ' + (graph.hasData() ? 'yes' : 'NO — bots will play suboptimally'), DC.bot)`
 
 **Test:** Build for Europe → shows adjacency loaded. Build for World/Asia →
 shows "NO — bots will play suboptimally".
