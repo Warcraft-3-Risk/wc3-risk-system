@@ -11,10 +11,14 @@ import { City } from '../../city/city';
 const BOT_MAX_TRAINS_PER_THINK = 5;
 const BOT_MAX_ORDERS_PER_THINK = 20;
 const BOT_MAX_REINFORCE_ORDERS_PER_THINK = 10;
+const CAMPAIGN_STALL_THRESHOLD = 10; // think cycles before abandoning a stalled campaign
 
 export class ComputerPlayer extends ActivePlayer {
 	public readonly territory: BotTerritoryTracker = new BotTerritoryTracker();
 	private currentTarget: string | null = null; // country name
+	private campaignTicks: number = 0;
+	private lastOwnedInTarget: number = 0; // bot's owned cities in target last think
+	private consolidating: boolean = false; // skip attacks while rebuilding
 	private pendingOrders: { unit: unit; x: number; y: number }[] = [];
 	private orderedThisTick: Set<unit> = new Set();
 
@@ -69,11 +73,89 @@ export class ComputerPlayer extends ActivePlayer {
 		const borderCountries = this.territory.getBorderCountries();
 
 		if (!adjacencyGraph.hasData()) {
-			// Fallback: pick a random enemy neighbor from any border city
 			this.selectTargetFallback(id);
 			return;
 		}
 
+		// --- Campaign lifecycle: check if existing campaign is still valid ---
+		if (this.currentTarget) {
+			const targetCountry = StringToCountry.get(this.currentTarget);
+
+			if (targetCountry) {
+				const targetCities = targetCountry.getCities();
+				let ownedInTarget = 0;
+				for (const c of targetCities) {
+					if (c.getOwner() === p) ownedInTarget++;
+				}
+
+				// Campaign complete — we own all cities in the target country
+				if (ownedInTarget === targetCities.length) {
+					debugPrint(`[Bot] Slot ${id}: campaign COMPLETE! ${this.currentTarget} fully captured`, DC.bot);
+					this.resetCampaign();
+					// Fall through to pick a new target
+				} else {
+					// Check progress: did we capture a new city since last think?
+					if (ownedInTarget > this.lastOwnedInTarget) {
+						debugPrint(
+							`[Bot] Slot ${id}: captured city in ${this.currentTarget} (${ownedInTarget}/${targetCities.length}), continuing push`,
+							DC.bot
+						);
+						this.campaignTicks = 0; // reset stall counter on progress
+						this.consolidating = false;
+					}
+					this.lastOwnedInTarget = ownedInTarget;
+
+					// Check if we can still reach the target (must have an adjacent border country)
+					const targetNeighbors = adjacencyGraph.getNeighbors(this.currentTarget);
+					let canReach = false;
+					for (const borderName of borderCountries) {
+						if (targetNeighbors.indexOf(borderName) >= 0) {
+							canReach = true;
+							break;
+						}
+					}
+					// Also reachable if we own a city inside the target
+					if (ownedInTarget > 0) canReach = true;
+
+					if (!canReach) {
+						debugPrint(`[Bot] Slot ${id}: campaign vs ${this.currentTarget} UNREACHABLE, picking new target`, DC.bot);
+						this.resetCampaign();
+					} else {
+						// Check stall
+						this.campaignTicks++;
+
+						// After half the stall threshold with no progress, consolidate (stop sending fresh units)
+						if (!this.consolidating && this.campaignTicks >= math.floor(CAMPAIGN_STALL_THRESHOLD / 2)) {
+							this.consolidating = true;
+							debugPrint(
+								`[Bot] Slot ${id}: campaign vs ${this.currentTarget} — consolidating (no progress for ${this.campaignTicks} ticks)`,
+								DC.bot
+							);
+						}
+
+						if (this.campaignTicks >= CAMPAIGN_STALL_THRESHOLD) {
+							debugPrint(
+								`[Bot] Slot ${id}: campaign vs ${this.currentTarget} STALLED (${this.campaignTicks} ticks), picking new target`,
+								DC.bot
+							);
+							this.resetCampaign();
+						} else {
+							// Campaign still active — keep current target
+							debugPrint(
+								`[Bot] Slot ${id}: campaign vs ${this.currentTarget} — tick ${this.campaignTicks}/${CAMPAIGN_STALL_THRESHOLD}`,
+								DC.bot
+							);
+							return;
+						}
+					}
+				}
+			} else {
+				// Target country no longer valid
+				this.resetCampaign();
+			}
+		}
+
+		// --- Pick a new target ---
 		let bestTarget: string | null = null;
 		let bestScore = -1;
 		let bestOwnerId = -1;
@@ -82,7 +164,6 @@ export class ComputerPlayer extends ActivePlayer {
 			const neighbors = adjacencyGraph.getNeighbors(borderName);
 
 			for (const neighborName of neighbors) {
-				// Skip if we fully own this country (all cities are ours)
 				const neighborCountry = StringToCountry.get(neighborName);
 				if (!neighborCountry) continue;
 
@@ -95,33 +176,26 @@ export class ComputerPlayer extends ActivePlayer {
 
 				const owner = neighborCountry.getOwner();
 
-				let score = 100; // base score
+				let score = 100;
 
-				// Prefer weaker neighbors: targets owned by players with fewer cities
 				const ownerStats = globalStats.playerStats.get(owner);
 				if (ownerStats) {
-					// Invert strength: weaker players get higher score bonus
 					score += (1 - ownerStats.strength) * 50;
 
-					// Penalize attacking the strongest player
 					if (owner === globalStats.largestPlayer && globalStats.totalActivePlayers > 2) {
 						score -= 30;
 					}
 				}
 
-				// Prefer targets with fewer visible defending units
 				const defenderCount = this.countVisibleDefenders(neighborCountry.getCities());
 				score -= defenderCount * 10;
 
-				// Prefer completing a country: if we own some cities in this country already
 				const countryCities = neighborCountry.getCities();
 				let ownedInCountry = 0;
 				for (const city of countryCities) {
 					if (city.getOwner() === p) ownedInCountry++;
 				}
 				if (ownedInCountry > 0) {
-					// Strong bonus for partial ownership — finishing a country is top priority
-					// Scales with completion %: owning 2/3 cities = +133, 1/3 = +66
 					score += 200 * (ownedInCountry / countryCities.length);
 				}
 
@@ -133,12 +207,39 @@ export class ComputerPlayer extends ActivePlayer {
 			}
 		}
 
-		this.currentTarget = bestTarget;
+		this.startCampaign(bestTarget);
 
 		if (bestTarget) {
-			debugPrint(`[Bot] Slot ${id} target: ${bestTarget} (score=${math.floor(bestScore)}, owner=slot ${bestOwnerId})`, DC.bot);
+			debugPrint(`[Bot] Slot ${id} NEW campaign: ${bestTarget} (score=${math.floor(bestScore)}, owner=slot ${bestOwnerId})`, DC.bot);
 		} else {
 			debugPrint(`[Bot] Slot ${id} target: none (no valid targets)`, DC.bot);
+		}
+	}
+
+	private resetCampaign(): void {
+		this.currentTarget = null;
+		this.campaignTicks = 0;
+		this.lastOwnedInTarget = 0;
+		this.consolidating = false;
+	}
+
+	private startCampaign(target: string | null): void {
+		this.currentTarget = target;
+		this.campaignTicks = 0;
+		this.consolidating = false;
+
+		if (target) {
+			const p = this.getPlayer();
+			const targetCountry = StringToCountry.get(target);
+			if (targetCountry) {
+				let owned = 0;
+				for (const c of targetCountry.getCities()) {
+					if (c.getOwner() === p) owned++;
+				}
+				this.lastOwnedInTarget = owned;
+			}
+		} else {
+			this.lastOwnedInTarget = 0;
 		}
 	}
 
@@ -188,6 +289,12 @@ export class ComputerPlayer extends ActivePlayer {
 
 		// 2. Issue new attack orders toward current target
 		if (!this.currentTarget) {
+			return;
+		}
+
+		// Skip new attacks while consolidating — let existing units fight, don't send more
+		if (this.consolidating) {
+			debugPrint(`[Bot] Slot ${id}: consolidating (rebuilding forces), skipping new attack orders`, DC.bot);
 			return;
 		}
 

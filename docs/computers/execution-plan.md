@@ -473,20 +473,20 @@ attacking, rather than spreading units evenly.
 
 ### Step 8.1 — Commit to a campaign target
 
-- [ ] Add campaign state to `ComputerPlayer`:
+- [x] Add campaign state to `ComputerPlayer`:
   ```typescript
   private campaignTarget: Country | null = null;
   private campaignTicks: number = 0;
   private readonly CAMPAIGN_STALL_THRESHOLD = 10; // think cycles
   ```
-- [ ] In `selectTarget()`, don't switch targets every think — commit to one
+- [x] In `selectTarget()`, don't switch targets every think — commit to one
       target until:
   - (a) It's captured (reset campaign), or
   - (b) No progress for `CAMPAIGN_STALL_THRESHOLD` thinks (abandon + pick new)
-- [ ] Track progress: if the bot's unit count near the target decreases (or
+- [x] Track progress: if the bot's unit count near the target decreases (or
       remains 0) for too many ticks, it's stalled
-- [ ] `debugPrint('[Bot] Slot ' + id + ': campaign vs ' + target + ' — tick ' + ticks + '/' + threshold, DC.bot)`
-- [ ] `debugPrint('[Bot] Slot ' + id + ': campaign STALLED, picking new target', DC.bot)`
+- [x] `debugPrint('[Bot] Slot ' + id + ': campaign vs ' + target + ' — tick ' + ticks + '/' + threshold, DC.bot)`
+- [x] `debugPrint('[Bot] Slot ' + id + ': campaign STALLED, picking new target', DC.bot)`
 
 **Test:** Watch the bot commit to one target for multiple think cycles. If
 it's struggling (enemy is stronger), confirm it eventually abandons and picks
@@ -496,14 +496,14 @@ a new target.
 
 ### Step 8.2 — Post-capture: advance or consolidate
 
-- [ ] When the bot captures a city (detected via city count change in
+- [x] When the bot captures a city (detected via city count change in
       `trackedData`), decide:
   - If the target country now fully belongs to the bot: campaign complete → pick new target
   - If the target country has more cities: continue pushing
   - If the bot is severely weakened (lost >50% of staging units): consolidate
     (stop attacking, train up)
-- [ ] `debugPrint('[Bot] Slot ' + id + ': captured city in ' + country + ', continuing push', DC.bot)`
-- [ ] `debugPrint('[Bot] Slot ' + id + ': campaign complete! ' + country + ' fully captured', DC.bot)`
+- [x] `debugPrint('[Bot] Slot ' + id + ': captured city in ' + country + ', continuing push', DC.bot)`
+- [x] `debugPrint('[Bot] Slot ' + id + ': campaign complete! ' + country + ' fully captured', DC.bot)`
 
 **Test:** Watch the bot capture a multi-city country city by city. After full
 capture, confirm it picks a new adjacent target.
