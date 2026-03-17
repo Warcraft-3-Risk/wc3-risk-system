@@ -49,8 +49,8 @@ export function attackStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGraph)
 		if (stagingCtry) {
 			for (const sc of stagingCtry.getCities()) {
 				if (sc.getOwner() !== p) {
-					destX = sc.barrack.defaultX;
-					destY = sc.barrack.defaultY;
+					destX = GetUnitX(sc.cop);
+					destY = GetUnitY(sc.cop);
 					foundDest = true;
 					attackLabel = `${campaign.stagingCountry} (staging cleanup)`;
 					break;
@@ -64,8 +64,8 @@ export function attackStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGraph)
 		if (!targetCountry) return;
 		for (const tc of targetCountry.getCities()) {
 			if (tc.getOwner() !== p) {
-				destX = tc.barrack.defaultX;
-				destY = tc.barrack.defaultY;
+				destX = GetUnitX(tc.cop);
+				destY = GetUnitY(tc.cop);
 				foundDest = true;
 				break;
 			}
