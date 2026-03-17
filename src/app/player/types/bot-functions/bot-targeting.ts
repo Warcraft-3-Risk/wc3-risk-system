@@ -142,10 +142,13 @@ export function selectTarget(ctx: BotSkillContext, adjacencyGraph: AdjacencyGrap
 		}
 	}
 
-	startCampaign(campaign, bestTarget, p);
+	startCampaign(campaign, bestTarget, p, borderCountries, adjacencyGraph);
 
 	if (bestTarget) {
-		debugPrint(`[Bot] Slot ${id} NEW campaign: ${bestTarget} (score=${math.floor(bestScore)}, owner=slot ${bestOwnerId})`, DC.bot);
+		debugPrint(
+			`[Bot] Slot ${id} NEW campaign: ${bestTarget} (score=${math.floor(bestScore)}, owner=slot ${bestOwnerId}, staging=${campaign.stagingCountry})`,
+			DC.bot
+		);
 	} else {
 		debugPrint(`[Bot] Slot ${id} target: none (no valid targets)`, DC.bot);
 	}
@@ -163,6 +166,7 @@ function selectTargetFallback(ctx: BotSkillContext): void {
 				const neighborCountry = CityToCountry.get(neighborCity);
 				if (neighborCountry) {
 					campaign.currentTarget = neighborCountry.getName();
+					campaign.stagingCountry = null;
 					debugPrint(`[Bot] Slot ${id} target (fallback): ${campaign.currentTarget}`, DC.bot);
 					return;
 				}
@@ -171,22 +175,31 @@ function selectTargetFallback(ctx: BotSkillContext): void {
 	}
 
 	campaign.currentTarget = null;
+	campaign.stagingCountry = null;
 	debugPrint(`[Bot] Slot ${id} target: none (fallback, no neighbors)`, DC.bot);
 }
 
 function resetCampaign(campaign: CampaignState): void {
 	campaign.currentTarget = null;
+	campaign.stagingCountry = null;
 	campaign.campaignTicks = 0;
 	campaign.lastOwnedInTarget = 0;
 	campaign.consolidating = false;
 }
 
-function startCampaign(campaign: CampaignState, target: string | null, p: player): void {
+function startCampaign(
+	campaign: CampaignState,
+	target: string | null,
+	p: player,
+	borderCountries: Set<string>,
+	adjacencyGraph: AdjacencyGraph
+): void {
 	campaign.currentTarget = target;
 	campaign.campaignTicks = 0;
 	campaign.consolidating = false;
 
 	if (target) {
+		campaign.stagingCountry = pickStagingCountry(target, borderCountries, adjacencyGraph, p);
 		const targetCountry = StringToCountry.get(target);
 		if (targetCountry) {
 			let owned = 0;
@@ -196,8 +209,32 @@ function startCampaign(campaign: CampaignState, target: string | null, p: player
 			campaign.lastOwnedInTarget = owned;
 		}
 	} else {
+		campaign.stagingCountry = null;
 		campaign.lastOwnedInTarget = 0;
 	}
+}
+
+function pickStagingCountry(target: string, borderCountries: Set<string>, adjacencyGraph: AdjacencyGraph, p: player): string | null {
+	const targetNeighbors = adjacencyGraph.getNeighbors(target);
+	let bestStaging: string | null = null;
+	let bestOwnedCount = -1;
+
+	for (const borderName of borderCountries) {
+		if (targetNeighbors.indexOf(borderName) >= 0) {
+			const country = StringToCountry.get(borderName);
+			if (!country) continue;
+			let owned = 0;
+			for (const c of country.getCities()) {
+				if (c.getOwner() === p) owned++;
+			}
+			if (owned > bestOwnedCount) {
+				bestOwnedCount = owned;
+				bestStaging = borderName;
+			}
+		}
+	}
+
+	return bestStaging;
 }
 
 function countVisibleDefenders(cities: City[], p: player): number {

@@ -14,6 +14,7 @@ export class ComputerPlayer extends ActivePlayer {
 	public readonly territory: BotTerritoryTracker = new BotTerritoryTracker();
 	private campaign: CampaignState = {
 		currentTarget: null,
+		stagingCountry: null,
 		campaignTicks: 0,
 		lastOwnedInTarget: 0,
 		consolidating: false,

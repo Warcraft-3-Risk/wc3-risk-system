@@ -3,6 +3,7 @@ import { City } from '../../../city/city';
 
 export interface CampaignState {
 	currentTarget: string | null;
+	stagingCountry: string | null;
 	campaignTicks: number;
 	lastOwnedInTarget: number;
 	consolidating: boolean;

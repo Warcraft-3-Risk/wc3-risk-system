@@ -65,25 +65,15 @@ export function reinforceStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGra
 		}
 	}
 
-	// Step 2 — Concentrate non-staging border units toward the campaign target
-	if (campaign.currentTarget && ordersIssued < BOT_MAX_REINFORCE_ORDERS_PER_THINK) {
-		const targetNeighbors = adjacencyGraph.getNeighbors(campaign.currentTarget);
-		const borderCountries = territory.getBorderCountries();
-		const stagingNames = new Set<string>();
-
-		for (const borderName of borderCountries) {
-			if (targetNeighbors.indexOf(borderName) >= 0) {
-				stagingNames.add(borderName);
-			}
-		}
-
+	// Step 2 — Concentrate non-staging border units toward the staging country
+	if (campaign.stagingCountry && ordersIssued < BOT_MAX_REINFORCE_ORDERS_PER_THINK) {
+		const stagingCtry = StringToCountry.get(campaign.stagingCountry);
 		let stagingDestX = 0;
 		let stagingDestY = 0;
 		let foundStaging = false;
-		for (const stageName of stagingNames) {
-			const stageCountry = StringToCountry.get(stageName);
-			if (!stageCountry) continue;
-			for (const city of stageCountry.getCities()) {
+
+		if (stagingCtry) {
+			for (const city of stagingCtry.getCities()) {
 				if (city.getOwner() === p) {
 					stagingDestX = city.barrack.defaultX;
 					stagingDestY = city.barrack.defaultY;
@@ -91,15 +81,15 @@ export function reinforceStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGra
 					break;
 				}
 			}
-			if (foundStaging) break;
 		}
 
 		if (foundStaging) {
+			const borderCountries = territory.getBorderCountries();
 			let concentrateCount = 0;
 
 			for (const borderName of borderCountries) {
 				if (ordersIssued >= BOT_MAX_REINFORCE_ORDERS_PER_THINK) break;
-				if (stagingNames.has(borderName)) continue;
+				if (borderName === campaign.stagingCountry) continue;
 
 				const borderCountry = StringToCountry.get(borderName);
 				if (!borderCountry) continue;
@@ -123,7 +113,7 @@ export function reinforceStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGra
 
 			if (concentrateCount > 0) {
 				debugPrint(
-					`[Bot] Slot ${id}: concentrating ${concentrateCount} units toward staging for campaign vs ${campaign.currentTarget}`,
+					`[Bot] Slot ${id}: concentrating ${concentrateCount} units toward ${campaign.stagingCountry} for campaign vs ${campaign.currentTarget}`,
 					DC.bot
 				);
 			}
@@ -140,16 +130,7 @@ function findReinforceDestination(ctx: BotSkillContext, fromCountry: string, adj
 
 	const borderCountries = ctx.territory.getBorderCountries();
 	const ownedNames = ctx.territory.getOwnedCountryNames();
-
-	const stagingNames = new Set<string>();
-	if (ctx.campaign.currentTarget) {
-		const targetNeighbors = adjacencyGraph.getNeighbors(ctx.campaign.currentTarget);
-		for (const borderName of borderCountries) {
-			if (targetNeighbors.indexOf(borderName) >= 0) {
-				stagingNames.add(borderName);
-			}
-		}
-	}
+	const stagingCountry = ctx.campaign.stagingCountry;
 
 	const visited = new Set<string>();
 	const queue: string[] = [fromCountry];
@@ -160,7 +141,7 @@ function findReinforceDestination(ctx: BotSkillContext, fromCountry: string, adj
 	while (queue.length > 0) {
 		const current = queue.shift()!;
 
-		if (stagingNames.has(current)) return current;
+		if (stagingCountry && current === stagingCountry) return current;
 
 		if (borderCountries.has(current) && current !== fromCountry && !nearestBorder) {
 			nearestBorder = current;

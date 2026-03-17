@@ -2,6 +2,7 @@ import { BotSkillContext } from './bot-skill-context';
 import { AdjacencyGraph } from '../../../bot/adjacency-graph';
 import { StringToCountry } from '../../../country/country-map';
 import { City } from '../../../city/city';
+import { UnitToCity } from '../../../city/city-map';
 import { debugPrint } from '../../../utils/debug-print';
 import { DC } from 'src/configs/game-settings';
 
@@ -27,7 +28,7 @@ export function attackStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGraph)
 		return;
 	}
 
-	// 2. Issue new attack orders toward current target
+	// 2. Issue new attack orders
 	if (!campaign.currentTarget) return;
 
 	if (campaign.consolidating) {
@@ -35,51 +36,77 @@ export function attackStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGraph)
 		return;
 	}
 
-	const targetCountry = StringToCountry.get(campaign.currentTarget);
-	if (!targetCountry) return;
-
-	const targetCities = targetCountry.getCities();
+	// Determine attack destination
+	// Priority 1: Capture unowned cities in our staging country first
+	// Priority 2: Attack enemy cities in the target country
 	let destX = 0;
 	let destY = 0;
 	let foundDest = false;
+	let attackLabel = campaign.currentTarget;
 
-	for (const tc of targetCities) {
-		if (tc.getOwner() !== p) {
-			destX = tc.barrack.defaultX;
-			destY = tc.barrack.defaultY;
-			foundDest = true;
-			break;
+	if (campaign.stagingCountry) {
+		const stagingCtry = StringToCountry.get(campaign.stagingCountry);
+		if (stagingCtry) {
+			for (const sc of stagingCtry.getCities()) {
+				if (sc.getOwner() !== p) {
+					destX = sc.barrack.defaultX;
+					destY = sc.barrack.defaultY;
+					foundDest = true;
+					attackLabel = `${campaign.stagingCountry} (staging cleanup)`;
+					break;
+				}
+			}
+		}
+	}
+
+	if (!foundDest) {
+		const targetCountry = StringToCountry.get(campaign.currentTarget);
+		if (!targetCountry) return;
+		for (const tc of targetCountry.getCities()) {
+			if (tc.getOwner() !== p) {
+				destX = tc.barrack.defaultX;
+				destY = tc.barrack.defaultY;
+				foundDest = true;
+				break;
+			}
 		}
 	}
 
 	if (!foundDest) return;
 
-	// Find idle units in border countries adjacent to the target
-	const borderCountries = territory.getBorderCountries();
-	const targetNeighbors = adjacencyGraph.getNeighbors(campaign.currentTarget);
-	const stagingCountryNames = new Set<string>();
-
-	for (const borderName of borderCountries) {
-		if (targetNeighbors.indexOf(borderName) >= 0) {
-			stagingCountryNames.add(borderName);
-		}
-	}
-
-	stagingCountryNames.add(campaign.currentTarget);
-
-	if (!adjacencyGraph.hasData()) {
-		for (const borderName of borderCountries) {
-			stagingCountryNames.add(borderName);
-		}
-	}
-
+	// Collect idle units from staging country + owned cities in the target
 	const stagingCities: City[] = [];
-	for (const name of stagingCountryNames) {
-		const country = StringToCountry.get(name);
-		if (country) {
-			for (const city of country.getCities()) {
+
+	if (campaign.stagingCountry) {
+		const stageCtry = StringToCountry.get(campaign.stagingCountry);
+		if (stageCtry) {
+			for (const city of stageCtry.getCities()) {
 				if (city.getOwner() === p) {
 					stagingCities.push(city);
+				}
+			}
+		}
+	}
+
+	const targetCtry = StringToCountry.get(campaign.currentTarget);
+	if (targetCtry) {
+		for (const city of targetCtry.getCities()) {
+			if (city.getOwner() === p) {
+				stagingCities.push(city);
+			}
+		}
+	}
+
+	// Fallback: if no adjacency data, use all border cities
+	if (!adjacencyGraph.hasData()) {
+		const borderCountries = territory.getBorderCountries();
+		for (const borderName of borderCountries) {
+			const country = StringToCountry.get(borderName);
+			if (country) {
+				for (const city of country.getCities()) {
+					if (city.getOwner() === p) {
+						stagingCities.push(city);
+					}
 				}
 			}
 		}
@@ -100,10 +127,7 @@ export function attackStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGraph)
 	}
 
 	if (ordersIssued > 0 || pendingOrders.length > 0) {
-		debugPrint(
-			`[Bot] Slot ${id}: attacking ${campaign.currentTarget} with ${ordersIssued} units, ${pendingOrders.length} orders queued`,
-			DC.bot
-		);
+		debugPrint(`[Bot] Slot ${id}: attacking ${attackLabel} with ${ordersIssued} units, ${pendingOrders.length} orders queued`, DC.bot);
 	}
 }
 
@@ -115,6 +139,7 @@ export function findIdleUnits(ctx: BotSkillContext, nearCities: City[]): unit[] 
 		if (orderedThisTick.has(u)) continue;
 		if (GetUnitState(u, UNIT_STATE_LIFE) <= 0) continue;
 		if (GetUnitCurrentOrder(u) !== 0) continue;
+		if (UnitToCity.has(u)) continue;
 
 		const ux = GetUnitX(u);
 		const uy = GetUnitY(u);
