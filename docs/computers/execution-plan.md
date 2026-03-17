@@ -444,12 +444,12 @@ orders in one frame.
 
 ### Step 7.1 — Move interior units toward the border
 
-- [ ] In `ComputerPlayer`, add `reinforceStep()` called from `think()`
-- [ ] Find idle units in interior countries (no enemy-adjacent borders)
-- [ ] Move them toward the nearest border country (using adjacency graph to
+- [x] In `ComputerPlayer`, add `reinforceStep()` called from `think()`
+- [x] Find idle units in interior countries (no enemy-adjacent borders)
+- [x] Move them toward the nearest border country (using adjacency graph to
       find the closest border, then target that country's barracks position)
-- [ ] Cap at `BOT_MAX_REINFORCE_ORDERS_PER_THINK = 10`
-- [ ] `debugPrint('[Bot] Slot ' + id + ': reinforcing border, moving ' + count + ' units from interior', DC.bot)`
+- [x] Cap at `BOT_MAX_REINFORCE_ORDERS_PER_THINK = 10`
+- [x] `debugPrint('[Bot] Slot ' + id + ': reinforcing border, moving ' + count + ' units from interior', DC.bot)`
 
 **Test:** Give the bot a large connected territory. Confirm units in the
 center gradually move outward toward the borders. Interior empties over time.
@@ -458,11 +458,11 @@ center gradually move outward toward the borders. Interior empties over time.
 
 ### Step 7.2 — Concentrate units toward the active campaign target
 
-- [ ] When the bot has a campaign target, not just any border — reinforce
+- [x] When the bot has a campaign target, not just any border — reinforce
       specifically toward the staging country (the owned country adjacent to the
       target)
-- [ ] Prefer moving units from non-threatened borders first
-- [ ] `debugPrint('[Bot] Slot ' + id + ': concentrating ' + count + ' units toward ' + staging + ' for campaign vs ' + target, DC.bot)`
+- [x] Prefer moving units from non-threatened borders first
+- [x] `debugPrint('[Bot] Slot ' + id + ': concentrating ' + count + ' units toward ' + staging + ' for campaign vs ' + target, DC.bot)`
 
 **Test:** Watch the bot build up a staging force near its target before
 attacking, rather than spreading units evenly.

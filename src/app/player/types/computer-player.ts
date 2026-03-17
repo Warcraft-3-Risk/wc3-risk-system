@@ -10,6 +10,7 @@ import { City } from '../../city/city';
 
 const BOT_MAX_TRAINS_PER_THINK = 5;
 const BOT_MAX_ORDERS_PER_THINK = 20;
+const BOT_MAX_REINFORCE_ORDERS_PER_THINK = 10;
 
 export class ComputerPlayer extends ActivePlayer {
 	public readonly territory: BotTerritoryTracker = new BotTerritoryTracker();
@@ -36,6 +37,7 @@ export class ComputerPlayer extends ActivePlayer {
 		this.economyStep();
 		this.selectTarget(adjacencyGraph, globalStats);
 		this.attackStep(adjacencyGraph);
+		this.reinforceStep(adjacencyGraph);
 	}
 
 	private economyStep(): void {
@@ -305,6 +307,189 @@ export class ComputerPlayer extends ActivePlayer {
 		}
 
 		return idle;
+	}
+
+	private reinforceStep(adjacencyGraph: AdjacencyGraph): void {
+		const p = this.getPlayer();
+		const id = GetPlayerId(p);
+		let ordersIssued = 0;
+
+		const interiorCountries = this.territory.getInteriorCountries();
+		if (interiorCountries.size === 0 && !this.currentTarget) return;
+
+		// Step 7.1 — Move interior units toward the nearest border
+		for (const interiorName of interiorCountries) {
+			if (ordersIssued >= BOT_MAX_REINFORCE_ORDERS_PER_THINK) break;
+
+			// Find the destination: prefer staging countries if we have a target, else nearest border
+			const destCountryName = this.findReinforceDestination(interiorName, adjacencyGraph);
+			if (!destCountryName) continue;
+
+			const destCountry = StringToCountry.get(destCountryName);
+			if (!destCountry) continue;
+
+			// Find a friendly city in the destination to move toward
+			let destX = 0;
+			let destY = 0;
+			let foundDest = false;
+			for (const city of destCountry.getCities()) {
+				if (city.getOwner() === p) {
+					destX = city.barrack.defaultX;
+					destY = city.barrack.defaultY;
+					foundDest = true;
+					break;
+				}
+			}
+			if (!foundDest) {
+				// Destination is a border country we own — just pick first city
+				const cities = destCountry.getCities();
+				if (cities.length > 0) {
+					destX = cities[0].barrack.defaultX;
+					destY = cities[0].barrack.defaultY;
+					foundDest = true;
+				}
+			}
+			if (!foundDest) continue;
+
+			// Collect staging cities in the interior country to find idle units there
+			const interiorCountry = StringToCountry.get(interiorName);
+			if (!interiorCountry) continue;
+
+			const interiorCities: City[] = [];
+			for (const city of interiorCountry.getCities()) {
+				if (city.getOwner() === p) {
+					interiorCities.push(city);
+				}
+			}
+
+			const idleUnits = this.findIdleUnits(interiorCities);
+			for (const u of idleUnits) {
+				if (ordersIssued >= BOT_MAX_REINFORCE_ORDERS_PER_THINK) break;
+				IssuePointOrder(u, 'attack', destX, destY);
+				this.orderedThisTick.add(u);
+				ordersIssued++;
+			}
+		}
+
+		// Step 7.2 — Concentrate non-staging border units toward the campaign target
+		if (this.currentTarget && ordersIssued < BOT_MAX_REINFORCE_ORDERS_PER_THINK) {
+			const targetNeighbors = adjacencyGraph.getNeighbors(this.currentTarget);
+			const borderCountries = this.territory.getBorderCountries();
+			const stagingNames = new Set<string>();
+
+			for (const borderName of borderCountries) {
+				if (targetNeighbors.indexOf(borderName) >= 0) {
+					stagingNames.add(borderName);
+				}
+			}
+
+			// Find a destination in a staging country
+			let stagingDestX = 0;
+			let stagingDestY = 0;
+			let foundStaging = false;
+			for (const stageName of stagingNames) {
+				const stageCountry = StringToCountry.get(stageName);
+				if (!stageCountry) continue;
+				for (const city of stageCountry.getCities()) {
+					if (city.getOwner() === p) {
+						stagingDestX = city.barrack.defaultX;
+						stagingDestY = city.barrack.defaultY;
+						foundStaging = true;
+						break;
+					}
+				}
+				if (foundStaging) break;
+			}
+
+			if (foundStaging) {
+				let concentrateCount = 0;
+
+				for (const borderName of borderCountries) {
+					if (ordersIssued >= BOT_MAX_REINFORCE_ORDERS_PER_THINK) break;
+					if (stagingNames.has(borderName)) continue; // already at staging
+
+					const borderCountry = StringToCountry.get(borderName);
+					if (!borderCountry) continue;
+
+					const borderCities: City[] = [];
+					for (const city of borderCountry.getCities()) {
+						if (city.getOwner() === p) {
+							borderCities.push(city);
+						}
+					}
+
+					const idleUnits = this.findIdleUnits(borderCities);
+					for (const u of idleUnits) {
+						if (ordersIssued >= BOT_MAX_REINFORCE_ORDERS_PER_THINK) break;
+						IssuePointOrder(u, 'attack', stagingDestX, stagingDestY);
+						this.orderedThisTick.add(u);
+						ordersIssued++;
+						concentrateCount++;
+					}
+				}
+
+				if (concentrateCount > 0) {
+					debugPrint(
+						`[Bot] Slot ${id}: concentrating ${concentrateCount} units toward staging for campaign vs ${this.currentTarget}`,
+						DC.bot
+					);
+				}
+			}
+		}
+
+		if (ordersIssued > 0) {
+			debugPrint(`[Bot] Slot ${id}: reinforcing border, moving ${ordersIssued} units from interior/quiet borders`, DC.bot);
+		}
+	}
+
+	/**
+	 * BFS through owned territory to find the best reinforce destination.
+	 * Prefers staging countries (adjacent to current target) over generic borders.
+	 */
+	private findReinforceDestination(fromCountry: string, adjacencyGraph: AdjacencyGraph): string | null {
+		if (!adjacencyGraph.hasData()) return null;
+
+		const borderCountries = this.territory.getBorderCountries();
+		const ownedNames = this.territory.getOwnedCountryNames();
+
+		// Determine staging countries if we have a target
+		const stagingNames = new Set<string>();
+		if (this.currentTarget) {
+			const targetNeighbors = adjacencyGraph.getNeighbors(this.currentTarget);
+			for (const borderName of borderCountries) {
+				if (targetNeighbors.indexOf(borderName) >= 0) {
+					stagingNames.add(borderName);
+				}
+			}
+		}
+
+		// BFS from the interior country through owned territory
+		const visited = new Set<string>();
+		const queue: string[] = [fromCountry];
+		visited.add(fromCountry);
+
+		let nearestBorder: string | null = null;
+
+		while (queue.length > 0) {
+			const current = queue.shift()!;
+
+			// If this is a staging country, return immediately (best destination)
+			if (stagingNames.has(current)) return current;
+
+			// If this is any border country, remember it as fallback
+			if (borderCountries.has(current) && current !== fromCountry && !nearestBorder) {
+				nearestBorder = current;
+			}
+
+			for (const neighbor of adjacencyGraph.getNeighbors(current)) {
+				if (ownedNames.has(neighbor) && !visited.has(neighbor)) {
+					visited.add(neighbor);
+					queue.push(neighbor);
+				}
+			}
+		}
+
+		return nearestBorder;
 	}
 
 	private countVisibleDefenders(cities: City[]): number {
