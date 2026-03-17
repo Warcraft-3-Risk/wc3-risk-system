@@ -1,6 +1,9 @@
 import { ActivePlayer } from './active-player';
 import { debugPrint } from '../../utils/debug-print';
 import { DC } from 'src/configs/game-settings';
+import { UNIT_ID } from 'src/configs/unit-id';
+
+const BOT_MAX_TRAINS_PER_THINK = 5;
 
 export class ComputerPlayer extends ActivePlayer {
 	constructor(player: player) {
@@ -15,6 +18,31 @@ export class ComputerPlayer extends ActivePlayer {
 		const gold = GetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD);
 
 		debugPrint(`[Bot] Slot ${GetPlayerId(p)} THINK — cities=${cities}, units=${units}, gold=${gold}`, DC.bot);
+
+		this.economyStep();
+	}
+
+	private economyStep(): void {
+		const p = this.getPlayer();
+		const id = GetPlayerId(p);
+		let trainCount = 0;
+
+		for (const city of this.trackedData.cities.cities) {
+			if (trainCount >= BOT_MAX_TRAINS_PER_THINK) break;
+			if (GetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD) <= 0) break;
+
+			const trainId = city.isPort() ? UNIT_ID.MARINE : UNIT_ID.RIFLEMEN;
+
+			if (IssueImmediateOrderById(city.barrack.unit, trainId)) {
+				trainCount++;
+			}
+		}
+
+		debugPrint(
+			`[Bot] Slot ${id} economy: gold=${GetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD)}, trained=${trainCount}/${BOT_MAX_TRAINS_PER_THINK}`,
+			DC.bot
+		);
+		debugPrint(`[Bot] Slot ${id} unit count: ${this.trackedData.units.size}`, DC.bot);
 	}
 
 	onKill(victim: player, unit: unit, isPlayerCombat: boolean): void {

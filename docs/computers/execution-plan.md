@@ -272,8 +272,8 @@ shows "NO — bots will play suboptimally".
 
 ### Step 3.1 — Bot trains units at owned barracks
 
-- [ ] In `ComputerPlayer.think()`, add an `economyStep()` method
-- [ ] `economyStep()`:
+- [x] In `ComputerPlayer.think()`, add an `economyStep()` method
+- [x] `economyStep()`:
   1. Read gold: `GetPlayerState(this.getPlayer(), PLAYER_STATE_RESOURCE_GOLD)`
   2. Iterate `this.trackedData.cities.cities` (owned cities)
   3. For each city, get the barracks unit handle
@@ -282,7 +282,7 @@ shows "NO — bots will play suboptimally".
   5. Issue train order: `IssueImmediateOrderById(barracks.unit, trainOrderId)`
   6. Cap at **1 train order per barracks per think** to avoid overqueuing
   7. Cap at a **global max trains per think** (`BOT_MAX_TRAINS_PER_THINK = 5`)
-- [ ] `debugPrint('[Bot] Slot ' + id + ' economy: gold=' + gold + ', trained=' + trainCount + '/' + maxTrain, DC.bot)`
+- [x] `debugPrint('[Bot] Slot ' + id + ' economy: gold=' + gold + ', trained=' + trainCount + '/' + maxTrain, DC.bot)`
 
 **Test:** Launch with 1 bot. Watch debug output showing train counts. Visually
 confirm units appearing at bot-owned cities over time. Confirm bot's gold
@@ -292,11 +292,11 @@ decreases as it trains.
 
 ### Step 3.2 — Respect fog of war in economy decisions
 
-- [ ] Bots should only train at cities they own (already ensured by iterating
+- [x] Bots should only train at cities they own (already ensured by iterating
       `trackedData.cities.cities`)
-- [ ] Verify that bot-trained units are correctly tracked in
+- [x] Verify that bot-trained units are correctly tracked in
       `trackedData.units` (the existing unit-train trigger should handle this)
-- [ ] `debugPrint('[Bot] Slot ' + id + ' unit count: ' + this.trackedData.units.size, DC.bot)`
+- [x] `debugPrint('[Bot] Slot ' + id + ' unit count: ' + this.trackedData.units.size, DC.bot)`
 
 **Test:** Let the bot accumulate units for several turns. Confirm unit count
 in debug output increases. Confirm units have the correct player color on the
