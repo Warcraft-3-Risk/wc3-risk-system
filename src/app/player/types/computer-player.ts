@@ -80,14 +80,18 @@ export class ComputerPlayer extends ActivePlayer {
 			const neighbors = adjacencyGraph.getNeighbors(borderName);
 
 			for (const neighborName of neighbors) {
-				// Skip if we already own this country
-				if (this.territory.getOwnedCountryNames().has(neighborName)) continue;
-
+				// Skip if we fully own this country (all cities are ours)
 				const neighborCountry = StringToCountry.get(neighborName);
 				if (!neighborCountry) continue;
 
+				const neighborCities = neighborCountry.getCities();
+				let enemyCitiesInCountry = 0;
+				for (const c of neighborCities) {
+					if (c.getOwner() !== p) enemyCitiesInCountry++;
+				}
+				if (enemyCitiesInCountry === 0) continue;
+
 				const owner = neighborCountry.getOwner();
-				if (owner === p) continue; // safety check
 
 				let score = 100; // base score
 
@@ -114,8 +118,9 @@ export class ComputerPlayer extends ActivePlayer {
 					if (city.getOwner() === p) ownedInCountry++;
 				}
 				if (ownedInCountry > 0) {
-					// Bonus for partial ownership — completing the country
-					score += 25 * (ownedInCountry / countryCities.length);
+					// Strong bonus for partial ownership — finishing a country is top priority
+					// Scales with completion %: owning 2/3 cities = +133, 1/3 = +66
+					score += 200 * (ownedInCountry / countryCities.length);
 				}
 
 				if (score > bestScore) {
@@ -187,34 +192,48 @@ export class ComputerPlayer extends ActivePlayer {
 		const targetCountry = StringToCountry.get(this.currentTarget);
 		if (!targetCountry) return;
 
-		// Find a destination — the first target city's barracks position
+		// Find a destination — the first enemy-owned city in the target country
 		const targetCities = targetCountry.getCities();
-		if (targetCities.length === 0) return;
+		let destX = 0;
+		let destY = 0;
+		let foundDest = false;
 
-		const destX = targetCities[0].barrack.defaultX;
-		const destY = targetCities[0].barrack.defaultY;
+		for (const tc of targetCities) {
+			if (tc.getOwner() !== p) {
+				destX = tc.barrack.defaultX;
+				destY = tc.barrack.defaultY;
+				foundDest = true;
+				break;
+			}
+		}
+
+		if (!foundDest) return; // we own all cities in target already
 
 		// Find idle units in border countries adjacent to the target
+		// Also include bot-owned cities inside the target country itself as staging
 		const borderCountries = this.territory.getBorderCountries();
 		const targetNeighbors = adjacencyGraph.getNeighbors(this.currentTarget);
-		const stagingCountries: string[] = [];
+		const stagingCountryNames = new Set<string>();
 
 		for (const borderName of borderCountries) {
 			if (targetNeighbors.indexOf(borderName) >= 0) {
-				stagingCountries.push(borderName);
+				stagingCountryNames.add(borderName);
 			}
 		}
+
+		// Bot-owned cities inside the target country are also staging points
+		stagingCountryNames.add(this.currentTarget);
 
 		// Fallback: if no adjacency data, use all border countries
 		if (!adjacencyGraph.hasData()) {
 			for (const borderName of borderCountries) {
-				stagingCountries.push(borderName);
+				stagingCountryNames.add(borderName);
 			}
 		}
 
 		// Collect staging city positions for proximity checks
 		const stagingCities: City[] = [];
-		for (const name of stagingCountries) {
+		for (const name of stagingCountryNames) {
 			const country = StringToCountry.get(name);
 			if (country) {
 				for (const city of country.getCities()) {
