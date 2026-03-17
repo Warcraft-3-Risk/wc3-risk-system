@@ -9,10 +9,13 @@ import { CityToCountry, StringToCountry } from '../../country/country-map';
 import { City } from '../../city/city';
 
 const BOT_MAX_TRAINS_PER_THINK = 5;
+const BOT_MAX_ORDERS_PER_THINK = 20;
 
 export class ComputerPlayer extends ActivePlayer {
 	public readonly territory: BotTerritoryTracker = new BotTerritoryTracker();
 	private currentTarget: string | null = null; // country name
+	private pendingOrders: { unit: unit; x: number; y: number }[] = [];
+	private orderedThisTick: Set<unit> = new Set();
 
 	constructor(player: player) {
 		super(player);
@@ -32,6 +35,7 @@ export class ComputerPlayer extends ActivePlayer {
 
 		this.economyStep();
 		this.selectTarget(adjacencyGraph, globalStats);
+		this.attackStep(adjacencyGraph);
 	}
 
 	private economyStep(): void {
@@ -151,6 +155,137 @@ export class ComputerPlayer extends ActivePlayer {
 
 		this.currentTarget = null;
 		debugPrint(`[Bot] Slot ${slotId} target: none (fallback, no neighbors)`, DC.bot);
+	}
+
+	private attackStep(adjacencyGraph: AdjacencyGraph): void {
+		const p = this.getPlayer();
+		const id = GetPlayerId(p);
+		let ordersIssued = 0;
+		this.orderedThisTick = new Set();
+
+		// 1. Drain pending orders from previous tick
+		while (this.pendingOrders.length > 0 && ordersIssued < BOT_MAX_ORDERS_PER_THINK) {
+			const order = this.pendingOrders.shift()!;
+			// Verify unit is still alive and belongs to us
+			if (GetUnitState(order.unit, UNIT_STATE_LIFE) > 0 && GetOwningPlayer(order.unit) === p) {
+				IssuePointOrder(order.unit, 'attack', order.x, order.y);
+				this.orderedThisTick.add(order.unit);
+				ordersIssued++;
+			}
+		}
+
+		if (ordersIssued >= BOT_MAX_ORDERS_PER_THINK) {
+			debugPrint(`[Bot] Slot ${id}: drained ${ordersIssued} pending orders, ${this.pendingOrders.length} still queued`, DC.bot);
+			return;
+		}
+
+		// 2. Issue new attack orders toward current target
+		if (!this.currentTarget) {
+			return;
+		}
+
+		const targetCountry = StringToCountry.get(this.currentTarget);
+		if (!targetCountry) return;
+
+		// Find a destination — the first target city's barracks position
+		const targetCities = targetCountry.getCities();
+		if (targetCities.length === 0) return;
+
+		const destX = targetCities[0].barrack.defaultX;
+		const destY = targetCities[0].barrack.defaultY;
+
+		// Find idle units in border countries adjacent to the target
+		const borderCountries = this.territory.getBorderCountries();
+		const targetNeighbors = adjacencyGraph.getNeighbors(this.currentTarget);
+		const stagingCountries: string[] = [];
+
+		for (const borderName of borderCountries) {
+			if (targetNeighbors.indexOf(borderName) >= 0) {
+				stagingCountries.push(borderName);
+			}
+		}
+
+		// Fallback: if no adjacency data, use all border countries
+		if (!adjacencyGraph.hasData()) {
+			for (const borderName of borderCountries) {
+				stagingCountries.push(borderName);
+			}
+		}
+
+		// Collect staging city positions for proximity checks
+		const stagingCities: City[] = [];
+		for (const name of stagingCountries) {
+			const country = StringToCountry.get(name);
+			if (country) {
+				for (const city of country.getCities()) {
+					if (city.getOwner() === p) {
+						stagingCities.push(city);
+					}
+				}
+			}
+		}
+
+		if (stagingCities.length === 0) return;
+
+		// Find idle units near staging cities and issue attack orders
+		const idleUnits = this.findIdleUnits(stagingCities);
+
+		for (const u of idleUnits) {
+			if (ordersIssued >= BOT_MAX_ORDERS_PER_THINK) {
+				// Queue remaining for next tick
+				this.pendingOrders.push({ unit: u, x: destX, y: destY });
+			} else {
+				IssuePointOrder(u, 'attack', destX, destY);
+				this.orderedThisTick.add(u);
+				ordersIssued++;
+			}
+		}
+
+		if (ordersIssued > 0 || this.pendingOrders.length > 0) {
+			debugPrint(
+				`[Bot] Slot ${id}: attacking ${this.currentTarget} with ${ordersIssued} units, ${this.pendingOrders.length} orders queued`,
+				DC.bot
+			);
+		}
+	}
+
+	private findIdleUnits(nearCities: City[]): unit[] {
+		const idle: unit[] = [];
+		const p = this.getPlayer();
+		const PROXIMITY = 800; // distance threshold to consider a unit "near" a city
+
+		for (const u of this.trackedData.units) {
+			// Skip units already ordered this tick
+			if (this.orderedThisTick.has(u)) continue;
+
+			// Skip dead units
+			if (GetUnitState(u, UNIT_STATE_LIFE) <= 0) continue;
+
+			// Check if idle (no current order)
+			if (GetUnitCurrentOrder(u) !== 0) continue;
+
+			// Check proximity to any staging city
+			const ux = GetUnitX(u);
+			const uy = GetUnitY(u);
+
+			for (const city of nearCities) {
+				const dx = ux - city.barrack.defaultX;
+				const dy = uy - city.barrack.defaultY;
+				const distSq = dx * dx + dy * dy;
+
+				if (distSq <= PROXIMITY * PROXIMITY) {
+					idle.push(u);
+					break;
+				}
+			}
+		}
+
+		const id = GetPlayerId(p);
+		if (idle.length > 0) {
+			debugPrint(`[Bot] Slot ${id}: found ${idle.length} idle units near staging cities`, DC.bot);
+		}
+
+		return idle;
 	}
 
 	private countVisibleDefenders(cities: City[]): number {

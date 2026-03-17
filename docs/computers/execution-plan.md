@@ -394,13 +394,13 @@ capturing a country).
 
 ### Step 6.1 — Find idle units near staging countries
 
-- [ ] In `ComputerPlayer`, add `findIdleUnits(nearCountry: Country): unit[]`
-- [ ] Iterate `trackedData.units`, check each unit's position
-- [ ] A unit is "near" a country if it's within range of the country's barracks
+- [x] In `ComputerPlayer`, add `findIdleUnits(nearCountry: Country): unit[]`
+- [x] Iterate `trackedData.units`, check each unit's position
+- [x] A unit is "near" a country if it's within range of the country's barracks
       or spawner coordinates
-- [ ] A unit is "idle" if `GetUnitCurrentOrder(unit) == 0` (no current order)
+- [x] A unit is "idle" if `GetUnitCurrentOrder(unit) == 0` (no current order)
       or if it has 0 movement left (standing still)
-- [ ] `debugPrint('[Bot] Slot ' + id + ': found ' + idle.length + ' idle units near ' + country.getName(), DC.bot)`
+- [x] `debugPrint('[Bot] Slot ' + id + ': found ' + idle.length + ' idle units near ' + country.getName(), DC.bot)`
 
 **Test:** Let the bot train units for a few turns without moving them. Confirm
 debug output shows idle units accumulating near owned cities.
@@ -409,15 +409,15 @@ debug output shows idle units accumulating near owned cities.
 
 ### Step 6.2 — Issue attack-move orders to target
 
-- [ ] In `ComputerPlayer`, add `attackStep()` method called from `think()`
-- [ ] If the bot has a current target (from Step 5.2):
+- [x] In `ComputerPlayer`, add `attackStep()` method called from `think()`
+- [x] If the bot has a current target (from Step 5.2):
   1. Find idle units in border countries adjacent to the target
   2. Get the target city's barracks position as the destination:
      `GetUnitX(targetCity.barrack.unit)`, `GetUnitY(targetCity.barrack.unit)`
   3. Issue `IssuePointOrder(unit, 'attack', destX, destY)` for each idle unit
   4. Cap at `BOT_MAX_ORDERS_PER_THINK = 20` to avoid lag spikes
   5. Track which units have been ordered this think (don't re-order next think)
-- [ ] `debugPrint('[Bot] Slot ' + id + ': attacking ' + target + ' with ' + count + ' units', DC.bot)`
+- [x] `debugPrint('[Bot] Slot ' + id + ': attacking ' + target + ' with ' + count + ' units', DC.bot)`
 
 **Test:** Watch the bot's units start moving toward enemy territory. Visually
 confirm on the map that units attack-move toward the target city. Confirm
@@ -427,12 +427,12 @@ guard replacement happens automatically when they arrive (existing trigger).
 
 ### Step 6.3 — Order batching across ticks
 
-- [ ] If more than `BOT_MAX_ORDERS_PER_THINK` units need orders, queue the
+- [x] If more than `BOT_MAX_ORDERS_PER_THINK` units need orders, queue the
       remainder for the next think cycle
-- [ ] Maintain a `pendingOrders: { unit: unit, x: number, y: number }[]` queue
-- [ ] At the start of each think, drain up to `BOT_MAX_ORDERS_PER_THINK` from
+- [x] Maintain a `pendingOrders: { unit: unit, x: number, y: number }[]` queue
+- [x] At the start of each think, drain up to `BOT_MAX_ORDERS_PER_THINK` from
       the queue before computing new orders
-- [ ] `debugPrint('[Bot] Slot ' + id + ': ' + pending.length + ' orders queued for next think', DC.bot)`
+- [x] `debugPrint('[Bot] Slot ' + id + ': ' + pending.length + ' orders queued for next think', DC.bot)`
 
 **Test:** Give the bot many cities (via map editor) so it has lots of units.
 Confirm orders are spread across multiple think ticks instead of issuing 100+
