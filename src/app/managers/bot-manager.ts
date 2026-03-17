@@ -1,11 +1,23 @@
 import { ComputerPlayer } from 'src/app/player/types/computer-player';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { DC } from 'src/configs/game-settings';
-import { TICK_DURATION_IN_SECONDS } from 'src/configs/game-settings';
+import { DC, TICK_DURATION_IN_SECONDS } from 'src/configs/game-settings';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
+import { AdjacencyGraph } from 'src/app/bot/adjacency-graph';
+import { AdjacencyMap } from 'src/configs/adjacency/adjacency-types';
+import { MAP_TYPE } from 'src/app/utils/map-info';
+import { EUROPE_ADJACENCY } from 'src/configs/adjacency/europe-adjacency';
 
 const BOT_THINK_INTERVAL = 2; // seconds between thinks
+
+function getAdjacencyForMap(): AdjacencyMap | null {
+	switch (MAP_TYPE) {
+		case 'europe':
+			return EUROPE_ADJACENCY;
+		default:
+			return null;
+	}
+}
 
 export class BotManager {
 	private static instance: BotManager;
@@ -13,8 +25,12 @@ export class BotManager {
 	private bots: ComputerPlayer[] = [];
 	private thinkCounters: Map<ComputerPlayer, number> = new Map();
 	private started: boolean = false;
+	public adjacencyGraph: AdjacencyGraph;
 
 	private constructor() {
+		// Load adjacency data for the current map
+		this.adjacencyGraph = new AdjacencyGraph(getAdjacencyForMap());
+
 		// Discover computer players from PlayerManager
 		const pm = PlayerManager.getInstance();
 		for (const [handle, activePlayer] of pm.players) {
@@ -40,6 +56,8 @@ export class BotManager {
 	public start(): void {
 		if (this.started || this.bots.length === 0) return;
 		this.started = true;
+
+		debugPrint(`[BotManager] Adjacency data loaded: ${this.adjacencyGraph.hasData() ? 'yes' : 'NO — bots will play suboptimally'}`, DC.bot);
 
 		// Stagger: bot 0 starts at 0, bot 1 starts at 1, etc.
 		this.bots.forEach((bot, index) => {
