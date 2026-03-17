@@ -7,6 +7,7 @@ import { AdjacencyGraph } from 'src/app/bot/adjacency-graph';
 import { AdjacencyMap } from 'src/configs/adjacency/adjacency-types';
 import { MAP_TYPE } from 'src/app/utils/map-info';
 import { EUROPE_ADJACENCY } from 'src/configs/adjacency/europe-adjacency';
+import { GlobalStats } from 'src/app/bot/bot-types';
 
 const BOT_THINK_INTERVAL = 2; // seconds between thinks
 
@@ -26,6 +27,13 @@ export class BotManager {
 	private thinkCounters: Map<ComputerPlayer, number> = new Map();
 	private started: boolean = false;
 	public adjacencyGraph: AdjacencyGraph;
+	public globalStats: GlobalStats = {
+		largestPlayer: null,
+		largestCityCount: 0,
+		totalActivePlayers: 0,
+		totalCities: 0,
+		playerStats: new Map(),
+	};
 
 	private constructor() {
 		// Load adjacency data for the current map
@@ -53,6 +61,48 @@ export class BotManager {
 		return this.bots;
 	}
 
+	public updateGlobalStats(): void {
+		const pm = PlayerManager.getInstance();
+		const stats = this.globalStats;
+		stats.playerStats.clear();
+		stats.largestPlayer = null;
+		stats.largestCityCount = 0;
+		stats.totalCities = 0;
+		stats.totalActivePlayers = 0;
+
+		for (const [handle, ap] of pm.activePlayersThatAreAlive) {
+			const cityCount = ap.trackedData.cities.cities.length;
+			stats.totalCities += cityCount;
+			stats.totalActivePlayers++;
+
+			stats.playerStats.set(handle, {
+				player: handle,
+				activePlayer: ap,
+				cityCount,
+				strength: 0, // computed after totals
+			});
+
+			if (cityCount > stats.largestCityCount) {
+				stats.largestCityCount = cityCount;
+				stats.largestPlayer = handle;
+			}
+		}
+
+		// Compute relative strength
+		if (stats.totalCities > 0) {
+			for (const [, ps] of stats.playerStats) {
+				ps.strength = ps.cityCount / stats.totalCities;
+			}
+		}
+
+		const largestId = stats.largestPlayer !== null ? GetPlayerId(stats.largestPlayer) : -1;
+		const pct = stats.totalCities > 0 ? math.floor((stats.largestCityCount / stats.totalCities) * 100) : 0;
+		debugPrint(
+			`[Stats] Largest: slot ${largestId} with ${stats.largestCityCount} cities (${pct}%), active=${stats.totalActivePlayers}`,
+			DC.bot
+		);
+	}
+
 	public start(): void {
 		if (this.started || this.bots.length === 0) return;
 		this.started = true;
@@ -76,11 +126,14 @@ export class BotManager {
 		TimerStart(botTimer, TICK_DURATION_IN_SECONDS, true, () => {
 			if (GlobalGameData.matchState !== 'inProgress') return;
 
+			// Update global stats once per tick, before any bot thinks
+			this.updateGlobalStats();
+
 			for (const [bot, counter] of this.thinkCounters) {
 				if (!bot.status.isAlive() && !bot.status.isNomad()) continue;
 
 				if (counter <= 0) {
-					bot.think(this.adjacencyGraph);
+					bot.think(this.adjacencyGraph, this.globalStats);
 					this.thinkCounters.set(bot, BOT_THINK_INTERVAL);
 				} else {
 					this.thinkCounters.set(bot, counter - 1);

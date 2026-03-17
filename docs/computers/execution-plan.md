@@ -354,13 +354,13 @@ captures more territory, border/interior counts change logically.
 
 ### Step 5.1 — Global stats: who is the biggest player?
 
-- [ ] In `BotManager`, add `updateGlobalStats()` called once per think loop
+- [x] In `BotManager`, add `updateGlobalStats()` called once per think loop
       tick (before any bot thinks)
-- [ ] Compute: for each active player, count cities owned
-- [ ] Track `largestPlayer`, `largestCityCount`, `totalActivePlayers`
-- [ ] Also compute per-player relative strength:
+- [x] Compute: for each active player, count cities owned
+- [x] Track `largestPlayer`, `largestCityCount`, `totalActivePlayers`
+- [x] Also compute per-player relative strength:
       `strength[p] = cityCount / totalCities`
-- [ ] `debugPrint('[Stats] Largest: slot ' + id + ' with ' + count + ' cities (' + pct + '%)', DC.bot)`
+- [x] `debugPrint('[Stats] Largest: slot ' + id + ' with ' + count + ' cities (' + pct + '%)', DC.bot)`
 
 **Test:** Watch debug output. Confirm the largest player is correctly
 identified and updates as the game progresses.
@@ -369,19 +369,19 @@ identified and updates as the game progresses.
 
 ### Step 5.2 — Score enemy border targets
 
-- [ ] In `ComputerPlayer`, add `selectTarget()` method
-- [ ] For each border country the bot owns, look at adjacent countries it does
+- [x] In `ComputerPlayer`, add `selectTarget()` method
+- [x] For each border country the bot owns, look at adjacent countries it does
       NOT own
-- [ ] Score each potential target:
+- [x] Score each potential target:
   - **Prefer weaker neighbors:** targets owned by players with fewer total
     cities score higher
   - **Prefer completing a country group:** if capturing a target would give
     the bot all cities in a country, score higher (continent bonus motivation)
   - **Prefer targets with fewer defending units** (if visible via fog of war)
   - **Avoid attacking the strongest player** unless no other option
-- [ ] Select the top-scoring target as the current campaign target
-- [ ] `debugPrint('[Bot] Slot ' + id + ' target: ' + targetCountry + ' (score=' + score + ', owner=slot ' + ownerId + ')', DC.bot)`
-- [ ] If no adjacency data, pick a random enemy neighbor from any border
+- [x] Select the top-scoring target as the current campaign target
+- [x] `debugPrint('[Bot] Slot ' + id + ' target: ' + targetCountry + ' (score=' + score + ', owner=slot ' + ownerId + ')', DC.bot)`
+- [x] If no adjacency data, pick a random enemy neighbor from any border
       region (fallback)
 
 **Test:** Watch debug output. Confirm the bot picks a sensible target each
