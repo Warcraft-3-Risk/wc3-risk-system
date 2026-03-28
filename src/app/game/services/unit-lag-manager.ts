@@ -28,9 +28,11 @@ export class UnitLagManager {
 	// This replaces the old method of using dummy units to follow the tracked unit.
 	// The untracked unit is effectively just managed for its minimap icon color.
 	public trackUnit(unit: unit): void {
-		// Only clients need their units tracked/fixed
-		if (!ClientManager.getInstance().isAnyClientOwnerOfUnit(unit)) {
-			// debugPrint(`UnitLagManager: Not tracking ${GetUnitName(unit)} as its owner is not a client.`);
+		// Only clients need their units tracked/fixed.
+		// Exception: transports are always owned by the real player slot (not a client),
+		// but still need custom minimap tracking so they retain the player's color
+		// after neutralization (transfer to NEUTRAL_HOSTILE would turn them black).
+		if (!ClientManager.getInstance().isAnyClientOwnerOfUnit(unit) && !IsUnitType(unit, UNIT_TYPE.TRANSPORT)) {
 			return;
 		}
 

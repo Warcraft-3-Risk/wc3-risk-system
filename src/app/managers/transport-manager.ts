@@ -145,6 +145,14 @@ export class TransportManager {
 	}
 
 	/**
+	 * Returns the cargo units loaded in the given transport, or null if not tracked.
+	 */
+	public getCargo(unit: unit): unit[] | null {
+		const transport = this.transports.get(unit);
+		return transport ? transport.cargo : null;
+	}
+
+	/**
 	 * Handles the death event of a transport unit.
 	 * @param killer - The unit that killed the transport.
 	 * @param unit - The transport unit that is killed.
