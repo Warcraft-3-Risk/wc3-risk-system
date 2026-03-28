@@ -5,6 +5,7 @@ import { debugPrint } from '../utils/debug-print';
 import { ClientManager } from '../game/services/client-manager';
 import { MAP_TYPE } from '../utils/map-info';
 import { PlayerManager } from '../player/player-manager';
+import { NameManager } from './names/name-manager';
 import { SettingsContext } from '../settings/settings-context';
 
 /**
@@ -407,7 +408,9 @@ export class MinimapIconManager {
 
 		if (isVisible) {
 			// City is visible - update and remember the owner
-			owner = city.getOwner();
+			// For neutralized cities, resolve original owner so they retain the player's color
+			const originalOwner = ClientManager.getInstance().getOriginalOwner(city.guard.unit);
+			owner = originalOwner ?? city.getOwner();
 			this.lastSeenOwners.set(city, owner);
 		} else {
 			// City is in fog of war - check if we've seen it before
@@ -426,7 +429,9 @@ export class MinimapIconManager {
 		const allyColorMode = GetAllyColorFilterState();
 
 		// If the local player owns this city, show it in WHITE
-		if (owner == localPlayer) {
+		// Skip for eliminated players — they are observers and should see player colors, not "own" white
+		const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
+		if (owner == localPlayer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
 		}
@@ -463,8 +468,8 @@ export class MinimapIconManager {
 		}
 
 		// Default: Use player colors (mode 0)
-		// Use GetPlayerColor to get the actual color, then convert to integer
-		const playerColor = GetPlayerColor(owner);
+		// Use original color to avoid slot reassignment changing the color
+		const playerColor = NameManager.getInstance().getOriginalColor(owner);
 		const colorIndex = GetHandleId(playerColor); // Convert playercolor to integer
 
 		// Validate color index (WC3 supports 24 player colors: 0-23)
@@ -492,7 +497,9 @@ export class MinimapIconManager {
 		const allyColorMode = GetAllyColorFilterState();
 
 		// If the local player owns this unit (or owns the client), show it in WHITE
-		if (owner == localPlayer) {
+		// Skip for eliminated players — they are observers and should see player colors, not "own" white
+		const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
+		if (owner == localPlayer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
 		}
@@ -525,7 +532,8 @@ export class MinimapIconManager {
 		}
 
 		// Default: Use player colors
-		const playerColor = GetPlayerColor(owner as player);
+		// Use original color to avoid slot reassignment changing the color
+		const playerColor = NameManager.getInstance().getOriginalColor(owner as player);
 		const colorIndex = GetHandleId(playerColor);
 
 		if (colorIndex < 0 || colorIndex > 23) {
