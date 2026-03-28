@@ -41,6 +41,7 @@ import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCrea
 import { debugPrint } from './app/utils/debug-print';
 import { TooltipManager } from './app/managers/tooltip-manager';
 import { ChatUIManager } from './app/managers/chat-ui-manager';
+import { detectGameStatus } from './app/utils/game-status';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -131,6 +132,7 @@ function tsMain() {
 		const onLoadTimer: timer = CreateTimer();
 
 		TimerStart(onLoadTimer, 0.0, false, () => {
+			detectGameStatus();
 			clearTickUI();
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);

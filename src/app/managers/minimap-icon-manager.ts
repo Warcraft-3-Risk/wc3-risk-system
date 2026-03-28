@@ -7,6 +7,7 @@ import { MAP_TYPE } from '../utils/map-info';
 import { PlayerManager } from '../player/player-manager';
 import { NameManager } from './names/name-manager';
 import { SettingsContext } from '../settings/settings-context';
+import { isReplay } from '../utils/game-status';
 
 /**
  * Manages custom minimap icons using SimpleFrames for cities.
@@ -429,9 +430,10 @@ export class MinimapIconManager {
 		const allyColorMode = GetAllyColorFilterState();
 
 		// If the local player owns this city, show it in WHITE
-		// Skip for eliminated players — they are observers and should see player colors, not "own" white
+		// Skip for eliminated players and replay viewers — they should see actual player colors, not "own" white
 		const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
-		if (owner == localPlayer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
+		const isReplayViewer = isReplay();
+		if (owner == localPlayer && !isReplayViewer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
 		}
@@ -440,7 +442,7 @@ export class MinimapIconManager {
 		if(allyColorMode == 2) {
 			SetAllyColorFilterState(0);
 		}
-		if (allyColorMode > 0) {
+		if (allyColorMode > 0 && !isReplayViewer) {
 			// Check if owner is a neutral player (Player 24+)
 			const ownerId = GetPlayerId(owner);
 			if (ownerId >= 24) {
@@ -497,9 +499,10 @@ export class MinimapIconManager {
 		const allyColorMode = GetAllyColorFilterState();
 
 		// If the local player owns this unit (or owns the client), show it in WHITE
-		// Skip for eliminated players — they are observers and should see player colors, not "own" white
+		// Skip for eliminated players and replay viewers — they should see actual player colors, not "own" white
 		const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
-		if (owner == localPlayer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
+		const isReplayViewer = isReplay();
+		if (owner == localPlayer && !isReplayViewer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
 		}
@@ -507,7 +510,7 @@ export class MinimapIconManager {
 		// If ally color mode is enabled (mode 1 or 2)
 		// 1 = Ally/Enemy
 		// 2 = Ally (Teal)/Enemy
-		if (allyColorMode > 0) {
+		if (allyColorMode > 0 && !isReplayViewer) {
 			const ownerId = GetPlayerId(owner as player);
 			if (ownerId >= 24) {
 				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
