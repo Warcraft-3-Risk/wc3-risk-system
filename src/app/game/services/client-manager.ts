@@ -129,6 +129,9 @@ export class ClientManager implements Resetable {
 			for (const city of citiesToNeutralize) {
 				// Store original owner for the guard unit (for minimap color resolution)
 				this.setOriginalOwner(city.guard.unit, realPlayer);
+				// Store original owner for barrack and cop (for tooltip color resolution)
+				this.setOriginalOwner(city.barrack.unit, realPlayer);
+				// this.setOriginalOwner(city.cop, realPlayer);
 				// Decrement guard unit count on its current slot
 				this.decrementUnitCount(GetOwningPlayer(city.guard.unit));
 				// Decrement barracks unit count
