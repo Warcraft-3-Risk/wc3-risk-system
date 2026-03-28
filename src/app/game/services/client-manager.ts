@@ -115,9 +115,6 @@ export class ClientManager implements Resetable {
 		}
 
 		debugPrint(`[Neutralize] Neutralizing all units for player ${GetPlayerId(realPlayer)}`);
-
-		const transportMgr = (require('../../managers/transport-manager') as any).TransportManager.getInstance();
-
 		const clientSlots = this.getClientSlotsByPlayer(realPlayer);
 		const slots = [realPlayer, ...clientSlots];
 		debugPrint(`[Neutralize] Processing ${slots.length} slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`);
