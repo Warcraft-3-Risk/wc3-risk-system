@@ -7,7 +7,7 @@ import { MAP_TYPE } from '../utils/map-info';
 import { PlayerManager } from '../player/player-manager';
 import { NameManager } from './names/name-manager';
 import { SettingsContext } from '../settings/settings-context';
-import { isReplay } from '../utils/game-status';
+import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 
 /**
  * Manages custom minimap icons using SimpleFrames for cities.
@@ -222,7 +222,7 @@ export class MinimapIconManager {
 			const localPlayer = GetLocalPlayer();
 			if (IsUnitVisible(unit, localPlayer)) {
 				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
-				this.updateUnitIconColor(iconFrame, unit);
+				this.updateUnitIconColor(iconFrame, unit, localPlayer);
 				BlzFrameSetVisible(iconFrame, true);
 			} else {
 				BlzFrameSetVisible(iconFrame, false);
@@ -273,7 +273,7 @@ export class MinimapIconManager {
 			const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
 
 			// Set initial color based on owner and visibility
-			this.updateIconColor(iconFrame, city, isVisible);
+			this.updateIconColor(iconFrame, city, isVisible, localPlayer);
 
 			// Make it visible
 			BlzFrameSetVisible(iconFrame, true);
@@ -337,6 +337,7 @@ export class MinimapIconManager {
 	 */
 	private updateAllIcons(): void {
 		const localPlayer = GetLocalPlayer();
+		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
 
 		this.cityIcons.forEach((iconFrame, city) => {
 			// Check if the city's barrack is visible through fog of war
@@ -358,7 +359,7 @@ export class MinimapIconManager {
 			}
 
 			// Update color based on owner and visibility
-			this.updateIconColor(iconFrame, city, isVisible);
+			this.updateIconColor(iconFrame, city, isVisible, effectiveLocal);
 		});
 
 		// Update tracked units
@@ -377,7 +378,7 @@ export class MinimapIconManager {
 				// Update position
 				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
 				// Update color
-				this.updateUnitIconColor(iconFrame, unit);
+				this.updateUnitIconColor(iconFrame, unit, effectiveLocal);
 				// Show icon
 				BlzFrameSetVisible(iconFrame, true);
 			} else {
@@ -403,8 +404,7 @@ export class MinimapIconManager {
 	 * @param city - The city whose owner to check
 	 * @param isVisible - Whether the city is visible through fog of war
 	 */
-	private updateIconColor(iconFrame: framehandle, city: City, isVisible: boolean): void {
-		const localPlayer = GetLocalPlayer();
+	private updateIconColor(iconFrame: framehandle, city: City, isVisible: boolean, localPlayer: player): void {
 		let owner: player;
 
 		if (isVisible) {
@@ -430,10 +430,9 @@ export class MinimapIconManager {
 		const allyColorMode = GetAllyColorFilterState();
 
 		// If the local player owns this city, show it in WHITE
-		// Skip for eliminated players and replay viewers — they should see actual player colors, not "own" white
+		// Skip for eliminated players — they should see actual player colors, not "own" white
 		const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
-		const isReplayViewer = isReplay();
-		if (owner == localPlayer && !isReplayViewer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
+		if (owner == localPlayer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
 		}
@@ -442,7 +441,7 @@ export class MinimapIconManager {
 		if(allyColorMode == 2) {
 			SetAllyColorFilterState(0);
 		}
-		if (allyColorMode > 0 && !isReplayViewer) {
+		if (allyColorMode > 0) {
 			// Check if owner is a neutral player (Player 24+)
 			const ownerId = GetPlayerId(owner);
 			if (ownerId >= 24) {
@@ -492,17 +491,15 @@ export class MinimapIconManager {
 	 * @param iconFrame - The frame to update
 	 * @param unit - The unit whose owner to check
 	 */
-	private updateUnitIconColor(iconFrame: framehandle, unit: unit): void {
+	private updateUnitIconColor(iconFrame: framehandle, unit: unit, localPlayer: player): void {
 		// Used the ClientManager to resolve the real owner (maps Client -> Player)
 		const owner = ClientManager.getInstance().getOwnerOfUnit(unit);
-		const localPlayer = GetLocalPlayer();
 		const allyColorMode = GetAllyColorFilterState();
 
 		// If the local player owns this unit (or owns the client), show it in WHITE
-		// Skip for eliminated players and replay viewers — they should see actual player colors, not "own" white
+		// Skip for eliminated players — they should see actual player colors, not "own" white
 		const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
-		const isReplayViewer = isReplay();
-		if (owner == localPlayer && !isReplayViewer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
+		if (owner == localPlayer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
 		}
@@ -510,6 +507,8 @@ export class MinimapIconManager {
 		// If ally color mode is enabled (mode 1 or 2)
 		// 1 = Ally/Enemy
 		// 2 = Ally (Teal)/Enemy
+		// Skip ally color in replay — always show player colors
+		const isReplayViewer = isReplay();
 		if (allyColorMode > 0 && !isReplayViewer) {
 			const ownerId = GetPlayerId(owner as player);
 			if (ownerId >= 24) {
@@ -631,7 +630,7 @@ export class MinimapIconManager {
 				// Update color immediately
 				const localPlayer = GetLocalPlayer();
 				const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
-				this.updateIconColor(iconFrame, city, isVisible);
+				this.updateIconColor(iconFrame, city, isVisible, localPlayer);
 			}
 
 			debugPrint('MinimapIconManager: Capital double-ring border created successfully');

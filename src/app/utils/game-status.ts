@@ -48,6 +48,12 @@ export function detectGameStatus(): void {
 	} else {
 		gameStatus = GAME_STATUS_ONLINE;
 	}
+
+	// Initialize replay POV detection if we're in a replay
+	if (isReplay()) {
+		replayLeaderboard = CreateLeaderboard();
+		LeaderboardDisplay(replayLeaderboard, false);
+	}
 }
 
 export function isReplay(): boolean {
@@ -60,4 +66,31 @@ export function isOffline(): boolean {
 
 export function isOnline(): boolean {
 	return gameStatus === GAME_STATUS_ONLINE;
+}
+
+// --- Replay POV Detection ---
+// Uses the PlayerSetLeaderboard / IsLeaderboardDisplayed exploit:
+// IsLeaderboardDisplayed resolves against the currently observed replay POV player,
+// not the recording player. See docs/unit-lag/replay-pov-detection.md for details.
+
+let replayLeaderboard: leaderboard | null = null;
+
+/**
+ * Returns the player whose POV is currently selected in replay mode.
+ * Falls back to GetLocalPlayer() if not in a replay or if detection fails.
+ */
+export function getReplayObservedPlayer(): player {
+	if (!replayLeaderboard) return GetLocalPlayer();
+
+	LeaderboardDisplay(replayLeaderboard, false);
+	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
+		const p = Player(i);
+		PlayerSetLeaderboard(p, replayLeaderboard);
+		if (IsLeaderboardDisplayed(replayLeaderboard)) {
+			LeaderboardDisplay(replayLeaderboard, false);
+			return p;
+		}
+	}
+	LeaderboardDisplay(replayLeaderboard, false);
+	return GetLocalPlayer();
 }
