@@ -430,9 +430,7 @@ export class MinimapIconManager {
 		const allyColorMode = GetAllyColorFilterState();
 
 		// If the local player owns this city, show it in WHITE
-		// Skip for eliminated players — they should see actual player colors, not "own" white
-		const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
-		if (owner == localPlayer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
+		if (owner == localPlayer) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
 		}
@@ -497,9 +495,7 @@ export class MinimapIconManager {
 		const allyColorMode = GetAllyColorFilterState();
 
 		// If the local player owns this unit (or owns the client), show it in WHITE
-		// Skip for eliminated players — they should see actual player colors, not "own" white
-		const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
-		if (owner == localPlayer && !(localActivePlayer && localActivePlayer.status.isEliminated())) {
+		if (owner == localPlayer) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
 		}
