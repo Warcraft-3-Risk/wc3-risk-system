@@ -6,7 +6,7 @@ import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { FogManager } from 'src/app/managers/fog-manager';
-import { ClientManager } from '../../services/client-manager';
+import { SharedSlotManager } from '../../services/shared-slot-manager';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { GlobalGameData } from '../../state/global-game-state';
@@ -47,7 +47,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			TreeManager.getInstance().reset();
 			await Wait.forSeconds(1);
 
-			ClientManager.getInstance().reset();
+			SharedSlotManager.getInstance().reset();
 
 			GlobalGameData.matchPlayers.forEach((val) => {
 				val.trackedData.reset();

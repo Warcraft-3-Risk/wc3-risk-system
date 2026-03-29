@@ -1,5 +1,5 @@
 import { ABILITY_ID } from '../../configs/ability-id';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { TimedEvent } from '../libs/timer/timed-event';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
@@ -174,7 +174,7 @@ export class TransportManager {
 		const transportData: Transport = this.transports.get(unit);
 
 		if (transportData.cargo) {
-			// Track all cargo units (clients) again since the transport is dead
+			// Track all cargo units (shared slots) again since the transport is dead
 			transportData.cargo.forEach((unit) => {
 				UnitLagManager.getInstance().trackUnit(unit);
 				MinimapIconManager.getInstance().registerIfValid(unit);
@@ -307,14 +307,14 @@ export class TransportManager {
 						BlzPauseUnitEx(transport.unit, true);
 						BlzPauseUnitEx(transport.unit, false);
 						IssueImmediateOrder(transport.unit, 'stop');
-						ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+						ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 						return false;
 					} else {
 						if (this.isTargetTerrainInvalid(abilityTargetX, abilityTargetY)) {
 							BlzPauseUnitEx(transport.unit, true);
 							BlzPauseUnitEx(transport.unit, false);
 							IssueImmediateOrder(transport.unit, 'stop');
-							ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+							ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 							return false;
 						}
 					}
@@ -345,7 +345,7 @@ export class TransportManager {
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 
 					return false;
 				}
@@ -424,7 +424,7 @@ export class TransportManager {
 
 				if (this.isTerrainInvalid(transport.unit)) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
@@ -458,7 +458,7 @@ export class TransportManager {
 
 				if (this.isTerrainInvalid(transport.unit)) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
@@ -560,7 +560,7 @@ export class TransportManager {
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
@@ -700,8 +700,8 @@ export class TransportManager {
 
 		if (transport.cargo.length + transport.orderedUnits.length >= 10) return;
 
-		// Resolve real owner once (handles multi-client slots)
-		const transportRealOwner = ClientManager.getInstance().getOwnerOfUnit(transport.unit);
+		// Resolve real owner once (handles multi-shared slots)
+		const transportRealOwner = SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit);
 		let group: group = CreateGroup();
 
 		GroupEnumUnitsInRange(
@@ -715,7 +715,7 @@ export class TransportManager {
 				if (IsUnitType(unit, UNIT_TYPE.SHIP)) return;
 				if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
 				if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
-				if (ClientManager.getInstance().getOwnerOfUnit(unit) != transportRealOwner) return;
+				if (SharedSlotManager.getInstance().getOwnerOfUnit(unit) != transportRealOwner) return;
 				
 				// Global check for already ordered units
 				if (this.allOrderedUnits.has(unit)) return;

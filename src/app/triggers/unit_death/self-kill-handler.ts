@@ -4,10 +4,10 @@ import { City } from 'src/app/city/city';
 import { ReplaceGuard } from './replace-guard';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { AlliedKillHandler } from './allied-kill-handler';
-import { ClientManager } from 'src/app/game/services/client-manager';
+import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 
 export function SelfKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (city.getOwner() != ClientManager.getInstance().getOwnerOfUnit(killingUnit)) return null;
+	if (city.getOwner() != SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit)) return null;
 
 	const searchGroup: group = CreateGroup();
 

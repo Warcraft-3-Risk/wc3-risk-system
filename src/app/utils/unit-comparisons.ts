@@ -1,4 +1,4 @@
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { Options } from '../player/options';
 import { PlayerManager } from '../player/player-manager';
 
@@ -16,7 +16,7 @@ export function CompareUnitByValue(compareUnit: unit, initialUnit: unit): unit {
 
 	const initialUnitValue: number = GetUnitPointValue(initialUnit);
 	const compareUnitValue: number = GetUnitPointValue(compareUnit);
-	const playerSettings: Options = PlayerManager.getInstance().players.get(ClientManager.getInstance().getOwnerOfUnit(compareUnit)).options;
+	const playerSettings: Options = PlayerManager.getInstance().players.get(SharedSlotManager.getInstance().getOwnerOfUnit(compareUnit)).options;
 
 	if (!playerSettings.value && compareUnitValue < initialUnitValue) {
 		return compareUnit;

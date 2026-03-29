@@ -21,7 +21,7 @@ import { FogManager } from 'src/app/managers/fog-manager';
 import { AnnounceOnLocation } from '../../announcer/announce';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
-import { ClientManager } from '../../services/client-manager';
+import { SharedSlotManager } from '../../services/shared-slot-manager';
 import { IncomeManager } from 'src/app/managers/income-manager';
 import { RatingManager } from 'src/app/rating/rating-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
@@ -170,11 +170,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onStartTurn(turn: number): void {
 		this.updateFogSettings(turn);
 		debugPrint(`[Redistribute] Triggered by: turn start (turn ${turn})`);
-		const changed = ClientManager.getInstance().evaluateAndRedistribute();
+		const changed = SharedSlotManager.getInstance().evaluateAndRedistribute();
 		debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`);
 
 		debugPrint(`[SlotCount] === Turn ${turn} Slot Summary ===`);
-		ClientManager.getInstance().debugPrintSlotCounts();
+		SharedSlotManager.getInstance().debugPrintSlotCounts();
 
 		if (!changed) {
 			ScoreboardManager.getInstance().updateFull();
@@ -327,7 +327,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
-		const cm = ClientManager.getInstance();
+		const cm = SharedSlotManager.getInstance();
 		const killingUnitOwner = cm.getOwnerOfUnit(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(killingUnitOwner));
 
@@ -357,8 +357,8 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		super.onPlayerLeft(player);
 
 		debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`);
-		ClientManager.getInstance().neutralizePlayerUnits(player.getPlayer());
-		ClientManager.getInstance().evaluateAndRedistribute();
+		SharedSlotManager.getInstance().neutralizePlayerUnits(player.getPlayer());
+		SharedSlotManager.getInstance().evaluateAndRedistribute();
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
@@ -379,8 +379,8 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		super.onPlayerDead(player, forfeit);
 
 		debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`);
-		ClientManager.getInstance().neutralizePlayerUnits(player.getPlayer());
-		ClientManager.getInstance().evaluateAndRedistribute();
+		SharedSlotManager.getInstance().neutralizePlayerUnits(player.getPlayer());
+		SharedSlotManager.getInstance().evaluateAndRedistribute();
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();

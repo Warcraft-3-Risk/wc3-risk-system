@@ -145,13 +145,13 @@ export class PlayerManager {
 				continue;
 			}
 
-			// If the player has no units and no cities, consider them for client allocation
+			// If the player has no units and no cities, consider them for shared slot allocation
 			debugPrint(
 				`Player ${GetPlayerId(player)} has left. Units: ${activePlayer.trackedData.units.size}, Cities: ${activePlayer.trackedData.cities.cities.length}`
 			);
 
 			if (activePlayer.trackedData.units.size === 0 && activePlayer.trackedData.cities.cities.length === 0) {
-				debugPrint(`Player ${GetPlayerId(player)} added to left players list for potential client allocation.`);
+				debugPrint(`Player ${GetPlayerId(player)} added to left players list for potential shared slot allocation.`);
 				players.push(player);
 			} else {
 				debugPrint(`Player ${GetPlayerId(player)} not added to left players list (has units or cities).`);

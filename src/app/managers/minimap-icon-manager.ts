@@ -2,7 +2,7 @@ import { FORCE_CUSTOM_MINIMAP_ICONS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { City } from '../city/city';
 import { debugPrint } from '../utils/debug-print';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { MAP_TYPE } from '../utils/map-info';
 import { PlayerManager } from '../player/player-manager';
 import { NameManager } from './names/name-manager';
@@ -410,7 +410,7 @@ export class MinimapIconManager {
 		if (isVisible) {
 			// City is visible - update and remember the owner
 			// For neutralized cities, resolve original owner so they retain the player's color
-			const originalOwner = ClientManager.getInstance().getOriginalOwner(city.guard.unit);
+			const originalOwner = SharedSlotManager.getInstance().getOriginalOwner(city.guard.unit);
 			owner = originalOwner ?? city.getOwner();
 			this.lastSeenOwners.set(city, owner);
 		} else {
@@ -450,8 +450,8 @@ export class MinimapIconManager {
 
 			// Check if owner is ally or enemy
 			if (IsPlayerAlly(owner, localPlayer)) {
-				// In FFA, dead players may be assigned as clients to another player,
-				// so show allies as red to avoid confusion with the client's units
+				// In FFA, dead players may be assigned as shared slots to another player,
+				// so show allies as red to avoid confusion with the shared slot's units
 				const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
 				const isDeadInFFA = localActivePlayer && localActivePlayer.status.isDead() && SettingsContext.getInstance().isFFA();
 				const allyColor = isDeadInFFA ? 'TeamColor00' : 'TeamColor04';
@@ -490,11 +490,11 @@ export class MinimapIconManager {
 	 * @param unit - The unit whose owner to check
 	 */
 	private updateUnitIconColor(iconFrame: framehandle, unit: unit, localPlayer: player): void {
-		// Used the ClientManager to resolve the real owner (maps Client -> Player)
-		const owner = ClientManager.getInstance().getOwnerOfUnit(unit);
+		// Used the SharedSlotManager to resolve the real owner (maps SharedSlot -> Player)
+		const owner = SharedSlotManager.getInstance().getOwnerOfUnit(unit);
 		const allyColorMode = GetAllyColorFilterState();
 
-		// If the local player owns this unit (or owns the client), show it in WHITE
+		// If the local player owns this unit (or owns the shared slot), show it in WHITE
 		if (owner == localPlayer) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
@@ -513,8 +513,8 @@ export class MinimapIconManager {
 			}
 
 			if (IsPlayerAlly(owner as player, localPlayer)) {
-				// In FFA, dead players may be assigned as clients to another player,
-				// so show allies as red to avoid confusion with the client's units
+				// In FFA, dead players may be assigned as shared slots to another player,
+				// so show allies as red to avoid confusion with the shared slot's units
 				const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
 				const isDeadInFFA = localActivePlayer && localActivePlayer.status.isDead() && SettingsContext.getInstance().isFFA();
 				const allyColor = isDeadInFFA ? 'TeamColor00' : 'TeamColor04';

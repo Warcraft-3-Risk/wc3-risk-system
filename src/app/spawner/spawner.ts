@@ -1,5 +1,5 @@
 import { UNIT_ID } from '../../configs/unit-id';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
@@ -74,7 +74,7 @@ export class Spawner implements Resetable, Ownable {
 		const amount: number = Math.min(this.spawnsPerStepWithMultiplier, this.maxSpawnsPerPlayerWithMultiplier - spawnCount);
 
 		for (let i = 0; i < amount; i++) {
-			const owningSlot = ClientManager.getInstance().getSlotWithLowestUnitCount(this.getOwner());
+			const owningSlot = SharedSlotManager.getInstance().getSlotWithLowestUnitCount(this.getOwner());
 			let u: unit = CreateUnit(
 				owningSlot,
 				this.spawnType,
@@ -83,7 +83,7 @@ export class Spawner implements Resetable, Ownable {
 				270
 			);
 			debugPrint(`[SlotCount] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`);
-			ClientManager.getInstance().incrementUnitCount(owningSlot);
+			SharedSlotManager.getInstance().incrementUnitCount(owningSlot);
 			UnitLagManager.getInstance().trackUnit(u);
 			let loc: location = GetUnitRallyPoint(this.unit);
 
@@ -136,7 +136,7 @@ export class Spawner implements Resetable, Ownable {
 	public setOwner(player: player): void {
 		if (player == null) player = NEUTRAL_HOSTILE;
 
-		SetUnitOwner(this._unit, ClientManager.getInstance().getOwner(player), true);
+		SetUnitOwner(this._unit, SharedSlotManager.getInstance().getOwner(player), true);
 
 		if (!this.spawnMap.has(this.getOwner())) {
 			this.spawnMap.set(this.getOwner(), []);
@@ -148,7 +148,7 @@ export class Spawner implements Resetable, Ownable {
 
 	/** @returns The player that owns the spawner. */
 	public getOwner(): player {
-		return ClientManager.getInstance().getOwnerOfUnit(this._unit);
+		return SharedSlotManager.getInstance().getOwnerOfUnit(this._unit);
 	}
 
 	/**
@@ -157,9 +157,9 @@ export class Spawner implements Resetable, Ownable {
 	 * @param {unit} unit - The deceased unit.
 	 */
 	public onDeath(player: player, unit: unit): void {
-		const index = this.spawnMap.get(ClientManager.getInstance().getOwner(player)).indexOf(unit);
+		const index = this.spawnMap.get(SharedSlotManager.getInstance().getOwner(player)).indexOf(unit);
 
-		this.spawnMap.get(ClientManager.getInstance().getOwner(player)).splice(index, 1);
+		this.spawnMap.get(SharedSlotManager.getInstance().getOwner(player)).splice(index, 1);
 
 		SPAWNER_UNITS.delete(unit);
 

@@ -5,7 +5,7 @@ import { BaseState } from '../state/base-state';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { CapitalDistributionService } from '../../services/distribution-service/capital-distribution-service';
 import { CapitalsData } from '../mode/capitals-mode';
-import { ClientManager } from '../../services/client-manager';
+import { SharedSlotManager } from '../../services/shared-slot-manager';
 
 export class CapitalsDistributeState extends BaseState<CapitalsData> {
 	onEnterState() {
@@ -18,9 +18,9 @@ export class CapitalsDistributeState extends BaseState<CapitalsData> {
 				//Prevent guards from moving and update unit counts
 				IssueImmediateOrder(city.guard.unit, 'stop');
 
-				if (ClientManager.getInstance().getOwnerOfUnit(city.guard.unit) != NEUTRAL_HOSTILE) {
+				if (SharedSlotManager.getInstance().getOwnerOfUnit(city.guard.unit) != NEUTRAL_HOSTILE) {
 					GlobalGameData.matchPlayers
-						.find((x) => x.getPlayer() == ClientManager.getInstance().getOwnerOfUnit(city.guard.unit))
+						.find((x) => x.getPlayer() == SharedSlotManager.getInstance().getOwnerOfUnit(city.guard.unit))
 						.trackedData.units.add(city.guard.unit);
 				}
 

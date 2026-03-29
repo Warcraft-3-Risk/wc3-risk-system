@@ -1,7 +1,7 @@
-// PlayerClientManager is responsible for managing the players' clients in the game. The reason for this is to reduce the unit lag.
+// SharedSlotManager is responsible for managing the shared slots in the game. The reason for this is to reduce the unit lag.
 
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
-import { ClientManager } from './client-manager';
+import { SharedSlotManager } from './shared-slot-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 
@@ -9,10 +9,10 @@ import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 // Warcraft III appears to enforce a hard cap on the number of order issues a single player can queue.
 // Once this cap is reached, new orders cannot be processed until earlier ones are resolved, causing units to appear unresponsive.
 // Importantly, this lag is isolated to individual players and does not impact others.
-// As such, we are here solving the issue by giving each player their own client "non active player slot", which we will call a client slot.
+// As such, we are here solving the issue by giving each player their own "non active player slot", which we will call a shared slot.
 
 export class UnitLagManager {
-	// This class will manage the player clients and their interactions.
+	// This class will manage the player shared slots and their interactions.
 	private static instance: UnitLagManager;
 
 	public static getInstance(): UnitLagManager {
@@ -28,16 +28,16 @@ export class UnitLagManager {
 	// This replaces the old method of using dummy units to follow the tracked unit.
 	// The untracked unit is effectively just managed for its minimap icon color.
 	public trackUnit(unit: unit): void {
-		// Only clients need their units tracked/fixed.
-		// Exception: transports are always owned by the real player slot (not a client),
+		// Only shared slots need their units tracked/fixed.
+		// Exception: transports are always owned by the real player slot (not a shared slot),
 		// but still need custom minimap tracking so they retain the player's color
 		// after neutralization (transfer to NEUTRAL_HOSTILE would turn them black).
-		if (!ClientManager.getInstance().isAnyClientOwnerOfUnit(unit) && !IsUnitType(unit, UNIT_TYPE.TRANSPORT)) {
+		if (!SharedSlotManager.getInstance().isAnySharedSlotOwnerOfUnit(unit) && !IsUnitType(unit, UNIT_TYPE.TRANSPORT)) {
 			return;
 		}
 
 		// Color the unit to match the real owner instead of using SetPlayerColor (which corrupts WC3 native End-Game screen)
-		//const realOwner = ClientManager.getInstance().getOwnerOfUnit(unit);
+		//const realOwner = SharedSlotManager.getInstance().getOwnerOfUnit(unit);
 
 		//SetUnitColor(unit, GetPlayerColor(realOwner));
 		//BlzShowUnitTeamGlow(unit, false);

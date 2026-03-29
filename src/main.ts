@@ -34,7 +34,7 @@ import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST, EDITOR_DEVELOPER_MODE } from './con
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
 import { FogManager } from './app/managers/fog-manager';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
-import { ClientManager } from './app/game/services/client-manager';
+import { SharedSlotManager } from './app/game/services/shared-slot-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 import { PlayerManager } from './app/player/player-manager';
 import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCreatorSaveEvent } from './app/triggers/country-creator-event';
@@ -68,7 +68,7 @@ function tsMain() {
 
 		//Handle names to prevent namebug
 		NameManager.getInstance();
-		ClientManager.getInstance();
+		SharedSlotManager.getInstance();
 		PlayerManager.getInstance();
 		ChatUIManager.getInstance();
 		TooltipManager.getInstance();

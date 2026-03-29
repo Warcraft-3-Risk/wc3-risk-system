@@ -6,7 +6,7 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 import { GetRandomElementFromArray } from 'src/app/utils/utils';
 import { DoublyLinkedList } from 'src/app/utils/doubly-linked-list';
 import { CITIES_PER_PLAYER_UPPER_BOUND } from 'src/configs/game-settings';
-import { ClientManager } from '../client-manager';
+import { SharedSlotManager } from '../shared-slot-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 
 /**
@@ -148,7 +148,7 @@ export class StandardDistributionService {
 		city.setOwner(player.getPlayer());
 		SetUnitOwner(city.guard.unit, player.getPlayer(), true);
 		debugPrint(`[SlotCount] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`);
-		ClientManager.getInstance().incrementUnitCount(player.getPlayer());
+		SharedSlotManager.getInstance().incrementUnitCount(player.getPlayer());
 	}
 
 	protected setCities = (cities: City[]): void => {

@@ -54,11 +54,11 @@ export class NameManager {
 	/**
 	 * Finds players matching the search string by color or btag.
 	 * Uses exact color match first; falls back to substring if no exact match is found.
-	 * Skips client slots.
+	 * Skips shared slots.
 	 */
 	private findPlayersByName(search: string, filter?: (p: player) => boolean): player[] {
-		// Lazy import to avoid circular dependency (ClientManager imports NameManager)
-		const { ClientManager } = require('src/app/game/services/client-manager') as { ClientManager: typeof import('src/app/game/services/client-manager').ClientManager };
+		// Lazy import to avoid circular dependency (SharedSlotManager imports NameManager)
+		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as { SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager };
 
 		const resolved = this.resolveColorAlias(search);
 		const resolvedLower = resolved.toLowerCase().trim();
@@ -70,7 +70,7 @@ export class NameManager {
 			const p = Player(i);
 
 			if (GetPlayerSlotState(p) != PLAYER_SLOT_STATE_PLAYING) continue;
-			if (ClientManager.getInstance().getPlayerByClient(p) != null) continue;
+			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(p) != null) continue;
 			if (filter && !filter(p)) continue;
 
 			const color = this.getColor(p);
@@ -112,8 +112,8 @@ export class NameManager {
 	 * @returns The player object if found, null otherwise.
 	 */
 	public getPlayerFromBtag(string: string): player | null {
-		// Lazy import to avoid circular dependency (ClientManager imports NameManager)
-		const { ClientManager } = require('src/app/game/services/client-manager') as { ClientManager: typeof import('src/app/game/services/client-manager').ClientManager };
+		// Lazy import to avoid circular dependency (SharedSlotManager imports NameManager)
+		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as { SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager };
 
 		let result: player = null;
 
@@ -121,7 +121,7 @@ export class NameManager {
 			const player = Player(i);
 
 			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_PLAYING) continue;
-			if (ClientManager.getInstance().getPlayerByClient(player) != null) continue;
+			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(player) != null) continue;
 
 			if (isNonEmptySubstring(string, this.getBtag(player))) {
 				result = player;
@@ -203,7 +203,7 @@ export class NameManager {
 
 	/**
 	 * @param p - The player object.
-	 * @returns The original playercolor from the first setColor call (after randomization), before client-manager overrides.
+	 * @returns The original playercolor from the first setColor call (after randomization), before shared-slot-manager overrides.
 	 */
 	public getOriginalColor(p: player): playercolor {
 		return this.originalColors.get(p) ?? GetPlayerColor(p);

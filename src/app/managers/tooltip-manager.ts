@@ -1,4 +1,4 @@
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { NameManager } from './names/name-manager';
 import { PlayerManager } from '../player/player-manager';
 import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
@@ -76,9 +76,9 @@ export class TooltipManager {
 			return;
 		}
 
-		const cm = ClientManager.getInstance();
+		const cm = SharedSlotManager.getInstance();
 
-		// Don't show tooltip for units we own (directly or via client slot)
+		// Don't show tooltip for units we own (directly or via shared slot)
 		// Exception: in developer mode, show our own units' owner name too
 		if (cm.canPlayerSeeUnitTooltip(unit, GetLocalPlayer())) {
 			if (!EDITOR_DEVELOPER_MODE) {
@@ -87,11 +87,11 @@ export class TooltipManager {
 			}
 		}
 
-		// Resolve client slots to their real player owner (used for isActive check)
+		// Resolve shared slots to their real player owner (used for isActive check)
 		const effectiveOwner = cm.getOwnerOfUnit(unit);
 
 		// Player-owned unit — show owner's colored display name
-		// In dev mode: show raw slot owner so client slots display their own color (e.g. Purple),
+		// In dev mode: show raw slot owner so shared slots display their own color (e.g. Purple),
 		// not the real player who controls them (e.g. Red)
 		if (PlayerManager.getInstance().isActive(effectiveOwner)) {
 			const displayOwner = EDITOR_DEVELOPER_MODE ? GetOwningPlayer(unit) : effectiveOwner;
