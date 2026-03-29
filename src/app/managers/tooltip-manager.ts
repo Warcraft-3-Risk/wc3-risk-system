@@ -2,6 +2,7 @@ import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { NameManager } from './names/name-manager';
 import { PlayerManager } from '../player/player-manager';
 import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
+import { UNIT_ID } from 'src/configs/unit-id';
 
 declare function World2Screen(x: number, y: number, z: number): LuaMultiReturn<[number, number, boolean]>;
 
@@ -12,8 +13,10 @@ export class TooltipManager {
 	private tooltipText: framehandle;
 	private lastFocusUnit: unit = null;
 	private isVisible: boolean = false;
+	private tooltipOffsets: Map<number, number>;
 
 	private constructor() {
+		this.tooltipOffsets = this.buildTooltipOffsets();
 		this.init();
 	}
 
@@ -53,14 +56,23 @@ export class TooltipManager {
 		}
 
 		if (this.isVisible && this.lastFocusUnit) {
+			let unitXPosition = GetUnitX(this.lastFocusUnit);
+			let unitYPosition = GetUnitY(this.lastFocusUnit);
+			let unitZPosition = BlzGetUnitZ(this.lastFocusUnit);
+
+			if(BlzGetUnitCollisionSize(this.lastFocusUnit) < 31.5 || BlzGetUnitCollisionSize(this.lastFocusUnit) > 47.5) {
+				unitXPosition = unitXPosition - 16;
+				unitYPosition = unitYPosition - 16;
+			}
+
 			const [sx, sy, onScreen] = World2Screen(
-				GetUnitX(this.lastFocusUnit),
-				GetUnitY(this.lastFocusUnit),
-				BlzGetUnitZ(this.lastFocusUnit) || 0
+				unitXPosition,
+				unitYPosition,
+				(unitZPosition + this.getTooltipOffset(this.lastFocusUnit)) || 0
 			);
 
 			if (onScreen) {
-				BlzFrameSetAbsPoint(this.tooltipText, FRAMEPOINT_BOTTOM, sx, sy + 0.025);
+				BlzFrameSetAbsPoint(this.tooltipText, FRAMEPOINT_BOTTOM, sx, sy + 0.015);
 			}
 		}
 	}
@@ -140,5 +152,43 @@ export class TooltipManager {
 		BlzFrameSetVisible(this.tooltipBox, false);
 		BlzFrameSetVisible(this.tooltipText, false);
 		this.isVisible = false;
+	}
+
+	// Returns screen-space Y offset for tooltip placement
+	private getTooltipOffset(u: unit): number {
+		const typeId = GetUnitTypeId(u);
+		const offset = this.tooltipOffsets.get(typeId);
+		return offset != null ? offset : 0;
+	}
+
+	// Screen-space Y offsets per unit type — tune these values in-game
+	private buildTooltipOffsets(): Map<number, number> {
+		const offsets = new Map<number, number>();
+		// Structures
+		offsets.set(UNIT_ID.CITY, 200);
+		offsets.set(UNIT_ID.PORT, 200);
+		offsets.set(UNIT_ID.CONTROL_POINT, 100);
+		offsets.set(UNIT_ID.SPAWNER, 100);
+		offsets.set(UNIT_ID.CAPITAL, 100);
+		offsets.set(UNIT_ID.CONQUERED_CAPITAL, 100);
+		// City Units
+		offsets.set(UNIT_ID.RIFLEMEN, 80);
+		offsets.set(UNIT_ID.MEDIC, 190);
+		offsets.set(UNIT_ID.MORTAR, 100);
+		offsets.set(UNIT_ID.ROARER, 190);
+		offsets.set(UNIT_ID.KNIGHT, 100);
+		offsets.set(UNIT_ID.GENERAL, 190);
+		offsets.set(UNIT_ID.ARTILLERY, 120);
+		offsets.set(UNIT_ID.TANK, 120);
+		// Port Units
+		offsets.set(UNIT_ID.MARINE, 80);
+		offsets.set(UNIT_ID.CAPTAIN, 100);
+		offsets.set(UNIT_ID.ADMIRAL, 100);
+		offsets.set(UNIT_ID.TRANSPORT_SHIP, 300);
+		offsets.set(UNIT_ID.ARMORED_TRANSPORT_SHIP, 150);
+		offsets.set(UNIT_ID.WARSHIP_A, 275);
+		offsets.set(UNIT_ID.WARSHIP_B, 300);
+		offsets.set(UNIT_ID.BATTLESHIP_SS, 420);
+		return offsets;
 	}
 }
