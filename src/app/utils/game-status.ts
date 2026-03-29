@@ -70,7 +70,7 @@ export function isOnline(): boolean {
 // --- Replay POV Detection ---
 // Uses the PlayerSetLeaderboard / IsLeaderboardDisplayed exploit:
 // IsLeaderboardDisplayed resolves against the currently observed replay POV player,
-// not the recording player. See docs/unit-lag/replay-pov-detection.md for details.
+// not the recording player. See docs/shared-slots/replay-pov-detection.md for details.
 
 let replayLeaderboard: leaderboard | null = null;
 
