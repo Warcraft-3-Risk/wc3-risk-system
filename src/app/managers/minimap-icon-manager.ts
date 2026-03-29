@@ -220,9 +220,10 @@ export class MinimapIconManager {
 
 			// Initial update
 			const localPlayer = GetLocalPlayer();
-			if (IsUnitVisible(unit, localPlayer)) {
+			const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
+			if (IsUnitVisible(unit, effectiveLocal)) {
 				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
-				this.updateUnitIconColor(iconFrame, unit, localPlayer);
+				this.updateUnitIconColor(iconFrame, unit, effectiveLocal);
 				BlzFrameSetVisible(iconFrame, true);
 			} else {
 				BlzFrameSetVisible(iconFrame, false);
@@ -341,7 +342,7 @@ export class MinimapIconManager {
 
 		this.cityIcons.forEach((iconFrame, city) => {
 			// Check if the city's barrack is visible through fog of war
-			const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
+			const isVisible = IsUnitVisible(city.barrack.unit, effectiveLocal);
 
 			// Update position (in case anything changed)
 			const worldX = city.barrack.defaultX;
@@ -374,7 +375,7 @@ export class MinimapIconManager {
 			}
 
 			// Check visibility
-			if (IsUnitVisible(unit, localPlayer)) {
+			if (IsUnitVisible(unit, effectiveLocal)) {
 				// Update position
 				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
 				// Update color
@@ -625,8 +626,9 @@ export class MinimapIconManager {
 
 				// Update color immediately
 				const localPlayer = GetLocalPlayer();
-				const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
-				this.updateIconColor(iconFrame, city, isVisible, localPlayer);
+				const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
+				const isVisible = IsUnitVisible(city.barrack.unit, effectiveLocal);
+				this.updateIconColor(iconFrame, city, isVisible, effectiveLocal);
 			}
 
 			debugPrint('MinimapIconManager: Capital double-ring border created successfully');
