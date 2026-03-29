@@ -49,11 +49,10 @@ export function detectGameStatus(): void {
 		gameStatus = GAME_STATUS_ONLINE;
 	}
 
-	// Initialize replay POV detection if we're in a replay
-	if (isReplay()) {
-		replayLeaderboard = CreateLeaderboard();
-		LeaderboardDisplay(replayLeaderboard, false);
-	}
+	// Always create the leaderboard to keep handle IDs in sync between live and replay.
+	// Only used for replay POV detection, but must exist in both contexts.
+	replayLeaderboard = CreateLeaderboard();
+	LeaderboardDisplay(replayLeaderboard, false);
 }
 
 export function isReplay(): boolean {
