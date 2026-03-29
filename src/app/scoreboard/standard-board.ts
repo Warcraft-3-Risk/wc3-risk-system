@@ -6,6 +6,7 @@ import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
 import { RatingManager } from '../rating/rating-manager';
+import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 
 export class StandardBoard extends Scoreboard {
 	private players: ActivePlayer[];
@@ -83,19 +84,20 @@ export class StandardBoard extends Scoreboard {
 			return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
 		});
 
+		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
 		let row: number = 2;
 
 		this.players.forEach((player) => {
 			const data: TrackedData = player.trackedData;
 
-			let textColor: string = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
+			let textColor: string = effectiveLocal == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 
 			if (player.status.isEliminated()) {
 				// Show rating change in income column for eliminated players
 				const ratingManager = RatingManager.getInstance();
 				const btag = NameManager.getInstance().getBtag(player.getPlayer());
 				const ratingResult = ratingManager.getRatingResults().get(btag);
-				const localBtag = NameManager.getInstance().getBtag(GetLocalPlayer());
+				const localBtag = NameManager.getInstance().getBtag(effectiveLocal);
 				const localShowRating = ratingManager.getShowRatingPreference(localBtag);
 
 				if (ratingResult && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled() && localShowRating) {
@@ -120,10 +122,11 @@ export class StandardBoard extends Scoreboard {
 	 * Updates all columns except income on the scoreboard (without re-sorting).
 	 */
 	public updatePartial(): void {
+		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
 		let row: number = 2;
 
 		this.players.forEach((player) => {
-			let textColor: string = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
+			let textColor: string = effectiveLocal == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 
 			this.updatePlayerData(player, row, textColor, player.trackedData);
 
@@ -155,10 +158,11 @@ export class StandardBoard extends Scoreboard {
 	 */
 	private updatePlayerData(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
 		const grey = HexColors.LIGHT_GRAY;
+		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
 
 		// --- Eliminated Player Formatting ---
 		if (player.status.isEliminated()) {
-			const elimColor = GetLocalPlayer() == player.getPlayer() ? textColor : grey;
+			const elimColor = effectiveLocal == player.getPlayer() ? textColor : grey;
 
 			// Player name — always in original player color
 			const nameColor = NameManager.getInstance().getOriginalColorCode(player.getPlayer());

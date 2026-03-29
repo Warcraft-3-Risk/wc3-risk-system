@@ -9,6 +9,7 @@ import { Scoreboard } from './scoreboard';
 import { SessionBoard } from './session-board';
 import { StandardBoard } from './standard-board';
 import { TeamBoard } from './team-board';
+import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 
 export type ScoreboardTypes = 'standard' | 'obs';
 
@@ -16,6 +17,8 @@ export class ScoreboardManager {
 	private static instance: ScoreboardManager;
 	private scoreboards: Record<ScoreboardTypes, Scoreboard>;
 	private sessionBoard: SessionBoard | null = null;
+	private observers: player[] = [];
+	private lastObservedPlayer: player | null = null;
 
 	private constructor() {
 		this.scoreboards = {
@@ -37,6 +40,8 @@ export class ScoreboardManager {
 	}
 
 	public obsSetup(players: ActivePlayer[], observers: player[]) {
+		this.observers = observers;
+
 		if (observers.length >= 1) {
 			this.scoreboards.obs = new ObserverBoard(players);
 			this.scoreboards.obs.setVisibility(false);
@@ -56,10 +61,12 @@ export class ScoreboardManager {
 	}
 
 	public updateFull() {
+		this.checkReplayPovBoardSwap();
 		this.iterateBoards((board) => board.updateFull());
 	}
 
 	public updatePartial() {
+		this.checkReplayPovBoardSwap();
 		this.iterateBoards((board) => board.updatePartial());
 	}
 
@@ -104,6 +111,23 @@ export class ScoreboardManager {
 				callback(board);
 			}
 		});
+	}
+
+	private checkReplayPovBoardSwap(): void {
+		if (!isReplay() || !this.scoreboards.obs) return;
+
+		const observed = getReplayObservedPlayer();
+		if (observed === this.lastObservedPlayer) return;
+
+		this.lastObservedPlayer = observed;
+		const isObserver = this.observers.some((obs) => obs === observed);
+		if (isObserver) {
+			if (this.scoreboards.standard) this.scoreboards.standard.setVisibility(false);
+			this.scoreboards.obs.setVisibility(true);
+		} else {
+			this.scoreboards.obs.setVisibility(false);
+			if (this.scoreboards.standard) this.scoreboards.standard.setVisibility(true);
+		}
 	}
 
 	public updateScoreboardTitle() {

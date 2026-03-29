@@ -7,6 +7,7 @@ import { HexColors } from '../utils/hex-colors';
 import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
+import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 
 export class TeamBoard extends Scoreboard {
 	private teams: Team[];
@@ -132,8 +133,9 @@ export class TeamBoard extends Scoreboard {
 	}
 
 	private getStringColor(player: player): string {
-		if (GetLocalPlayer() == player) return HexColors.TANGERINE;
-		if (IsPlayerAlly(GetLocalPlayer(), player)) return HexColors.GREEN;
+		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
+		if (effectiveLocal == player) return HexColors.TANGERINE;
+		if (IsPlayerAlly(effectiveLocal, player)) return HexColors.GREEN;
 		return HexColors.WHITE;
 	}
 
@@ -181,7 +183,8 @@ export class TeamBoard extends Scoreboard {
 
 		if (teamEliminated) {
 			const grey = HexColors.LIGHT_GRAY;
-			const elimColor = GetLocalPlayer() == playerHandle ? textColor : grey;
+			const effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
+			const elimColor = effectiveLocal == playerHandle ? textColor : grey;
 
 			// Name — show account name in original player color (same as standard board)
 			const nameColor = NameManager.getInstance().getOriginalColorCode(playerHandle);
