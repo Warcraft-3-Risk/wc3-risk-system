@@ -79,7 +79,11 @@ export class ScoreboardManager {
 	}
 
 	public destroyBoards() {
-		this.iterateBoards((board) => board.destroy());
+		if (isReplay()) {
+			this.iterateBoards((board) => board.setVisibility(false));
+		} else {
+			this.iterateBoards((board) => board.destroy());
+		}
 		this.scoreboards = { standard: undefined, obs: undefined };
 	}
 
