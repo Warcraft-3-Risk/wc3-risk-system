@@ -14,20 +14,16 @@ This is consistent with the handle parity constraint documented in [replay-score
 
 ## Fix
 
-`ScoreboardManager.destroyBoards()` now checks `isReplay()` and hides the boards instead of destroying them:
+`ScoreboardManager.destroyBoards()` now hides boards instead of destroying them unconditionally — no replay vs. live distinction needed:
 
 ```ts
 public destroyBoards() {
-    if (isReplay()) {
-        this.iterateBoards((board) => board.setVisibility(false));
-    } else {
-        this.iterateBoards((board) => board.destroy());
-    }
+    this.iterateBoards((board) => board.setVisibility(false));
     this.scoreboards = { standard: undefined, obs: undefined };
 }
 ```
 
-Hiding via `MultiboardDisplay` is replay-safe (operates on existing handles without destroying them).
+This is safe because `SetupState` creates fresh multiboards each round regardless. The old hidden boards leak a trivial handle (a few bytes per round in promode best-of series) but avoid the engine crash entirely. `MultiboardDisplay` is replay-safe since it operates on existing handles without destroying them.
 
 ## Files Changed
 
