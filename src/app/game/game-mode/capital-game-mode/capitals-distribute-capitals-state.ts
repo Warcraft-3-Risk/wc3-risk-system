@@ -11,7 +11,7 @@ import { ShuffleArray } from 'src/app/utils/utils';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { DC } from 'src/configs/game-settings';
 import { LandCity } from 'src/app/city/land-city';
-import { ClientManager } from 'src/app/game/services/client-manager';
+import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 
 export class CapitalsDistributeCapitalsState extends BaseState<CapitalsData> {
 	onEnterState() {
@@ -90,7 +90,7 @@ export class CapitalsDistributeCapitalsState extends BaseState<CapitalsData> {
 	changeCityOwner(city: City, player: ActivePlayer) {
 		city.setOwner(player.getPlayer());
 		SetUnitOwner(city.guard.unit, player.getPlayer(), true);
-		debugPrint(`[SlotCount] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`, DC.slotCount);
-		ClientManager.getInstance().incrementUnitCount(player.getPlayer());
+		debugPrint(`[SlotCount] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`);
+		SharedSlotManager.getInstance().incrementUnitCount(player.getPlayer());
 	}
 }

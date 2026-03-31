@@ -929,12 +929,12 @@ Frame "BACKDROP" "LeaderboardFrame" INHERITS "QuestButtonBaseTemplate" {
 }
 
 Frame "TEXT" "TasTooltipText" {
-     DecorateFileNames,
-     FrameFont "MasterFont", 0.011,"",
-     LayerStyle "IGNORETRACKEVENTS",
-     FontJustificationH JUSTIFYCENTER,
-     FontJustificationV JUSTIFYMIDDLE,
- }
+    DecorateFileNames,
+    FrameFont "MasterFont", 0.009,"",
+    LayerStyle "IGNORETRACKEVENTS",
+    FontJustificationH JUSTIFYCENTER,
+    FontJustificationV JUSTIFYMIDDLE,
+}
 
  Frame "BACKDROP" "TasToolTipBox" {
      BackdropTileBackground,

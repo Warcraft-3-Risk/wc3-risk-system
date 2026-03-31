@@ -1,5 +1,5 @@
 import { UnitToCity } from '../city/city-map';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
@@ -18,29 +18,29 @@ export function UnitTrainedEvent() {
 			UnitToCity.get(GetTriggerUnit()).onUnitTrain(trainedUnit);
 
 			const oldSlot = GetOwningPlayer(trainedUnit);
-			const realOwner = ClientManager.getInstance().getOwnerOfUnit(trainedUnit);
+			const realOwner = SharedSlotManager.getInstance().getOwnerOfUnit(trainedUnit);
 
 			// Transports must always be owned by the real player so rally-loading works correctly
 			if (IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
 				if (oldSlot !== realOwner) {
-					debugPrint(`[SlotCount] Transport reassigned from client slot ${GetPlayerId(oldSlot)} to real owner ${GetPlayerId(realOwner)}`, DC.slotCount);
+					debugPrint(`[SlotCount] Transport reassigned from shared slot ${GetPlayerId(oldSlot)} to real owner ${GetPlayerId(realOwner)}`);
 					SetUnitOwner(trainedUnit, realOwner, true);
-					ClientManager.getInstance().incrementUnitCount(realOwner);
+					SharedSlotManager.getInstance().incrementUnitCount(realOwner);
 				} else {
-					debugPrint(`[SlotCount] Transport trained on real owner slot ${GetPlayerId(oldSlot)}`, DC.slotCount);
-					ClientManager.getInstance().incrementUnitCount(oldSlot);
+					debugPrint(`[SlotCount] Transport trained on real owner slot ${GetPlayerId(oldSlot)}`);
+					SharedSlotManager.getInstance().incrementUnitCount(oldSlot);
 				}
 			} else {
-				const optimalSlot = ClientManager.getInstance().getSlotWithLowestUnitCount(realOwner);
+				const optimalSlot = SharedSlotManager.getInstance().getSlotWithLowestUnitCount(realOwner);
 
 				if (optimalSlot !== oldSlot) {
 					// Reassign the trained unit to the optimal (lowest-count) slot
 					debugPrint(`[SlotCount] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(optimalSlot)}`, DC.slotCount);
 					SetUnitOwner(trainedUnit, optimalSlot, true);
-					ClientManager.getInstance().incrementUnitCount(optimalSlot);
+					SharedSlotManager.getInstance().incrementUnitCount(optimalSlot);
 				} else {
-					debugPrint(`[SlotCount] Trained unit on slot ${GetPlayerId(oldSlot)}`, DC.slotCount);
-					ClientManager.getInstance().incrementUnitCount(oldSlot);
+					debugPrint(`[SlotCount] Trained unit on slot ${GetPlayerId(oldSlot)}`);
+					SharedSlotManager.getInstance().incrementUnitCount(oldSlot);
 				}
 			}
 

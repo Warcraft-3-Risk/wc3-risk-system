@@ -11,7 +11,7 @@ import { TeamManager } from '../teams/team-manager';
 import { debugPrint } from '../utils/debug-print';
 import { DC } from 'src/configs/game-settings';
 import { LocalMessage } from '../utils/messages';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 
 /**
  * LandCity is a variant of City for land based terrain.
@@ -77,15 +77,15 @@ export class LandCity extends City {
 		}
 
 		// If owner then swap
-		if (ClientManager.getInstance().getOwnerOfUnit(targetedUnit) === this.getOwner()) {
-			debugPrint('If same owner then swap', DC.city);
+		if (SharedSlotManager.getInstance().getOwnerOfUnit(targetedUnit) === this.getOwner()) {
+			debugPrint('If same owner then swap');
 			this.castHandler(targetedUnit);
 			return;
 		}
 
 		// If enemy team then don't swap
 		const shareTeam = TeamManager.getInstance()
-			.getTeamFromPlayer(ClientManager.getInstance().getOwnerOfUnit(targetedUnit))
+			.getTeamFromPlayer(SharedSlotManager.getInstance().getOwnerOfUnit(targetedUnit))
 			.playerIsInTeam(this.getOwner());
 		if (!shareTeam) {
 			debugPrint("If enemy team then don't swap", DC.city);

@@ -11,8 +11,7 @@ import { EVENT_ON_UNIT_KILLED } from 'src/app/utils/events/event-constants';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { DC } from 'src/configs/game-settings';
-import { ClientManager } from 'src/app/game/services/client-manager';
+import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { updateUnitNameWithKillValue } from '../../utils/unit-name-helper';
 
@@ -32,23 +31,20 @@ export function UnitDeathEvent() {
 
 			// Decrement slot unit count using raw WC3 owner (not resolved real player)
 			const rawDyingUnitOwner = GetOwningPlayer(dyingUnit);
-			debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.slotCount);
-			ClientManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
+			debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`);
+			SharedSlotManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
 
 			// Clean up originalOwnerMap entry for neutralized units
-			ClientManager.getInstance().clearOriginalOwner(dyingUnit);
+			SharedSlotManager.getInstance().clearOriginalOwner(dyingUnit);
 
 			// Check if this slot is pending free and now has 0 units
-			if (
-				ClientManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) &&
-				ClientManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0
-			) {
-				debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.redistribute);
-				ClientManager.getInstance().evaluateAndRedistribute();
+			if (SharedSlotManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) && SharedSlotManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0) {
+				debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`);
+				SharedSlotManager.getInstance().evaluateAndRedistribute();
 			}
 
-			const dyingUnitOwnerHandle: player = ClientManager.getInstance().getOwnerOfUnit(dyingUnit);
-			const killingUnitOwnerHandle: player = ClientManager.getInstance().getOwnerOfUnit(killingUnit);
+			const dyingUnitOwnerHandle: player = SharedSlotManager.getInstance().getOwnerOfUnit(dyingUnit);
+			const killingUnitOwnerHandle: player = SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit);
 			const dyingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(dyingUnitOwnerHandle);
 			const killingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(killingUnitOwnerHandle);
 
