@@ -1,5 +1,6 @@
 // SharedSlotManager is responsible for managing the shared slots in the game. The reason for this is to reduce the unit lag.
 
+import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { SharedSlotManager } from './shared-slot-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
@@ -28,10 +29,14 @@ export class UnitLagManager {
 	// The untracked unit is effectively just managed for its minimap icon color.
 	public trackUnit(unit: unit): void {
 		// Only shared slots need their units tracked/fixed.
-		// Also allow neutralized units (have an originalOwnerMap entry) so units unloaded
-		// from dead neutralized transports get the correct player color.
+		// Exception: transports are always owned by the real player slot (not a shared slot),
+		// but still need custom minimap tracking so they retain the player's color
+		// after neutralization (transfer to NEUTRAL_HOSTILE would turn them black).
+		// Also allow neutralized units (have an originalOwnerMap entry) so cargo unloaded
+		// from dead neutralized transports gets the correct player color.
 		if (
 			!SharedSlotManager.getInstance().isAnySharedSlotOwnerOfUnit(unit) &&
+			!IsUnitType(unit, UNIT_TYPE.TRANSPORT) &&
 			!SharedSlotManager.getInstance().getOriginalOwner(unit)
 		) {
 			return;
