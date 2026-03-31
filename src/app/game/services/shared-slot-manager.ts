@@ -179,6 +179,10 @@ export class SharedSlotManager implements Resetable {
 				SetUnitOwner(u, NEUTRAL_HOSTILE, false);
 				SetUnitColor(u, playerColor);
 				this.decrementUnitCount(slot);
+				// Stop transports — NEUTRAL_HOSTILE transports exhibit unintended movement
+				if (IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
+					IssueImmediateOrder(u, 'stop');
+				}
 				debugPrint(`[Neutralize] Transferred unit ${GetUnitName(u)} from slot ${GetPlayerId(slot)} to NEUTRAL_HOSTILE`);
 			}
 		}
