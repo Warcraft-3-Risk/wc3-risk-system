@@ -146,6 +146,9 @@ export class SharedSlotManager implements Resetable {
 			}
 		}
 
+		// lazy require to avoid circular dependency between SharedSlotManager and TransportManager (unit enumeration needs to happen before ownership changes from city.setOwner)
+		const { TransportManager } = require('../../managers/transport-manager') as { TransportManager: typeof import('../../managers/transport-manager').TransportManager };
+		
 		// Now enumerate and transfer all remaining units on each slot
 		for (const slot of slots) {
 			const unitsToTransfer: unit[] = [];
@@ -157,12 +160,22 @@ export class SharedSlotManager implements Resetable {
 				if (!IsUnitType(u, UNIT_TYPE.CITY)) {
 					unitsToTransfer.push(u);
 				}
+
+				// Handle cargo units inside transports
+				if (IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
+					debugPrint(`[Neutralize] Found transport ${GetUnitName(u)} on slot ${GetPlayerId(slot)}, checking cargo units for transfer`);
+					const cargoUnits = TransportManager.getInstance().getCargo(u);
+					debugPrint(`[Neutralize] Found transport ${GetUnitName(u)} with ${cargoUnits ? cargoUnits.length : 0} cargo units`);
+					for (const cargoUnit of cargoUnits) {
+						debugPrint(`[Neutralize] Adding cargo unit ${GetUnitName(cargoUnit)} inside transport ${GetUnitName(u)} to transfer list`);
+						unitsToTransfer.push(cargoUnit);
+					}
+				}
 			});
 			DestroyGroup(g);
 
 			for (const u of unitsToTransfer) {
 				this.setOriginalOwner(u, realPlayer);
-
 				SetUnitOwner(u, NEUTRAL_HOSTILE, false);
 				SetUnitColor(u, playerColor);
 				this.decrementUnitCount(slot);
