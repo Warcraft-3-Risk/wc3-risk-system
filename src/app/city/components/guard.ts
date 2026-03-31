@@ -86,7 +86,7 @@ export class Guard implements Resetable {
 	public remove(): void {
 		if (this._unit) {
 			const owner = GetOwningPlayer(this._unit);
-			debugPrint(`[SlotCount] Unit removed on slot ${GetPlayerId(owner)}`);
+			debugPrint(`[SharedSlots] Unit removed on slot ${GetPlayerId(owner)}`, DC.sharedSlots);
 			SharedSlotManager.getInstance().decrementUnitCount(owner);
 		}
 		RemoveUnit(this._unit);

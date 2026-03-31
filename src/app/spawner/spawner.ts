@@ -83,7 +83,7 @@ export class Spawner implements Resetable, Ownable {
 				GetUnitY(this.unit),
 				270
 			);
-			debugPrint(`[SlotCount] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`);
+			debugPrint(`[SharedSlots] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`, DC.sharedSlots);
 			SharedSlotManager.getInstance().incrementUnitCount(owningSlot);
 			UnitLagManager.getInstance().trackUnit(u);
 			let loc: location = GetUnitRallyPoint(this.unit);

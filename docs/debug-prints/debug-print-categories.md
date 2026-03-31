@@ -19,7 +19,7 @@ export const DEBUG_PRINTS = {
 	master: true, // kill switch for everything
 	ratingSync: true, // [RATING SYNC] P2P sync, data merging (~68 calls)
 	ratingManager: true, // [RatingManager] file I/O, checksums, finalization (~25 calls)
-	slotCount: true, // [SlotCount] unit count tracking per slot (~20 calls)
+	slotCount: true, // [SharedSlots] unit count tracking per slot (~20 calls)
 	redistribute: true, // [Redistribute] slot redistribution on leave/death (~25 calls)
 	neutralize: true, // [Neutralize] converting leaver units to neutral (~8 calls)
 	clientManager: true, // ClientManager: slot allocation, alliances (~12 calls)
@@ -89,7 +89,7 @@ Handles rating file I/O, checksum validation, pending game finalization, and pla
 
 | Detail          | Value                                                                                                                                                                                                                                                                                                                                                                              |
 | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Prefix**      | `[SlotCount]`                                                                                                                                                                                                                                                                                                                                                                      |
+| **Prefix**      | `[SharedSlots]`                                                                                                                                                                                                                                                                                                                                                                      |
 | **Files**       | `src/app/game/services/client-manager.ts`, `src/app/spawner/spawner.ts`, `src/app/triggers/unit-trained-event.ts`, `src/app/city/components/guard.ts`, `src/app/game/game-mode/base-game-mode/game-loop-state.ts`, `src/app/game/services/distribution-service/standard-distribution-service.ts`, `src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts` |
 | **Call sites**  | ~20+                                                                                                                                                                                                                                                                                                                                                                               |
 | **Noise level** | **High** — fires on every unit spawn/death/train                                                                                                                                                                                                                                                                                                                                   |
@@ -98,9 +98,9 @@ Tracks per-slot unit counts. Logs increments, decrements, and turn summaries.
 
 **Example messages:**
 
-- `[SlotCount] Increment slot ${slot}: ${oldCount} → ${newCount}`
-- `[SlotCount] Spawned unit for player ${playerId} on slot ${owningSlot}`
-- `[SlotCount] === Turn ${turn} Slot Summary ===`
+- `[SharedSlots] Increment slot ${slot}: ${oldCount} → ${newCount}`
+- `[SharedSlots] Spawned unit for player ${playerId} on slot ${owningSlot}`
+- `[SharedSlots] === Turn ${turn} Slot Summary ===`
 
 **When to enable:** Debugging unit count drift, slot allocation bugs, or the unit lag system.
 
@@ -267,7 +267,7 @@ Boat patrol casting, validation, and unload events.
 | Detail          | Value                                                                                                                                                          |
 | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Prefix**      | _(bare messages)_                                                                                                                                              |
-| **Files**       | `src/app/triggers/unit_death/unit-death-event.ts` (active calls), `src/app/triggers/unit-trained-event.ts` (active — [SlotCount] prefix, counted in slotCount) |
+| **Files**       | `src/app/triggers/unit_death/unit-death-event.ts` (active calls), `src/app/triggers/unit-trained-event.ts` (active — [SharedSlots] prefix, counted in slotCount) |
 | **Call sites**  | ~1 unique to this category (unit death bare message)                                                                                                           |
 | **Noise level** | **High** — fires on every unit death                                                                                                                           |
 
@@ -288,7 +288,7 @@ Raw game event logging. Most trigger files (`unit-damaged-event.ts`, `unit-issue
 | Detail          | Value                                                                                                   |
 | --------------- | ------------------------------------------------------------------------------------------------------- |
 | **Prefix**      | _(bare messages about swap logic)_                                                                      |
-| **Files**       | `src/app/city/land-city.ts` (4 calls), `src/app/city/components/guard.ts` (1 call — [SlotCount] prefix) |
+| **Files**       | `src/app/city/land-city.ts` (4 calls), `src/app/city/components/guard.ts` (1 call — [SharedSlots] prefix) |
 | **Call sites**  | ~5                                                                                                      |
 | **Noise level** | **Low** — fires on guard swap attempts                                                                  |
 
@@ -309,7 +309,7 @@ City guard swap logic: capital checks, same-owner checks, enemy team checks, all
 
 | Detail          | Value                              |
 | --------------- | ---------------------------------- |
-| **Prefix**      | _(overlaps with [SlotCount])_      |
+| **Prefix**      | _(overlaps with [SharedSlots])_      |
 | **Files**       | `src/app/spawner/spawner.ts`       |
 | **Call sites**  | ~3+                                |
 | **Noise level** | **High** — fires every spawn cycle |
@@ -364,16 +364,16 @@ Player state changes, leave/join tracking, client allocation candidates.
 
 | Detail          | Value                                                                         |
 | --------------- | ----------------------------------------------------------------------------- |
-| **Prefix**      | `[SlotCount]` (guard distribution)                                            |
+| **Prefix**      | `[SharedSlots]` (guard distribution)                                            |
 | **Files**       | `src/app/game/services/distribution-service/standard-distribution-service.ts` |
 | **Call sites**  | 1                                                                             |
 | **Noise level** | **Very Low** — fires once per player at game start                            |
 
-Initial territory distribution. The single call uses `[SlotCount]` prefix for guard distribution tracking.
+Initial territory distribution. The single call uses `[SharedSlots]` prefix for guard distribution tracking.
 
 **Example messages:**
 
-- `[SlotCount] Guard distributed to player ${id}, incrementing count`
+- `[SharedSlots] Guard distributed to player ${id}, incrementing count`
 
 **When to enable:** Debugging uneven territory distribution, start-of-game allocation.
 

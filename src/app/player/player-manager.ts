@@ -153,7 +153,7 @@ export class PlayerManager {
 			);
 
 			if (activePlayer.trackedData.units.size === 0 && activePlayer.trackedData.cities.cities.length === 0) {
-				debugPrint(`Player ${GetPlayerId(player)} added to left players list for potential shared slot allocation.`);
+				debugPrint(`Player ${GetPlayerId(player)} added to left players list for potential shared slot allocation.`, DC.player);
 				players.push(player);
 			} else {
 				debugPrint(`Player ${GetPlayerId(player)} not added to left players list (has units or cities).`, DC.player);

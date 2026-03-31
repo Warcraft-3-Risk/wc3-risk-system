@@ -78,7 +78,7 @@ export class LandCity extends City {
 
 		// If owner then swap
 		if (SharedSlotManager.getInstance().getOwnerOfUnit(targetedUnit) === this.getOwner()) {
-			debugPrint('If same owner then swap');
+			debugPrint('If same owner then swap', DC.city);
 			this.castHandler(targetedUnit);
 			return;
 		}

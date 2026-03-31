@@ -37,9 +37,9 @@ Improve the shared slot allocation system so that **multiple shared slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
-  debugPrint(`[SlotCount] Decrement slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
-  debugPrint(`[SlotCount] Lowest slot for player ${GetPlayerId(player)}: slot ${GetPlayerId(result)} (count: ${count})`);
+  debugPrint(`[SharedSlots] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
+  debugPrint(`[SharedSlots] Decrement slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
+  debugPrint(`[SharedSlots] Lowest slot for player ${GetPlayerId(player)}: slot ${GetPlayerId(result)} (count: ${count})`);
   ```
   
   **Verify:** After city distribution, print all slot counts. Expect each real player to have a count equal to their number of owned guard units.
@@ -60,7 +60,7 @@ Improve the shared slot allocation system so that **multiple shared slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`);
+  debugPrint(`[SharedSlots] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`);
   ```
   
   **Note on guard transitions at runtime:**
@@ -79,7 +79,7 @@ Improve the shared slot allocation system so that **multiple shared slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`);
+  debugPrint(`[SharedSlots] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`);
   ```
   
   **Verify:** After first spawn turn, print all slot counts. Expect counts to increase by spawn amounts.
@@ -95,7 +95,7 @@ Improve the shared slot allocation system so that **multiple shared slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Trained unit on slot ${GetPlayerId(GetOwningPlayer(trainedUnit))}`);
+  debugPrint(`[SharedSlots] Trained unit on slot ${GetPlayerId(GetOwningPlayer(trainedUnit))}`);
   ```
   
   **Verify:** Train a unit from a city. Confirm count on the owning slot increased by 1.
@@ -110,7 +110,7 @@ Improve the shared slot allocation system so that **multiple shared slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(GetOwningPlayer(dyingUnit))}`);
+  debugPrint(`[SharedSlots] Unit died on slot ${GetPlayerId(GetOwningPlayer(dyingUnit))}`);
   ```
   
   **Verify:** Kill a unit. Confirm slot count decreased by 1.
@@ -125,7 +125,7 @@ Improve the shared slot allocation system so that **multiple shared slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Unit removed on slot ${GetPlayerId(GetOwningPlayer(unit))}`);
+  debugPrint(`[SharedSlots] Unit removed on slot ${GetPlayerId(GetOwningPlayer(unit))}`);
   ```
   
   **Verify:** Trigger a game reset. Confirm all slot counts are 0 after `SharedSlotManager.reset()` runs.
@@ -141,8 +141,8 @@ Improve the shared slot allocation system so that **multiple shared slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] === Turn ${turn} Slot Summary ===`);
-  debugPrint(`[SlotCount] Slot ${GetPlayerId(slot)} (owner: ${GetPlayerId(realOwner)}): ${count} units`);
+  debugPrint(`[SharedSlots] === Turn ${turn} Slot Summary ===`);
+  debugPrint(`[SharedSlots] Slot ${GetPlayerId(slot)} (owner: ${GetPlayerId(realOwner)}): ${count} units`);
   ```
   
   **Verify:** Play through a few turns. Confirm counts make sense — they should increase with spawns and decrease with deaths.
@@ -195,7 +195,7 @@ Improve the shared slot allocation system so that **multiple shared slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(newSlot)}`);
+  debugPrint(`[SharedSlots] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(newSlot)}`);
   ```
   
   **Verify:** Train a unit when the barracks slot has more units than another slot. Confirm the unit ends up on the lower-count slot.

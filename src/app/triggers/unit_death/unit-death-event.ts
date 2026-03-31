@@ -6,11 +6,11 @@ import { SPAWNER_UNITS } from '../../spawner/spawner';
 import { UNIT_TYPE } from '../../utils/unit-types';
 import { HandleGuardDeath } from './handle-guard-death';
 import { TeamManager } from 'src/app/teams/team-manager';
-import { GlobalGameData } from 'src/app/game/state/global-game-state';
 import { EVENT_ON_UNIT_KILLED } from 'src/app/utils/events/event-constants';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC } from 'src/configs/game-settings';
 import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { updateUnitNameWithKillValue } from '../../utils/unit-name-helper';
@@ -31,7 +31,7 @@ export function UnitDeathEvent() {
 
 			// Decrement slot unit count using raw WC3 owner (not resolved real player)
 			const rawDyingUnitOwner = GetOwningPlayer(dyingUnit);
-			debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`);
+			debugPrint(`[SharedSlots] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.sharedSlots);
 			SharedSlotManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
 
 			// Clean up originalOwnerMap entry for neutralized units
@@ -39,7 +39,7 @@ export function UnitDeathEvent() {
 
 			// Check if this slot is pending free and now has 0 units
 			if (SharedSlotManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) && SharedSlotManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0) {
-				debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`);
+				debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.redistribute);
 				SharedSlotManager.getInstance().evaluateAndRedistribute();
 			}
 

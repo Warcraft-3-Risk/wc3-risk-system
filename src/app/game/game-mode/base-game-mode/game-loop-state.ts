@@ -170,11 +170,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onStartTurn(turn: number): void {
 		this.updateFogSettings(turn);
-		debugPrint(`[Redistribute] Triggered by: turn start (turn ${turn})`);
+		debugPrint(`[Redistribute] Triggered by: turn start (turn ${turn})`, DC.redistribute);
 		const changed = SharedSlotManager.getInstance().evaluateAndRedistribute();
-		debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`);
+		debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`, DC.redistribute);
 
-		debugPrint(`[SlotCount] === Turn ${turn} Slot Summary ===`);
+		debugPrint(`[SharedSlots] === Turn ${turn} Slot Summary ===`, DC.sharedSlots);
 		SharedSlotManager.getInstance().debugPrintSlotCounts();
 
 		if (!changed) {
@@ -357,7 +357,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerLeft(player: ActivePlayer): void {
 		super.onPlayerLeft(player);
 
-		debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`);
+		debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
 		SharedSlotManager.getInstance().neutralizePlayerUnits(player.getPlayer());
 		SharedSlotManager.getInstance().evaluateAndRedistribute();
 
@@ -379,7 +379,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
 		super.onPlayerDead(player, forfeit);
 
-		debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`);
+		debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
 		SharedSlotManager.getInstance().neutralizePlayerUnits(player.getPlayer());
 		SharedSlotManager.getInstance().evaluateAndRedistribute();
 

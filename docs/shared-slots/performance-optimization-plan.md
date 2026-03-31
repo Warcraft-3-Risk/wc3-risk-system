@@ -263,12 +263,12 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
 
   **File:** [src/app/utils/debug-print.ts](src/app/utils/debug-print.ts#L193)
 
-  Template literals like `` `[SlotCount] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}` `` are fully evaluated **before** `debugPrint` is called, including the `GetPlayerId()` native calls. When `SHOW_DEBUG_PRINTS` is `false`, this is wasted work.
+  Template literals like `` `[SharedSlots] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}` `` are fully evaluated **before** `debugPrint` is called, including the `GetPlayerId()` native calls. When `SHOW_DEBUG_PRINTS` is `false`, this is wasted work.
 
   Wrap high-frequency debug calls in an inline guard so the template literal is never evaluated when `SHOW_DEBUG_PRINTS` is `false`:
 
   ```typescript
-  if (SHOW_DEBUG_PRINTS) debugPrint(`[SlotCount] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
+  if (SHOW_DEBUG_PRINTS) debugPrint(`[SharedSlots] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
   ```
 
   Since `SHOW_DEBUG_PRINTS` is a `const`, TSTL may dead-code-eliminate the entire block. At worst, it's a single boolean check.
