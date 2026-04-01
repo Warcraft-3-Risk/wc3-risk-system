@@ -26,6 +26,7 @@ import { SharedSlotManager } from '../../services/shared-slot-manager';
 import { IncomeManager } from 'src/app/managers/income-manager';
 import { RatingManager } from 'src/app/rating/rating-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
+import { applyEliminatedBuff } from '../utillity/on-player-status';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -360,6 +361,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		super.onPlayerLeft(player);
 
 		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
+		applyEliminatedBuff(player.getPlayer());
 		SharedSlotManager.getInstance().neutralizePlayerUnits(player.getPlayer());
 		SharedSlotManager.getInstance().evaluateAndRedistribute();
 
@@ -382,6 +384,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		super.onPlayerDead(player, forfeit);
 
 		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
+		applyEliminatedBuff(player.getPlayer());
 		SharedSlotManager.getInstance().neutralizePlayerUnits(player.getPlayer());
 		SharedSlotManager.getInstance().evaluateAndRedistribute();
 

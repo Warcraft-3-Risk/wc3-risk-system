@@ -182,7 +182,7 @@ export class TooltipManager {
 		offsets.set(UNIT_ID.TANK, 120);
 		// Port Units
 		offsets.set(UNIT_ID.MARINE, 80);
-		offsets.set(UNIT_ID.CAPTAIN, 100);
+		offsets.set(UNIT_ID.MAJOR, 100);
 		offsets.set(UNIT_ID.ADMIRAL, 100);
 		offsets.set(UNIT_ID.TRANSPORT_SHIP, 300);
 		offsets.set(UNIT_ID.ARMORED_TRANSPORT_SHIP, 150);

@@ -7,6 +7,7 @@ import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { ABILITY_ID } from 'src/configs/ability-id';
+import { removeEliminatedBuff } from 'src/app/game/game-mode/utillity/on-player-status';
 
 /**
  * Represents a Guard entity in the game, implementing the `Resetable` interface.
@@ -55,6 +56,7 @@ export class Guard implements Resetable {
 		}
 
 		this._unit = guard;
+		removeEliminatedBuff(guard);
 		UnitAddAbility(guard, ABILITY_ID.GUARD_INDICATOR);
 		UnitAddType(this._unit, UNIT_TYPE.GUARD);
 
