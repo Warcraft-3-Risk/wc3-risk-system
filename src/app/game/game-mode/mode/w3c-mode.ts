@@ -27,8 +27,8 @@ export class W3CMode extends BaseMode<W3CData> {
 		const states = [
 			new UpdatePlayerStatusState(),
 			new SetupState(),
-			new ApplyFogState(),
 			new CityDistributeState(),
+			new ApplyFogState(),
 			new SetPromodeTempVisionState(),
 			new W3CTipsState(),
 			new PromodeCountdownState(),
