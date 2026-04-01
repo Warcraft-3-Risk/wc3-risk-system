@@ -3,7 +3,7 @@
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { SharedSlotManager } from './shared-slot-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 
 // Players may experience unit lag when too many orders are issued simultaneously.
@@ -50,12 +50,12 @@ export class UnitLagManager {
 		//BlzShowUnitTeamGlow(unit, false);
 
 		// Use MinimapIconManager to handle the visual representation
-		debugPrint(`UnitLagManager: Tracking ${GetUnitName(unit)} via MinimapIconManager.`, DC.unitLag);
+		if (DEBUG_PRINTS.master) debugPrint(`UnitLagManager: Tracking ${GetUnitName(unit)} via MinimapIconManager.`, DC.unitLag);
 		MinimapIconManager.getInstance().registerTrackedUnit(unit);
 	}
 
 	public untrackUnit(unit: unit): void {
-		debugPrint(`UnitLagManager: Untracking ${GetUnitName(unit)}.`, DC.unitLag);
+		if (DEBUG_PRINTS.master) debugPrint(`UnitLagManager: Untracking ${GetUnitName(unit)}.`, DC.unitLag);
 		MinimapIconManager.getInstance().unregisterTrackedUnit(unit);
 	}
 

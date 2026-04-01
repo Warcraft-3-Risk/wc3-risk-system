@@ -5,7 +5,7 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
 import { debugPrint } from '../utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 import { MinimapIconManager } from '../managers/minimap-icon-manager';
@@ -76,14 +76,12 @@ export class Spawner implements Resetable, Ownable {
 
 		for (let i = 0; i < amount; i++) {
 			const owningSlot = SharedSlotManager.getInstance().getSlotWithLowestUnitCount(this.getOwner());
-			let u: unit = CreateUnit(
-				owningSlot,
-				this.spawnType,
-				GetUnitX(this.unit),
-				GetUnitY(this.unit),
-				270
-			);
-			debugPrint(`[SharedSlots] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`, DC.sharedSlots);
+			let u: unit = CreateUnit(owningSlot, this.spawnType, GetUnitX(this.unit), GetUnitY(this.unit), 270);
+			if (DEBUG_PRINTS.master)
+				debugPrint(
+					`[SharedSlots] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`,
+					DC.sharedSlots
+				);
 			SharedSlotManager.getInstance().incrementUnitCount(owningSlot);
 			UnitLagManager.getInstance().trackUnit(u);
 			let loc: location = GetUnitRallyPoint(this.unit);

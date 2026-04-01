@@ -20,7 +20,7 @@ import { NameManager } from '../managers/names/name-manager';
 import { HexColors } from '../utils/hex-colors';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { debugPrint } from '../utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_QUEST_UPDATE_PLAYER_STATUS } from '../utils/events/event-constants';
 
@@ -137,12 +137,12 @@ export class RatingManager {
 		}
 
 		const filePath = this.getPlayerFilePath(btag);
-		debugPrint(`[RatingManager] loadPlayerRating: Loading file for ${btag} from ${filePath}`, DC.ratingManager);
+		if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] loadPlayerRating: Loading file for ${btag} from ${filePath}`, DC.ratingManager);
 		const data = readRatings(filePath);
 
 		if (!data) {
 			// No file exists yet - player will start fresh
-			debugPrint(`[RatingManager] loadPlayerRating: No file found for ${btag}`, DC.ratingManager);
+			if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] loadPlayerRating: No file found for ${btag}`, DC.ratingManager);
 			this.loadedPlayers.add(btag);
 			return true;
 		}
@@ -150,7 +150,7 @@ export class RatingManager {
 		// Validate checksum
 		if (!validateChecksum(data)) {
 			// Corrupted file - create fresh data and overwrite immediately
-			debugPrint(`[RatingManager] loadPlayerRating: Checksum FAILED for ${btag}`, DC.ratingManager);
+			if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] loadPlayerRating: Checksum FAILED for ${btag}`, DC.ratingManager);
 			print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
 			const timestamp = math.floor(os.time());
 			const freshData: PlayerRatingData = {
@@ -172,7 +172,7 @@ export class RatingManager {
 			return true;
 		}
 
-		debugPrint(
+		if (DEBUG_PRINTS.master) debugPrint(
 			`[RatingManager] loadPlayerRating: Checksum OK for ${btag}, rating=${data.player.rating}, hasPending=${data.player.pendingGame != null}`,
 			DC.ratingManager
 		);
@@ -184,13 +184,13 @@ export class RatingManager {
 
 		// Finalize pending game if exists
 		if (data.player.pendingGame) {
-			debugPrint(
+			if (DEBUG_PRINTS.master) debugPrint(
 				`[RatingManager] loadPlayerRating: Found pending entry for ${btag} - gameId=${data.player.pendingGame.gameId}, pendingRating=${data.player.pendingGame.rating}, baseRating=${data.player.rating}`,
 				DC.ratingManager
 			);
 			const playerData = this.ratingData.get(data.player.btag);
 			if (playerData && playerData.pendingGame) {
-				debugPrint(
+				if (DEBUG_PRINTS.master) debugPrint(
 					`[RatingManager] loadPlayerRating: Finalizing pending entry for ${btag} - ${playerData.rating} -> ${playerData.pendingGame.rating}`,
 					DC.ratingManager
 				);
@@ -206,15 +206,15 @@ export class RatingManager {
 
 				// Save immediately to finalize
 				const saved = this.savePlayerRating(btag);
-				debugPrint(`[RatingManager] loadPlayerRating: Finalization save result=${saved} for ${btag}`, DC.ratingManager);
+				if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] loadPlayerRating: Finalization save result=${saved} for ${btag}`, DC.ratingManager);
 			} else {
-				debugPrint(
+				if (DEBUG_PRINTS.master) debugPrint(
 					`[RatingManager] loadPlayerRating: FAILED to retrieve playerData from map for ${btag} (playerData=${playerData != null}, pendingGame=${playerData?.pendingGame != null})`,
 					DC.ratingManager
 				);
 			}
 		} else {
-			debugPrint(`[RatingManager] loadPlayerRating: No pending entry for ${btag}`, DC.ratingManager);
+			if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] loadPlayerRating: No pending entry for ${btag}`, DC.ratingManager);
 		}
 
 		this.loadedPlayers.add(btag);
@@ -317,7 +317,7 @@ export class RatingManager {
 			this.initialPlayerRatings.set(btag, rating);
 		});
 
-		debugPrint(`[RatingManager] Captured initial game data: ${this.initialPlayerCount} players`, DC.ratingManager);
+		if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] Captured initial game data: ${this.initialPlayerCount} players`, DC.ratingManager);
 	}
 
 	/**
@@ -644,7 +644,7 @@ export class RatingManager {
 
 		// Skip if already finalized
 		if (this.finalizedPlayers.has(btag)) {
-			debugPrint(`[RatingManager] Player ${btag} already finalized, skipping`, DC.ratingManager);
+			if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] Player ${btag} already finalized, skipping`, DC.ratingManager);
 			return;
 		}
 
@@ -658,7 +658,7 @@ export class RatingManager {
 		this.eliminatedCount++;
 		const placement = this.initialPlayerCount - this.eliminatedCount;
 
-		debugPrint(
+		if (DEBUG_PRINTS.master) debugPrint(
 			`[RatingManager] Finalizing ${btag}: eliminated #${this.eliminatedCount}, placement ${placement + 1} of ${this.initialPlayerCount}`,
 			DC.ratingManager
 		);
@@ -777,7 +777,7 @@ export class RatingManager {
 			if (!saved) {
 				print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
 			} else {
-				debugPrint(
+				if (DEBUG_PRINTS.master) debugPrint(
 					`[RatingManager] Saved finalized rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`,
 					DC.ratingManager
 				);
@@ -826,7 +826,7 @@ export class RatingManager {
 			return true;
 		});
 
-		debugPrint(
+		if (DEBUG_PRINTS.master) debugPrint(
 			`[RatingManager] calculateAndSaveRatings: ${survivors.length} survivors to finalize, ${this.finalizedPlayers.size} already finalized`,
 			DC.ratingManager
 		);
@@ -950,7 +950,7 @@ export class RatingManager {
 				if (!saved) {
 					print(`${HexColors.RED}ERROR:|r Failed to save rating for ${btag}`);
 				} else {
-					debugPrint(
+					if (DEBUG_PRINTS.master) debugPrint(
 						`[RatingManager] Saved survivor rating for ${btag}: ${oldRating} -> ${newRating} (${totalChange >= 0 ? '+' : ''}${totalChange})`,
 						DC.ratingManager
 					);
@@ -971,13 +971,13 @@ export class RatingManager {
 	 * @param currentTurn Current turn number
 	 */
 	public saveRatingsInProgress(ranks: ActivePlayer[], currentTurn: number): void {
-		debugPrint(
+		if (DEBUG_PRINTS.master) debugPrint(
 			`[RatingManager] saveRatingsInProgress called: turn=${currentTurn}, isRanked=${this.isRankedGameFlag}, gameId=${this.currentGameId || 'EMPTY'}, ranksCount=${ranks.length}`,
 			DC.ratingManager
 		);
 
 		if (!this.isRankedGameFlag || !this.currentGameId) {
-			debugPrint(
+			if (DEBUG_PRINTS.master) debugPrint(
 				`[RatingManager] saveRatingsInProgress exiting early: isRankedGameFlag=${this.isRankedGameFlag}, currentGameId=${this.currentGameId || 'EMPTY'}`,
 				DC.ratingManager
 			);
@@ -993,7 +993,7 @@ export class RatingManager {
 
 			// Skip already finalized players
 			if (this.finalizedPlayers.has(btag)) {
-				debugPrint(`[RatingManager] Filter: ${btag} excluded - already finalized`, DC.ratingManager);
+				if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] Filter: ${btag} excluded - already finalized`, DC.ratingManager);
 				return false;
 			}
 
@@ -1001,36 +1001,36 @@ export class RatingManager {
 			// Note: turnDied = -1 means "hasn't died yet" (alive), not "left before game started"
 			// We check slot state to detect players who actually disconnected/left
 			if (GetPlayerSlotState(player.getPlayer()) !== PLAYER_SLOT_STATE_PLAYING) {
-				debugPrint(`[RatingManager] Filter: ${btag} excluded - player left the game (slot state != PLAYING)`, DC.ratingManager);
+				if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] Filter: ${btag} excluded - player left the game (slot state != PLAYING)`, DC.ratingManager);
 				return false;
 			}
 
 			// Exclude dead players - they should be finalized via finalizePlayerRating
 			if (player.status.isEliminated()) {
-				debugPrint(`[RatingManager] Filter: ${btag} excluded - isEliminated=true`, DC.ratingManager);
+				if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] Filter: ${btag} excluded - isEliminated=true`, DC.ratingManager);
 				return false;
 			}
 
 			// Exclude computer/AI players
 			if (GetPlayerController(player.getPlayer()) !== MAP_CONTROL_USER) {
-				debugPrint(`[RatingManager] Filter: ${btag} excluded - AI player`, DC.ratingManager);
+				if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] Filter: ${btag} excluded - AI player`, DC.ratingManager);
 				return false;
 			}
 
-			debugPrint(`[RatingManager] Filter: ${btag} INCLUDED - alive and not finalized`, DC.ratingManager);
+			if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] Filter: ${btag} INCLUDED - alive and not finalized`, DC.ratingManager);
 			return true;
 		});
 
 		// No alive players to save pending entries for
 		if (alivePlayers.length === 0) {
-			debugPrint(
+			if (DEBUG_PRINTS.master) debugPrint(
 				`[RatingManager] saveRatingsInProgress: No alive players after filtering (total ranks: ${ranks.length})`,
 				DC.ratingManager
 			);
 			return;
 		}
 
-		debugPrint(`[RatingManager] saveRatingsInProgress: ${alivePlayers.length} alive players to save pending entries for`, DC.ratingManager);
+		if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] saveRatingsInProgress: ${alivePlayers.length} alive players to save pending entries for`, DC.ratingManager);
 
 		// Build INITIAL opponent ratings array
 		const opponentRatings: number[] = [];
@@ -1132,9 +1132,9 @@ export class RatingManager {
 			if (isLocalPlayer) {
 				const saved = this.savePlayerRating(btag);
 				if (!saved) {
-					debugPrint(`[RatingManager] Failed to save pending rating for ${btag}`, DC.ratingManager);
+					if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] Failed to save pending rating for ${btag}`, DC.ratingManager);
 				} else {
-					debugPrint(
+					if (DEBUG_PRINTS.master) debugPrint(
 						`[RatingManager] Saved pending entry for ${btag}: turn=${currentTurn}, preliminaryPlacement=${preliminaryPlacement + 1}, preliminaryRating=${preliminaryRating}`,
 						DC.ratingManager
 					);
@@ -1156,7 +1156,7 @@ export class RatingManager {
 
 		// Skip if the finalized player IS the local player (they have their own personal file)
 		if (finalizedPlayerData.btag === localBtag) {
-			debugPrint(`[RatingManager] broadcastFinalizedPlayerToOthers: Skipping self (${localBtag})`, DC.ratingManager);
+			if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] broadcastFinalizedPlayerToOthers: Skipping self (${localBtag})`, DC.ratingManager);
 			return;
 		}
 
@@ -1228,7 +1228,7 @@ export class RatingManager {
 		};
 
 		writeOthersRatings(othersData, sanitizedName, this.seasonId);
-		debugPrint(
+		if (DEBUG_PRINTS.master) debugPrint(
 			`[RatingManager] Broadcast finalized player ${cleanPlayerData.btag} (rating: ${cleanPlayerData.rating}) to ${localBtag}'s others database`,
 			DC.ratingManager
 		);

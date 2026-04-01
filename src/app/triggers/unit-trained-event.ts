@@ -4,7 +4,7 @@ import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { debugPrint } from '../utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 
 export const UnitTrainedTrigger: trigger = CreateTrigger();
@@ -23,11 +23,11 @@ export function UnitTrainedEvent() {
 			// Transports must always be owned by the real player so rally-loading works correctly
 			if (IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
 				if (oldSlot !== realOwner) {
-					debugPrint(`[SharedSlots] Transport reassigned from shared slot ${GetPlayerId(oldSlot)} to real owner ${GetPlayerId(realOwner)}`, DC.sharedSlots);
+					if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Transport reassigned from shared slot ${GetPlayerId(oldSlot)} to real owner ${GetPlayerId(realOwner)}`, DC.sharedSlots);
 					SetUnitOwner(trainedUnit, realOwner, true);
 					SharedSlotManager.getInstance().incrementUnitCount(realOwner);
 				} else {
-					debugPrint(`[SharedSlots] Transport trained on real owner slot ${GetPlayerId(oldSlot)}`, DC.sharedSlots);
+					if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Transport trained on real owner slot ${GetPlayerId(oldSlot)}`, DC.sharedSlots);
 					SharedSlotManager.getInstance().incrementUnitCount(oldSlot);
 				}
 			} else {
@@ -35,11 +35,11 @@ export function UnitTrainedEvent() {
 
 				if (optimalSlot !== oldSlot) {
 					// Reassign the trained unit to the optimal (lowest-count) slot
-					debugPrint(`[SharedSlots] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(optimalSlot)}`, DC.sharedSlots);
+					if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(optimalSlot)}`, DC.sharedSlots);
 					SetUnitOwner(trainedUnit, optimalSlot, true);
 					SharedSlotManager.getInstance().incrementUnitCount(optimalSlot);
 				} else {
-					debugPrint(`[SharedSlots] Trained unit on slot ${GetPlayerId(oldSlot)}`, DC.sharedSlots);
+					if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Trained unit on slot ${GetPlayerId(oldSlot)}`, DC.sharedSlots);
 					SharedSlotManager.getInstance().incrementUnitCount(oldSlot);
 				}
 			}

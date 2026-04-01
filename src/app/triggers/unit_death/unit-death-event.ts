@@ -10,7 +10,7 @@ import { EVENT_ON_UNIT_KILLED } from 'src/app/utils/events/event-constants';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { updateUnitNameWithKillValue } from '../../utils/unit-name-helper';
@@ -27,11 +27,11 @@ export function UnitDeathEvent() {
 		Condition(() => {
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
-			debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`, DC.events);
+			if (DEBUG_PRINTS.master) debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`, DC.events);
 
 			// Decrement slot unit count using raw WC3 owner (not resolved real player)
 			const rawDyingUnitOwner = GetOwningPlayer(dyingUnit);
-			debugPrint(`[SharedSlots] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.sharedSlots);
+			if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.sharedSlots);
 			SharedSlotManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
 
 			// Clean up originalOwnerMap entry for neutralized units
@@ -39,7 +39,7 @@ export function UnitDeathEvent() {
 
 			// Check if this slot is pending free and now has 0 units
 			if (SharedSlotManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) && SharedSlotManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0) {
-				debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.redistribute);
+				if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.redistribute);
 				SharedSlotManager.getInstance().evaluateAndRedistribute();
 			}
 
@@ -64,13 +64,13 @@ export function UnitDeathEvent() {
 						const totalKillValue = UnitKillTracker.getInstance().addKillValue(killingUnit, pointValue);
 						updateUnitNameWithKillValue(killingUnit, totalKillValue);
 					} else {
-						debugPrint(`[KILL TRACKER] Skipping deny - unit killed its own unit`, DC.killTracker);
+						if (DEBUG_PRINTS.master) debugPrint(`[KILL TRACKER] Skipping deny - unit killed its own unit`, DC.killTracker);
 					}
 				} else if (killingUnit) {
-					debugPrint(`[KILL TRACKER] Skipping name update - killing unit is a building`, DC.killTracker);
+					if (DEBUG_PRINTS.master) debugPrint(`[KILL TRACKER] Skipping name update - killing unit is a building`, DC.killTracker);
 				}
 			} catch (e) {
-				debugPrint(`[KILL TRACKER ERROR] Exception: ${e}`, DC.killTracker);
+				if (DEBUG_PRINTS.master) debugPrint(`[KILL TRACKER ERROR] Exception: ${e}`, DC.killTracker);
 			}
 
 			// Remove the dying unit from kill tracking

@@ -18,13 +18,13 @@ This document identifies performance bottlenecks in the custom minimap icon syst
 
 **Sub-issues:**
 
-| # | Issue | Lines | Severity |
-|---|-------|-------|----------|
-| 1a | City positions are **static** but `updateIconPosition` is called every tick for every city + capital borders | [L347–358](src/app/managers/minimap-icon-manager.ts#L347-L358) | High |
-| 1b | City colors only change on ownership change, yet `updateIconColor` + `BlzFrameSetTexture` is called every 100ms for all cities | [L360](src/app/managers/minimap-icon-manager.ts#L360) | High |
-| 1c | Texture path strings (`'ReplaceableTextures\\TeamColor\\TeamColor' + colorStr + '.blp'`) are built via concatenation every tick for every icon | [L456–475](src/app/managers/minimap-icon-manager.ts#L456-L475) | Medium |
-| 1d | `unitsToRemove` array is **allocated every tick** to collect dead units | [L370](src/app/managers/minimap-icon-manager.ts#L370) | Low |
-| 1e | `IsUnitVisible` called for every city every tick, even when fog-of-war hasn't changed | [L348](src/app/managers/minimap-icon-manager.ts#L348) | Medium |
+| #   | Issue                                                                                                                                          | Lines                                                          | Severity |
+| --- | ---------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- | -------- |
+| 1a  | City positions are **static** but `updateIconPosition` is called every tick for every city + capital borders                                   | [L347–358](src/app/managers/minimap-icon-manager.ts#L347-L358) | High     |
+| 1b  | City colors only change on ownership change, yet `updateIconColor` + `BlzFrameSetTexture` is called every 100ms for all cities                 | [L360](src/app/managers/minimap-icon-manager.ts#L360)          | High     |
+| 1c  | Texture path strings (`'ReplaceableTextures\\TeamColor\\TeamColor' + colorStr + '.blp'`) are built via concatenation every tick for every icon | [L456–475](src/app/managers/minimap-icon-manager.ts#L456-L475) | Medium   |
+| 1d  | `unitsToRemove` array is **allocated every tick** to collect dead units                                                                        | [L370](src/app/managers/minimap-icon-manager.ts#L370)          | Low      |
+| 1e  | `IsUnitVisible` called for every city every tick, even when fog-of-war hasn't changed                                                          | [L348](src/app/managers/minimap-icon-manager.ts#L348)          | Medium   |
 
 ---
 
@@ -42,9 +42,10 @@ A separate timer fires every **30ms** solely to check `GetAllyColorFilterState()
 
 **Files:** [shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts#L59-L68), [unit-lag-manager.ts](src/app/game/services/unit-lag-manager.ts#L37), [spawner.ts](src/app/spawner/spawner.ts)
 
-`debugPrint` is called on **every** unit spawn, death, track/untrack, and increment/decrement. Even when `SHOW_DEBUG_PRINTS` is `false`, the call still:
+`debugPrint` is called on **every** unit spawn, death, track/untrack, and increment/decrement. Even when `DEBUG_PRINTS.master` is `false`, the call still:
+
 1. Evaluates template literal arguments (string concatenation, `GetPlayerId()` calls)
-2. Enters the function body to hit the `if (SHOW_DEBUG_PRINTS)` guard
+2. Enters the function body to hit the `if (!DEBUG_PRINTS.master) return` guard
 
 With thousands of spawns/deaths per game, the argument evaluation cost adds up even in release builds.
 
@@ -55,6 +56,7 @@ With thousands of spawns/deaths per game, the argument evaluation cost adds up e
 **File:** [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts#L68-L105)
 
 Each spawned unit triggers:
+
 - `matchPlayers.find(x => x.getPlayer() == this.getOwner())` — **O(n) linear scan** per unit spawned
 - `GetUnitRallyPoint` / `RemoveLocation` — creates and destroys a **handle** per unit (WC3 handle table pressure)
 - `BlzSetUnitName(u, ...)` — string concatenation per unit
@@ -105,8 +107,8 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
 
   ```typescript
   this.cityIcons.forEach((iconFrame, city) => {
-      const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
-      this.updateIconColor(iconFrame, city, isVisible, effectiveLocal);
+  	const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
+  	this.updateIconColor(iconFrame, city, isVisible, effectiveLocal);
   });
   ```
 
@@ -121,6 +123,7 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
   **File:** [src/app/managers/minimap-icon-manager.ts](src/app/managers/minimap-icon-manager.ts#L400)
 
   City color only changes when:
+
   - Ownership changes (captured, neutralized)
   - Ally color filter mode toggles (0 ↔ 1)
 
@@ -130,11 +133,11 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
 
   ```typescript
   this.dirtyCities.forEach((city) => {
-      const iconFrame = this.cityIcons.get(city);
-      if (iconFrame) {
-          const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
-          this.updateIconColor(iconFrame, city, isVisible, effectiveLocal);
-      }
+  	const iconFrame = this.cityIcons.get(city);
+  	if (iconFrame) {
+  		const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
+  		this.updateIconColor(iconFrame, city, isVisible, effectiveLocal);
+  	}
   });
   this.dirtyCities.clear();
   ```
@@ -143,12 +146,12 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
 
   ```typescript
   this.cityIcons.forEach((iconFrame, city) => {
-      const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
-      const wasVisible = this.cityVisibility.get(city) || false;
-      if (isVisible !== wasVisible) {
-          this.cityVisibility.set(city, isVisible);
-          this.dirtyColors.add(city); // trigger color update on visibility transition
-      }
+  	const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
+  	const wasVisible = this.cityVisibility.get(city) || false;
+  	if (isVisible !== wasVisible) {
+  		this.cityVisibility.set(city, isVisible);
+  		this.dirtyColors.add(city); // trigger color update on visibility transition
+  	}
   });
   ```
 
@@ -166,14 +169,14 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
 
   ```typescript
   TimerStart(allyModeTimer, 0.5, true, () => {
-      const currentState = GetAllyColorFilterState();
-      if (currentState === 2) {
-          SetAllyColorFilterState(0);
-      }
-      if (currentState !== this.lastAllyColorState) {
-          this.lastAllyColorState = currentState;
-          this.markAllColorsDirty();
-      }
+  	const currentState = GetAllyColorFilterState();
+  	if (currentState === 2) {
+  		SetAllyColorFilterState(0);
+  	}
+  	if (currentState !== this.lastAllyColorState) {
+  		this.lastAllyColorState = currentState;
+  		this.markAllColorsDirty();
+  	}
   });
   ```
 
@@ -259,19 +262,19 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
 
 **Objective:** Ensure debug logging has zero cost when disabled.
 
-- [ ] **3.1 — Avoid argument evaluation when debug is off**
+- [x] **3.1 — Avoid argument evaluation when debug is off**
 
   **File:** [src/app/utils/debug-print.ts](src/app/utils/debug-print.ts#L193)
 
-  Template literals like `` `[SharedSlots] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}` `` are fully evaluated **before** `debugPrint` is called, including the `GetPlayerId()` native calls. When `SHOW_DEBUG_PRINTS` is `false`, this is wasted work.
+  Template literals like `` `[SharedSlots] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}` `` are fully evaluated **before** `debugPrint` is called, including the `GetPlayerId()` native calls. When `DEBUG_PRINTS.master` is `false`, this is wasted work.
 
-  Wrap high-frequency debug calls in an inline guard so the template literal is never evaluated when `SHOW_DEBUG_PRINTS` is `false`:
+  Wrap high-frequency debug calls in an inline guard so the template literal is never evaluated when `DEBUG_PRINTS.master` is `false`:
 
   ```typescript
-  if (SHOW_DEBUG_PRINTS) debugPrint(`[SharedSlots] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
+  if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`, DC.sharedSlots);
   ```
 
-  Since `SHOW_DEBUG_PRINTS` is a `const`, TSTL may dead-code-eliminate the entire block. At worst, it's a single boolean check.
+  Since `DEBUG_PRINTS.master` is a property on a `const` object, TSTL cannot prove it isn't mutated at runtime, so dead-code elimination is unlikely. However, the inline guard is still effective — it's a single boolean check that avoids all template literal evaluation, `GetPlayerId()` native calls, and the `debugPrint` function call overhead.
 
   Apply this to all high-frequency call sites: `incrementUnitCount`, `decrementUnitCount`, `trackUnit`, `untrackUnit`, `getSlotWithLowestUnitCount`, and `Spawner.step()`.
 
@@ -290,14 +293,14 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
   The `.find()` linear scan runs once per spawned unit, but the result is always the same within a single `step()` call (same owner). Cache it before the loop:
 
   ```typescript
-  const ownerMatchPlayer = GlobalGameData.matchPlayers.find(x => x.getPlayer() == this.getOwner());
+  const ownerMatchPlayer = GlobalGameData.matchPlayers.find((x) => x.getPlayer() == this.getOwner());
 
   for (let i = 0; i < amount; i++) {
-      // use ownerMatchPlayer directly
-      if (!IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
-          ownerMatchPlayer.trackedData.units.add(u);
-      }
-      // ...
+  	// use ownerMatchPlayer directly
+  	if (!IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
+  		ownerMatchPlayer.trackedData.units.add(u);
+  	}
+  	// ...
   }
   ```
 
@@ -315,10 +318,10 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
   const rallyLoc = GetUnitRallyPoint(this.unit);
 
   for (let i = 0; i < amount; i++) {
-      // ...
-      if (rallyLoc != null) {
-          IssuePointOrderLoc(u, 'attack', rallyLoc);
-      }
+  	// ...
+  	if (rallyLoc != null) {
+  		IssuePointOrderLoc(u, 'attack', rallyLoc);
+  	}
   }
 
   if (rallyLoc != null) RemoveLocation(rallyLoc);
@@ -330,7 +333,7 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
 
 - [x] ~~**4.3 — Replace `spawnMap` array with a counter**~~ **REJECTED**
 
-  The `spawnMap` tracks which specific units belong to each country's spawner. On unit death, `onDeath()` uses `indexOf` + `splice` to remove the dead unit so the spawner knows it can replace it. A simple counter wouldn't work because we need to know *which* spawner a dying unit belongs to (via the global `SPAWNER_UNITS` map) and remove it from that spawner's list. The per-country tracking is essential to the spawn cap mechanic.
+  The `spawnMap` tracks which specific units belong to each country's spawner. On unit death, `onDeath()` uses `indexOf` + `splice` to remove the dead unit so the spawner knows it can replace it. A simple counter wouldn't work because we need to know _which_ spawner a dying unit belongs to (via the global `SPAWNER_UNITS` map) and remove it from that spawner's list. The per-country tracking is essential to the spawn cap mechanic.
 
 ---
 
@@ -341,6 +344,7 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
   **File:** [src/app/managers/minimap-icon-manager.ts](src/app/managers/minimap-icon-manager.ts#L40)
 
   The current `INITIAL_POOL_SIZE = 2000` may not be enough for late-game world maps. Options:
+
   - Increase to 3000–4000 based on expected max units
   - Or pre-expand during the first spawn turn (when unit counts are known) rather than at init
 
@@ -350,20 +354,20 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
 
 ## Priority & Estimated Impact
 
-| Phase | Optimization | Impact | Risk | Priority |
-|-------|-------------|--------|------|----------|
-| 1.1 | Remove city position updates | High | Low | P0 |
-| 1.2 | Event-driven city colors | High | Medium | P0 |
-| 2.1 | Cache texture strings | Medium | Low | P0 |
-| 2.2 | Skip unchanged textures | High | Low | P0 |
-| 3.1 | Guard debug prints | Medium | Low | P1 |
-| 4.1 | Cache matchPlayers.find | Medium | Low | P1 |
-| 4.2 | Cache rally point | Medium | Low | P1 |
-| 1.3 | Reduce ally color poll | Low | Low | P1 |
-| 2.3 | Reuse unitsToRemove array | Low | Low | P2 |
-| 4.3 | Replace spawnMap with counter | Low | Medium | P2 |
-| 5.1 | Frame pool tuning | Low | Low | P2 |
-| 2.4 | Relax unit update interval | Medium | Medium | P2 |
+| Phase | Optimization                  | Impact | Risk   | Priority |
+| ----- | ----------------------------- | ------ | ------ | -------- |
+| 1.1   | Remove city position updates  | High   | Low    | P0       |
+| 1.2   | Event-driven city colors      | High   | Medium | P0       |
+| 2.1   | Cache texture strings         | Medium | Low    | P0       |
+| 2.2   | Skip unchanged textures       | High   | Low    | P0       |
+| 3.1   | Guard debug prints            | Medium | Low    | P1       |
+| 4.1   | Cache matchPlayers.find       | Medium | Low    | P1       |
+| 4.2   | Cache rally point             | Medium | Low    | P1       |
+| 1.3   | Reduce ally color poll        | Low    | Low    | P1       |
+| 2.3   | Reuse unitsToRemove array     | Low    | Low    | P2       |
+| 4.3   | Replace spawnMap with counter | Low    | Medium | P2       |
+| 5.1   | Frame pool tuning             | Low    | Low    | P2       |
+| 2.4   | Relax unit update interval    | Medium | Medium | P2       |
 
 **P0 = Do first.** These address the core hot loop and together should cut minimap update cost by 60–80% in steady-state gameplay.
 

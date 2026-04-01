@@ -6,8 +6,7 @@ import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
-import { SHARED_SLOT_ALLOCATION_ENABLED } from 'src/configs/game-settings';
-import { DC } from 'src/configs/game-settings';
+import { SHARED_SLOT_ALLOCATION_ENABLED, DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { GlobalGameData } from '../state/global-game-state';
 import { PLAYER_COLORS } from '../../utils/player-colors';
 import { NameManager } from '../../managers/names/name-manager';
@@ -54,14 +53,14 @@ export class SharedSlotManager implements Resetable {
 		const oldCount = this.slotUnitCounts.get(slot) || 0;
 		const newCount = oldCount + 1;
 		this.slotUnitCounts.set(slot, newCount);
-		debugPrint(`[SharedSlots] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`, DC.sharedSlots);
+		if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`, DC.sharedSlots);
 	}
 
 	public decrementUnitCount(slot: player): void {
 		const oldCount = this.slotUnitCounts.get(slot) || 0;
 		const newCount = Math.max(0, oldCount - 1);
 		this.slotUnitCounts.set(slot, newCount);
-		debugPrint(`[SharedSlots] Decrement slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`, DC.sharedSlots);
+		if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Decrement slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`, DC.sharedSlots);
 	}
 
 	public getUnitCount(slot: player): number {
@@ -86,19 +85,21 @@ export class SharedSlotManager implements Resetable {
 			}
 		}
 
-		debugPrint(
-			`[SharedSlots] Lowest slot for player ${GetPlayerId(player)}: slot ${GetPlayerId(bestSlot)} (count: ${bestCount})`,
-			DC.sharedSlots
-		);
+		if (DEBUG_PRINTS.master)
+			debugPrint(
+				`[SharedSlots] Lowest slot for player ${GetPlayerId(player)}: slot ${GetPlayerId(bestSlot)} (count: ${bestCount})`,
+				DC.sharedSlots
+			);
 		return bestSlot;
 	}
 
 	public debugPrintSlotCounts(): void {
-		debugPrint(`[SharedSlots] === Slot Summary ===`, DC.sharedSlots);
+		if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] === Slot Summary ===`, DC.sharedSlots);
 		this.slotUnitCounts.forEach((count, slot) => {
 			if (count > 0) {
 				const realOwner = this.slotToPlayer.get(slot) || slot;
-				debugPrint(`[SharedSlots] Slot ${GetPlayerId(slot)} (owner: ${GetPlayerId(realOwner)}): ${count} units`, DC.sharedSlots);
+				if (DEBUG_PRINTS.master)
+					debugPrint(`[SharedSlots] Slot ${GetPlayerId(slot)} (owner: ${GetPlayerId(realOwner)}): ${count} units`, DC.sharedSlots);
 			}
 		});
 	}
@@ -114,14 +115,15 @@ export class SharedSlotManager implements Resetable {
 	 */
 	public neutralizePlayerUnits(realPlayer: player): void {
 		if (!SettingsContext.getInstance().isFFA()) {
-			debugPrint(`[Neutralize] Skipping — not FFA mode`, DC.sharedSlots);
+			if (DEBUG_PRINTS.master) debugPrint(`[Neutralize] Skipping — not FFA mode`, DC.sharedSlots);
 			return;
 		}
 
-		debugPrint(`[Neutralize] Neutralizing all units for player ${GetPlayerId(realPlayer)}`, DC.sharedSlots);
+		if (DEBUG_PRINTS.master) debugPrint(`[Neutralize] Neutralizing all units for player ${GetPlayerId(realPlayer)}`, DC.sharedSlots);
 		const sharedSlots = this.getSharedSlotsByPlayer(realPlayer);
 		const slots = [realPlayer, ...sharedSlots];
-		debugPrint(`[Neutralize] Processing ${slots.length} slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`, DC.sharedSlots);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`[Neutralize] Processing ${slots.length} slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`, DC.sharedSlots);
 
 		const playerColor = GetPlayerColor(realPlayer);
 
@@ -146,13 +148,15 @@ export class SharedSlotManager implements Resetable {
 				// Retain original player color on all city components
 				SetUnitOwner(city.guard.unit, NEUTRAL_HOSTILE, false);
 				city.setColor(playerColor);
-				debugPrint(`[Neutralize] Reset city (cop owner changed via city.setOwner)`, DC.sharedSlots);
+				if (DEBUG_PRINTS.master) debugPrint(`[Neutralize] Reset city (cop owner changed via city.setOwner)`, DC.sharedSlots);
 			}
 		}
 
 		// lazy require to avoid circular dependency between SharedSlotManager and TransportManager (unit enumeration needs to happen before ownership changes from city.setOwner)
-		const { TransportManager } = require('../../managers/transport-manager') as { TransportManager: typeof import('../../managers/transport-manager').TransportManager };
-		
+		const { TransportManager } = require('../../managers/transport-manager') as {
+			TransportManager: typeof import('../../managers/transport-manager').TransportManager;
+		};
+
 		// Now enumerate and transfer all remaining units on each slot
 		for (const slot of slots) {
 			const unitsToTransfer: unit[] = [];
@@ -167,11 +171,23 @@ export class SharedSlotManager implements Resetable {
 
 				// Handle cargo units inside transports
 				if (IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
-					debugPrint(`[Neutralize] Found transport ${GetUnitName(u)} on slot ${GetPlayerId(slot)}, checking cargo units for transfer`, DC.sharedSlots);
+					if (DEBUG_PRINTS.master)
+						debugPrint(
+							`[Neutralize] Found transport ${GetUnitName(u)} on slot ${GetPlayerId(slot)}, checking cargo units for transfer`,
+							DC.sharedSlots
+						);
 					const cargoUnits = TransportManager.getInstance().getCargo(u);
-					debugPrint(`[Neutralize] Found transport ${GetUnitName(u)} with ${cargoUnits ? cargoUnits.length : 0} cargo units`, DC.sharedSlots);
+					if (DEBUG_PRINTS.master)
+						debugPrint(
+							`[Neutralize] Found transport ${GetUnitName(u)} with ${cargoUnits ? cargoUnits.length : 0} cargo units`,
+							DC.sharedSlots
+						);
 					for (const cargoUnit of cargoUnits) {
-						debugPrint(`[Neutralize] Adding cargo unit ${GetUnitName(cargoUnit)} inside transport ${GetUnitName(u)} to transfer list`, DC.sharedSlots);
+						if (DEBUG_PRINTS.master)
+							debugPrint(
+								`[Neutralize] Adding cargo unit ${GetUnitName(cargoUnit)} inside transport ${GetUnitName(u)} to transfer list`,
+								DC.sharedSlots
+							);
 						unitsToTransfer.push(cargoUnit);
 					}
 				}
@@ -187,7 +203,8 @@ export class SharedSlotManager implements Resetable {
 				if (IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
 					IssueImmediateOrder(u, 'stop');
 				}
-				debugPrint(`[Neutralize] Transferred unit ${GetUnitName(u)} from slot ${GetPlayerId(slot)} to NEUTRAL_HOSTILE`, DC.sharedSlots);
+				if (DEBUG_PRINTS.master)
+					debugPrint(`[Neutralize] Transferred unit ${GetUnitName(u)} from slot ${GetPlayerId(slot)} to NEUTRAL_HOSTILE`, DC.sharedSlots);
 			}
 		}
 
@@ -198,9 +215,10 @@ export class SharedSlotManager implements Resetable {
 		}
 		this.playerToSlots.delete(realPlayer);
 		this.pendingFreeSlots.delete(realPlayer);
-		debugPrint(`[Neutralize] Cleared ${sharedSlots.length} shared slot mappings for player ${GetPlayerId(realPlayer)}`, DC.sharedSlots);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`[Neutralize] Cleared ${sharedSlots.length} shared slot mappings for player ${GetPlayerId(realPlayer)}`, DC.sharedSlots);
 
-		debugPrint(`[Neutralize] Complete. All slots should now have 0 units.`, DC.sharedSlots);
+		if (DEBUG_PRINTS.master) debugPrint(`[Neutralize] Complete. All slots should now have 0 units.`, DC.sharedSlots);
 	}
 
 	/**
@@ -211,11 +229,11 @@ export class SharedSlotManager implements Resetable {
 	 */
 	public evaluateAndRedistribute(): boolean {
 		if (!SHARED_SLOT_ALLOCATION_ENABLED) {
-			debugPrint('[Redistribute] Shared slot allocation disabled, skipping', DC.redistribute);
+			if (DEBUG_PRINTS.master) debugPrint('[Redistribute] Shared slot allocation disabled, skipping', DC.redistribute);
 			return false;
 		}
 
-		debugPrint('[Redistribute] === Running evaluateAndRedistribute() ===', DC.redistribute);
+		if (DEBUG_PRINTS.master) debugPrint('[Redistribute] === Running evaluateAndRedistribute() ===', DC.redistribute);
 
 		// 1. COLLECT: Build the current picture
 		const activePlayers: player[] = [];
@@ -230,16 +248,18 @@ export class SharedSlotManager implements Resetable {
 			}
 		}
 
-		debugPrint(`[Redistribute] Active players: ${activePlayers.map((p) => GetPlayerId(p)).join(', ')}`, DC.redistribute);
-		debugPrint(`[Redistribute] Eliminated players: ${eliminatedPlayers.map((p) => GetPlayerId(p)).join(', ')}`, DC.redistribute);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`[Redistribute] Active players: ${activePlayers.map((p) => GetPlayerId(p)).join(', ')}`, DC.redistribute);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`[Redistribute] Eliminated players: ${eliminatedPlayers.map((p) => GetPlayerId(p)).join(', ')}`, DC.redistribute);
 
 		if (activePlayers.length === 0) {
-			debugPrint('[Redistribute] No active players, returning false', DC.redistribute);
+			if (DEBUG_PRINTS.master) debugPrint('[Redistribute] No active players, returning false', DC.redistribute);
 			return false;
 		}
 
 		if (activePlayers.length > SharedSlotManager.MAX_PLAYERS_FOR_SHARED_SLOT_ALLOCATION) {
-			debugPrint(`[Redistribute] Too many active players (${activePlayers.length}), skipping`, DC.redistribute);
+			if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Too many active players (${activePlayers.length}), skipping`, DC.redistribute);
 			return false;
 		}
 
@@ -252,17 +272,19 @@ export class SharedSlotManager implements Resetable {
 				const remainingSlots: SharedSlot[] = [];
 				for (const slot of sharedSlots) {
 					if (this.getUnitCount(slot) === 0) {
-						debugPrint(
-							`[Redistribute] Freed slot ${GetPlayerId(slot)} from eliminated player ${GetPlayerId(elimPlayer)} (unitCount was 0)`,
-							DC.redistribute
-						);
+						if (DEBUG_PRINTS.master)
+							debugPrint(
+								`[Redistribute] Freed slot ${GetPlayerId(slot)} from eliminated player ${GetPlayerId(elimPlayer)} (unitCount was 0)`,
+								DC.redistribute
+							);
 						this.tearDownSlot(slot, elimPlayer);
 						this.slotToPlayer.delete(slot);
 						this.pendingFreeSlots.delete(slot);
 						availablePool.push(slot);
 					} else {
 						const count = this.getUnitCount(slot);
-						debugPrint(`[Redistribute] Slot ${GetPlayerId(slot)} marked pendingFree (unitCount: ${count})`, DC.redistribute);
+						if (DEBUG_PRINTS.master)
+							debugPrint(`[Redistribute] Slot ${GetPlayerId(slot)} marked pendingFree (unitCount: ${count})`, DC.redistribute);
 						this.pendingFreeSlots.add(slot);
 						remainingSlots.push(slot);
 					}
@@ -281,7 +303,8 @@ export class SharedSlotManager implements Resetable {
 				if (!activePlayers.includes(elimPlayer)) {
 					// Check if it's not already in the pool
 					if (!availablePool.includes(elimPlayer)) {
-						debugPrint(`[Redistribute] Freed eliminated player handle ${GetPlayerId(elimPlayer)} (unitCount was 0)`, DC.redistribute);
+						if (DEBUG_PRINTS.master)
+							debugPrint(`[Redistribute] Freed eliminated player handle ${GetPlayerId(elimPlayer)} (unitCount was 0)`, DC.redistribute);
 						availablePool.push(elimPlayer);
 						this.pendingFreeSlots.delete(elimPlayer);
 					}
@@ -309,7 +332,7 @@ export class SharedSlotManager implements Resetable {
 			}
 		}
 
-		debugPrint(`[Redistribute] Available pool: ${availablePool.length} slots`, DC.redistribute);
+		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Available pool: ${availablePool.length} slots`, DC.redistribute);
 
 		// 3. CALCULATE: Determine optimal distribution
 		// Count currently assigned slots per active player
@@ -321,16 +344,17 @@ export class SharedSlotManager implements Resetable {
 
 		const totalSlots = totalAssignedSlots + availablePool.length;
 		if (totalSlots === 0) {
-			debugPrint('[Redistribute] No slots available at all, returning false', DC.redistribute);
+			if (DEBUG_PRINTS.master) debugPrint('[Redistribute] No slots available at all, returning false', DC.redistribute);
 			return false;
 		}
 
 		const slotsPerPlayer = Math.floor(totalSlots / activePlayers.length);
 
-		debugPrint(
-			`[Redistribute] Target: ${slotsPerPlayer} per player (${totalSlots % activePlayers.length} leftover unassigned)`,
-			DC.redistribute
-		);
+		if (DEBUG_PRINTS.master)
+			debugPrint(
+				`[Redistribute] Target: ${slotsPerPlayer} per player (${totalSlots % activePlayers.length} leftover unassigned)`,
+				DC.redistribute
+			);
 
 		// Sort active players by ID for deterministic remainder distribution
 		activePlayers.sort((a, b) => GetPlayerId(a) - GetPlayerId(b));
@@ -345,10 +369,11 @@ export class SharedSlotManager implements Resetable {
 			const target = slotsPerPlayer;
 			const delta = target - currentSlots.length;
 
-			debugPrint(
-				`[Redistribute] Player ${GetPlayerId(p)}: current=${currentSlots.length}, target=${target}, delta=${delta}`,
-				DC.redistribute
-			);
+			if (DEBUG_PRINTS.master)
+				debugPrint(
+					`[Redistribute] Player ${GetPlayerId(p)}: current=${currentSlots.length}, target=${target}, delta=${delta}`,
+					DC.redistribute
+				);
 
 			if (delta < 0) {
 				// Donor: give away slots with 0 units
@@ -369,7 +394,7 @@ export class SharedSlotManager implements Resetable {
 		}
 
 		if (!anyChanges && availablePool.length === 0) {
-			debugPrint('[Redistribute] No changes needed, returning false', DC.redistribute);
+			if (DEBUG_PRINTS.master) debugPrint('[Redistribute] No changes needed, returning false', DC.redistribute);
 			return false;
 		}
 
@@ -377,7 +402,8 @@ export class SharedSlotManager implements Resetable {
 		// Collect donated slots
 		for (const donor of donors) {
 			for (const slot of donor.slotsToGive) {
-				debugPrint(`[Redistribute] Donor ${GetPlayerId(donor.player)}: donating slot ${GetPlayerId(slot)}`, DC.redistribute);
+				if (DEBUG_PRINTS.master)
+					debugPrint(`[Redistribute] Donor ${GetPlayerId(donor.player)}: donating slot ${GetPlayerId(slot)}`, DC.redistribute);
 				this.tearDownSlot(slot, donor.player);
 				this.slotToPlayer.delete(slot);
 				// Remove from donor's slot array
@@ -409,7 +435,11 @@ export class SharedSlotManager implements Resetable {
 						const altSlot = availablePool.shift();
 						if (GetPlayerId(altSlot) !== GetPlayerId(receiver.player)) {
 							this.assignSlotToPlayer(altSlot, receiver.player);
-							debugPrint(`[Redistribute] Receiver ${GetPlayerId(receiver.player)}: assigned slot ${GetPlayerId(altSlot)}`, DC.redistribute);
+							if (DEBUG_PRINTS.master)
+								debugPrint(
+									`[Redistribute] Receiver ${GetPlayerId(receiver.player)}: assigned slot ${GetPlayerId(altSlot)}`,
+									DC.redistribute
+								);
 						} else {
 							availablePool.push(altSlot);
 						}
@@ -417,11 +447,12 @@ export class SharedSlotManager implements Resetable {
 					continue;
 				}
 				this.assignSlotToPlayer(slot, receiver.player);
-				debugPrint(`[Redistribute] Receiver ${GetPlayerId(receiver.player)}: assigned slot ${GetPlayerId(slot)}`, DC.redistribute);
+				if (DEBUG_PRINTS.master)
+					debugPrint(`[Redistribute] Receiver ${GetPlayerId(receiver.player)}: assigned slot ${GetPlayerId(slot)}`, DC.redistribute);
 			}
 		}
 
-		debugPrint(`[Redistribute] Complete. Leftover unassigned: ${availablePool.length}`, DC.redistribute);
+		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Complete. Leftover unassigned: ${availablePool.length}`, DC.redistribute);
 
 		// 5. REBALANCE: Spread existing units across newly assigned slots
 		for (const receiver of receivers) {
@@ -437,7 +468,8 @@ export class SharedSlotManager implements Resetable {
 	}
 
 	private tearDownSlot(slot: SharedSlot, previousOwner: player): void {
-		debugPrint(`[Redistribute] Tearing down slot ${GetPlayerId(slot)} (prev owner: ${GetPlayerId(previousOwner)})`, DC.redistribute);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`[Redistribute] Tearing down slot ${GetPlayerId(slot)} (prev owner: ${GetPlayerId(previousOwner)})`, DC.redistribute);
 		this.enableAdvancedControl(previousOwner, slot, false);
 		this.enableAdvancedControl(slot, previousOwner, false);
 
@@ -445,7 +477,8 @@ export class SharedSlotManager implements Resetable {
 		const siblingSlots = this.playerToSlots.get(previousOwner) || [];
 		for (const siblingSlot of siblingSlots) {
 			if (siblingSlot !== slot) {
-				debugPrint(`[Redistribute] Un-allying sibling slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(siblingSlot)}`, DC.redistribute);
+				if (DEBUG_PRINTS.master)
+					debugPrint(`[Redistribute] Un-allying sibling slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(siblingSlot)}`, DC.redistribute);
 				this.enableAdvancedControl(slot, siblingSlot, false);
 				this.enableAdvancedControl(siblingSlot, slot, false);
 			}
@@ -465,10 +498,11 @@ export class SharedSlotManager implements Resetable {
 							// Un-ally from all of the teammate's shared slots
 							const memberSlots = this.playerToSlots.get(memberPlayer) || [];
 							for (const memberSlot of memberSlots) {
-								debugPrint(
-									`[Redistribute] Un-allying cross-team slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(memberSlot)}`,
-									DC.redistribute
-								);
+								if (DEBUG_PRINTS.master)
+									debugPrint(
+										`[Redistribute] Un-allying cross-team slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(memberSlot)}`,
+										DC.redistribute
+									);
 								this.enableAdvancedControl(slot, memberSlot, false);
 								this.enableAdvancedControl(memberSlot, slot, false);
 							}
@@ -480,7 +514,8 @@ export class SharedSlotManager implements Resetable {
 	}
 
 	private assignSlotToPlayer(slot: SharedSlot, newOwner: player): void {
-		debugPrint(`[Redistribute] Assigning slot ${GetPlayerId(slot)} to player ${GetPlayerId(newOwner)}`, DC.redistribute);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`[Redistribute] Assigning slot ${GetPlayerId(slot)} to player ${GetPlayerId(newOwner)}`, DC.redistribute);
 
 		// Full alliance wipe before reassignment — ensures no stale alliances from previous owner
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
@@ -489,7 +524,8 @@ export class SharedSlotManager implements Resetable {
 				this.enableAdvancedControl(Player(i), slot, false);
 			}
 		}
-		debugPrint(`[Redistribute] Wiped all alliances for slot ${GetPlayerId(slot)} before reassignment`, DC.redistribute);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`[Redistribute] Wiped all alliances for slot ${GetPlayerId(slot)} before reassignment`, DC.redistribute);
 
 		if (!this.playerToSlots.has(newOwner)) {
 			this.playerToSlots.set(newOwner, []);
@@ -499,10 +535,11 @@ export class SharedSlotManager implements Resetable {
 		this.givePlayerFullControlOfSlot(newOwner, slot);
 
 		const slots = this.playerToSlots.get(newOwner);
-		debugPrint(
-			`[SharedSlotManager] Player ${GetPlayerId(newOwner)} now has ${slots.length} shared slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`,
-			DC.clientManager
-		);
+		if (DEBUG_PRINTS.master)
+			debugPrint(
+				`[SharedSlotManager] Player ${GetPlayerId(newOwner)} now has ${slots.length} shared slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`,
+				DC.clientManager
+			);
 	}
 
 	/**
@@ -542,10 +579,11 @@ export class SharedSlotManager implements Resetable {
 		const unitsPerSlot = Math.floor(movableUnits.length / numSlots);
 		const remainder = movableUnits.length % numSlots;
 
-		debugPrint(
-			`[Redistribute] Spreading ${movableUnits.length} units for player ${GetPlayerId(realPlayer)} across ${numSlots} slots (${unitsPerSlot} each, +1 for first ${remainder})`,
-			DC.redistribute
-		);
+		if (DEBUG_PRINTS.master)
+			debugPrint(
+				`[Redistribute] Spreading ${movableUnits.length} units for player ${GetPlayerId(realPlayer)} across ${numSlots} slots (${unitsPerSlot} each, +1 for first ${remainder})`,
+				DC.redistribute
+			);
 
 		// Lazy import to avoid circular dependency (UnitLagManager imports SharedSlotManager)
 		const { UnitLagManager } = require('./unit-lag-manager') as { UnitLagManager: typeof import('./unit-lag-manager').UnitLagManager };
@@ -578,13 +616,13 @@ export class SharedSlotManager implements Resetable {
 			}
 		}
 
-		debugPrint(`[Redistribute] Finished spreading units for player ${GetPlayerId(realPlayer)}`, DC.redistribute);
+		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Finished spreading units for player ${GetPlayerId(realPlayer)}`, DC.redistribute);
 		this.debugPrintSlotCounts();
 	}
 
 	public setOriginalOwner(unit: unit, realPlayer: player): void {
 		this.originalOwnerMap.set(unit, realPlayer);
-		debugPrint(`[Neutralize] Stored original owner for unit: player ${GetPlayerId(realPlayer)}`, DC.sharedSlots);
+		if (DEBUG_PRINTS.master) debugPrint(`[Neutralize] Stored original owner for unit: player ${GetPlayerId(realPlayer)}`, DC.sharedSlots);
 	}
 
 	public getOriginalOwner(unit: unit): player | undefined {
@@ -608,9 +646,10 @@ export class SharedSlotManager implements Resetable {
 	private getAvailableSharedSlots(): SharedSlot[] {
 		let sharedSlots: SharedSlot[] = [];
 		const emptySlots = PlayerManager.getInstance().getEmptyPlayerSlots();
-		debugPrint(`SharedSlotManager: Found ${emptySlots.length} empty player slots`, DC.clientManager);
+		if (DEBUG_PRINTS.master) debugPrint(`SharedSlotManager: Found ${emptySlots.length} empty player slots`, DC.clientManager);
 		const leftPlayers = PlayerManager.getInstance().getPlayersThatLeftWithNoUnitsOrCities();
-		debugPrint(`SharedSlotManager: Found ${leftPlayers.length} players that have left with no units or cities`, DC.clientManager);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`SharedSlotManager: Found ${leftPlayers.length} players that have left with no units or cities`, DC.clientManager);
 
 		if (emptySlots && emptySlots.length > 0) {
 			sharedSlots.push(...emptySlots.filter((p) => p !== null && p !== undefined));
@@ -625,11 +664,12 @@ export class SharedSlotManager implements Resetable {
 
 	public givePlayerFullControlOfSlot(player: player, slot: SharedSlot): void {
 		if (!player || !slot) {
-			debugPrint('SharedSlotManager: Invalid player or slot in givePlayerFullControlOfSlot', DC.clientManager);
+			if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Invalid player or slot in givePlayerFullControlOfSlot', DC.clientManager);
 			return;
 		}
 
-		debugPrint(`SharedSlotManager: Giving player ${GetPlayerName(player)} full control of slot ${GetPlayerId(slot)}`, DC.clientManager);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`SharedSlotManager: Giving player ${GetPlayerName(player)} full control of slot ${GetPlayerId(slot)}`, DC.clientManager);
 
 		NameManager.getInstance().setColor(slot, NameManager.getInstance().getOriginalColor(player));
 
@@ -640,7 +680,8 @@ export class SharedSlotManager implements Resetable {
 		const existingSlots = this.playerToSlots.get(player) || [];
 		for (const existingSlot of existingSlots) {
 			if (existingSlot !== slot) {
-				debugPrint(`SharedSlotManager: Allying sibling slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(existingSlot)}`, DC.clientManager);
+				if (DEBUG_PRINTS.master)
+					debugPrint(`SharedSlotManager: Allying sibling slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(existingSlot)}`, DC.clientManager);
 				this.enableAdvancedControl(slot, existingSlot, true);
 				this.enableAdvancedControl(existingSlot, slot, true);
 			}
@@ -660,7 +701,11 @@ export class SharedSlotManager implements Resetable {
 							// Also ally this slot with all of the teammate's shared slots
 							const memberSlots = this.playerToSlots.get(memberPlayer) || [];
 							for (const memberSlot of memberSlots) {
-								debugPrint(`SharedSlotManager: Allying cross-team slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(memberSlot)}`, DC.clientManager);
+								if (DEBUG_PRINTS.master)
+									debugPrint(
+										`SharedSlotManager: Allying cross-team slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(memberSlot)}`,
+										DC.clientManager
+									);
 								this.enableAdvancedControl(slot, memberSlot, true);
 								this.enableAdvancedControl(memberSlot, slot, true);
 							}
@@ -731,7 +776,7 @@ export class SharedSlotManager implements Resetable {
 
 	reset(): void {
 		// Reset all player colors and names to default
-		debugPrint('SharedSlotManager: Resetting all player colors and names to default', DC.clientManager);
+		if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Resetting all player colors and names to default', DC.clientManager);
 		NameManager.getInstance().resetOriginalColors();
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p = Player(i);
@@ -756,6 +801,6 @@ export class SharedSlotManager implements Resetable {
 		this.slotUnitCounts.clear();
 		this.pendingFreeSlots.clear();
 		this.originalOwnerMap.clear();
-		debugPrint('SharedSlotManager: Reset complete', DC.clientManager);
+		if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Reset complete', DC.clientManager);
 	}
 }
