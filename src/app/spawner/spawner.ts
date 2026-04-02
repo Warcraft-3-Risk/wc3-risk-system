@@ -4,6 +4,8 @@ import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
+import { PlayerManager } from '../player/player-manager';
+import { SettingsContext } from 'src/app/settings/settings-context';
 import { debugPrint } from '../utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
@@ -67,6 +69,12 @@ export class Spawner implements Resetable, Ownable {
 		if (this.getOwner() == NEUTRAL_HOSTILE) return;
 		if (GetPlayerSlotState(this.getOwner()) != PLAYER_SLOT_STATE_PLAYING) return;
 		if (GlobalGameData.matchState != 'inProgress') return;
+
+		// Eliminated players (e.g. forfeited via -ff) still have PLAYER_SLOT_STATE_PLAYING,
+		// so we must explicitly check their status to prevent spawning in FFA.
+		// In team games, eliminated players keep spawning so teammates can use those units.
+		const matchPlayer = PlayerManager.getInstance().players.get(this.getOwner());
+		if (SettingsContext.getInstance().isFFA() && matchPlayer && matchPlayer.status.isEliminated()) return;
 
 		const spawnCount: number = this.spawnMap.get(this.getOwner()).length;
 

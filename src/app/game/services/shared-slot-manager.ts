@@ -1,11 +1,9 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
-import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
-import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { SHARED_SLOT_ALLOCATION_ENABLED, DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { GlobalGameData } from '../state/global-game-state';
 import { PLAYER_COLORS } from '../../utils/player-colors';
@@ -38,9 +36,6 @@ export class SharedSlotManager implements Resetable {
 
 	// Slots of eliminated players that still have units alive
 	private pendingFreeSlots: Set<player> = new Set<player>();
-
-	// Maps neutralized units to their original real player (for color resolution after transfer to NEUTRAL_HOSTILE)
-	private originalOwnerMap: Map<unit, player> = new Map<unit, player>();
 
 	private constructor() {
 		// Initialize shared slot manager
@@ -106,119 +101,6 @@ export class SharedSlotManager implements Resetable {
 
 	public getPendingFreeSlots(): Set<player> {
 		return this.pendingFreeSlots;
-	}
-
-	/**
-	 * In FFA mode, immediately transfers all units/buildings of an eliminated player
-	 * (and their shared slots) to NEUTRAL_HOSTILE so the slots can be reclaimed.
-	 * Units retain their original player color on-screen and minimap.
-	 */
-	public neutralizePlayerUnits(realPlayer: player): void {
-		if (!SettingsContext.getInstance().isFFA()) {
-			if (DEBUG_PRINTS.master) debugPrint(`[Neutralize] Skipping — not FFA mode`, DC.sharedSlots);
-			return;
-		}
-
-		if (DEBUG_PRINTS.master) debugPrint(`[Neutralize] Neutralizing all units for player ${GetPlayerId(realPlayer)}`, DC.sharedSlots);
-		const sharedSlots = this.getSharedSlotsByPlayer(realPlayer);
-		const slots = [realPlayer, ...sharedSlots];
-		if (DEBUG_PRINTS.master)
-			debugPrint(`[Neutralize] Processing ${slots.length} slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`, DC.sharedSlots);
-
-		const playerColor = GetPlayerColor(realPlayer);
-
-		// Handle cities FIRST (before enumerating general units) to avoid mid-iteration ownership changes
-		const matchPlayer = PlayerManager.getInstance().players.get(realPlayer);
-		if (matchPlayer) {
-			const citiesToNeutralize = [...matchPlayer.trackedData.cities.cities];
-			for (const city of citiesToNeutralize) {
-				// Store original owner for the guard unit (for minimap color resolution)
-				this.setOriginalOwner(city.guard.unit, realPlayer);
-				// Store original owner for barrack and cop (for tooltip color resolution)
-				this.setOriginalOwner(city.barrack.unit, realPlayer);
-				// this.setOriginalOwner(city.cop, realPlayer);
-				// Decrement guard unit count on its current slot
-				this.decrementUnitCount(GetOwningPlayer(city.guard.unit));
-				// Decrement barracks unit count
-				this.decrementUnitCount(GetOwningPlayer(city.barrack.unit));
-				// Decrement cop unit count
-				this.decrementUnitCount(GetOwningPlayer(city.cop));
-				// city.setOwner transfers cop, barracks, and triggers OwnershipChangeEvent
-				city.setOwner(NEUTRAL_HOSTILE);
-				// Retain original player color on all city components
-				SetUnitOwner(city.guard.unit, NEUTRAL_HOSTILE, false);
-				city.setColor(playerColor);
-				if (DEBUG_PRINTS.master) debugPrint(`[Neutralize] Reset city (cop owner changed via city.setOwner)`, DC.sharedSlots);
-			}
-		}
-
-		// lazy require to avoid circular dependency between SharedSlotManager and TransportManager (unit enumeration needs to happen before ownership changes from city.setOwner)
-		const { TransportManager } = require('../../managers/transport-manager') as {
-			TransportManager: typeof import('../../managers/transport-manager').TransportManager;
-		};
-
-		// Now enumerate and transfer all remaining units on each slot
-		for (const slot of slots) {
-			const unitsToTransfer: unit[] = [];
-			const g = CreateGroup();
-			GroupEnumUnitsOfPlayer(g, slot, null);
-			ForGroup(g, () => {
-				const u = GetEnumUnit();
-				// Skip city cops — already handled above via city.setOwner()
-				if (!IsUnitType(u, UNIT_TYPE.CITY)) {
-					unitsToTransfer.push(u);
-				}
-
-				// Handle cargo units inside transports
-				if (IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
-					if (DEBUG_PRINTS.master)
-						debugPrint(
-							`[Neutralize] Found transport ${GetUnitName(u)} on slot ${GetPlayerId(slot)}, checking cargo units for transfer`,
-							DC.sharedSlots
-						);
-					const cargoUnits = TransportManager.getInstance().getCargo(u);
-					if (DEBUG_PRINTS.master)
-						debugPrint(
-							`[Neutralize] Found transport ${GetUnitName(u)} with ${cargoUnits ? cargoUnits.length : 0} cargo units`,
-							DC.sharedSlots
-						);
-					for (const cargoUnit of cargoUnits) {
-						if (DEBUG_PRINTS.master)
-							debugPrint(
-								`[Neutralize] Adding cargo unit ${GetUnitName(cargoUnit)} inside transport ${GetUnitName(u)} to transfer list`,
-								DC.sharedSlots
-							);
-						unitsToTransfer.push(cargoUnit);
-					}
-				}
-			});
-			DestroyGroup(g);
-
-			for (const u of unitsToTransfer) {
-				this.setOriginalOwner(u, realPlayer);
-				SetUnitOwner(u, NEUTRAL_HOSTILE, false);
-				SetUnitColor(u, playerColor);
-				this.decrementUnitCount(slot);
-				// Stop transports — NEUTRAL_HOSTILE transports exhibit unintended movement
-				if (IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
-					IssueImmediateOrder(u, 'stop');
-				}
-				if (DEBUG_PRINTS.master)
-					debugPrint(`[Neutralize] Transferred unit ${GetUnitName(u)} from slot ${GetPlayerId(slot)} to NEUTRAL_HOSTILE`, DC.sharedSlots);
-			}
-		}
-
-		// Clear shared slot mappings — slots are now free
-		for (const sharedSlot of sharedSlots) {
-			this.slotToPlayer.delete(sharedSlot);
-			this.pendingFreeSlots.delete(sharedSlot);
-		}
-		this.playerToSlots.delete(realPlayer);
-		this.pendingFreeSlots.delete(realPlayer);
-		if (DEBUG_PRINTS.master)
-			debugPrint(`[Neutralize] Cleared ${sharedSlots.length} shared slot mappings for player ${GetPlayerId(realPlayer)}`, DC.sharedSlots);
-
-		if (DEBUG_PRINTS.master) debugPrint(`[Neutralize] Complete. All slots should now have 0 units.`, DC.sharedSlots);
 	}
 
 	/**
@@ -620,19 +502,6 @@ export class SharedSlotManager implements Resetable {
 		this.debugPrintSlotCounts();
 	}
 
-	public setOriginalOwner(unit: unit, realPlayer: player): void {
-		this.originalOwnerMap.set(unit, realPlayer);
-		if (DEBUG_PRINTS.master) debugPrint(`[Neutralize] Stored original owner for unit: player ${GetPlayerId(realPlayer)}`, DC.sharedSlots);
-	}
-
-	public getOriginalOwner(unit: unit): player | undefined {
-		return this.originalOwnerMap.get(unit);
-	}
-
-	public clearOriginalOwner(unit: unit): void {
-		this.originalOwnerMap.delete(unit);
-	}
-
 	public getSharedSlotByPlayer(player: player): player | undefined {
 		const slots = this.playerToSlots.get(player);
 		return slots && slots.length > 0 ? slots[0] : undefined;
@@ -733,10 +602,7 @@ export class SharedSlotManager implements Resetable {
 	}
 
 	// This method returns the unit owner of the provided shared slot. If no shared slot is found then it returns the owner of the unit.
-	// Consults originalOwnerMap first for neutralized units.
 	public getOwnerOfUnit(unit: unit): SharedSlot | player {
-		const original = this.originalOwnerMap.get(unit);
-		if (original) return original;
 		return this.getOwner(GetOwningPlayer(unit));
 	}
 
@@ -800,7 +666,6 @@ export class SharedSlotManager implements Resetable {
 		this.availableSlots = [];
 		this.slotUnitCounts.clear();
 		this.pendingFreeSlots.clear();
-		this.originalOwnerMap.clear();
 		if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Reset complete', DC.clientManager);
 	}
 }

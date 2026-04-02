@@ -31,15 +31,8 @@ export class UnitLagManager {
 	public trackUnit(unit: unit): void {
 		// Only shared slots need their units tracked/fixed.
 		// Exception: transports are always owned by the real player slot (not a shared slot),
-		// but still need custom minimap tracking so they retain the player's color
-		// after neutralization (transfer to NEUTRAL_HOSTILE would turn them black).
-		// Also allow neutralized units (have an originalOwnerMap entry) so cargo unloaded
-		// from dead neutralized transports gets the correct player color.
-		if (
-			!SharedSlotManager.getInstance().isAnySharedSlotOwnerOfUnit(unit) &&
-			!IsUnitType(unit, UNIT_TYPE.TRANSPORT) &&
-			!SharedSlotManager.getInstance().getOriginalOwner(unit)
-		) {
+		// but still need custom minimap tracking so they retain the player's color.
+		if (!SharedSlotManager.getInstance().isAnySharedSlotOwnerOfUnit(unit) && !IsUnitType(unit, UNIT_TYPE.TRANSPORT)) {
 			return;
 		}
 

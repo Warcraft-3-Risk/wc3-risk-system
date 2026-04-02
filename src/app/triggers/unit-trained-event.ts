@@ -23,7 +23,11 @@ export function UnitTrainedEvent() {
 			// Transports must always be owned by the real player so rally-loading works correctly
 			if (IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
 				if (oldSlot !== realOwner) {
-					if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Transport reassigned from shared slot ${GetPlayerId(oldSlot)} to real owner ${GetPlayerId(realOwner)}`, DC.sharedSlots);
+					if (DEBUG_PRINTS.master)
+						debugPrint(
+							`[SharedSlots] Transport reassigned from shared slot ${GetPlayerId(oldSlot)} to real owner ${GetPlayerId(realOwner)}`,
+							DC.sharedSlots
+						);
 					SetUnitOwner(trainedUnit, realOwner, true);
 					SharedSlotManager.getInstance().incrementUnitCount(realOwner);
 				} else {
@@ -35,7 +39,11 @@ export function UnitTrainedEvent() {
 
 				if (optimalSlot !== oldSlot) {
 					// Reassign the trained unit to the optimal (lowest-count) slot
-					if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(optimalSlot)}`, DC.sharedSlots);
+					if (DEBUG_PRINTS.master)
+						debugPrint(
+							`[SharedSlots] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(optimalSlot)}`,
+							DC.sharedSlots
+						);
 					SetUnitOwner(trainedUnit, optimalSlot, true);
 					SharedSlotManager.getInstance().incrementUnitCount(optimalSlot);
 				} else {

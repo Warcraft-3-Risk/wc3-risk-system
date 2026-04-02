@@ -27,19 +27,21 @@ export function UnitDeathEvent() {
 		Condition(() => {
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
-			if (DEBUG_PRINTS.master) debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`, DC.events);
+			if (DEBUG_PRINTS.master)
+				debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`, DC.events);
 
 			// Decrement slot unit count using raw WC3 owner (not resolved real player)
 			const rawDyingUnitOwner = GetOwningPlayer(dyingUnit);
 			if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.sharedSlots);
 			SharedSlotManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
 
-			// Clean up originalOwnerMap entry for neutralized units
-			SharedSlotManager.getInstance().clearOriginalOwner(dyingUnit);
-
 			// Check if this slot is pending free and now has 0 units
-			if (SharedSlotManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) && SharedSlotManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0) {
-				if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.redistribute);
+			if (
+				SharedSlotManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) &&
+				SharedSlotManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0
+			) {
+				if (DEBUG_PRINTS.master)
+					debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.redistribute);
 				SharedSlotManager.getInstance().evaluateAndRedistribute();
 			}
 

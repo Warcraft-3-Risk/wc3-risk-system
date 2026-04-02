@@ -260,9 +260,8 @@ export function hasEliminatedBuff(u: unit): boolean {
 }
 
 /**
- * Applies the eliminated player buff to all living units that originally belonged
- * to the given player, after a 60-second delay. By then, units will have been neutralized
- * to NEUTRAL_HOSTILE, so we enumerate NEUTRAL_HOSTILE and check originalOwner.
+ * Applies the eliminated player buff to all living units that belong
+ * to the given player (own slot + shared slots), after a 60-second delay.
  * Each unit type receives its own specific buff ability.
  */
 export function applyEliminatedBuff(playerHandle: player): void {
@@ -270,23 +269,27 @@ export function applyEliminatedBuff(playerHandle: player): void {
 	const delay = 60;
 	TimerStart(delayTimer, delay, false, () => {
 		const cm = SharedSlotManager.getInstance();
-		const g = CreateGroup();
-		GroupEnumUnitsOfPlayer(g, Player(PLAYER_NEUTRAL_AGGRESSIVE), null);
-		ForGroup(g, () => {
-			const u = GetEnumUnit();
-			const originalOwner = cm.getOriginalOwner(u);
-			if (originalOwner !== playerHandle || IsUnitType(u, UNIT_TYPE_DEAD) || IsUnitType(u, UNIT_TYPE_STRUCTURE) || IsUnitType(u, UNIT_TYPE.GUARD)) return;
+		const sharedSlots = cm.getSharedSlotsByPlayer(playerHandle);
+		const slots = [playerHandle, ...sharedSlots];
 
-			// Remove heal ability and all active buffs before applying the debuff
-			UnitRemoveAbility(u, ABILITY_ID.HEAL);
-			UnitRemoveBuffs(u, true, true);
+		for (const slot of slots) {
+			const g = CreateGroup();
+			GroupEnumUnitsOfPlayer(g, slot, null);
+			ForGroup(g, () => {
+				const u = GetEnumUnit();
+				if (IsUnitType(u, UNIT_TYPE_DEAD) || IsUnitType(u, UNIT_TYPE_STRUCTURE) || IsUnitType(u, UNIT_TYPE.GUARD)) return;
 
-			const buffAbility = ELIMINATED_BUFF_MAP.get(GetUnitTypeId(u));
-			if (buffAbility && GetUnitAbilityLevel(u, buffAbility) === 0) {
-				UnitAddAbility(u, buffAbility);
-			}
-		});
-		DestroyGroup(g);
+				// Remove heal ability and all active buffs before applying the debuff
+				UnitRemoveAbility(u, ABILITY_ID.HEAL);
+				UnitRemoveBuffs(u, true, true);
+
+				const buffAbility = ELIMINATED_BUFF_MAP.get(GetUnitTypeId(u));
+				if (buffAbility && GetUnitAbilityLevel(u, buffAbility) === 0) {
+					UnitAddAbility(u, buffAbility);
+				}
+			});
+			DestroyGroup(g);
+		}
 		DestroyTimer(delayTimer);
 	});
 }

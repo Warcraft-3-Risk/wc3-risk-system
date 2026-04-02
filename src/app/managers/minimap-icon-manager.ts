@@ -91,7 +91,8 @@ export class MinimapIconManager {
 			}
 		});
 
-		if (DEBUG_PRINTS.master) debugPrint('World bounds: ' + this.worldMinX + ', ' + this.worldMinY + ' to ' + this.worldMaxX + ', ' + this.worldMaxY, DC.minimap);
+		if (DEBUG_PRINTS.master)
+			debugPrint('World bounds: ' + this.worldMinX + ', ' + this.worldMinY + ' to ' + this.worldMaxX + ', ' + this.worldMaxY, DC.minimap);
 		if (DEBUG_PRINTS.master) debugPrint('World size: ' + this.worldWidth + 'x' + this.worldHeight, DC.minimap);
 		if (DEBUG_PRINTS.master) debugPrint('Minimap frame handle: ' + (this.minimapFrame ? 'FOUND' : 'NULL'), DC.minimap);
 	}
@@ -135,7 +136,8 @@ export class MinimapIconManager {
 					this.framePool.push(iconFrame);
 				}
 			}
-			if (DEBUG_PRINTS.master) debugPrint(`MinimapIconManager: Expanded pool by ${count}. Total size: ${this.framePool.length}`, DC.minimap);
+			if (DEBUG_PRINTS.master)
+				debugPrint(`MinimapIconManager: Expanded pool by ${count}. Total size: ${this.framePool.length}`, DC.minimap);
 		} catch (e) {
 			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Error expanding pool - ' + e, DC.minimap);
 		}
@@ -229,7 +231,11 @@ export class MinimapIconManager {
 			} else {
 				BlzFrameSetVisible(iconFrame, false);
 			}
-			if (DEBUG_PRINTS.master) debugPrint(`MinimapIconManager: Count of tracked units: ${this.trackedUnits.size}, Pool size: ${this.framePool.length}`, DC.minimap);
+			if (DEBUG_PRINTS.master)
+				debugPrint(
+					`MinimapIconManager: Count of tracked units: ${this.trackedUnits.size}, Pool size: ${this.framePool.length}`,
+					DC.minimap
+				);
 		} catch (e) {
 			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Error registering unit - ' + e, DC.minimap);
 		}
@@ -316,8 +322,10 @@ export class MinimapIconManager {
 
 		// Debug first few icons
 		if (this.cityIcons.size <= 2) {
-			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' normalized: ' + coords.x + ', ' + coords.y, DC.minimap);
-			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' absolute: ' + iconX + ', ' + iconY, DC.minimap);
+			if (DEBUG_PRINTS.master)
+				debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' normalized: ' + coords.x + ', ' + coords.y, DC.minimap);
+			if (DEBUG_PRINTS.master)
+				debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' absolute: ' + iconX + ', ' + iconY, DC.minimap);
 		}
 	}
 
@@ -411,9 +419,7 @@ export class MinimapIconManager {
 
 		if (isVisible) {
 			// City is visible - update and remember the owner
-			// For neutralized cities, resolve original owner so they retain the player's color
-			const originalOwner = SharedSlotManager.getInstance().getOriginalOwner(city.guard.unit);
-			owner = originalOwner ?? city.getOwner();
+			owner = city.getOwner();
 			this.lastSeenOwners.set(city, owner);
 		} else {
 			// City is in fog of war - check if we've seen it before

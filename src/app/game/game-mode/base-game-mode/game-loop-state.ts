@@ -361,9 +361,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		super.onPlayerLeft(player);
 
 		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
-		applyEliminatedBuff(player.getPlayer());
-		SharedSlotManager.getInstance().neutralizePlayerUnits(player.getPlayer());
-		SharedSlotManager.getInstance().evaluateAndRedistribute();
+
+		// In FFA, apply a damage-over-time debuff to the eliminated player's units.
+		// Units remain on the player's slot and slowly die off; slots are reclaimed organically.
+		// In team games, teammates retain control of the eliminated player's units without debuff.
+		if (SettingsContext.getInstance().isFFA()) applyEliminatedBuff(player.getPlayer());
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
@@ -384,9 +386,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		super.onPlayerDead(player, forfeit);
 
 		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
-		applyEliminatedBuff(player.getPlayer());
-		SharedSlotManager.getInstance().neutralizePlayerUnits(player.getPlayer());
-		SharedSlotManager.getInstance().evaluateAndRedistribute();
+
+		// In FFA, apply a damage-over-time debuff to the eliminated player's units.
+		// Units remain on the player's slot and slowly die off; slots are reclaimed organically.
+		// In team games, teammates retain control of the eliminated player's units without debuff.
+		if (SettingsContext.getInstance().isFFA()) applyEliminatedBuff(player.getPlayer());
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
