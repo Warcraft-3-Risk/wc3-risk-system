@@ -420,7 +420,7 @@ export class SharedSlotManager implements Resetable {
 		if (DEBUG_PRINTS.master)
 			debugPrint(
 				`[SharedSlotManager] Player ${GetPlayerId(newOwner)} now has ${slots.length} shared slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`,
-				DC.clientManager
+				DC.sharedSlots
 			);
 	}
 
@@ -515,10 +515,10 @@ export class SharedSlotManager implements Resetable {
 	private getAvailableSharedSlots(): SharedSlot[] {
 		let sharedSlots: SharedSlot[] = [];
 		const emptySlots = PlayerManager.getInstance().getEmptyPlayerSlots();
-		if (DEBUG_PRINTS.master) debugPrint(`SharedSlotManager: Found ${emptySlots.length} empty player slots`, DC.clientManager);
+		if (DEBUG_PRINTS.master) debugPrint(`SharedSlotManager: Found ${emptySlots.length} empty player slots`, DC.sharedSlots);
 		const leftPlayers = PlayerManager.getInstance().getPlayersThatLeftWithNoUnitsOrCities();
 		if (DEBUG_PRINTS.master)
-			debugPrint(`SharedSlotManager: Found ${leftPlayers.length} players that have left with no units or cities`, DC.clientManager);
+			debugPrint(`SharedSlotManager: Found ${leftPlayers.length} players that have left with no units or cities`, DC.sharedSlots);
 
 		if (emptySlots && emptySlots.length > 0) {
 			sharedSlots.push(...emptySlots.filter((p) => p !== null && p !== undefined));
@@ -533,12 +533,12 @@ export class SharedSlotManager implements Resetable {
 
 	public givePlayerFullControlOfSlot(player: player, slot: SharedSlot): void {
 		if (!player || !slot) {
-			if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Invalid player or slot in givePlayerFullControlOfSlot', DC.clientManager);
+			if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Invalid player or slot in givePlayerFullControlOfSlot', DC.sharedSlots);
 			return;
 		}
 
 		if (DEBUG_PRINTS.master)
-			debugPrint(`SharedSlotManager: Giving player ${GetPlayerName(player)} full control of slot ${GetPlayerId(slot)}`, DC.clientManager);
+			debugPrint(`SharedSlotManager: Giving player ${GetPlayerName(player)} full control of slot ${GetPlayerId(slot)}`, DC.sharedSlots);
 
 		NameManager.getInstance().setColor(slot, NameManager.getInstance().getOriginalColor(player));
 
@@ -550,7 +550,7 @@ export class SharedSlotManager implements Resetable {
 		for (const existingSlot of existingSlots) {
 			if (existingSlot !== slot) {
 				if (DEBUG_PRINTS.master)
-					debugPrint(`SharedSlotManager: Allying sibling slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(existingSlot)}`, DC.clientManager);
+					debugPrint(`SharedSlotManager: Allying sibling slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(existingSlot)}`, DC.sharedSlots);
 				this.enableAdvancedControl(slot, existingSlot, true);
 				this.enableAdvancedControl(existingSlot, slot, true);
 			}
@@ -573,7 +573,7 @@ export class SharedSlotManager implements Resetable {
 								if (DEBUG_PRINTS.master)
 									debugPrint(
 										`SharedSlotManager: Allying cross-team slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(memberSlot)}`,
-										DC.clientManager
+										DC.sharedSlots
 									);
 								this.enableAdvancedControl(slot, memberSlot, true);
 								this.enableAdvancedControl(memberSlot, slot, true);
@@ -642,7 +642,7 @@ export class SharedSlotManager implements Resetable {
 
 	reset(): void {
 		// Reset all player colors and names to default
-		if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Resetting all player colors and names to default', DC.clientManager);
+		if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Resetting all player colors and names to default', DC.sharedSlots);
 		NameManager.getInstance().resetOriginalColors();
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p = Player(i);
@@ -666,6 +666,6 @@ export class SharedSlotManager implements Resetable {
 		this.availableSlots = [];
 		this.slotUnitCounts.clear();
 		this.pendingFreeSlots.clear();
-		if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Reset complete', DC.clientManager);
+		if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Reset complete', DC.sharedSlots);
 	}
 }
