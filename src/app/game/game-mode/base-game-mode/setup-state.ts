@@ -38,9 +38,10 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		StatisticsController.getInstance().setViewVisibility(false);
 
 		// Create session board for modes that use between-matches scoring (promode, chaos promode, random teams)
-		const needsSessionBoard = SettingsContext.getInstance().isPromode()
-			|| SettingsContext.getInstance().isChaosPromode()
-			|| SettingsContext.getInstance().isRandomTeams();
+		const needsSessionBoard =
+			SettingsContext.getInstance().isPromode() ||
+			SettingsContext.getInstance().isChaosPromode() ||
+			SettingsContext.getInstance().isRandomTeams();
 
 		if (needsSessionBoard) {
 			if (!ScoreboardManager.getInstance().getSessionBoard()) {

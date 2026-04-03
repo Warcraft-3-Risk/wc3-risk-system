@@ -1,6 +1,7 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
+import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
@@ -556,31 +557,35 @@ export class SharedSlotManager implements Resetable {
 			}
 		}
 
-		const team = TeamManager.getInstance().getTeamFromPlayer(player);
-		if (team) {
-			const members = team.getMembers();
-			if (members && members.length > 0) {
-				members.forEach((member) => {
-					if (member) {
-						const memberPlayer = member.getPlayer();
-						if (memberPlayer) {
-							this.enableAdvancedControl(memberPlayer, slot, true);
-							this.enableAdvancedControl(slot, memberPlayer, true);
+		// Only ally shared slots with team members in team-based game modes.
+		// In FFA, teams from the lobby should not grant alliances.
+		if (!SettingsContext.getInstance().isFFA()) {
+			const team = TeamManager.getInstance().getTeamFromPlayer(player);
+			if (team) {
+				const members = team.getMembers();
+				if (members && members.length > 0) {
+					members.forEach((member) => {
+						if (member) {
+							const memberPlayer = member.getPlayer();
+							if (memberPlayer) {
+								this.enableAdvancedControl(memberPlayer, slot, true);
+								this.enableAdvancedControl(slot, memberPlayer, true);
 
-							// Also ally this slot with all of the teammate's shared slots
-							const memberSlots = this.playerToSlots.get(memberPlayer) || [];
-							for (const memberSlot of memberSlots) {
-								if (DEBUG_PRINTS.master)
-									debugPrint(
-										`SharedSlotManager: Allying cross-team slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(memberSlot)}`,
-										DC.sharedSlots
-									);
-								this.enableAdvancedControl(slot, memberSlot, true);
-								this.enableAdvancedControl(memberSlot, slot, true);
+								// Also ally this slot with all of the teammate's shared slots
+								const memberSlots = this.playerToSlots.get(memberPlayer) || [];
+								for (const memberSlot of memberSlots) {
+									if (DEBUG_PRINTS.master)
+										debugPrint(
+											`SharedSlotManager: Allying cross-team slots ${GetPlayerId(slot)} ↔ ${GetPlayerId(memberSlot)}`,
+											DC.sharedSlots
+										);
+									this.enableAdvancedControl(slot, memberSlot, true);
+									this.enableAdvancedControl(memberSlot, slot, true);
+								}
 							}
 						}
-					}
-				});
+					});
+				}
 			}
 		}
 	}
