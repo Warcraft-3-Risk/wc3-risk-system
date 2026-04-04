@@ -1,5 +1,5 @@
 import { debugPrint } from '../utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { NameManager } from './names/name-manager';
 import { PlayerManager } from '../player/player-manager';
 import { getElapsedTime } from 'w3ts';
@@ -33,7 +33,7 @@ export class W3CDrawManager {
 		}
 
 		if (this.playersVoted.has(triggeringPlayer)) {
-			debugPrint('[DrawManager] Player already voted for draw.', DC.drawManager);
+			if (DEBUG_PRINTS.master) debugPrint('[DrawManager] Player already voted for draw.', DC.drawManager);
 			return;
 		}
 

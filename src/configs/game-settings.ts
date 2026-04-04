@@ -8,7 +8,7 @@ export const CITIES_TO_WIN_RATIO: number = 0.6;
 //This is the starting gold for each player. 4 gold by default.
 export const STARTING_INCOME: number = 4;
 
-//This is the starting gold for each player in Chaos promode. 50 gold by default.
+//This is the starting gold for each player in Chaos promode. 25 gold by default.
 export const CHAOS_STARTING_INCOME: number = 25;
 
 //This is the starting countdown for the game. 10 by default
@@ -59,8 +59,8 @@ export const W3C_DRAW_DURATION: number = 120;
 // Enable/disable emitting player statistics to W3MMD (MMD) during the match and on game end.
 export const MMD_ENABLED: boolean = true;
 
-// Enable/disable player client allocation. Default is false.
-export const CLIENT_ALLOCATION_ENABLED = true;
+// Enable/disable shared slot allocation. Default is false.
+export const SHARED_SLOT_ALLOCATION_ENABLED = true;
 
 // This represents whether the ban list is active. Is set to true by default.
 export const BAN_LIST_ACTIVE: boolean = true;
@@ -122,13 +122,11 @@ export const FORCE_CUSTOM_MINIMAP_ICONS: boolean = true;
 // Per-category toggles for debug output. Set individual categories to false to silence them.
 // master = global kill switch (overrides all others).
 export const DEBUG_PRINTS = {
-	master: true,
+	master: false,
 	ratingSync: false,
 	ratingManager: false,
-	slotCount: false,
+	sharedSlots: false,
 	redistribute: false,
-	neutralize: false,
-	clientManager: false,
 	killTracker: false,
 	victory: false,
 	drawManager: false,

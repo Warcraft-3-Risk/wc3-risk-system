@@ -9,23 +9,23 @@ import { PlayerManager } from 'src/app/player/player-manager';
 import { Country } from 'src/app/country/country';
 import { ShuffleArray } from 'src/app/utils/utils';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { LandCity } from 'src/app/city/land-city';
-import { ClientManager } from 'src/app/game/services/client-manager';
+import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 
 export class CapitalsDistributeCapitalsState extends BaseState<CapitalsData> {
 	onEnterState() {
-		debugPrint('Distributing Capitals', DC.gameMode);
+		if (DEBUG_PRINTS.master) debugPrint('Distributing Capitals', DC.gameMode);
 
 		//Assign capitals for players that have chosen a capital city
 		this.stateData.playerCapitalSelections.forEach((city, player) => {
-			debugPrint(`Player ${player} has chosen a capital: ${city}`, DC.gameMode);
+			if (DEBUG_PRINTS.master) debugPrint(`Player ${player} has chosen a capital: ${city}`, DC.gameMode);
 			if (city) {
 				LocalMessage(player, `Your chosen capital is in ${CityToCountry.get(city).getName()}.`, '', 5);
 				this.changeCityOwner(city, PlayerManager.getInstance().players.get(player));
 				IssueImmediateOrderById(city.barrack.unit, UNIT_ID.CAPITAL);
 				this.stateData.capitals.set(player, city);
-				debugPrint(`Player ${player} has chosen a capital in ${CityToCountry.get(city).getName()}`, DC.gameMode);
+				if (DEBUG_PRINTS.master) debugPrint(`Player ${player} has chosen a capital in ${CityToCountry.get(city).getName()}`, DC.gameMode);
 			}
 		});
 
@@ -36,30 +36,32 @@ export class CapitalsDistributeCapitalsState extends BaseState<CapitalsData> {
 			if (country) {
 				const countryName = country.getName();
 				countriesWithCapitals.add(country);
-				debugPrint(countryName, DC.gameMode);
+				if (DEBUG_PRINTS.master) debugPrint(countryName, DC.gameMode);
 			}
 		});
 
-		debugPrint(
-			`Countries with capitals: ${Array.from(countriesWithCapitals)
-				.map((x) => x.getName())
-				.join(', ')}`,
-			DC.gameMode
-		);
+		if (DEBUG_PRINTS.master)
+			debugPrint(
+				`Countries with capitals: ${Array.from(countriesWithCapitals)
+					.map((x) => x.getName())
+					.join(', ')}`,
+				DC.gameMode
+			);
 
 		const validCityCountries = Array.from(CityToCountry.values())
 			.filter((x) => !countriesWithCapitals.has(x))
 			.filter((x) => x.getCities().filter((city) => !city.isPort()).length > 0)
 			.filter((x) => x.getCities().length > 1);
 
-		debugPrint(`All selectable cities count: ${validCityCountries.length}`, DC.gameMode);
+		if (DEBUG_PRINTS.master) debugPrint(`All selectable cities count: ${validCityCountries.length}`, DC.gameMode);
 
 		let uniqueCountries = new Set<Country>(validCityCountries);
 		let randomSelectableCountries = Array.from(uniqueCountries);
 		ShuffleArray(randomSelectableCountries);
-		debugPrint(`Selectable countries without capitals: ${randomSelectableCountries.map((x) => x.getName()).join(', ')}`, DC.gameMode);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`Selectable countries without capitals: ${randomSelectableCountries.map((x) => x.getName()).join(', ')}`, DC.gameMode);
 
-		debugPrint(`Players with capitals: ${Array.from(this.stateData.capitals.keys()).join(', ')}`, DC.gameMode);
+		if (DEBUG_PRINTS.master) debugPrint(`Players with capitals: ${Array.from(this.stateData.capitals.keys()).join(', ')}`, DC.gameMode);
 
 		this.stateData.playerCapitalSelections.forEach((city, player) => {
 			if (!city) {
@@ -69,7 +71,7 @@ export class CapitalsDistributeCapitalsState extends BaseState<CapitalsData> {
 				const capital = countryBarracks[0];
 
 				LocalMessage(player, `You have been randomly assigned a capital in ${country.getName()}.`, '', 5);
-				debugPrint(`Player ${player} has been randomly assigned a capital in ${country.getName()}`, DC.gameMode);
+				if (DEBUG_PRINTS.master) debugPrint(`Player ${player} has been randomly assigned a capital in ${country.getName()}`, DC.gameMode);
 				this.changeCityOwner(capital, PlayerManager.getInstance().players.get(player));
 				IssueImmediateOrderById(capital.barrack.unit, UNIT_ID.CAPITAL);
 				PanCameraToTimedLocForPlayer(player, capital.barrack.location, 1);
@@ -90,7 +92,8 @@ export class CapitalsDistributeCapitalsState extends BaseState<CapitalsData> {
 	changeCityOwner(city: City, player: ActivePlayer) {
 		city.setOwner(player.getPlayer());
 		SetUnitOwner(city.guard.unit, player.getPlayer(), true);
-		debugPrint(`[SlotCount] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`, DC.slotCount);
-		ClientManager.getInstance().incrementUnitCount(player.getPlayer());
+		if (DEBUG_PRINTS.master)
+			debugPrint(`[SharedSlots] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`, DC.sharedSlots);
+		SharedSlotManager.getInstance().incrementUnitCount(player.getPlayer());
 	}
 }

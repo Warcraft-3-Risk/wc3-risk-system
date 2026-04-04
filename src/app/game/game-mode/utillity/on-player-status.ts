@@ -9,12 +9,13 @@ import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { CHAOS_STARTING_INCOME, NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
-import { ClientManager } from 'src/app/game/services/client-manager';
+import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { Quests } from '../../../quests/quests';
 import { UNIT_ID } from '../../../../configs/unit-id';
+import { ABILITY_ID } from '../../../../configs/ability-id';
 
 export function onPlayerAliveHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.ALIVE;
@@ -219,4 +220,76 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 	});
 
 	ScoreboardManager.getInstance().updatePartial();
+}
+
+/** Maps unit type IDs to their corresponding eliminated player buff ability. */
+export const ELIMINATED_BUFF_MAP: Map<number, number> = new Map([
+	[UNIT_ID.ARTILLERY, ABILITY_ID.ELIMINATED_ARTILLERY],
+	[UNIT_ID.BATTLESHIP_SS, ABILITY_ID.ELIMINATED_BATTLESHIP_SS],
+	[UNIT_ID.GENERAL, ABILITY_ID.ELIMINATED_GENERAL],
+	[UNIT_ID.ARMORED_TRANSPORT_SHIP, ABILITY_ID.ELIMINATED_ARMORED_TRANSPORT_SHIP],
+	[UNIT_ID.KNIGHT, ABILITY_ID.ELIMINATED_KNIGHT],
+	[UNIT_ID.MAJOR, ABILITY_ID.ELIMINATED_MAJOR],
+	[UNIT_ID.MARINE, ABILITY_ID.ELIMINATED_MARINE],
+	[UNIT_ID.MEDIC, ABILITY_ID.ELIMINATED_MEDIC],
+	[UNIT_ID.MORTAR, ABILITY_ID.ELIMINATED_MORTAR],
+	[UNIT_ID.RIFLEMEN, ABILITY_ID.ELIMINATED_RIFLEMEN],
+	[UNIT_ID.ROARER, ABILITY_ID.ELIMINATED_ROARER],
+	[UNIT_ID.TANK, ABILITY_ID.ELIMINATED_TANK],
+	[UNIT_ID.TRANSPORT_SHIP, ABILITY_ID.ELIMINATED_TRANSPORT_SHIP],
+	[UNIT_ID.WARSHIP_A, ABILITY_ID.ELIMINATED_WARSHIP_A],
+	[UNIT_ID.WARSHIP_B, ABILITY_ID.ELIMINATED_WARSHIP_B],
+]);
+
+/**
+ * Removes any eliminated player buff from the given unit.
+ */
+export function removeEliminatedBuff(u: unit): void {
+	const buffAbility = ELIMINATED_BUFF_MAP.get(GetUnitTypeId(u));
+	if (buffAbility && GetUnitAbilityLevel(u, buffAbility) > 0) {
+		UnitRemoveAbility(u, buffAbility);
+	}
+}
+
+/**
+ * Returns true if the unit has an eliminated player buff applied.
+ */
+export function hasEliminatedBuff(u: unit): boolean {
+	const buffAbility = ELIMINATED_BUFF_MAP.get(GetUnitTypeId(u));
+	return buffAbility != null && GetUnitAbilityLevel(u, buffAbility) > 0;
+}
+
+/**
+ * Applies the eliminated player buff to all living units that belong
+ * to the given player (own slot + shared slots), after a 60-second delay.
+ * Each unit type receives its own specific buff ability.
+ */
+export function applyEliminatedBuff(playerHandle: player): void {
+	const delayTimer = CreateTimer();
+	const delay = 60;
+	TimerStart(delayTimer, delay, false, () => {
+		const cm = SharedSlotManager.getInstance();
+		const sharedSlots = cm.getSharedSlotsByPlayer(playerHandle);
+		const slots = [playerHandle, ...sharedSlots];
+
+		for (const slot of slots) {
+			const g = CreateGroup();
+			GroupEnumUnitsOfPlayer(g, slot, null);
+			ForGroup(g, () => {
+				const u = GetEnumUnit();
+				if (IsUnitType(u, UNIT_TYPE_DEAD) || IsUnitType(u, UNIT_TYPE_STRUCTURE) || IsUnitType(u, UNIT_TYPE.GUARD)) return;
+
+				// Remove heal ability and all active buffs before applying the debuff
+				UnitRemoveAbility(u, ABILITY_ID.HEAL);
+				UnitRemoveBuffs(u, true, true);
+
+				const buffAbility = ELIMINATED_BUFF_MAP.get(GetUnitTypeId(u));
+				if (buffAbility && GetUnitAbilityLevel(u, buffAbility) === 0) {
+					UnitAddAbility(u, buffAbility);
+				}
+			});
+			DestroyGroup(g);
+		}
+		DestroyTimer(delayTimer);
+	});
 }

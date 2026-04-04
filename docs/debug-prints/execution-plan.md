@@ -136,13 +136,13 @@ All calls prefixed with `[RatingManager]` → add `'ratingManager'`.
 
 ### Step 2.3: `slotCount` (~20 calls, 7 files)
 
-- `src/app/game/services/client-manager.ts` — `[SlotCount]` prefixed calls only
+- `src/app/game/services/client-manager.ts` — `[SharedSlots]` prefixed calls only
 - `src/app/spawner/spawner.ts`
 - `src/app/triggers/unit-trained-event.ts`
 - `src/app/city/components/guard.ts`
-- `src/app/game/game-mode/base-game-mode/game-loop-state.ts` — `[SlotCount]` lines only
+- `src/app/game/game-mode/base-game-mode/game-loop-state.ts` — `[SharedSlots]` lines only
 - `src/app/game/services/distribution-service/standard-distribution-service.ts`
-- `src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts` — `[SlotCount]` line only
+- `src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts` — `[SharedSlots]` line only
 
 ### Step 2.4: `redistribute` (~25 calls, 3 files)
 

@@ -5,7 +5,7 @@ import { UNIT_TYPE } from '../utils/unit-types';
 import { GetUnitsInRangeByAllegiance } from '../utils/guard-filters';
 import { CompareUnitByValue } from '../utils/unit-comparisons';
 import { UNIT_ID } from 'src/configs/unit-id';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { UnitLagManager } from '../game/services/unit-lag-manager';
 
 export const EnterRegionTrigger: trigger = CreateTrigger();
@@ -42,7 +42,7 @@ export function EnterRegionEvent() {
 
 			if (!guardChoice) {
 				guardChoice = CreateUnit(
-					ClientManager.getInstance().getOwnerOfUnit(trigUnit),
+					SharedSlotManager.getInstance().getOwnerOfUnit(trigUnit),
 					UNIT_ID.DUMMY_GUARD,
 					city.guard.defaultX,
 					city.guard.defaultY,
@@ -52,7 +52,7 @@ export function EnterRegionEvent() {
 
 			//Change owner if guardChoice is an enemy of the city.
 			if (UnitLagManager.IsUnitEnemy(guardChoice, city.getOwner())) {
-				city.setOwner(ClientManager.getInstance().getOwnerOfUnit(guardChoice));
+				city.setOwner(SharedSlotManager.getInstance().getOwnerOfUnit(guardChoice));
 			}
 
 			UnitToCity.delete(city.guard.unit);

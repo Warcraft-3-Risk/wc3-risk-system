@@ -1,11 +1,13 @@
 import { UNIT_ID } from '../../configs/unit-id';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
+import { PlayerManager } from '../player/player-manager';
+import { SettingsContext } from 'src/app/settings/settings-context';
 import { debugPrint } from '../utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 import { MinimapIconManager } from '../managers/minimap-icon-manager';
@@ -68,6 +70,12 @@ export class Spawner implements Resetable, Ownable {
 		if (GetPlayerSlotState(this.getOwner()) != PLAYER_SLOT_STATE_PLAYING) return;
 		if (GlobalGameData.matchState != 'inProgress') return;
 
+		// Eliminated players (e.g. forfeited via -ff) still have PLAYER_SLOT_STATE_PLAYING,
+		// so we must explicitly check their status to prevent spawning in FFA.
+		// In team games, eliminated players keep spawning so teammates can use those units.
+		const matchPlayer = PlayerManager.getInstance().players.get(this.getOwner());
+		if (SettingsContext.getInstance().isFFA() && matchPlayer && matchPlayer.status.isEliminated()) return;
+
 		const spawnCount: number = this.spawnMap.get(this.getOwner()).length;
 
 		if (spawnCount >= this.maxSpawnsPerPlayerWithMultiplier) return;
@@ -75,16 +83,14 @@ export class Spawner implements Resetable, Ownable {
 		const amount: number = Math.min(this.spawnsPerStepWithMultiplier, this.maxSpawnsPerPlayerWithMultiplier - spawnCount);
 
 		for (let i = 0; i < amount; i++) {
-			const owningSlot = ClientManager.getInstance().getSlotWithLowestUnitCount(this.getOwner());
-			let u: unit = CreateUnit(
-				owningSlot,
-				this.spawnType,
-				GetUnitX(this.unit),
-				GetUnitY(this.unit),
-				270
-			);
-			debugPrint(`[SlotCount] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`, DC.slotCount);
-			ClientManager.getInstance().incrementUnitCount(owningSlot);
+			const owningSlot = SharedSlotManager.getInstance().getSlotWithLowestUnitCount(this.getOwner());
+			let u: unit = CreateUnit(owningSlot, this.spawnType, GetUnitX(this.unit), GetUnitY(this.unit), 270);
+			if (DEBUG_PRINTS.master)
+				debugPrint(
+					`[SharedSlots] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`,
+					DC.sharedSlots
+				);
+			SharedSlotManager.getInstance().incrementUnitCount(owningSlot);
 			UnitLagManager.getInstance().trackUnit(u);
 			let loc: location = GetUnitRallyPoint(this.unit);
 
@@ -137,7 +143,7 @@ export class Spawner implements Resetable, Ownable {
 	public setOwner(player: player): void {
 		if (player == null) player = NEUTRAL_HOSTILE;
 
-		SetUnitOwner(this._unit, ClientManager.getInstance().getOwner(player), true);
+		SetUnitOwner(this._unit, SharedSlotManager.getInstance().getOwner(player), true);
 
 		if (!this.spawnMap.has(this.getOwner())) {
 			this.spawnMap.set(this.getOwner(), []);
@@ -149,7 +155,7 @@ export class Spawner implements Resetable, Ownable {
 
 	/** @returns The player that owns the spawner. */
 	public getOwner(): player {
-		return ClientManager.getInstance().getOwnerOfUnit(this._unit);
+		return SharedSlotManager.getInstance().getOwnerOfUnit(this._unit);
 	}
 
 	/**
@@ -158,9 +164,9 @@ export class Spawner implements Resetable, Ownable {
 	 * @param {unit} unit - The deceased unit.
 	 */
 	public onDeath(player: player, unit: unit): void {
-		const index = this.spawnMap.get(ClientManager.getInstance().getOwner(player)).indexOf(unit);
+		const index = this.spawnMap.get(SharedSlotManager.getInstance().getOwner(player)).indexOf(unit);
 
-		this.spawnMap.get(ClientManager.getInstance().getOwner(player)).splice(index, 1);
+		this.spawnMap.get(SharedSlotManager.getInstance().getOwner(player)).splice(index, 1);
 
 		SPAWNER_UNITS.delete(unit);
 

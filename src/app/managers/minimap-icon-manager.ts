@@ -1,12 +1,14 @@
 import { FORCE_CUSTOM_MINIMAP_ICONS } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { City } from '../city/city';
 import { debugPrint } from '../utils/debug-print';
-import { DC } from 'src/configs/game-settings';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { MAP_TYPE } from '../utils/map-info';
 import { PlayerManager } from '../player/player-manager';
+import { NameManager } from './names/name-manager';
 import { SettingsContext } from '../settings/settings-context';
+import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 
 /**
  * Manages custom minimap icons using SimpleFrames for cities.
@@ -61,8 +63,8 @@ export class MinimapIconManager {
 		// Only activate for world terrain
 		this.isActive = FORCE_CUSTOM_MINIMAP_ICONS || MAP_TYPE === 'world';
 
-		debugPrint('MinimapIconManager: Initialized for terrain: ' + MAP_TYPE, DC.minimap);
-		debugPrint('MinimapIconManager: Active: ' + this.isActive, DC.minimap);
+		if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Initialized for terrain: ' + MAP_TYPE, DC.minimap);
+		if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Active: ' + this.isActive, DC.minimap);
 
 		if (!this.isActive) {
 			return;
@@ -89,9 +91,10 @@ export class MinimapIconManager {
 			}
 		});
 
-		debugPrint('World bounds: ' + this.worldMinX + ', ' + this.worldMinY + ' to ' + this.worldMaxX + ', ' + this.worldMaxY, DC.minimap);
-		debugPrint('World size: ' + this.worldWidth + 'x' + this.worldHeight, DC.minimap);
-		debugPrint('Minimap frame handle: ' + (this.minimapFrame ? 'FOUND' : 'NULL'), DC.minimap);
+		if (DEBUG_PRINTS.master)
+			debugPrint('World bounds: ' + this.worldMinX + ', ' + this.worldMinY + ' to ' + this.worldMaxX + ', ' + this.worldMaxY, DC.minimap);
+		if (DEBUG_PRINTS.master) debugPrint('World size: ' + this.worldWidth + 'x' + this.worldHeight, DC.minimap);
+		if (DEBUG_PRINTS.master) debugPrint('Minimap frame handle: ' + (this.minimapFrame ? 'FOUND' : 'NULL'), DC.minimap);
 	}
 
 	/**
@@ -104,13 +107,13 @@ export class MinimapIconManager {
 			return;
 		}
 
-		debugPrint(`MinimapIconManager: Creating icons for ${cities.length} cities`, DC.minimap);
+		if (DEBUG_PRINTS.master) debugPrint(`MinimapIconManager: Creating icons for ${cities.length} cities`, DC.minimap);
 
 		cities.forEach((city) => {
 			this.createCityIcon(city);
 		});
 
-		debugPrint(`MinimapIconManager: Created ${this.cityIcons.size} icons`, DC.minimap);
+		if (DEBUG_PRINTS.master) debugPrint(`MinimapIconManager: Created ${this.cityIcons.size} icons`, DC.minimap);
 
 		this.startUpdateTimer();
 		this.expandPool(this.INITIAL_POOL_SIZE);
@@ -133,9 +136,10 @@ export class MinimapIconManager {
 					this.framePool.push(iconFrame);
 				}
 			}
-			debugPrint(`MinimapIconManager: Expanded pool by ${count}. Total size: ${this.framePool.length}`, DC.minimap);
+			if (DEBUG_PRINTS.master)
+				debugPrint(`MinimapIconManager: Expanded pool by ${count}. Total size: ${this.framePool.length}`, DC.minimap);
 		} catch (e) {
-			debugPrint('MinimapIconManager: Error expanding pool - ' + e, DC.minimap);
+			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Error expanding pool - ' + e, DC.minimap);
 		}
 	}
 
@@ -198,13 +202,13 @@ export class MinimapIconManager {
 			if (this.framePool.length > 0) {
 				iconFrame = this.framePool.pop();
 			} else {
-				debugPrint('MinimapIconManager: Pool exhausted, expanding by 200', DC.minimap);
+				if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Pool exhausted, expanding by 200', DC.minimap);
 				this.expandPool(200);
 				iconFrame = this.framePool.pop();
 			}
 
 			if (!iconFrame) {
-				debugPrint('MinimapIconManager: Failed to create/recycle frame for unit', DC.minimap);
+				if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Failed to create/recycle frame for unit', DC.minimap);
 				return;
 			}
 
@@ -219,16 +223,21 @@ export class MinimapIconManager {
 
 			// Initial update
 			const localPlayer = GetLocalPlayer();
-			if (IsUnitVisible(unit, localPlayer)) {
+			const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
+			if (IsUnitVisible(unit, effectiveLocal)) {
 				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
-				this.updateUnitIconColor(iconFrame, unit);
+				this.updateUnitIconColor(iconFrame, unit, effectiveLocal);
 				BlzFrameSetVisible(iconFrame, true);
 			} else {
 				BlzFrameSetVisible(iconFrame, false);
 			}
-			debugPrint(`MinimapIconManager: Count of tracked units: ${this.trackedUnits.size}, Pool size: ${this.framePool.length}`, DC.minimap);
+			if (DEBUG_PRINTS.master)
+				debugPrint(
+					`MinimapIconManager: Count of tracked units: ${this.trackedUnits.size}, Pool size: ${this.framePool.length}`,
+					DC.minimap
+				);
 		} catch (e) {
-			debugPrint('MinimapIconManager: Error registering unit - ' + e, DC.minimap);
+			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Error registering unit - ' + e, DC.minimap);
 		}
 	}
 
@@ -251,7 +260,7 @@ export class MinimapIconManager {
 			const iconFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCityIcon', gameUI, '', 0);
 
 			if (!iconFrame) {
-				debugPrint('MinimapIconManager: Failed to create frame for city', DC.minimap);
+				if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Failed to create frame for city', DC.minimap);
 				return;
 			}
 
@@ -272,12 +281,12 @@ export class MinimapIconManager {
 			const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
 
 			// Set initial color based on owner and visibility
-			this.updateIconColor(iconFrame, city, isVisible);
+			this.updateIconColor(iconFrame, city, isVisible, localPlayer);
 
 			// Make it visible
 			BlzFrameSetVisible(iconFrame, true);
 		} catch (e) {
-			debugPrint('MinimapIconManager: Error creating icon - ' + e, DC.minimap);
+			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Error creating icon - ' + e, DC.minimap);
 		}
 	}
 
@@ -313,8 +322,10 @@ export class MinimapIconManager {
 
 		// Debug first few icons
 		if (this.cityIcons.size <= 2) {
-			debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' normalized: ' + coords.x + ', ' + coords.y, DC.minimap);
-			debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' absolute: ' + iconX + ', ' + iconY, DC.minimap);
+			if (DEBUG_PRINTS.master)
+				debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' normalized: ' + coords.x + ', ' + coords.y, DC.minimap);
+			if (DEBUG_PRINTS.master)
+				debugPrint('MinimapIconManager: Icon #' + this.cityIcons.size + ' absolute: ' + iconX + ', ' + iconY, DC.minimap);
 		}
 	}
 
@@ -336,10 +347,11 @@ export class MinimapIconManager {
 	 */
 	private updateAllIcons(): void {
 		const localPlayer = GetLocalPlayer();
+		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
 
 		this.cityIcons.forEach((iconFrame, city) => {
 			// Check if the city's barrack is visible through fog of war
-			const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
+			const isVisible = IsUnitVisible(city.barrack.unit, effectiveLocal);
 
 			// Update position (in case anything changed)
 			const worldX = city.barrack.defaultX;
@@ -357,7 +369,7 @@ export class MinimapIconManager {
 			}
 
 			// Update color based on owner and visibility
-			this.updateIconColor(iconFrame, city, isVisible);
+			this.updateIconColor(iconFrame, city, isVisible, effectiveLocal);
 		});
 
 		// Update tracked units
@@ -372,11 +384,11 @@ export class MinimapIconManager {
 			}
 
 			// Check visibility
-			if (IsUnitVisible(unit, localPlayer)) {
+			if (IsUnitVisible(unit, effectiveLocal)) {
 				// Update position
 				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
 				// Update color
-				this.updateUnitIconColor(iconFrame, unit);
+				this.updateUnitIconColor(iconFrame, unit, effectiveLocal);
 				// Show icon
 				BlzFrameSetVisible(iconFrame, true);
 			} else {
@@ -402,8 +414,7 @@ export class MinimapIconManager {
 	 * @param city - The city whose owner to check
 	 * @param isVisible - Whether the city is visible through fog of war
 	 */
-	private updateIconColor(iconFrame: framehandle, city: City, isVisible: boolean): void {
-		const localPlayer = GetLocalPlayer();
+	private updateIconColor(iconFrame: framehandle, city: City, isVisible: boolean, localPlayer: player): void {
 		let owner: player;
 
 		if (isVisible) {
@@ -447,8 +458,8 @@ export class MinimapIconManager {
 
 			// Check if owner is ally or enemy
 			if (IsPlayerAlly(owner, localPlayer)) {
-				// In FFA, dead players may be assigned as clients to another player,
-				// so show allies as red to avoid confusion with the client's units
+				// In FFA, dead players may be assigned as shared slots to another player,
+				// so show allies as red to avoid confusion with the shared slot's units
 				const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
 				const isDeadInFFA = localActivePlayer && localActivePlayer.status.isDead() && SettingsContext.getInstance().isFFA();
 				const allyColor = isDeadInFFA ? 'TeamColor00' : 'TeamColor04';
@@ -464,8 +475,8 @@ export class MinimapIconManager {
 		}
 
 		// Default: Use player colors (mode 0)
-		// Use GetPlayerColor to get the actual color, then convert to integer
-		const playerColor = GetPlayerColor(owner);
+		// Use original color to avoid slot reassignment changing the color
+		const playerColor = NameManager.getInstance().getOriginalColor(owner);
 		const colorIndex = GetHandleId(playerColor); // Convert playercolor to integer
 
 		// Validate color index (WC3 supports 24 player colors: 0-23)
@@ -486,13 +497,12 @@ export class MinimapIconManager {
 	 * @param iconFrame - The frame to update
 	 * @param unit - The unit whose owner to check
 	 */
-	private updateUnitIconColor(iconFrame: framehandle, unit: unit): void {
-		// Used the ClientManager to resolve the real owner (maps Client -> Player)
-		const owner = ClientManager.getInstance().getOwnerOfUnit(unit);
-		const localPlayer = GetLocalPlayer();
+	private updateUnitIconColor(iconFrame: framehandle, unit: unit, localPlayer: player): void {
+		// Used the SharedSlotManager to resolve the real owner (maps SharedSlot -> Player)
+		const owner = SharedSlotManager.getInstance().getOwnerOfUnit(unit);
 		const allyColorMode = GetAllyColorFilterState();
 
-		// If the local player owns this unit (or owns the client), show it in WHITE
+		// If the local player owns this unit (or owns the shared slot), show it in WHITE
 		if (owner == localPlayer) {
 			BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor99.blp', 0, true);
 			return;
@@ -501,7 +511,9 @@ export class MinimapIconManager {
 		// If ally color mode is enabled (mode 1 or 2)
 		// 1 = Ally/Enemy
 		// 2 = Ally (Teal)/Enemy
-		if (allyColorMode > 0) {
+		// Skip ally color in replay — always show player colors
+		const isReplayViewer = isReplay();
+		if (allyColorMode > 0 && !isReplayViewer) {
 			const ownerId = GetPlayerId(owner as player);
 			if (ownerId >= 24) {
 				BlzFrameSetTexture(iconFrame, 'ReplaceableTextures\\TeamColor\\TeamColor90.blp', 0, true);
@@ -509,8 +521,8 @@ export class MinimapIconManager {
 			}
 
 			if (IsPlayerAlly(owner as player, localPlayer)) {
-				// In FFA, dead players may be assigned as clients to another player,
-				// so show allies as red to avoid confusion with the client's units
+				// In FFA, dead players may be assigned as shared slots to another player,
+				// so show allies as red to avoid confusion with the shared slot's units
 				const localActivePlayer = PlayerManager.getInstance().players.get(localPlayer);
 				const isDeadInFFA = localActivePlayer && localActivePlayer.status.isDead() && SettingsContext.getInstance().isFFA();
 				const allyColor = isDeadInFFA ? 'TeamColor00' : 'TeamColor04';
@@ -526,7 +538,8 @@ export class MinimapIconManager {
 		}
 
 		// Default: Use player colors
-		const playerColor = GetPlayerColor(owner as player);
+		// Use original color to avoid slot reassignment changing the color
+		const playerColor = NameManager.getInstance().getOriginalColor(owner as player);
 		const colorIndex = GetHandleId(playerColor);
 
 		if (colorIndex < 0 || colorIndex > 23) {
@@ -559,12 +572,12 @@ export class MinimapIconManager {
 			const worldX = city.barrack.defaultX;
 			const worldY = city.barrack.defaultY;
 
-			debugPrint('MinimapIconManager: Adding double-ring border for capital city', DC.minimap);
+			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Adding double-ring border for capital city', DC.minimap);
 
 			// Create outer border (white, largest)
 			const outerBorderFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCapitalOuterBorder', gameUI, '', 0);
 			if (!outerBorderFrame) {
-				debugPrint('MinimapIconManager: Failed to create outer border frame for capital', DC.minimap);
+				if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Failed to create outer border frame for capital', DC.minimap);
 				return;
 			}
 
@@ -586,7 +599,7 @@ export class MinimapIconManager {
 			// Create inner border (black, medium size)
 			const innerBorderFrame = BlzCreateFrameByType('BACKDROP', 'MinimapCapitalInnerBorder', gameUI, '', 0);
 			if (!innerBorderFrame) {
-				debugPrint('MinimapIconManager: Failed to create inner border frame for capital', DC.minimap);
+				if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Failed to create inner border frame for capital', DC.minimap);
 				return;
 			}
 
@@ -620,13 +633,14 @@ export class MinimapIconManager {
 
 				// Update color immediately
 				const localPlayer = GetLocalPlayer();
-				const isVisible = IsUnitVisible(city.barrack.unit, localPlayer);
-				this.updateIconColor(iconFrame, city, isVisible);
+				const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
+				const isVisible = IsUnitVisible(city.barrack.unit, effectiveLocal);
+				this.updateIconColor(iconFrame, city, isVisible, effectiveLocal);
 			}
 
-			debugPrint('MinimapIconManager: Capital double-ring border created successfully', DC.minimap);
+			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Capital double-ring border created successfully', DC.minimap);
 		} catch (e) {
-			debugPrint('MinimapIconManager: Error adding capital border - ' + e, DC.minimap);
+			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Error adding capital border - ' + e, DC.minimap);
 		}
 	}
 

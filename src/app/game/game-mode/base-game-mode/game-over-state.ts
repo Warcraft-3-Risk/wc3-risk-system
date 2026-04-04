@@ -39,7 +39,7 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 
 			const handle = player.getPlayer();
 
-			// Reset to original color (before client-manager overrides)
+			// Reset to original color (before shared-slot-manager overrides)
 			nameManager.setColor(handle, nameManager.getOriginalColor(handle));
 			nameManager.setName(handle, isPromode ? 'acct' : 'btag');
 

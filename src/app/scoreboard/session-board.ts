@@ -2,6 +2,7 @@ import { NameManager } from '../managers/names/name-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
 import { Scoreboard } from './scoreboard';
+import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 
 export interface SessionStats {
 	wins: number;
@@ -90,12 +91,13 @@ export class SessionBoard extends Scoreboard {
 			return GetPlayerId(a.getPlayer()) - GetPlayerId(b.getPlayer());
 		});
 
+		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
 		let row = 2;
 		this.players.forEach((player) => {
 			const stats = this.stats.get(player.getPlayer());
 			if (!stats) return;
 
-			const textColor = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
+			const textColor = effectiveLocal == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 			const nameColor = NameManager.getInstance().getOriginalColorCode(player.getPlayer());
 
 			this.setItemValue(`${nameColor}${NameManager.getInstance().getBtag(player.getPlayer())}`, row, this.PLAYER_COL);

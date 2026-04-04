@@ -17,16 +17,17 @@ import { OvertimeManager } from 'src/app/managers/overtime-manager';
 import { Team } from 'src/app/teams/team';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { FogManager } from 'src/app/managers/fog-manager';
 import { AnnounceOnLocation } from '../../announcer/announce';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
-import { ClientManager } from '../../services/client-manager';
+import { SharedSlotManager } from '../../services/shared-slot-manager';
 import { IncomeManager } from 'src/app/managers/income-manager';
 import { RatingManager } from 'src/app/rating/rating-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { BotManager } from 'src/app/managers/bot-manager';
+import { applyEliminatedBuff } from '../utillity/on-player-status';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -95,7 +96,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				updateTickUI();
 			} catch (error) {
 				File.write('errors', error as string);
-				debugPrint('Error in Timer ' + error, DC.gameMode);
+				if (DEBUG_PRINTS.master) debugPrint('Error in Timer ' + error, DC.gameMode);
 			}
 		});
 	}
@@ -129,7 +130,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		// First turn should always be half day
 		if (turn === 0) {
-			debugPrint('first turn, turning off fog', DC.gameMode);
+			if (DEBUG_PRINTS.master) debugPrint('first turn, turning off fog', DC.gameMode);
 			SetTimeOfDay(12.0);
 			FogManager.getInstance().turnFogOff();
 			return;
@@ -144,28 +145,28 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		// dusk
 		if (phase == 0) {
-			debugPrint('Phase is dusk (0), turning on fog', DC.gameMode);
+			if (DEBUG_PRINTS.master) debugPrint('Phase is dusk (0), turning on fog', DC.gameMode);
 			SetTimeOfDay(18.0);
 			FogManager.getInstance().turnFogOn();
 			return;
 		}
 
 		if (phase == 1) {
-			debugPrint('Phase is night (1), turning on fog', DC.gameMode);
+			if (DEBUG_PRINTS.master) debugPrint('Phase is night (1), turning on fog', DC.gameMode);
 			SetTimeOfDay(0.0);
 			FogManager.getInstance().turnFogOn();
 			return;
 		}
 
 		if (phase == 2) {
-			debugPrint('Phase is dawn (2), turning off fog', DC.gameMode);
+			if (DEBUG_PRINTS.master) debugPrint('Phase is dawn (2), turning off fog', DC.gameMode);
 			SetTimeOfDay(6.0);
 			FogManager.getInstance().turnFogOff();
 			return;
 		}
 
 		if (phase == 3) {
-			debugPrint('Phase is day (3), turning off fog', DC.gameMode);
+			if (DEBUG_PRINTS.master) debugPrint('Phase is day (3), turning off fog', DC.gameMode);
 			SetTimeOfDay(12.0);
 			FogManager.getInstance().turnFogOff();
 			return;
@@ -174,12 +175,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onStartTurn(turn: number): void {
 		this.updateFogSettings(turn);
-		debugPrint(`[Redistribute] Triggered by: turn start (turn ${turn})`, DC.redistribute);
-		const changed = ClientManager.getInstance().evaluateAndRedistribute();
-		debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`, DC.gameMode);
+		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: turn start (turn ${turn})`, DC.redistribute);
+		const changed = SharedSlotManager.getInstance().evaluateAndRedistribute();
+		if (DEBUG_PRINTS.master)
+			debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`, DC.redistribute);
 
-		debugPrint(`[SlotCount] === Turn ${turn} Slot Summary ===`, DC.slotCount);
-		ClientManager.getInstance().debugPrintSlotCounts();
+		if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] === Turn ${turn} Slot Summary ===`, DC.sharedSlots);
+		SharedSlotManager.getInstance().debugPrintSlotCounts();
 
 		if (!changed) {
 			ScoreboardManager.getInstance().updateFull();
@@ -217,7 +219,8 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		// Refresh rating stats UI for all players to show updated K/D values
 		// This runs REGARDLESS of ranked status so players can see their current game stats
-		debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`, DC.gameMode);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`, DC.gameMode);
 		GlobalGameData.matchPlayers.forEach((player) => {
 			if (player.ratingStatsUI && player.ratingStatsUI.refresh) {
 				player.ratingStatsUI.refresh();
@@ -332,7 +335,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
-		const cm = ClientManager.getInstance();
+		const cm = SharedSlotManager.getInstance();
 		const killingUnitOwner = cm.getOwnerOfUnit(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(killingUnitOwner));
 
@@ -361,9 +364,12 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerLeft(player: ActivePlayer): void {
 		super.onPlayerLeft(player);
 
-		debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
-		ClientManager.getInstance().neutralizePlayerUnits(player.getPlayer());
-		ClientManager.getInstance().evaluateAndRedistribute();
+		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
+
+		// In FFA, apply a damage-over-time debuff to the eliminated player's units.
+		// Units remain on the player's slot and slowly die off; slots are reclaimed organically.
+		// In team games, teammates retain control of the eliminated player's units without debuff.
+		if (SettingsContext.getInstance().isFFA()) applyEliminatedBuff(player.getPlayer());
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
@@ -383,9 +389,12 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
 		super.onPlayerDead(player, forfeit);
 
-		debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
-		ClientManager.getInstance().neutralizePlayerUnits(player.getPlayer());
-		ClientManager.getInstance().evaluateAndRedistribute();
+		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
+
+		// In FFA, apply a damage-over-time debuff to the eliminated player's units.
+		// Units remain on the player's slot and slowly die off; slots are reclaimed organically.
+		// In team games, teammates retain control of the eliminated player's units without debuff.
+		if (SettingsContext.getInstance().isFFA()) applyEliminatedBuff(player.getPlayer());
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();

@@ -2,11 +2,12 @@ import { UNIT_ID } from 'src/configs/unit-id';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Resetable } from 'src/app/interfaces/resetable';
-import { ClientManager } from 'src/app/game/services/client-manager';
+import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { ABILITY_ID } from 'src/configs/ability-id';
+import { removeEliminatedBuff } from 'src/app/game/game-mode/utillity/on-player-status';
 
 /**
  * Represents a Guard entity in the game, implementing the `Resetable` interface.
@@ -55,6 +56,7 @@ export class Guard implements Resetable {
 		}
 
 		this._unit = guard;
+		removeEliminatedBuff(guard);
 		UnitAddAbility(guard, ABILITY_ID.GUARD_INDICATOR);
 		UnitAddType(this._unit, UNIT_TYPE.GUARD);
 
@@ -86,8 +88,8 @@ export class Guard implements Resetable {
 	public remove(): void {
 		if (this._unit) {
 			const owner = GetOwningPlayer(this._unit);
-			debugPrint(`[SlotCount] Unit removed on slot ${GetPlayerId(owner)}`, DC.slotCount);
-			ClientManager.getInstance().decrementUnitCount(owner);
+			if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Unit removed on slot ${GetPlayerId(owner)}`, DC.sharedSlots);
+			SharedSlotManager.getInstance().decrementUnitCount(owner);
 		}
 		RemoveUnit(this._unit);
 		this._unit = null;

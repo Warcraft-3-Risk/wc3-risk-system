@@ -1,18 +1,18 @@
-# Unit Lag Improvement Plan: Multi-Client Slot Distribution
+# Unit Lag Improvement Plan: Multi-shared slot Distribution
 
 ## Goal
 
-Improve the client slot allocation system so that **multiple client slots can be assigned to a single player**, and units are distributed across all available slots using a **lowest-unit-count** strategy. When a player is eliminated (while below 11 total players), their freed client slots are redistributed equally among remaining players.
+Improve the shared slot allocation system so that **multiple shared slots can be assigned to a single player**, and units are distributed across all available slots using a **lowest-unit-count** strategy. When a player is eliminated (while below 11 total players), their freed shared slots are redistributed equally among remaining players.
 
 ---
 
 ## Current State
 
-- Each active player gets **exactly 1 client slot** (1:1 mapping in `playerToClient`)
-- Allocation runs **once** on Turn 1 (`hasAllocated` flag in `ClientManager`)
-- `getClientOrPlayer(player)` always returns the same single client slot
-- Spawned units go to the client slot; trained units stay on the barracks owner (which is the client slot since barracks are owned by `ClientManager.getOwner(player)`)
-- When players are eliminated (DEAD/LEFT), their client slots are **not reclaimed**
+- Each active player gets **exactly 1 shared slot** (1:1 mapping in `playerToSlots`)
+- Allocation runs **once** on Turn 1 (`hasAllocated` flag in `SharedSlotManager`)
+- `getSharedSlotOrPlayer(player)` always returns the same single shared slot
+- Spawned units go to the shared slot; trained units stay on the barracks owner (which is the shared slot since barracks are owned by `SharedSlotManager.getOwner(player)`)
+- When players are eliminated (DEAD/LEFT), their shared slots are **not reclaimed**
 
 ---
 
@@ -20,11 +20,11 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 ### Phase 1: Unit Counting Per Player Slot
 
-**Objective:** Track the number of units owned by each WC3 player slot (both real players and client slots) in real time.
+**Objective:** Track the number of units owned by each WC3 player slot (both real players and shared slots) in real time.
 
-- [x] **1.1 — Add unit count tracking to `ClientManager`**
+- [x] **1.1 — Add unit count tracking to `SharedSlotManager`**
   
-  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  **File:** [src/app/game/services/shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts)
   
   - Add `slotUnitCounts: Map<player, number>` field.
   - Initialize counts to `0` for all allocated slots.
@@ -37,9 +37,9 @@ Improve the client slot allocation system so that **multiple client slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
-  debugPrint(`[SlotCount] Decrement slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
-  debugPrint(`[SlotCount] Lowest slot for player ${GetPlayerId(player)}: slot ${GetPlayerId(result)} (count: ${count})`);
+  debugPrint(`[SharedSlots] Increment slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
+  debugPrint(`[SharedSlots] Decrement slot ${GetPlayerId(slot)}: ${oldCount} → ${newCount}`);
+  debugPrint(`[SharedSlots] Lowest slot for player ${GetPlayerId(player)}: slot ${GetPlayerId(result)} (count: ${count})`);
   ```
   
   **Verify:** After city distribution, print all slot counts. Expect each real player to have a count equal to their number of owned guard units.
@@ -52,15 +52,15 @@ Improve the client slot allocation system so that **multiple client slots can be
   
   **File:** [src/app/game/services/distribution-service/standard-distribution-service.ts](src/app/game/services/distribution-service/standard-distribution-service.ts#L147)
   - In `changeCityOwner()`, after `SetUnitOwner(city.guard.unit, player.getPlayer(), true)`:
-    - Call `ClientManager.getInstance().incrementUnitCount(player.getPlayer())`.
+    - Call `SharedSlotManager.getInstance().incrementUnitCount(player.getPlayer())`.
   
   **File:** [src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts](src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts#L88)
   - In `changeCityOwner()`, after `SetUnitOwner(city.guard.unit, player.getPlayer(), true)`:
-    - Call `ClientManager.getInstance().incrementUnitCount(player.getPlayer())`.
+    - Call `SharedSlotManager.getInstance().incrementUnitCount(player.getPlayer())`.
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`);
+  debugPrint(`[SharedSlots] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`);
   ```
   
   **Note on guard transitions at runtime:**
@@ -75,11 +75,11 @@ Improve the client slot allocation system so that **multiple client slots can be
   
   **File:** [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts#L77-L85)
   
-  - In `Spawner.step()`, after `CreateUnit(...)`, call `ClientManager.getInstance().incrementUnitCount(owningSlot)`.
+  - In `Spawner.step()`, after `CreateUnit(...)`, call `SharedSlotManager.getInstance().incrementUnitCount(owningSlot)`.
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`);
+  debugPrint(`[SharedSlots] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`);
   ```
   
   **Verify:** After first spawn turn, print all slot counts. Expect counts to increase by spawn amounts.
@@ -91,11 +91,11 @@ Improve the client slot allocation system so that **multiple client slots can be
   **File:** [src/app/triggers/unit-trained-event.ts](src/app/triggers/unit-trained-event.ts)
   
   - In `UnitTrainedEvent()`, after the trained unit is created:
-    - Call `ClientManager.getInstance().incrementUnitCount(GetOwningPlayer(trainedUnit))`.
+    - Call `SharedSlotManager.getInstance().incrementUnitCount(GetOwningPlayer(trainedUnit))`.
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Trained unit on slot ${GetPlayerId(GetOwningPlayer(trainedUnit))}`);
+  debugPrint(`[SharedSlots] Trained unit on slot ${GetPlayerId(GetOwningPlayer(trainedUnit))}`);
   ```
   
   **Verify:** Train a unit from a city. Confirm count on the owning slot increased by 1.
@@ -106,11 +106,11 @@ Improve the client slot allocation system so that **multiple client slots can be
   
   **File:** [src/app/triggers/unit_death/unit-death-event.ts](src/app/triggers/unit_death/unit-death-event.ts)
   
-  - In the death event handler, call `ClientManager.getInstance().decrementUnitCount(GetOwningPlayer(dyingUnit))` (raw WC3 owner, not resolved real player).
+  - In the death event handler, call `SharedSlotManager.getInstance().decrementUnitCount(GetOwningPlayer(dyingUnit))` (raw WC3 owner, not resolved real player).
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(GetOwningPlayer(dyingUnit))}`);
+  debugPrint(`[SharedSlots] Unit died on slot ${GetPlayerId(GetOwningPlayer(dyingUnit))}`);
   ```
   
   **Verify:** Kill a unit. Confirm slot count decreased by 1.
@@ -125,24 +125,24 @@ Improve the client slot allocation system so that **multiple client slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Unit removed on slot ${GetPlayerId(GetOwningPlayer(unit))}`);
+  debugPrint(`[SharedSlots] Unit removed on slot ${GetPlayerId(GetOwningPlayer(unit))}`);
   ```
   
-  **Verify:** Trigger a game reset. Confirm all slot counts are 0 after `ClientManager.reset()` runs.
+  **Verify:** Trigger a game reset. Confirm all slot counts are 0 after `SharedSlotManager.reset()` runs.
 
 ---
 
 - [x] **1.7 — Add a periodic count summary for debugging**
   
-  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  **File:** [src/app/game/services/shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts)
   
   - Add method `debugPrintSlotCounts(): void` that prints all non-zero slot counts.
   - Call this from `onStartTurn()` in [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) so counts are logged every turn.
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] === Turn ${turn} Slot Summary ===`);
-  debugPrint(`[SlotCount] Slot ${GetPlayerId(slot)} (owner: ${GetPlayerId(realOwner)}): ${count} units`);
+  debugPrint(`[SharedSlots] === Turn ${turn} Slot Summary ===`);
+  debugPrint(`[SharedSlots] Slot ${GetPlayerId(slot)} (owner: ${GetPlayerId(realOwner)}): ${count} units`);
   ```
   
   **Verify:** Play through a few turns. Confirm counts make sense — they should increase with spawns and decrease with deaths.
@@ -151,26 +151,26 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 ### Phase 2: Spawn Units to Lowest-Count Slot
 
-**Objective:** Replace the current `getClientOrPlayer()` call with a method that picks the slot with the fewest units.
+**Objective:** Replace the current `getSharedSlotOrPlayer()` call with a method that picks the slot with the fewest units.
 
-- [x] **2.1 — Change `playerToClient` from `Map<player, client>` to `Map<player, client[]>`**
+- [x] **2.1 — Change `playerToSlots` from `Map<player, SharedSlot>` to `Map<player, SharedSlot[]>`**
   
-  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  **File:** [src/app/game/services/shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts)
   
-  - Change the mapping so a single real player can have **multiple** client slots.
-  - Update `clientToPlayer` to remain `Map<client, player>` (many-to-one is fine).
-  - Update all methods that read `playerToClient`:
-    - `getClientByPlayer` — return the array or first element depending on usage.
-    - `getClientOrPlayer` → rename/replace with `getSlotWithLowestUnitCount(player)`.
-    - `isPlayerOrClientOwnerOfUnit` — check against all client slots (use `.includes()`).
+  - Change the mapping so a single real player can have **multiple** shared slots.
+  - Update `slotToPlayer` to remain `Map<SharedSlot, player>` (many-to-one is fine).
+  - Update all methods that read `playerToSlots`:
+    - `getSharedSlotByPlayer` — return the array or first element depending on usage.
+    - `getSharedSlotOrPlayer` → rename/replace with `getSlotWithLowestUnitCount(player)`.
+    - `isPlayerOrSharedSlotOwnerOfUnit` — check against all shared slots (use `.includes()`).
     - `reset()` — clear all arrays.
   
   **Debug logging:**
   ```
-  debugPrint(`[ClientManager] Player ${GetPlayerId(player)} now has ${slots.length} client slots: [${slots.map(s => GetPlayerId(s)).join(', ')}]`);
+  debugPrint(`[SharedSlotManager] Player ${GetPlayerId(player)} now has ${slots.length} shared slots: [${slots.map(s => GetPlayerId(s)).join(', ')}]`);
   ```
   
-  **Verify:** After initial allocation, print each player's client slot array. Should match existing 1:1 behavior initially.
+  **Verify:** After initial allocation, print each player's shared slot array. Should match existing 1:1 behavior initially.
 
 ---
 
@@ -178,11 +178,11 @@ Improve the client slot allocation system so that **multiple client slots can be
   
   **File:** [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts#L78)
   
-  - Replace `ClientManager.getInstance().getClientOrPlayer(this.getOwner())` with `ClientManager.getInstance().getSlotWithLowestUnitCount(this.getOwner())`.
+  - Replace `SharedSlotManager.getInstance().getSharedSlotOrPlayer(this.getOwner())` with `SharedSlotManager.getInstance().getSlotWithLowestUnitCount(this.getOwner())`.
   
   **Debug logging:** (already covered by 1.3 and 1.1's `getSlotWithLowestUnitCount` log)
   
-  **Verify:** With 1 real player + 1 client slot, spawn 10 units. Expect roughly 5 on each slot (±1). Check via turn summary from 1.7.
+  **Verify:** With 1 real player + 1 shared slot, spawn 10 units. Expect roughly 5 on each slot (±1). Check via turn summary from 1.7.
 
 ---
 
@@ -195,7 +195,7 @@ Improve the client slot allocation system so that **multiple client slots can be
   
   **Debug logging:**
   ```
-  debugPrint(`[SlotCount] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(newSlot)}`);
+  debugPrint(`[SharedSlots] Trained unit reassigned from slot ${GetPlayerId(oldSlot)} to slot ${GetPlayerId(newSlot)}`);
   ```
   
   **Verify:** Train a unit when the barracks slot has more units than another slot. Confirm the unit ends up on the lower-count slot.
@@ -206,9 +206,9 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 **Objective:** Create a single, reusable algorithm that determines when slots can be freed and how to optimally distribute all available slots among active players. Replaces ad-hoc per-event logic with a unified routine.
 
-- [x] **3.1 — Implement `evaluateAndRedistribute()` in `ClientManager`**
+- [x] **3.1 — Implement `evaluateAndRedistribute()` in `SharedSlotManager`**
   
-  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  **File:** [src/app/game/services/shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts)
   
   The algorithm (single entry-point, idempotent):
   
@@ -218,13 +218,13 @@ Improve the client slot allocation system so that **multiple client slots can be
   ├── 1. COLLECT: Build the current picture
   │   ├── activePlayers[]        ← players with status ALIVE or NOMAD
   │   ├── eliminatedPlayers[]    ← players with status DEAD, LEFT, or STFU
-  │   ├── assignedSlots          ← all slots currently in playerToClient
+  │   ├── assignedSlots          ← all slots currently in playerToSlots
   │   └── unassignedSlots[]      ← empty WC3 player slots not assigned to anyone
   │
   ├── 2. FREE: Identify reclaimable slots from eliminated players
   │   ├── For each eliminated player:
-  │   │   ├── Get their client slots from playerToClient
-  │   │   ├── For each client slot:
+  │   │   ├── Get their shared slots from playerToSlots
+  │   │   ├── For each shared slot:
   │   │   │   ├── IF slotUnitCount[slot] == 0:
   │   │   │   │   ├── Tear down alliances
   │   │   │   │   ├── Remove from maps
@@ -240,7 +240,7 @@ Improve the client slot allocation system so that **multiple client slots can be
   │   │  remainder = totalSlots % activePlayers.count
   │   │
   │   ├── For each active player:
-  │   │   ├── currentSlotCount = playerToClient[player].length
+  │   │   ├── currentSlotCount = playerToSlots[player].length
   │   │   ├── targetSlotCount  = slotsPerPlayer (+ 1 if in remainder)
   │   │   └── delta = target - current
   │   │
@@ -265,7 +265,7 @@ Improve the client slot allocation system so that **multiple client slots can be
   
   Helper methods:
   - `getActivePlayers(): player[]`
-  - `getSlotsForPlayer(player): player[]` — returns `[player, ...playerToClient[player]]`
+  - `getSlotsForPlayer(player): player[]` — returns `[player, ...playerToSlots[player]]`
   - `tearDownSlot(slot, previousOwner): void`
   - `assignSlotToPlayer(slot, newOwner): void`
   
@@ -298,7 +298,7 @@ Improve the client slot allocation system so that **multiple client slots can be
   
   | Event | File | Where |
   |-------|------|-------|
-  | Turn start | [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | `onStartTurn()` — replaces `allocateClientSlot()` |
+  | Turn start | [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | `onStartTurn()` — replaces `allocateSharedSlot()` |
   | Player dead | [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | `onPlayerDead()` |
   | Player left | [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | `onPlayerLeft()` |
   | Unit death | [unit-death-event.ts](src/app/triggers/unit_death/unit-death-event.ts) | After decrement, if slot is in `pendingFreeSlots` and count == 0 |
@@ -314,7 +314,7 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 - [x] **3.3 — Remove `hasAllocated` flag**
   
-  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  **File:** [src/app/game/services/shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts)
   
   - Remove `hasAllocated` field and all early-return checks that reference it.
   - The algorithm's idempotency makes this guard unnecessary.
@@ -323,7 +323,7 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 ---
 
-- [x] **3.4 — Rename `allocateClientSlot()` → `evaluateAndRedistribute()`**
+- [x] **3.4 — Rename `allocateSharedSlot()` → `evaluateAndRedistribute()`**
   
   Update all call sites. The initial allocation on Turn 1 is now the first invocation of the general algorithm.
   
@@ -333,29 +333,29 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 ### Phase 4: Update Ownership Resolution
 
-**Objective:** Ensure all existing code that resolves ownership still works with multi-client mappings.
+**Objective:** Ensure all existing code that resolves ownership still works with Multi-Shared-Slot mappings.
 
 - [x] **4.1 — Audit `getOwner()` and `getOwnerOfUnit()`**
   
-  Reverse lookups via `clientToPlayer` — still `Map<client, player>`. Each client maps to exactly one real player. **No changes expected.**
+  Reverse lookups via `slotToPlayer` — still `Map<SharedSlot, player>`. Each shared slot maps to exactly one real player. **No changes expected.**
   
   **Verify:** Spot-check in debug logs that ownership resolution returns correct real player after redistribution.
 
 ---
 
-- [x] **4.2 — Update `isPlayerOrClientOwnerOfUnit()`**
+- [x] **4.2 — Update `isPlayerOrSharedSlotOwnerOfUnit()`**
   
-  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  **File:** [src/app/game/services/shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts)
   
-  - Change `playerToClient.get(player) == owner` → `playerToClient.get(player)?.includes(owner)`.
+  - Change `playerToSlots.get(player) == owner` → `playerToSlots.get(player)?.includes(owner)`.
   
-  **Verify:** Confirm city capture and guard replacement still work correctly with multi-client players.
+  **Verify:** Confirm city capture and guard replacement still work correctly with Multi-Shared-Slot players.
 
 ---
 
-- [x] **4.3 — Audit `isAnyClientOwnerOfUnit()`**
+- [x] **4.3 — Audit `isAnySharedSlotOwnerOfUnit()`**
   
-  Checks `clientToPlayer.has(GetOwningPlayer(unit))` — no change needed.
+  Checks `slotToPlayer.has(GetOwningPlayer(unit))` — no change needed.
   
   **Verify:** Confirm UnitLagManager tracking still works.
 
@@ -363,30 +363,30 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 - [x] **4.4 — Audit MinimapIconManager**
   
-  Uses `ClientManager.getOwnerOfUnit()` for color resolution — no change needed.
+  Uses `SharedSlotManager.getOwnerOfUnit()` for color resolution — no change needed.
   
-  **Verify:** Confirm units on all client slots show the correct player color on the minimap.
+  **Verify:** Confirm units on all shared slots show the correct player color on the minimap.
 
 ---
 
 - [x] **4.5 — Audit UnitLagManager**
   
-  - `trackUnit()` uses `isAnyClientOwnerOfUnit()` — no change needed.
-  - `IsUnitAlly`/`IsUnitEnemy` use native WC3 checks — no change needed (alliances are set per client slot).
+  - `trackUnit()` uses `isAnySharedSlotOwnerOfUnit()` — no change needed.
+  - `IsUnitAlly`/`IsUnitEnemy` use native WC3 checks — no change needed (alliances are set per shared slot).
 
 ---
 
 ### Phase 5: Inter-Slot Alliances
 
-**Objective:** Ensure all client slots belonging to the same player (and their teammates) are fully allied with each other so units on different slots don't fight.
+**Objective:** Ensure all shared slots belonging to the same player (and their teammates) are fully allied with each other so units on different slots don't fight.
 
 - [x] **5.1 — Ally sibling slots on assignment**
 
-  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  **File:** [src/app/game/services/shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts)
 
-  - In `givePlayerFullControlOfClient()`, after setting up player↔client and teammate↔client alliances:
-    - Ally the new slot with all OTHER existing client slots of the same player.
-    - Ally the new slot with all client slots of each teammate.
+  - In `givePlayerFullControlOfSlot()`, after setting up player↔slot and teammate↔slot alliances:
+    - Ally the new slot with all OTHER existing shared slots of the same player.
+    - Ally the new slot with all shared slots of each teammate.
 
   **Verify:** Assign 2+ slots to a player. Confirm units on slot A don't attack units on slot B.
 
@@ -394,11 +394,11 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 - [x] **5.2 — Un-ally sibling slots on teardown**
 
-  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  **File:** [src/app/game/services/shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts)
 
   - In `tearDownSlot()`, mirror the alliance setup:
-    - Un-ally the removed slot from all OTHER existing client slots of the same player.
-    - Un-ally the removed slot from all client slots of each teammate.
+    - Un-ally the removed slot from all OTHER existing shared slots of the same player.
+    - Un-ally the removed slot from all shared slots of each teammate.
 
   **Verify:** Tear down a slot. Confirm it no longer has alliances with the player's remaining slots.
 
@@ -414,7 +414,7 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 - [x] **5.4 — Full alliance wipe before slot reassignment**
 
-  **File:** [src/app/game/services/client-manager.ts](src/app/game/services/client-manager.ts)
+  **File:** [src/app/game/services/shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts)
 
   - In `assignSlotToPlayer()`, before setting up new alliances:
     - Iterate over all `bj_MAX_PLAYERS` player indices and call `enableAdvancedControl(slot, Player(i), false)` and `enableAdvancedControl(Player(i), slot, false)`.
@@ -428,38 +428,38 @@ Improve the client slot allocation system so that **multiple client slots can be
 
 | File | Changes |
 |------|---------|
-| [client-manager.ts](src/app/game/services/client-manager.ts) | Core: multi-client mapping, unit counting, slot deallocation/redistribution, `reset()` |
+| [shared-slot-manager.ts](src/app/game/services/shared-slot-manager.ts) | Core: Multi-Shared-Slot mapping, unit counting, slot deallocation/redistribution, `reset()` |
 | [standard-distribution-service.ts](src/app/game/services/distribution-service/standard-distribution-service.ts) | Increment guard count on city distribution |
 | [capitals-distribute-capitals-state.ts](src/app/game/game-mode/capital-game-mode/capitals-distribute-capitals-state.ts) | Increment guard count on capital distribution |
-| [spawner.ts](src/app/spawner/spawner.ts) | Use `getSlotWithLowestUnitCount()` instead of `getClientOrPlayer()` |
+| [spawner.ts](src/app/spawner/spawner.ts) | Use `getSlotWithLowestUnitCount()` instead of `getSharedSlotOrPlayer()` |
 | [unit-trained-event.ts](src/app/triggers/unit-trained-event.ts) | Reassign trained units to optimal slot, increment count |
 | [unit-death-event.ts](src/app/triggers/unit_death/unit-death-event.ts) | Decrement count, check for deferred slot freeing |
-| [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | Hook into elimination events, replace `allocateClientSlot()` |
+| [game-loop-state.ts](src/app/game/game-mode/base-game-mode/game-loop-state.ts) | Hook into elimination events, replace `allocateSharedSlot()` |
 | [transport-manager.ts](src/app/managers/transport-manager.ts) | Decrement/increment counts on load/unload |
 
 ---
 
 ## Risks and Considerations
 
-1. **Alliance complexity**: Each new client slot requires full alliance setup with the player AND their team allies. `givePlayerFullControlOfClient()` already handles this but will be called more frequently.
+1. **Alliance complexity**: Each new shared slot requires full alliance setup with the player AND their team allies. `givePlayerFullControlOfSlot()` already handles this but will be called more frequently.
 
-2. **Barracks ownership**: Barracks are owned by client slots. When client slots are redistributed, barracks remains on the original slot. Trained units from that barrack will be created under the old slot's owner. The post-train reassignment (Task 2.3) handles this.
+2. **Barracks ownership**: Barracks are owned by shared slots. When shared slots are redistributed, barracks remains on the original slot. Trained units from that barrack will be created under the old slot's owner. The post-train reassignment (Task 2.3) handles this.
 
 3. **Race conditions on unit death**: When an eliminated player's units die, the deferred freeing logic must safely handle cases where multiple units die simultaneously.
 
 4. **Scoreboard updates**: Each redistribution event needs a scoreboard toggle (off → on) + full update to prevent display glitches from shared control changes.
 
-5. **Minimap frame pool**: More client slots per player means more units potentially needing custom minimap icons. The current pool of 2,000 frames should be sufficient, but worth monitoring.
+5. **Minimap frame pool**: More shared slots per player means more units potentially needing custom minimap icons. The current pool of 2,000 frames should be sufficient, but worth monitoring.
 
-6. **Testing**: The `MAX_PLAYERS_FOR_CLIENT_ALLOCATION = 11` threshold and the "below 11 players" condition for redistribution need to be verified with edge cases (e.g., exactly 11 players, player leaves immediately on turn 1, all but 1 player eliminated).
+6. **Testing**: The `MAX_PLAYERS_FOR_SHARED_SLOT_ALLOCATION = 11` threshold and the "below 11 players" condition for redistribution need to be verified with edge cases (e.g., exactly 11 players, player leaves immediately on turn 1, all but 1 player eliminated).
 
-7. **Game mode reset**: The game can reset between rounds (e.g., equalized promode Round 1 → Round 2). The reset flow in [reset-state.ts](src/app/game/game-mode/base-game-mode/reset-state.ts) calls `removeUnits()` first (wipes all units from the map), then `ClientManager.getInstance().reset()`. The existing `reset()` method already clears `playerToClient`, `clientToPlayer`, `availableClients`, and `hasAllocated`. The new fields must also be cleared:
+7. **Game mode reset**: The game can reset between rounds (e.g., equalized promode Round 1 → Round 2). The reset flow in [reset-state.ts](src/app/game/game-mode/base-game-mode/reset-state.ts) calls `removeUnits()` first (wipes all units from the map), then `SharedSlotManager.getInstance().reset()`. The existing `reset()` method already clears `playerToSlots`, `slotToPlayer`, `availableSlots`, and `hasAllocated`. The new fields must also be cleared:
    - `slotUnitCounts` — must be cleared (all units already removed by `removeUnits()`)
    - `pendingFreeSlots` — must be cleared (irrelevant after full reset)
    
-   Since `removeUnits()` runs **before** `ClientManager.reset()`, counters will not be naturally decremented to zero via death events — they are forcibly wiped. This is correct because the entire game state is rebuilt from scratch.
+   Since `removeUnits()` runs **before** `SharedSlotManager.reset()`, counters will not be naturally decremented to zero via death events — they are forcibly wiped. This is correct because the entire game state is rebuilt from scratch.
    
-   **No additional hook is needed** — just ensure `ClientManager.reset()` clears the new fields alongside the existing ones.
+   **No additional hook is needed** — just ensure `SharedSlotManager.reset()` clears the new fields alongside the existing ones.
 
 ---
 
@@ -513,8 +513,8 @@ Improve the client slot allocation system so that **multiple client slots can be
   - On a `0.02s` repeating timer, read `BlzGetMouseFocusUnit()` and:
     - If the focused unit changed, call `updateTooltip()`.
     - If visible, reposition the text above the unit using `World2Screen()`.
-  - `updateTooltip()` resolves ownership via `ClientManager.getOwnerOfUnit()` and shows the player's `NameManager.getDisplayName()` (which includes their color code), or the unit's name for neutral units.
-  - Own units (and client-slot-owned units) are suppressed — no tooltip shown for friendly units.
+  - `updateTooltip()` resolves ownership via `SharedSlotManager.getOwnerOfUnit()` and shows the player's `NameManager.getDisplayName()` (which includes their color code), or the unit's name for neutral units.
+  - Own units (and shared-slot-owned units) are suppressed — no tooltip shown for friendly units.
 
   **Why this approach instead of SetPlayerColor / SetPlayerName:**
   - `SetPlayerColor` and `SetPlayerName` affect the WC3 match result screen shown after the game ends: players appear with incorrect colors and names in the lobby summary, which is confusing and breaks the post-game experience.

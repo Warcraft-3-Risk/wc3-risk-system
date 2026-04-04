@@ -1527,3 +1527,99 @@ STRING 7548
 This option cycles through two different unit color modes.|N|N|Cfffed312Mode 1:|R All units use Player Colors. |N|Cfffed312Mode 2:|R Minimap colors display |CFFFFFF00Allies|R and |CFFFF0000Enemies|R. |N
 }
 
+STRING 7549
+// Abilities: A00A (Player Death), Name (Name)
+{
+Player Death
+}
+
+STRING 7554
+// Abilities: A00B (Player Death - General), Name (Name)
+{
+Player Death - General
+}
+
+STRING 7555
+// Abilities: A00C (Player Death - Marine), Name (Name)
+{
+Player Death - Marine
+}
+
+STRING 7556
+// Abilities: A00D (Player Death - Artillery), Name (Name)
+{
+Player Death - Artillery
+}
+
+STRING 7557
+// Abilities: A00E (Player Death - Medic), Name (Name)
+{
+Player Death - Medic
+}
+
+STRING 7558
+// Abilities: A00F (Player Death - Mortar), Name (Name)
+{
+Player Death - Mortar
+}
+
+STRING 7559
+// Abilities: A00G (Player Death - Riflemen), Name (Name)
+{
+Player Death - Riflemen
+}
+
+STRING 7560
+// Abilities: A00H (Player Death - Roarer), Name (Name)
+{
+Player Death - Roarer
+}
+
+STRING 7561
+// Abilities: A00I (Player Death - Major), Name (Name)
+{
+Player Death - Major
+}
+
+STRING 7562
+// Abilities: A00J (Player Death - Knight), Name (Name)
+{
+Player Death - Knight
+}
+
+STRING 7563
+// Abilities: A00K (Player Death - Tank), Name (Name)
+{
+Player Death - Tank
+}
+
+STRING 7564
+// Abilities: A00L (Player Death - Warship A), Name (Name)
+{
+Player Death - Warship A
+}
+
+STRING 7565
+// Abilities: A00M (Player Death - Warship B), Name (Name)
+{
+Player Death - Warship B
+}
+
+STRING 7566
+// Abilities: A00N (Player Death - Battleship SS), Name (Name)
+{
+Player Death - Battleship SS
+}
+
+STRING 7567
+// Abilities: A00O (Player Death - Transport Ship), Name (Name)
+{
+Player Death - Transport Ship
+}
+
+STRING 7568
+// Abilities: A00P (Player Death - Armoured Transport Ship), Name (Name)
+{
+Player Death - Armoured Transport Ship
+}
+

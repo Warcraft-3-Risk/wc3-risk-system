@@ -1,10 +1,10 @@
 import { ABILITY_ID } from '../../configs/ability-id';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { TimedEvent } from '../libs/timer/timed-event';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { debugPrint } from '../utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { ORDER_ID } from '../../configs/order-id';
@@ -146,6 +146,14 @@ export class TransportManager {
 	}
 
 	/**
+	 * Returns the cargo units loaded in the given transport, or null if not tracked.
+	 */
+	public getCargo(unit: unit): unit[] | null {
+		const transport = this.transports.get(unit);
+		return transport ? transport.cargo : null;
+	}
+
+	/**
 	 * Handles the death event of a transport unit.
 	 * @param killer - The unit that killed the transport.
 	 * @param unit - The transport unit that is killed.
@@ -167,7 +175,7 @@ export class TransportManager {
 		const transportData: Transport = this.transports.get(unit);
 
 		if (transportData.cargo) {
-			// Track all cargo units (clients) again since the transport is dead
+			// Track all cargo units (shared slots) again since the transport is dead
 			transportData.cargo.forEach((unit) => {
 				UnitLagManager.getInstance().trackUnit(unit);
 				MinimapIconManager.getInstance().registerIfValid(unit);
@@ -300,14 +308,14 @@ export class TransportManager {
 						BlzPauseUnitEx(transport.unit, true);
 						BlzPauseUnitEx(transport.unit, false);
 						IssueImmediateOrder(transport.unit, 'stop');
-						ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+						ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 						return false;
 					} else {
 						if (this.isTargetTerrainInvalid(abilityTargetX, abilityTargetY)) {
 							BlzPauseUnitEx(transport.unit, true);
 							BlzPauseUnitEx(transport.unit, false);
 							IssueImmediateOrder(transport.unit, 'stop');
-							ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+							ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 							return false;
 						}
 					}
@@ -338,7 +346,7 @@ export class TransportManager {
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 
 					return false;
 				}
@@ -359,7 +367,7 @@ export class TransportManager {
 						TransportManager.delayedTrackTimerRunning = true;
 						TimerStart(TransportManager.delayedTrackTimer, 0.1, false, () => {
 							TransportManager.delayedTrackQueue.forEach((unit) => {
-								debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`, DC.transport);
+								if (DEBUG_PRINTS.master) debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`, DC.transport);
 								UnitLagManager.getInstance().trackUnit(unit);
 								MinimapIconManager.getInstance().registerIfValid(unit);
 							});
@@ -417,7 +425,7 @@ export class TransportManager {
 
 				if (this.isTerrainInvalid(transport.unit)) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
@@ -442,7 +450,7 @@ export class TransportManager {
 		TriggerAddCondition(
 			t,
 			Condition(() => {
-				debugPrint('Transport Patrol Casted', DC.transport);
+				if (DEBUG_PRINTS.master) debugPrint('Transport Patrol Casted', DC.transport);
 				const transport: Transport = this.transports.get(GetTriggerUnit());
 
 				if (!transport || GetSpellAbilityId() !== ABILITY_ID.TRANSPORT_PATROL) {
@@ -451,18 +459,18 @@ export class TransportManager {
 
 				if (this.isTerrainInvalid(transport.unit)) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
-				debugPrint('Transport Patrol Valid', DC.transport);
+				if (DEBUG_PRINTS.master) debugPrint('Transport Patrol Valid', DC.transport);
 
 				if (transport.patrolEnabled) {
-					debugPrint('Transport Patrol Already Enabled - Stopping Previous Patrol', DC.transport);
+					if (DEBUG_PRINTS.master) debugPrint('Transport Patrol Already Enabled - Stopping Previous Patrol', DC.transport);
 					this.stopPatrol(transport);
 				}
 
-				debugPrint('Transport Patrol Starting', DC.transport);
+				if (DEBUG_PRINTS.master) debugPrint('Transport Patrol Starting', DC.transport);
 
 				transport.patrolEnabled = true;
 				transport.patrolState = PatrolState.LOADING;
@@ -473,16 +481,16 @@ export class TransportManager {
 				transport.patrolOriginY = GetUnitY(u);
 				transport.patrolLoadTimer = 0;
 
-				debugPrint(`Patrol Origin: (${transport.patrolOriginX}, ${transport.patrolOriginY})`, DC.transport);
-				debugPrint(`Patrol Destination: (${transport.patrolDestX}, ${transport.patrolDestY})`, DC.transport);
+				if (DEBUG_PRINTS.master) debugPrint(`Patrol Origin: (${transport.patrolOriginX}, ${transport.patrolOriginY})`, DC.transport);
+				if (DEBUG_PRINTS.master) debugPrint(`Patrol Destination: (${transport.patrolDestX}, ${transport.patrolDestY})`, DC.transport);
 
 				this.addAutoLoadEffect(transport);
 
 				const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
 
-				debugPrint('Registering Patrol Timed Event', DC.transport);
+				if (DEBUG_PRINTS.master) debugPrint('Registering Patrol Timed Event', DC.transport);
 				transport.patrolEvent = timedEventManager.registerTimedEvent(1000000, () => {
-					debugPrint('Transport Patrol Tick', DC.transport);
+					if (DEBUG_PRINTS.master) debugPrint('Transport Patrol Tick', DC.transport);
 					this.handlePatrol(transport);
 				});
 
@@ -553,7 +561,7 @@ export class TransportManager {
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
@@ -693,8 +701,8 @@ export class TransportManager {
 
 		if (transport.cargo.length + transport.orderedUnits.length >= 10) return;
 
-		// Resolve real owner once (handles multi-client slots)
-		const transportRealOwner = ClientManager.getInstance().getOwnerOfUnit(transport.unit);
+		// Resolve real owner once (handles multi-shared slots)
+		const transportRealOwner = SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit);
 		let group: group = CreateGroup();
 
 		GroupEnumUnitsInRange(
@@ -708,7 +716,7 @@ export class TransportManager {
 				if (IsUnitType(unit, UNIT_TYPE.SHIP)) return;
 				if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
 				if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
-				if (ClientManager.getInstance().getOwnerOfUnit(unit) != transportRealOwner) return;
+				if (SharedSlotManager.getInstance().getOwnerOfUnit(unit) != transportRealOwner) return;
 				
 				// Global check for already ordered units
 				if (this.allOrderedUnits.has(unit)) return;

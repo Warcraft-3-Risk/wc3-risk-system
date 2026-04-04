@@ -6,7 +6,7 @@ import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { FogManager } from 'src/app/managers/fog-manager';
-import { ClientManager } from '../../services/client-manager';
+import { SharedSlotManager } from '../../services/shared-slot-manager';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { GlobalGameData } from '../../state/global-game-state';
@@ -14,7 +14,7 @@ import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 import { CityToCountry } from 'src/app/country/country-map';
 import { debugPrint } from '../../../utils/debug-print';
-import { DC } from 'src/configs/game-settings';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -48,7 +48,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			TreeManager.getInstance().reset();
 			await Wait.forSeconds(1);
 
-			ClientManager.getInstance().reset();
+			SharedSlotManager.getInstance().reset();
 
 			GlobalGameData.matchPlayers.forEach((val) => {
 				val.trackedData.reset();
@@ -71,7 +71,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 
 			this.nextState(this.stateData);
 		} catch (e) {
-			debugPrint(e as string, DC.gameMode);
+			if (DEBUG_PRINTS.master) debugPrint(e as string, DC.gameMode);
 		}
 	}
 }

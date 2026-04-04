@@ -7,7 +7,7 @@ import { UnitToCity } from './city-map';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { ABILITY_ID } from 'src/configs/ability-id';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 
 /**
  * Abstract class for a City.
@@ -143,7 +143,7 @@ export abstract class City implements Resetable, Ownable {
 
 		this.guard.reposition();
 
-		const newOwner: player = ClientManager.getInstance().getOwnerOfUnit(this.guard.unit);
+		const newOwner: player = SharedSlotManager.getInstance().getOwnerOfUnit(this.guard.unit);
 
 		if (this.owner != newOwner) {
 			const currOwner = this.owner;
