@@ -267,12 +267,23 @@ export function hasEliminatedBuff(u: unit): boolean {
 export function applyEliminatedBuff(playerHandle: player): void {
 	const delayTimer = CreateTimer();
 	const delay = 60;
-	TimerStart(delayTimer, delay, false, () => {
-		const cm = SharedSlotManager.getInstance();
-		const sharedSlots = cm.getSharedSlotsByPlayer(playerHandle);
-		const slots = [playerHandle, ...sharedSlots];
 
-		for (const slot of slots) {
+	// Snapshot the slots NOW, before redistribution can reassign them.
+	// After 60s, slots may have been reassigned to active players — querying
+	// getSharedSlotsByPlayer at that point would miss already-freed slots,
+	// and enumerating playerHandle could hit an active player's redistributed units.
+	const cm = SharedSlotManager.getInstance();
+	const sharedSlots = cm.getSharedSlotsByPlayer(playerHandle);
+	const snapshotSlots = [playerHandle, ...sharedSlots];
+
+	TimerStart(delayTimer, delay, false, () => {
+		for (const slot of snapshotSlots) {
+			// After the 60s delay, this slot may have been reassigned to an active player
+			// via evaluateAndRedistribute(). Only debuff slots whose resolved owner is
+			// still the eliminated player — skip slots that now belong to an active player.
+			const resolvedOwner = SharedSlotManager.getInstance().getOwner(slot);
+			if (resolvedOwner !== playerHandle) continue;
+
 			const g = CreateGroup();
 			GroupEnumUnitsOfPlayer(g, slot, null);
 			ForGroup(g, () => {
