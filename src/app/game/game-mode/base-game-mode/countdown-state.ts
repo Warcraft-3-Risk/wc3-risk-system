@@ -11,6 +11,7 @@ import { NameManager } from 'src/app/managers/names/name-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { updateRatingStatsButtonForRankedStatus } from 'src/app/ui/player-preference-buttons';
 import { GlobalGameData } from '../../state/global-game-state';
+import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 
 export class CountdownState<T extends StateData> extends BaseState<T> {
 	private initialDuration: number;
@@ -107,6 +108,9 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 					this.nextState(this.stateData);
 					return;
 				}
+
+				// Allow replay viewers to switch POV during countdown
+				ScoreboardManager.getInstance().updateReplayPov();
 
 				BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 				this.countdownDisplay(duration);

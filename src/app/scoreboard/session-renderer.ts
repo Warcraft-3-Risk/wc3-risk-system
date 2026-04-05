@@ -1,7 +1,8 @@
 import { NameManager } from '../managers/names/name-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { Scoreboard } from './scoreboard';
+import { ScoreboardRenderer } from './scoreboard-renderer';
+import { ScoreboardDataModel } from './scoreboard-data-model';
 import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 
 export interface SessionStats {
@@ -11,7 +12,7 @@ export interface SessionStats {
 	deaths: number;
 }
 
-export class SessionBoard extends Scoreboard {
+export class SessionRenderer extends ScoreboardRenderer {
 	private players: ActivePlayer[];
 	private stats: Map<player, SessionStats> = new Map();
 	private readonly PLAYER_COL = 1;
@@ -21,7 +22,7 @@ export class SessionBoard extends Scoreboard {
 	private readonly DEATHS_COL = 5;
 
 	constructor(players: ActivePlayer[]) {
-		super();
+		super(5);
 		this.players = [...players];
 		this.size = this.players.length + 2;
 
@@ -50,7 +51,7 @@ export class SessionBoard extends Scoreboard {
 
 		this.setTitle('Session Score');
 
-		this.updateFull();
+		this.renderFullInternal();
 
 		MultiboardSetItemsStyle(this.board, true, false);
 		this.setVisibility(false);
@@ -75,7 +76,31 @@ export class SessionBoard extends Scoreboard {
 		}
 	}
 
+	public renderFull(_data: ScoreboardDataModel): void {
+		this.renderFullInternal();
+	}
+
+	public renderPartial(_data: ScoreboardDataModel): void {
+		this.renderFullInternal();
+	}
+
+	/**
+	 * Standalone update for session board (used outside normal scoreboard update cycle).
+	 */
 	public updateFull(): void {
+		this.renderFullInternal();
+	}
+
+	public renderAlert(_player: player, _alert: string): void {
+		// Not used for session board
+	}
+
+	// Hides instead of destroying — see ScoreboardRenderer.destroy()
+	public destroy(): void {
+		this.setVisibility(false);
+	}
+
+	private renderFullInternal(): void {
 		// Sort by wins descending, then K/D ratio descending
 		this.players.sort((a, b) => {
 			const sa = this.stats.get(a.getPlayer());
@@ -108,20 +133,5 @@ export class SessionBoard extends Scoreboard {
 
 			row++;
 		});
-	}
-
-	public updatePartial(): void {
-		this.updateFull();
-	}
-
-	public setAlert(_player: player, _alert: string): void {
-		// Not used for session board
-	}
-
-	public destroy(): void {
-		this.players = null;
-		this.stats = null;
-		DestroyMultiboard(this.board);
-		this.board = null;
 	}
 }

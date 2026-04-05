@@ -64,7 +64,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			teams.forEach((team) => team.reset(teamStartingIncome));
 			// get random team from list
 			GlobalGameData.leader = teams[Math.floor(Math.random() * teams.length)];
-			ScoreboardManager.getInstance().teamSetup();
+			ScoreboardManager.getInstance().teamSetup(GlobalGameData.matchPlayers);
 		}
 
 		const observerKeys = [...PlayerManager.getInstance().observers.keys()];
