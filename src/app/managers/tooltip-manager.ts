@@ -44,7 +44,7 @@ export class TooltipManager {
 		this.hide();
 
 		const hoverTimer = CreateTimer();
-		TimerStart(hoverTimer, 0.02, true, () => this.onTick());
+		TimerStart(hoverTimer, 0.04, true, () => this.onTick());
 	}
 
 	private onTick(): void {

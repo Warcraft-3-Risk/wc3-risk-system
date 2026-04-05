@@ -286,7 +286,7 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
 
 ### Phase 4: Spawner Micro-Optimizations (Medium Impact, Low Risk)
 
-- [ ] **4.1 — Cache `matchPlayers.find()` result per step**
+- [x] **4.1 — Cache `matchPlayers.find()` result per step**
 
   **File:** [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts#L88)
 
@@ -308,7 +308,7 @@ When the 2,000-frame pool runs out, 200 new `BACKDROP` frames are created synchr
 
 ---
 
-- [ ] **4.2 — Cache rally point location per step**
+- [x] **4.2 — Cache rally point location per step**
 
   **File:** [src/app/spawner/spawner.ts](src/app/spawner/spawner.ts#L84-L99)
 

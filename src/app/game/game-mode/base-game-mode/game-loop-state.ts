@@ -69,10 +69,6 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				// Check if a turn has ended
 				this.onTick(GlobalGameData.tickCounter);
 
-				if (GlobalGameData.tickCounter <= 0) {
-					this.onEndTurn(GlobalGameData.turnCount);
-				}
-
 				// Stop game loop if match is over
 				if (this.isMatchOver()) {
 					PauseTimer(_matchLoopTimer);
