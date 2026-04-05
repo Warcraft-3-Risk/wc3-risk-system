@@ -135,9 +135,9 @@ This is the step-by-step execution plan for the scoreboard refactor described in
 
 ### Performance
 
-| Operation | Before | After |
-|---|---|---|
-| `updateFull()` (per turn) | Each board independently reads ActivePlayer fields, sorts, and renders. With observer: 3× data reads, 3× sorts | 1× data read into `PlayerRow[]`, 1× sort. Renderers consume cached data |
-| `updatePartial()` (per tick) | Each board independently reads ActivePlayer fields and renders | 1× data read (no sort) via `refreshValues()`. Renderers consume cached data |
-| `effectiveLocal` | Each board computes `isReplay() ? getReplayObservedPlayer() : GetLocalPlayer()` independently, sometimes multiple times per render | Computed once per refresh cycle in the data model |
-| Team totals | `TeamBoard` and `ObserverBoard` each call `team.getIncome()`, `team.getCities()`, etc. independently | Read once in `buildTeamRows()` / `refreshTeamValues()` |
+| Operation                    | Before                                                                                                                             | After                                                                       |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `updateFull()` (per turn)    | Each board independently reads ActivePlayer fields, sorts, and renders. With observer: 3× data reads, 3× sorts                     | 1× data read into `PlayerRow[]`, 1× sort. Renderers consume cached data     |
+| `updatePartial()` (per tick) | Each board independently reads ActivePlayer fields and renders                                                                     | 1× data read (no sort) via `refreshValues()`. Renderers consume cached data |
+| `effectiveLocal`             | Each board computes `isReplay() ? getReplayObservedPlayer() : GetLocalPlayer()` independently, sometimes multiple times per render | Computed once per refresh cycle in the data model                           |
+| Team totals                  | `TeamBoard` and `ObserverBoard` each call `team.getIncome()`, `team.getCities()`, etc. independently                               | Read once in `buildTeamRows()` / `refreshTeamValues()`                      |
