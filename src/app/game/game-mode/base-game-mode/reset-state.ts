@@ -13,8 +13,6 @@ import { GlobalGameData } from '../../state/global-game-state';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 import { CityToCountry } from 'src/app/country/country-map';
-import { debugPrint } from '../../../utils/debug-print';
-import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -71,7 +69,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 
 			this.nextState(this.stateData);
 		} catch (e) {
-			if (DEBUG_PRINTS.master) debugPrint(e as string, DC.gameMode);
+			print(`[ResetState] Error during reset: ${e}`);
 		}
 	}
 }
