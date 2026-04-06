@@ -12,6 +12,7 @@ import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
+import { GlobalGameData } from 'src/app/game/state/global-game-state';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { updateUnitNameWithKillValue } from '../../utils/unit-name-helper';
 
@@ -36,7 +37,9 @@ export function UnitDeathEvent() {
 			SharedSlotManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
 
 			// Check if this slot is pending free and now has 0 units
+			// Skip redistribution during postMatch — reset will clean up all slot state
 			if (
+				GlobalGameData.matchState !== 'postMatch' &&
 				SharedSlotManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) &&
 				SharedSlotManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0
 			) {
