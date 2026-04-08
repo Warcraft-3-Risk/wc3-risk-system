@@ -179,9 +179,14 @@ export class SharedSlotManager implements Resetable {
 				}
 			}
 
-			// Also check if the eliminated player's own handle has 0 units and is reclaimable
+			// Only reclaim if they have no units AND no cities, otherwise we could end up in a situation 
+			// where a player is eliminated but still has a city on the map and we accidentally free their slot 
+			// to someone else, causing ownership issues with that city. 
+			const activePlayerData = PlayerManager.getInstance().players.get(elimPlayer);
+			const hasCities = activePlayerData && activePlayerData.trackedData.cities.cities.length > 0;
+
 			// (Only if it's not already assigned as a shared slot to someone else)
-			if (this.getUnitCount(elimPlayer) === 0 && !this.slotToPlayer.has(elimPlayer)) {
+			if (this.getUnitCount(elimPlayer) === 0 && !hasCities && !this.slotToPlayer.has(elimPlayer)) {
 				// Check if this player slot is a valid shared slot candidate (not an active player)
 				if (!activePlayers.includes(elimPlayer)) {
 					// Check if it's not already in the pool
@@ -542,6 +547,7 @@ export class SharedSlotManager implements Resetable {
 			debugPrint(`SharedSlotManager: Giving player ${GetPlayerName(player)} full control of slot ${GetPlayerId(slot)}`, DC.sharedSlots);
 
 		NameManager.getInstance().setColor(slot, NameManager.getInstance().getOriginalColor(player));
+		NameManager.getInstance().copyDisplayNameToSlot(slot, player);
 
 		this.enableAdvancedControl(player, slot, true);
 		this.enableAdvancedControl(slot, player, true);
