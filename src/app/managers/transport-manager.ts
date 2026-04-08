@@ -57,10 +57,10 @@ const MAX_UNLOAD_DISTANCE: number = 300;
  * - IsUnitLoaded: Check if given unit is loaded into any transport.
  */
 export class TransportManager {
-	// Static queue and timer for delayed tracking
+	// Global queue for delayed minimap re-tracking after unload.
+	// A persistent 0.1s repeating timer drains this queue each tick.
 	private static delayedTrackQueue: unit[] = [];
 	private static delayedTrackTimer: timer = CreateTimer();
-	private static delayedTrackTimerRunning: boolean = false;
 	private static instance: TransportManager;
 	private transports: Map<unit, Transport>;
 	private autoLoadingTransports: Transport[] = [];
@@ -86,6 +86,9 @@ export class TransportManager {
 		this.transports = new Map<unit, Transport>();
 
 		TimerStart(this.autoLoadTimer, 1.0, true, () => this.onAutoLoadTick());
+
+		// Persistent timer to process delayed minimap re-tracking after unloads
+		TimerStart(TransportManager.delayedTrackTimer, 0.1, true, () => this.processDelayedTrackQueue());
 
 		// Unit load management
 		// Handler for order queued for the load ability start
@@ -143,6 +146,24 @@ export class TransportManager {
 		};
 
 		this.transports.set(unit, transport);
+	}
+
+	/**
+	 * Processes the delayed track queue each tick.
+	 * Units are queued here after unloading from transports because WC3 cannot
+	 * reliably handle minimap registration on the same frame a unit is unloaded.
+	 */
+	private processDelayedTrackQueue(): void {
+		if (TransportManager.delayedTrackQueue.length === 0) return;
+
+		TransportManager.delayedTrackQueue.forEach((unit) => {
+			if (DEBUG_PRINTS.master) debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`, DC.transport);
+			// Skip units that died, became guards, or were reloaded into a transport during the delay
+			if (!UnitAlive(unit) || IsUnitType(unit, UNIT_TYPE.GUARD) || IsUnitLoaded(unit)) return;
+			UnitLagManager.getInstance().trackUnit(unit);
+			MinimapIconManager.getInstance().registerIfValid(unit);
+		});
+		TransportManager.delayedTrackQueue = [];
 	}
 
 	/**
@@ -360,21 +381,6 @@ export class TransportManager {
 					unloadedUnits.forEach((unit) => {
 						TransportManager.delayedTrackQueue.push(unit);
 					});
-
-					// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
-					// Consider moving the timer into the UnitLagManager.
-					if (!TransportManager.delayedTrackTimerRunning) {
-						TransportManager.delayedTrackTimerRunning = true;
-						TimerStart(TransportManager.delayedTrackTimer, 0.1, false, () => {
-							TransportManager.delayedTrackQueue.forEach((unit) => {
-								if (DEBUG_PRINTS.master) debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`, DC.transport);
-								UnitLagManager.getInstance().trackUnit(unit);
-								MinimapIconManager.getInstance().registerIfValid(unit);
-							});
-							TransportManager.delayedTrackQueue = [];
-							TransportManager.delayedTrackTimerRunning = false;
-						});
-					}
 				}
 			})
 		);
@@ -589,12 +595,11 @@ export class TransportManager {
 					return false;
 				}
 
-				// Track unloaded units
+				// Queue unloaded units for delayed minimap re-tracking (same queue as onUnloadUnitStart)
 				const unloadedUnits = transport.cargo.filter((unit) => !IsUnitInTransport(unit, transport.unit));
 				transport.cargo = transport.cargo.filter((unit) => IsUnitInTransport(unit, transport.unit));
 				unloadedUnits.forEach((unit) => {
-					UnitLagManager.getInstance().trackUnit(unit);
-					MinimapIconManager.getInstance().registerIfValid(unit);
+					TransportManager.delayedTrackQueue.push(unit);
 					const index = transport.orderedUnits.indexOf(unit);
 					if (index > -1) {
 						this.unregisterOrder(transport, unit);

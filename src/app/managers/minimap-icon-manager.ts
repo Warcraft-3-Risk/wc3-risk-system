@@ -165,8 +165,18 @@ export class MinimapIconManager {
 	public registerIfValid(unit: unit): void {
 		if (!this.isActive) return;
 
+		// Don't track if unit is already dead
+		if (!UnitAlive(unit)) {
+			return;
+		}
+
 		// Only track units marked as SPAWN
 		if (!IsUnitType(unit, UNIT_TYPE.SPAWN)) {
+			return;
+		}
+
+		// Guards are managed separately — they should not have minimap icons
+		if (IsUnitType(unit, UNIT_TYPE.GUARD)) {
 			return;
 		}
 

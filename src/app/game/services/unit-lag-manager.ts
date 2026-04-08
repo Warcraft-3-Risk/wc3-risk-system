@@ -29,6 +29,12 @@ export class UnitLagManager {
 	// This replaces the old method of using dummy units to follow the tracked unit.
 	// The untracked unit is effectively just managed for its minimap icon color.
 	public trackUnit(unit: unit): void {
+		// Guards are managed separately — they hide their minimap icon intentionally.
+		// Tracking a guard would undo the hide and create a phantom minimap icon.
+		if (IsUnitType(unit, UNIT_TYPE.GUARD)) {
+			return;
+		}
+
 		// Only shared slots need their units tracked/fixed.
 		// Exception: transports are always owned by the real player slot (not a shared slot),
 		// but still need custom minimap tracking so they retain the player's color.
