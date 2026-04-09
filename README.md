@@ -79,13 +79,21 @@ Running the build command will automatically generate the path and required dire
 Check out the base [wc3-ts-template](https://cipherxof.github.io/w3ts/docs/getting-started) for more detials on installation and usage
 
 ## Usage
-### Testing the project locally
+### Running unit tests
 
 ```
-npm run test <terrain>
+npm test
+```
 
-npm run test europe
-npm run test asia
+This runs the Vitest test suite covering the rating calculator, data structures, and other pure logic modules. Tests run in CI on every push and pull request.
+
+### Launching the project locally in Warcraft III
+
+```
+npm run launch <terrain>
+
+npm run launch europe
+npm run launch asia
 ```
 
 ### Building the project for release
