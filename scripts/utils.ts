@@ -93,10 +93,11 @@ export function validateConfig(config: Record<string, unknown>, configPath: stri
 	}
 
 	if (errors.length > 0) {
-		logger.warn(`Config validation warnings for ${configPath}:`);
+		logger.error(`Config validation errors for ${configPath}:`);
 		for (const error of errors) {
-			logger.warn(error);
+			logger.error(error);
 		}
+		throw new Error(`Config validation failed for ${configPath}. See errors above.`);
 	}
 }
 
@@ -158,6 +159,17 @@ function updateTSConfig(mapFolder: string) {
 }
 
 /**
+ * Save the original tsconfig.json content before modification.
+ * Returns a restore function that writes the original content back.
+ */
+export function saveTSConfig(): () => void {
+	const original = fs.readFileSync('tsconfig.json', 'utf8');
+	return () => {
+		fs.writeFileSync('tsconfig.json', original);
+	};
+}
+
+/**
  *
  */
 export function compileMap(config: IProjectConfig) {
@@ -182,10 +194,16 @@ export function compileMap(config: IProjectConfig) {
 	syncObjectEditorFiles(config.mapType, config.mapFolder);
 
 	logger.info('Modifying tsconfig.json to work with war3-transformer...');
+	const restoreTSConfig = saveTSConfig();
 	updateTSConfig(config.mapFolder);
 
 	logger.info('Transpiling TypeScript to Lua...');
-	execSync('tstl -p tsconfig.json', { stdio: 'inherit' });
+	try {
+		execSync('tstl -p tsconfig.json', { stdio: 'inherit' });
+	} finally {
+		restoreTSConfig();
+		logger.info('Restored original tsconfig.json');
+	}
 
 	if (!fs.existsSync(tsLua)) {
 		logger.error(`Could not find "${tsLua}"`);

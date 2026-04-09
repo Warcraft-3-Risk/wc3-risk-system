@@ -36,6 +36,13 @@ export class ScoreboardManager {
 		return this.instance || (this.instance = new this());
 	}
 
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 */
+	public static resetInstance(): void {
+		this.instance = null as unknown as ScoreboardManager;
+	}
+
 	public ffaSetup(players: ActivePlayer[]) {
 		this.activePlayers = players;
 		this.dataModel.refresh(this.activePlayers, true);

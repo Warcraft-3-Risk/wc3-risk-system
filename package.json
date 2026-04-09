@@ -18,9 +18,11 @@
     "build:europe": "npm run build -- europe",
     "build:world": "npm run build -- world",
     "dev": "npm-watch",
-    "build:defs": "ts-node scripts/dev",
+    "build:defs": "ts-node scripts/dev europe",
     "format:check": "prettier --check \"tests/**/*.ts\"",
-    "lint": "eslint"
+    "lint": "eslint",
+    "typecheck:strict": "tsc --project tsconfig.strict.json",
+    "prepare": "husky"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
@@ -29,21 +31,23 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/fs-extra": "8.1.1",
+    "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.0.0",
     "@types/pako": "1.0.1",
     "@typescript-to-lua/language-extensions": "^1.0.0",
     "eslint": "^10.2.0",
-    "fs-extra": "8.1.0",
+    "fs-extra": "^11.3.4",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0",
     "lua-types": "^2.13.1",
     "luamin": "^1.0.4",
     "mdx-m3-viewer-th": "^5.13.3",
     "npm-watch": "0.6.0",
     "prettier": "^3.0.0",
-    "ts-node": "8.10.2",
-    "tsconfig-paths": "3.9.0",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
     "tsutils": "3.17.1",
-    "typescript": "5.0.4",
+    "typescript": "~5.8",
     "typescript-eslint": "^8.58.1",
     "typescript-to-lua": "1.15.1",
     "vitest": "^4.1.4",
@@ -60,5 +64,15 @@
       "extensions": "lua",
       "legacyWatch": true
     }
+  },
+  "lint-staged": {
+    "tests/**/*.ts": [
+      "prettier --write",
+      "eslint --fix"
+    ],
+    "scripts/**/*.ts": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   }
 }

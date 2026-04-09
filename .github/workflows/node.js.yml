@@ -5,7 +5,7 @@ on:
     types: [published] # Triggers when a new release is published
 
 env:
-  OUTPUT_FOLDER: './artifact'
+  OUTPUT_FOLDER: "./artifact"
 
 jobs:
   build:
@@ -21,13 +21,23 @@ jobs:
       W3C_MODE_ENABLED: ${{ matrix.w3c_mode }}
 
     steps:
+      - name: Validate tag format
+        shell: pwsh
+        run: |
+          $TAG = $env:GITHUB_REF -replace 'refs/tags/', ''
+          if ($TAG -notmatch '^\d+\.\d+$') {
+            Write-Error "Tag '$TAG' does not match expected format X.YZ (e.g. 1.23)"
+            exit 1
+          }
+          Write-Output "Tag format valid: $TAG"
+
       - name: Checkout code
         uses: actions/checkout@v4
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
       - name: Generate version suffix
         shell: pwsh

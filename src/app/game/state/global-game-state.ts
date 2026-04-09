@@ -33,6 +33,13 @@ export class GlobalGameData {
 		return this.instance;
 	}
 
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 */
+	public static resetInstance(): void {
+		this.instance = null as unknown as GlobalGameData;
+	}
+
 	public static prepareMatchData(players: ActivePlayer[]) {
 		this.getInstance().data = {
 			...GlobalGameData.initialGameData(),

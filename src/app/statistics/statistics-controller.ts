@@ -30,6 +30,13 @@ export class StatisticsController {
 		return this.instance;
 	}
 
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 */
+	public static resetInstance(): void {
+		this.instance = null as unknown as StatisticsController;
+	}
+
 	// Should be called on match startup, ensures that future statistics are based on the current match players pool at the start of the match.
 	public useCurrentActivePlayers() {
 		this.model = new StatisticsModel(GlobalGameData.matchPlayers);

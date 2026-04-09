@@ -33,6 +33,13 @@ export class VictoryManager {
 		return this.instance;
 	}
 
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 */
+	public static resetInstance(): void {
+		this.instance = null as unknown as VictoryManager;
+	}
+
 	public removePlayer(player: ActivePlayer, status: PLAYER_STATUS) {
 		PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), status);
 	}

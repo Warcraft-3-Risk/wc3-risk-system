@@ -116,6 +116,13 @@ export class RatingManager {
 	}
 
 	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 */
+	public static resetInstance(): void {
+		this.instance = null as unknown as RatingManager;
+	}
+
+	/**
 	 * Check if the rating system is enabled globally (from game-settings.ts config)
 	 * When disabled, no rating data is stored/loaded, no rating UI is shown,
 	 * and all games are considered unranked.
