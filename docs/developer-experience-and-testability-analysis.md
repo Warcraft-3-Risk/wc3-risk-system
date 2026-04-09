@@ -257,48 +257,48 @@ The improvements are organized into phases, ordered by impact and feasibility. E
 ### Phase 1: Quick Wins (1-2 days)
 High impact, low effort changes that immediately improve the developer experience.
 
-- [ ] **Add CI workflow for PRs** — Create `.github/workflows/ci.yml` with TypeScript type-check, TSTL compile, and unit tests
-- [ ] **Add `.env.example`** — Copy the README templates into a committed example file
-- [ ] **Fix script naming** — Rename `npm run test` to `npm run launch`, add a true `npm run test` for unit tests
-- [ ] **Clean up dead code** — Remove the Linux suffix step from the release workflow, fix/remove stale `dev.ts`
-- [ ] **Update GitHub Actions** — Bump `actions/checkout` and `actions/setup-node` from v3 to v4
+- [x] **Add CI workflow for PRs** — Create `.github/workflows/ci.yml` with TypeScript type-check, TSTL compile, and unit tests
+- [x] **Add `.env.example`** — Copy the README templates into a committed example file
+- [x] **Fix script naming** — Rename `npm run test` to `npm run launch`, add a true `npm run test` for unit tests
+- [x] **Clean up dead code** — Remove the Linux suffix step from the release workflow, fix/remove stale `dev.ts`
+- [x] **Update GitHub Actions** — Bump `actions/checkout` and `actions/setup-node` from v3 to v4
 
 ### Phase 2: Testing Foundation (3-5 days)
 Establish a real testing framework and begin extracting testable logic.
 
-- [ ] **Install Vitest (or Jest)** — Set up a proper test runner with TypeScript support
-- [ ] **Migrate rating calculator tests** — Convert `test-rating-calculator.ts` to import the real source instead of duplicating logic
-- [ ] **Extract pure logic from VictoryManager** — Move threshold/win-condition calculations to pure functions
-- [ ] **Extract pure logic from distribution services** — Make city distribution algorithms testable without WC3 APIs
-- [ ] **Add tests for income calculations** — Test edge cases for income math
-- [ ] **Add tests for doubly-linked list** — It's a custom data structure that should have its own test suite
+- [x] **Install Vitest (or Jest)** — Set up a proper test runner with TypeScript support
+- [x] **Migrate rating calculator tests** — Convert `test-rating-calculator.ts` to import the real source instead of duplicating logic
+- [x] **Extract pure logic from VictoryManager** — Move threshold/win-condition calculations to pure functions
+- [x] **Extract pure logic from distribution services** — Make city distribution algorithms testable without WC3 APIs
+- [x] **Add tests for income calculations** — Test edge cases for income math
+- [x] **Add tests for doubly-linked list** — It's a custom data structure that should have its own test suite
 
 ### Phase 3: Code Quality (2-3 days)
 Improve static analysis and catch bugs earlier.
 
-- [ ] **Add ESLint** — Install and configure `@typescript-eslint` with recommended rules
-- [ ] **Enable `strictNullChecks`** — Start with new files, gradually fix existing ones
-- [ ] **Add Prettier pre-commit hook** — Install `husky` + `lint-staged`
-- [ ] **Add typed event system** — Create a typed event map and update `EventEmitter`
-- [ ] **Add config validation** — Validate terrain JSON configs at build time
+- [x] **Add ESLint** — Install and configure `@typescript-eslint` with recommended rules
+- [x] **Enable `strictNullChecks`** — Start with new files, gradually fix existing ones
+- [x] **Add Prettier pre-commit hook** — Install `husky` + `lint-staged`
+- [x] **Add typed event system** — Create a typed event map and update `EventEmitter`
+- [x] **Add config validation** — Validate terrain JSON configs at build time
 
 ### Phase 4: Architecture Improvements (5-7 days)
 Larger refactoring to improve long-term testability and reliability.
 
-- [ ] **Introduce adapter interfaces** — Create interfaces for WC3 API calls (Player, Timer, UI, File I/O)
-- [ ] **Refactor `PlayerManager`** — Accept player data through constructor/interfaces instead of calling WC3 globals directly
-- [ ] **Add state machine tests** — Create simulation tests for game mode transitions
-- [ ] **Add error boundaries to EventEmitter** — Wrap handlers in try/catch with logging
-- [ ] **Refactor singletons for testability** — Add `reset()` methods or constructor injection patterns for test scenarios
+- [x] **Introduce adapter interfaces** — Create interfaces for WC3 API calls (Player, Timer, UI, File I/O)
+- [x] **Refactor `PlayerManager`** — Accept player data through constructor/interfaces instead of calling WC3 globals directly
+- [x] **Add state machine tests** — Create simulation tests for game mode transitions
+- [x] **Add error boundaries to EventEmitter** — Wrap handlers in try/catch with logging
+- [x] **Refactor singletons for testability** — Add `reset()` methods or constructor injection patterns for test scenarios
 
 ### Phase 5: Publishing & Maintenance (1-2 days)
 Polish the release process and developer onboarding.
 
-- [ ] **Add release notes automation** — Generate changelogs from PR titles/labels
-- [ ] **Add tag format validation** — Enforce version format in CI
-- [ ] **Update outdated dependencies** — Incrementally update `ts-node`, `@types/node`, `typescript`
-- [ ] **Improve README** — Add architecture overview, testing instructions, and contribution guidelines
-- [ ] **Add `tsconfig.json` restoration** — Prevent `updateTSConfig` from dirtying the working tree
+- [x] **Add release notes automation** — Generate changelogs from PR titles/labels
+- [x] **Add tag format validation** — Enforce version format in CI
+- [x] **Update outdated dependencies** — Incrementally update `ts-node`, `@types/node`, `typescript`
+- [x] **Improve README** — Add architecture overview, testing instructions, and contribution guidelines
+- [x] **Add `tsconfig.json` restoration** — Prevent `updateTSConfig` from dirtying the working tree
 
 ---
 

@@ -38,6 +38,13 @@ export class SettingsContext {
 		return this.instance;
 	}
 
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 */
+	public static resetInstance(): void {
+		this.instance = null as unknown as SettingsContext;
+	}
+
 	public initStrategies() {
 		this.strategies.set('GameType', new GameTypeStrategy(this.settings.GameType));
 		this.strategies.set('Diplomacy', new DiplomacyStrategy(this.settings.Diplomacy));

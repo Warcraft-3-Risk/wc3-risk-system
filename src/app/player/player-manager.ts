@@ -106,6 +106,14 @@ export class PlayerManager {
 		return this._instance;
 	}
 
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 * Allows tests to start with a fresh PlayerManager.
+	 */
+	public static resetInstance(): void {
+		this._instance = null as unknown as PlayerManager;
+	}
+
 	public getEmptyPlayerSlots(): player[] {
 		let players: player[] = [];
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {

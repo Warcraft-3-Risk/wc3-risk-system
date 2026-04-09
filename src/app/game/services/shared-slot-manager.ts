@@ -24,6 +24,13 @@ export class SharedSlotManager implements Resetable {
 		return SharedSlotManager.instance;
 	}
 
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 */
+	public static resetInstance(): void {
+		SharedSlotManager.instance = null as unknown as SharedSlotManager;
+	}
+
 	private availableSlots: SharedSlot[];
 
 	// Keeps track of each player's shared slots (one player can have multiple)
