@@ -19,7 +19,7 @@ class EventEmitter {
 		for (const handler of handlers) {
 			try {
 				handler(...args);
-			} catch (e) {
+			} catch (_e) {
 				// Error boundary: log but don't propagate
 			}
 		}
