@@ -30,7 +30,7 @@
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@types/fs-extra": "8.1.1",
-    "@types/node": "12.19.1",
+    "@types/node": "^22.0.0",
     "@types/pako": "1.0.1",
     "@typescript-to-lua/language-extensions": "^1.0.0",
     "eslint": "^10.2.0",
