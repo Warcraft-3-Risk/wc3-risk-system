@@ -1,8 +1,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import War3Map from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/map';
-import { compileMap, getFilesInDirectory, loadJsonFile, loadTerrainConfig, logger, toArrayBuffer, IProjectConfig, toBuffer, updateTsFileWithConfig } from './utils';
-import War3MapW3i from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/w3i/file';
+import { compileMap, getFilesInDirectory, loadTerrainConfig, logger, toArrayBuffer, IProjectConfig, updateTsFileWithConfig } from './utils';
 import War3MapWts from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/wts/file';
 
 function main() {
@@ -58,7 +57,7 @@ function buildTerrain(terrain: string, minifyOverride?: boolean) {
 		fs.mkdirSync(config.outputFolder);
 	}
 
-	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
+	const w3cModeEnabled = `${config.w3cModeEnabled}` === 'true';
 
 	const distDir = `./dist/${config.mapFolder}`;
 	const ddsDir = path.join(__dirname, '..', distDir, 'war3mapPreview.dds');
