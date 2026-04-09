@@ -23,7 +23,11 @@ export class EventEmitter {
 	public emit(event: string, ...args: any[]): void {
 		const handlers = this.events.get(event) || [];
 		for (const handler of handlers) {
-			handler(...args);
+			try {
+				handler(...args);
+			} catch (e) {
+				print(`[EventEmitter] Error in handler for '${event}': ${e}`);
+			}
 		}
 	}
 }
