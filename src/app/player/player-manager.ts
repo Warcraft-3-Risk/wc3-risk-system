@@ -291,6 +291,12 @@ export class PlayerManager {
 			}
 		}
 
+		for (const [, value] of this._observerFromHandle) {
+			if (value.getPlayer() === Player(0)) {
+				return value;
+			}
+		}
+
 		return undefined;
 	}
 }

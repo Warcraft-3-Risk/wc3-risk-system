@@ -4,8 +4,6 @@ import { PlayerManager } from '../player/player-manager';
 import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
 import { UNIT_ID } from 'src/configs/unit-id';
 
-declare function World2Screen(x: number, y: number, z: number): LuaMultiReturn<[number, number, boolean]>;
-
 export class TooltipManager {
 	private static instance: TooltipManager;
 
