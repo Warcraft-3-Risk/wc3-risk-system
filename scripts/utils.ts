@@ -61,9 +61,9 @@ export function loadTerrainConfig(terrain: string): IProjectConfig {
  * @param buf
  */
 export function toArrayBuffer(b: Buffer): ArrayBuffer {
-	var ab = new ArrayBuffer(b.length);
-	var view = new Uint8Array(ab);
-	for (var i = 0; i < b.length; ++i) {
+	const ab = new ArrayBuffer(b.length);
+	const view = new Uint8Array(ab);
+	for (let i = 0; i < b.length; ++i) {
 		view[i] = b[i];
 	}
 	return ab;
@@ -74,9 +74,9 @@ export function toArrayBuffer(b: Buffer): ArrayBuffer {
  * @param ab
  */
 export function toBuffer(ab: ArrayBuffer) {
-	var buf = Buffer.alloc(ab.byteLength);
-	var view = new Uint8Array(ab);
-	for (var i = 0; i < buf.length; ++i) {
+	const buf = Buffer.alloc(ab.byteLength);
+	const view = new Uint8Array(ab);
+	for (let i = 0; i < buf.length; ++i) {
 		buf[i] = view[i];
 	}
 	return buf;
@@ -89,7 +89,7 @@ export function toBuffer(ab: ArrayBuffer) {
 export function getFilesInDirectory(dir: string) {
 	const files: string[] = [];
 	fs.readdirSync(dir).forEach((file) => {
-		let fullPath = path.join(dir, file);
+		const fullPath = path.join(dir, file);
 		if (fs.lstatSync(fullPath).isDirectory()) {
 			const d = getFilesInDirectory(fullPath);
 			for (const n of d) {
@@ -159,7 +159,7 @@ export function compileMap(config: IProjectConfig) {
 		// --- Merge everything ---
 		let contents = '';
 
-		let war3mapContents = fs.readFileSync(mapLua, 'utf8');
+		const war3mapContents = fs.readFileSync(mapLua, 'utf8');
 		const tstlOutput = fs.readFileSync(tsLua, 'utf8');
 
 		// Inject raw Lua files from src/lua/ before the tstl bundle.
@@ -197,7 +197,7 @@ export function compileMap(config: IProjectConfig) {
  * Formatter for log messages.
  */
 const loggerFormatFunc = printf(({ level, message, timestamp }) => {
-	// @ts-ignore
+	// @ts-expect-error timestamp is present but not in the type definition
 	return `[${timestamp.replace('T', ' ').split('.')[0]}] ${level}: ${message}`;
 });
 
@@ -223,7 +223,7 @@ export const logger = createLogger({
  */
 export function updateTsFileWithConfig(config: IProjectConfig) {
 	const tsFilePath = path.join(__dirname, '..', 'src/app/utils', 'map-info.ts');
-	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
+	const w3cModeEnabled = `${config.w3cModeEnabled}` === 'true';
 
 	const fileContent = `
 	//Do not edit - this will automatically update based on the project config.json upon building the map

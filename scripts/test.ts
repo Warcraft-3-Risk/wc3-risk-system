@@ -1,6 +1,6 @@
-import { exec, execFile, execSync } from 'child_process';
+import { execFile, execSync } from 'child_process';
 import * as fs from 'fs-extra';
-import { loadJsonFile, loadTerrainConfig, logger, compileMap, updateTsFileWithConfig, IProjectConfig } from './utils';
+import { loadTerrainConfig, logger, compileMap, updateTsFileWithConfig, IProjectConfig } from './utils';
 
 /**
  * Patches war3map.lua in dist/ to set up a 2v2 team game:

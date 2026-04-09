@@ -19,7 +19,8 @@
     "build:world": "npm run build -- world",
     "dev": "npm-watch",
     "build:defs": "ts-node scripts/dev",
-    "format:check": "prettier --check \"tests/**/*.ts\""
+    "format:check": "prettier --check \"tests/**/*.ts\"",
+    "lint": "eslint"
   },
   "dependencies": {
     "dotenv": "^16.4.7",
@@ -27,10 +28,12 @@
     "wc3-ts-template": "file:"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/fs-extra": "8.1.1",
     "@types/node": "12.19.1",
     "@types/pako": "1.0.1",
     "@typescript-to-lua/language-extensions": "^1.0.0",
+    "eslint": "^10.2.0",
     "fs-extra": "8.1.0",
     "lua-types": "^2.13.1",
     "luamin": "^1.0.4",
@@ -41,6 +44,7 @@
     "tsconfig-paths": "3.9.0",
     "tsutils": "3.17.1",
     "typescript": "5.0.4",
+    "typescript-eslint": "^8.58.1",
     "typescript-to-lua": "1.15.1",
     "vitest": "^4.1.4",
     "war3-objectdata-th": "^0.2.8",
