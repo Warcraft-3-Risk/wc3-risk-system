@@ -53,7 +53,51 @@ export function loadTerrainConfig(terrain: string): IProjectConfig {
 	}
 
 	logger.info(`Loading config from: ${configPath}`);
-	return loadJsonFile(configPath);
+	const config = loadJsonFile(configPath);
+	validateConfig(config, configPath);
+	return config;
+}
+
+/**
+ * Required fields and their expected types for a terrain config.
+ */
+const REQUIRED_CONFIG_FIELDS: Record<string, string> = {
+	mapFolder: 'string',
+	mapType: 'string',
+	mapName: 'string',
+	mapVersion: 'string',
+	mapNameStringId: 'number',
+	minifyScript: 'boolean',
+	launchArgs: 'object', // arrays are typeof 'object'
+};
+
+/**
+ * Validate a terrain config against the IProjectConfig schema.
+ * Logs warnings for missing or mistyped required fields.
+ * @param config The loaded config object
+ * @param configPath Path to the config file (for error messages)
+ */
+export function validateConfig(config: Record<string, unknown>, configPath: string): void {
+	const errors: string[] = [];
+
+	for (const [field, expectedType] of Object.entries(REQUIRED_CONFIG_FIELDS)) {
+		if (!(field in config)) {
+			errors.push(`  Missing required field: '${field}'`);
+		} else if (typeof config[field] !== expectedType) {
+			errors.push(`  Field '${field}' should be ${expectedType}, got ${typeof config[field]}`);
+		}
+	}
+
+	if ('launchArgs' in config && !Array.isArray(config['launchArgs'])) {
+		errors.push(`  Field 'launchArgs' should be an array`);
+	}
+
+	if (errors.length > 0) {
+		logger.warn(`Config validation warnings for ${configPath}:`);
+		for (const error of errors) {
+			logger.warn(error);
+		}
+	}
 }
 
 /**
