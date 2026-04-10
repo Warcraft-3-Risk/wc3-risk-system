@@ -1,6 +1,7 @@
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { City } from 'src/app/city/city';
 import { StateData } from 'src/app/game/game-mode/state/state-data';
+import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import {
 	EVENT_ON_PLAYER_ALIVE,
 	EVENT_ON_PLAYER_DEAD,
@@ -52,7 +53,7 @@ export interface GameEventMap {
 	[EVENT_ON_POST_MATCH]: [];
 	[EVENT_ON_START_MATCH]: [];
 	[EVENT_ON_END_MATCH]: [];
-	[EVENT_SET_GAME_MODE]: [gameType: number];
+	[EVENT_SET_GAME_MODE]: [gameType: GameType];
 	[EVENT_MODE_SELECTION]: [];
 	[EVENT_START_GAME_LOOP]: [];
 	[EVENT_QUEST_UPDATE_PLAYER_STATUS]: [];
