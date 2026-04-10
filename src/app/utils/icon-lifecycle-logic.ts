@@ -83,3 +83,85 @@ export function isUnitDead(typeId: number, hp: number): boolean {
 export function expectedPoolSize(initialPoolSize: number, registrations: number, unregistrations: number): number {
 	return initialPoolSize - registrations + unregistrations;
 }
+
+// ---------------------------------------------------------------------------
+// Double-registration detection
+// ---------------------------------------------------------------------------
+
+/**
+ * Determine whether registering a unit would cause a frame leak.
+ *
+ * If a unit is already tracked, calling `registerTrackedUnit()` again will
+ * pop a new frame from the pool and overwrite the Map entry — the old
+ * frame is never returned to the pool (leaked).
+ *
+ * @param isAlreadyTracked - Whether the unit is already in the `trackedUnits` Map.
+ * @returns `true` if calling register would leak a frame.
+ */
+export function wouldDoubleRegister(isAlreadyTracked: boolean): boolean {
+	return isAlreadyTracked;
+}
+
+/**
+ * Count the number of leaked frames from cumulative register/unregister operations.
+ *
+ * The invariant is: `leaked = registerCalls - unregisterCalls - currentTracked`.
+ * Each register allocates a frame, each unregister returns one, and
+ * `currentTracked` is the number currently in use.  Any excess registers
+ * that were not balanced by unregisters and are not accounted for in
+ * `currentTracked` represent leaked frames.
+ *
+ * @param registerCalls   - Total calls to `registerTrackedUnit()`.
+ * @param unregisterCalls - Total calls to `unregisterTrackedUnit()`.
+ * @param currentTracked  - Units currently in `trackedUnits` Map.
+ * @returns Number of leaked frames (0 = healthy).
+ */
+export function countLeakedFrames(registerCalls: number, unregisterCalls: number, currentTracked: number): number {
+	const leaked = registerCalls - unregisterCalls - currentTracked;
+	return Math.max(0, leaked);
+}
+
+/**
+ * Simulate the delayed track queue processing and detect frame leaks.
+ *
+ * Models `TransportManager.processDelayedTrackQueue()` which calls both
+ * `UnitLagManager.trackUnit()` and `MinimapIconManager.registerIfValid()`
+ * for each queued unit.  If a unit is already tracked (e.g., by another
+ * code path during the 0.1s delay), the double-register leaks a frame.
+ *
+ * @param queuedUnits - Units in the delayed track queue with their current state.
+ * @returns Object with `trackedCount`, `registerCalls`, `leakedFrames`.
+ */
+export function simulateTransportQueueProcessing(
+	queuedUnits: (TrackableUnit & { isAlreadyTracked: boolean })[]
+): { trackedCount: number; registerCalls: number; leakedFrames: number } {
+	let registerCalls = 0;
+	let trackedCount = 0;
+	const trackedSet = new Set<number>();
+
+	for (let i = 0; i < queuedUnits.length; i++) {
+		const unit = queuedUnits[i];
+
+		// Skip invalid units (mirrors processDelayedTrackQueue guards)
+		if (!shouldRetrack(unit)) continue;
+
+		// UnitLagManager.trackUnit() → registerTrackedUnit() (no duplicate check)
+		const wasTracked = unit.isAlreadyTracked || trackedSet.has(i);
+		registerCalls++; // trackUnit always calls registerTrackedUnit
+
+		// registerIfValid() — HAS duplicate check
+		if (!wasTracked) {
+			// First call from trackUnit already registered it, registerIfValid sees it as tracked → no-op
+		}
+		// But if it WAS already tracked before queue processing, trackUnit overwrites → leak
+
+		trackedSet.add(i);
+		if (!wasTracked) {
+			trackedCount++;
+		}
+		// If wasTracked, one frame was leaked (old frame overwritten)
+	}
+
+	const leakedFrames = registerCalls - trackedCount;
+	return { trackedCount, registerCalls, leakedFrames };
+}
