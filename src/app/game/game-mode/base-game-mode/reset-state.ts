@@ -33,8 +33,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			SetTimeOfDay(12.0);
 
 			print('Removing units...');
-			removeUnits();
-			await Wait.forSeconds(1);
+			await removeUnits(50, 0.2);
 
 			print('Resetting countries...');
 			resetCountries();
