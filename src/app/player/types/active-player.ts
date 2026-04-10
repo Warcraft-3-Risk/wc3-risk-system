@@ -6,6 +6,7 @@ import { GamePlayer } from './game-player';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PLAYER_STATUS } from '../status/status-enum';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
+import { RatingStatsUI } from 'src/app/ui/rating-stats-ui';
 
 
 //Use lowercase for simplicity here
@@ -18,7 +19,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 	private _options: Options;
 	private _admin: boolean;
 	private _killedBy: player;
-	private _ratingStatsUI: any = null;
+	private _ratingStatsUI: RatingStatsUI | null = null;
 
 	constructor(player: player) {
 		this._player = player;
@@ -129,11 +130,11 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		return this._admin;
 	}
 
-	public get ratingStatsUI(): any {
+	public get ratingStatsUI(): RatingStatsUI | null {
 		return this._ratingStatsUI;
 	}
 
-	public set ratingStatsUI(value: any) {
+	public set ratingStatsUI(value: RatingStatsUI | null) {
 		this._ratingStatsUI = value;
 	}
 }

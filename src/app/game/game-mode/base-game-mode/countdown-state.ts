@@ -86,7 +86,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 				// Pre-initialize rating stats UI frames for all players during countdown
 				PlayerManager.getInstance().playersAndObservers.forEach((player) => {
-					if (player.ratingStatsUI && player.ratingStatsUI.preInitialize) {
+					if (player.ratingStatsUI) {
 						player.ratingStatsUI.preInitialize();
 					}
 					// Update F4 button appearance based on ranked status
