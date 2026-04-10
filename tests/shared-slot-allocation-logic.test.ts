@@ -6,6 +6,7 @@ import {
 	planIncrementalSlotAddition,
 	selectSlotForNewUnit,
 	countOwnershipChanges,
+	estimateMinimapCostOfRedistribution,
 	simulateRedistribution,
 	type UnitPlacement,
 	type SlotState,
@@ -581,5 +582,55 @@ describe('selectSlotForNewUnit', () => {
 		const result = selectSlotForNewUnit(allSlots)!;
 		expect(result.slotId).toBe(13);
 		expect(result.unitCount).toBe(3);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// estimateMinimapCostOfRedistribution
+// ---------------------------------------------------------------------------
+
+describe('estimateMinimapCostOfRedistribution', () => {
+	it('7 moves → 28 frame operations (4 per move)', () => {
+		const units: UnitPlacement[] = Array.from({ length: 14 }, (_, i) => ({
+			unitId: i,
+			currentSlotId: 0,
+		}));
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 14 },
+			{ slotId: 1, unitCount: 0 },
+		];
+		const plan = planUnitRedistribution(units, slots);
+		// 14 units across 2 slots = 7 per slot, 7 moves from slot 0 to slot 1
+		expect(plan.length).toBe(7);
+		expect(estimateMinimapCostOfRedistribution(plan)).toBe(28);
+	});
+
+	it('110 moves (23→11 scenario) → 440 frame operations', () => {
+		// Simulate: 11 active players, 220 total units, all on player slot
+		// Each player has 20 units on slot 0, needs 2 slots
+		// Moving 10 units per player to second slot = 110 moves total
+		const plan: { unitId: number; fromSlotId: number; toSlotId: number }[] = [];
+		for (let i = 0; i < 110; i++) {
+			plan.push({ unitId: i, fromSlotId: 0, toSlotId: 1 });
+		}
+		expect(estimateMinimapCostOfRedistribution(plan)).toBe(440);
+	});
+
+	it('zero moves → zero frame operations', () => {
+		expect(estimateMinimapCostOfRedistribution([])).toBe(0);
+	});
+
+	it('incremental slot addition: 0 minimap cost', () => {
+		const existingUnits: UnitPlacement[] = Array.from({ length: 10 }, (_, i) => ({
+			unitId: i,
+			currentSlotId: 0,
+		}));
+		const oldSlots: SlotState[] = [{ slotId: 0, unitCount: 10 }];
+		const newSlots: SlotState[] = [
+			{ slotId: 0, unitCount: 10 },
+			{ slotId: 1, unitCount: 0 },
+		];
+		const plan = planIncrementalSlotAddition(existingUnits, oldSlots, newSlots);
+		expect(estimateMinimapCostOfRedistribution(plan)).toBe(0);
 	});
 });

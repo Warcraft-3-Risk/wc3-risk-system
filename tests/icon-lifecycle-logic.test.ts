@@ -1,5 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { shouldTrackUnit, shouldRetrack, isUnitDead, expectedPoolSize, type TrackableUnit } from '../src/app/utils/icon-lifecycle-logic';
+import {
+	shouldTrackUnit,
+	shouldRetrack,
+	isUnitDead,
+	expectedPoolSize,
+	wouldDoubleRegister,
+	countLeakedFrames,
+	simulateTransportQueueProcessing,
+	type TrackableUnit,
+} from '../src/app/utils/icon-lifecycle-logic';
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
@@ -284,5 +293,123 @@ describe('transport lifecycle at ports', () => {
 		// Net: 12 registers (4 spawn + 4 + 4), 8 unregisters (4 + 4)
 		const result = expectedPoolSize(initial, 12, 8);
 		expect(result).toBe(1996); // 4 currently tracked at port C
+	});
+});
+
+// ─── wouldDoubleRegister ────────────────────────────────────────────
+
+describe('wouldDoubleRegister', () => {
+	it('returns true when unit is already tracked → frame would leak', () => {
+		expect(wouldDoubleRegister(true)).toBe(true);
+	});
+
+	it('returns false when unit is not yet tracked → safe to register', () => {
+		expect(wouldDoubleRegister(false)).toBe(false);
+	});
+});
+
+// ─── countLeakedFrames ──────────────────────────────────────────────
+
+describe('countLeakedFrames', () => {
+	it('healthy state: 10 registers, 5 unregisters, 5 tracked → 0 leaks', () => {
+		expect(countLeakedFrames(10, 5, 5)).toBe(0);
+	});
+
+	it('double-register leaks exactly 1 frame per occurrence', () => {
+		// 11 register calls, 5 unregisters, 5 tracked → 1 leaked
+		expect(countLeakedFrames(11, 5, 5)).toBe(1);
+	});
+
+	it('10 double-registers: 10 leaks', () => {
+		// 20 registers, 5 unregisters, 5 tracked → 10 leaked
+		expect(countLeakedFrames(20, 5, 5)).toBe(10);
+	});
+
+	it('no operations: 0 leaks', () => {
+		expect(countLeakedFrames(0, 0, 0)).toBe(0);
+	});
+
+	it('all unregistered: 0 leaks', () => {
+		expect(countLeakedFrames(10, 10, 0)).toBe(0);
+	});
+});
+
+// ─── simulateTransportQueueProcessing ───────────────────────────────
+
+describe('simulateTransportQueueProcessing', () => {
+	function makeQueuedUnit(
+		overrides: Partial<TrackableUnit & { isAlreadyTracked: boolean }> = {}
+	): TrackableUnit & { isAlreadyTracked: boolean } {
+		return {
+			typeId: 1000,
+			hp: 100,
+			isSpawn: true,
+			isGuard: false,
+			alive: true,
+			isLoaded: false,
+			isAlreadyTracked: false,
+			...overrides,
+		};
+	}
+
+	it('3 clean units: 3 tracked, 0 leaks', () => {
+		const units = [makeQueuedUnit(), makeQueuedUnit(), makeQueuedUnit()];
+		const result = simulateTransportQueueProcessing(units);
+		expect(result.trackedCount).toBe(3);
+		expect(result.leakedFrames).toBe(0);
+	});
+
+	it('1 already-tracked unit: 1 leak', () => {
+		const units = [makeQueuedUnit({ isAlreadyTracked: true })];
+		const result = simulateTransportQueueProcessing(units);
+		expect(result.registerCalls).toBe(1);
+		expect(result.leakedFrames).toBe(1);
+	});
+
+	it('10 rapid load/unload cycles without guard: leaks accumulate', () => {
+		// All 10 units are already tracked by another code path
+		const units = Array.from({ length: 10 }, () => makeQueuedUnit({ isAlreadyTracked: true }));
+		const result = simulateTransportQueueProcessing(units);
+		expect(result.leakedFrames).toBe(10);
+	});
+
+	it('10 rapid cycles with proper guard: 0 leaks', () => {
+		// None are pre-tracked → clean registrations
+		const units = Array.from({ length: 10 }, () => makeQueuedUnit({ isAlreadyTracked: false }));
+		const result = simulateTransportQueueProcessing(units);
+		expect(result.leakedFrames).toBe(0);
+		expect(result.trackedCount).toBe(10);
+	});
+
+	it('mixed queue: some alive, some dead, some reloaded', () => {
+		const units = [
+			makeQueuedUnit(), // valid → tracked
+			makeQueuedUnit({ alive: false }), // dead → skipped
+			makeQueuedUnit({ isLoaded: true }), // reloaded → skipped
+			makeQueuedUnit({ isGuard: true }), // became guard → skipped
+			makeQueuedUnit(), // valid → tracked
+		];
+		const result = simulateTransportQueueProcessing(units);
+		expect(result.trackedCount).toBe(2); // only 2 valid units
+		expect(result.leakedFrames).toBe(0);
+	});
+
+	it('queue processes same unit twice (simulated) — second is already tracked', () => {
+		// First entry: not tracked → registers fine
+		// Second entry: same logical unit, now marked as already tracked → leak
+		const units = [
+			makeQueuedUnit({ isAlreadyTracked: false }),
+			makeQueuedUnit({ isAlreadyTracked: true }), // "same unit" queued again
+		];
+		const result = simulateTransportQueueProcessing(units);
+		expect(result.registerCalls).toBe(2);
+		expect(result.leakedFrames).toBe(1); // second call leaks
+	});
+
+	it('empty queue: nothing happens', () => {
+		const result = simulateTransportQueueProcessing([]);
+		expect(result.trackedCount).toBe(0);
+		expect(result.registerCalls).toBe(0);
+		expect(result.leakedFrames).toBe(0);
 	});
 });

@@ -128,6 +128,24 @@ export function countOwnershipChanges(plan: RedistributionPlan[]): number {
 	return plan.length;
 }
 
+/**
+ * Estimate the minimap frame operations cost of a redistribution plan.
+ *
+ * Each ownership change triggers:
+ *   1. untrackUnit → hide frame, delete from Map, push to pool, restore boolean field
+ *   2. SetUnitOwner (WC3 native)
+ *   3. trackUnit → pop from pool, set size, set level, store in Map, set position, set color, show
+ *
+ * Estimated cost: ~4 frame-related operations per move (hide, delete, set, show).
+ *
+ * @param plan - The redistribution plan.
+ * @returns Estimated minimap frame operations.
+ */
+export function estimateMinimapCostOfRedistribution(plan: RedistributionPlan[]): number {
+	const FRAME_OPS_PER_MOVE = 4;
+	return plan.length * FRAME_OPS_PER_MOVE;
+}
+
 // ---------------------------------------------------------------------------
 // Incremental allocation (no redistribution of existing units)
 // ---------------------------------------------------------------------------
