@@ -32,12 +32,14 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			SetTimeOfDayScale(0);
 			SetTimeOfDay(12.0);
 
-			print('Resetting countries...');
-			resetCountries();
-			await Wait.forSeconds(1);
 			print('Removing units...');
 			removeUnits();
 			await Wait.forSeconds(1);
+
+			print('Resetting countries...');
+			resetCountries();
+			await Wait.forSeconds(1);
+
 			print('Resetting kill tracker...');
 			UnitKillTracker.getInstance().reset();
 			print('Resetting minimap icons...');
