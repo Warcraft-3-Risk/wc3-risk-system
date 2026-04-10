@@ -54,9 +54,7 @@ function buildTerrain(terrain: string, minifyOverride?: boolean) {
 
 	logger.info(`Creating w3x archive...`);
 	const outputFolder = config.outputFolder || './dist';
-	if (!fs.existsSync(outputFolder)) {
-		fs.mkdirSync(outputFolder, { recursive: true });
-	}
+	fs.mkdirSync(outputFolder, { recursive: true });
 
 	const w3cModeEnabled = `${config.w3cModeEnabled}` === 'true';
 
