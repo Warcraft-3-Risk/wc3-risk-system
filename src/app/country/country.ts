@@ -67,9 +67,10 @@ export class Country implements Resetable {
 	public setOwner(player: player): void {
 		if (player == null) player = NEUTRAL_HOSTILE;
 
+		const previousOwner = this.owner;
 		this.owner = player;
 		this.spawn.setOwner(player);
-		this.onOwnerChange();
+		this.onOwnerChange(previousOwner);
 	}
 
 	public createText(): void {
@@ -98,7 +99,7 @@ export class Country implements Resetable {
 	 * Called when the owner of the country changes.
 	 * Triggers various game events.
 	 */
-	private onOwnerChange() {
+	private onOwnerChange(previousOwner: player) {
 		if (this.owner == NEUTRAL_HOSTILE) return;
 
 		this.cities.forEach((city) => {
@@ -112,5 +113,9 @@ export class Country implements Resetable {
 		});
 
 		LocalMessage(this.owner, `${this.name} ${HexColors.WHITE}has been conquered!|r`, 'Sound\\Interface\\Rescue.flac');
+
+		if (previousOwner != null && previousOwner != NEUTRAL_HOSTILE) {
+			LocalMessage(previousOwner, `${this.name} ${HexColors.WHITE}has been lost!|r`, 'Sound\\Interface\\QuestFailed.flac');
+		}
 	}
 }

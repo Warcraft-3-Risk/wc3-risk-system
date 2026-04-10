@@ -142,7 +142,7 @@ export function suggestUpdateFrequency(
 	targetBudget: number
 ): number {
 	const callsPerTick = estimateNativeCallsPerTick(cityCount, trackedUnitCount);
-	if (callsPerTick <= 0) return 0.1; // default
+	if (callsPerTick <= 0) return 0.5; // default
 
 	// ticks/sec = budget / callsPerTick → interval = 1 / ticks/sec
 	const maxTicksPerSec = targetBudget / callsPerTick;
