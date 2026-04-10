@@ -214,7 +214,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		if (DEBUG_PRINTS.master)
 			debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`, DC.gameMode);
 		GlobalGameData.matchPlayers.forEach((player) => {
-			if (player.ratingStatsUI && player.ratingStatsUI.refresh) {
+			if (player.ratingStatsUI) {
 				player.ratingStatsUI.refresh();
 			}
 		});
