@@ -192,28 +192,29 @@ describe('Spawner with real object data', () => {
 
 ## Execution Plan
 
-### Phase 1: Spike / Proof of Concept
+### Phase 1: Spike / Proof of Concept ✅
 
 **Goal:** Validate that `war3-objectdata-th` can read the exploded map files from `maps/risk_europe.w3x/`.
 
-| Task | Description |
-|------|-------------|
-| Read `.w3u` directly | Use `War3MapW3u` parser from `mdx-m3-viewer-th` to load `maps/risk_europe.w3x/war3map.w3u` |
-| Parse unit data | Load into `ObjectData`, verify we can read custom unit IDs (`h000`, `u000`, etc.) |
-| Map to `UNIT_ID` constants | Confirm `objectData.units.get('u000')` returns the Riflemen definition |
-| Write spike test | Single Vitest file that loads map data and asserts on a known unit |
+| Task | Status | Description |
+|------|--------|-------------|
+| Read `.w3u` directly | ✅ | Use `War3MapW3u` parser from `mdx-m3-viewer-th` to load `maps/risk_europe.w3x/war3map.w3u` |
+| Parse unit data | ✅ | Load into `ObjectData`, verify we can read custom unit IDs (`h000`, `u000`, etc.) — 26 custom units found |
+| Map to `UNIT_ID` constants | ✅ | Confirmed `objectData.units.get('u000')` returns Rifleman (hp=200, atk=19, speed=270) |
+| Write spike test | ✅ | `tests/object-data.test.ts` — 26 tests covering loader, unit accuracy, fakes, and shim |
 
-**Risk:** The exploded directory layout may not work with `War3Map.load()` which expects an archive. Mitigation: use the lower-level `War3MapW3u` parser directly — this is what `war3-objectdata` does internally.
+**Resolved risk:** The exploded directory layout does NOT work with `War3Map.load()`. Solution: use the lower-level `War3MapW3u` parser directly to read individual `.w3u` files. The ability/buff skin files (`war3mapSkin.w3a`) trigger parser errors in `war3-objectdata-th` so only `war3map.w3u` is loaded for now.
 
-### Phase 2: Test Fixture Infrastructure
+### Phase 2: Test Fixture Infrastructure ✅
 
-| Task | Description |
-|------|-------------|
-| `object-data-loader.ts` | Cached loader for map object data with lazy initialization |
-| `fake-unit.ts` | Unit stub factory using real object data stats |
-| `fake-player.ts` | Player stub factory |
-| `wc3-shim.ts` | Global shim for common WC3 API functions |
-| Vitest `setupFiles` | Optional: auto-install shim for integration test suites |
+| Task | Status | Description |
+|------|--------|-------------|
+| `object-data-loader.ts` | ✅ | Cached loader for map object data with lazy initialization |
+| `fake-unit.ts` | ✅ | Unit stub factory using real object data stats, with `fourCCToInt()` helper |
+| `fake-player.ts` | ✅ | Player stub factory with configurable id/name/gold/lumber |
+| `wc3-shim.ts` | ✅ | Global shim for 20+ WC3 API functions (unit, player, FourCC, constants) |
+| Barrel export | ✅ | `tests/fixtures/index.ts` for convenient imports |
+| Vitest `setupFiles` | ⏭️ Deferred | Not needed yet — import `wc3-shim` per-test file for now |
 
 ### Phase 3: Integration Tests for Game Modules
 
@@ -287,9 +288,9 @@ No new dependencies required for Phase 1–3.
 
 ---
 
-## Open Questions
+## Open Questions (Resolved)
 
-1. **Exploded map vs archive:** Can `War3MapW3u` parse individual `.w3u` files from disk, or does it need the full archive? (Phase 1 spike will answer this)
-2. **Custom IDs:** The Risk map uses custom unit IDs (`h000`, `u000`, etc.). Do these appear in the `objectData.units.map` after loading, or only base game units populate `objectData.units.game`?
-3. **FourCC mapping:** `src/configs/unit-id.ts` uses `FourCC('h000')` which returns a number. The object data uses string IDs like `'h000'`. We need a bidirectional mapping.
-4. **Test isolation:** Should integration tests using the WC3 shim run in a separate Vitest project/workspace to avoid polluting globals for pure logic tests?
+1. **Exploded map vs archive:** ✅ **Resolved.** `War3MapW3u` can parse individual `.w3u` files directly from disk using `readFileSync(path).buffer`. No archive needed.
+2. **Custom IDs:** ✅ **Resolved.** Custom unit IDs (`h000`, `u000`, etc.) appear in `objectData.units.map` after loading. Base game units are in `objectData.units.game`. The `get(id)` method checks both.
+3. **FourCC mapping:** ✅ **Resolved.** `fourCCToInt()` in `tests/fixtures/fake-unit.ts` converts string IDs to integers. The WC3 shim also provides a global `FourCC()` function. Both produce identical results.
+4. **Test isolation:** ✅ **Resolved.** The WC3 shim is imported per-test-file (`import './fixtures/wc3-shim'`), not via `setupFiles`. Pure logic tests are unaffected since they don't import the shim.
