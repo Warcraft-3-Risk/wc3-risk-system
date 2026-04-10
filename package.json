@@ -49,7 +49,7 @@
     "tsutils": "3.17.1",
     "typescript": "~5.8",
     "typescript-eslint": "^8.58.1",
-    "typescript-to-lua": "1.15.1",
+    "typescript-to-lua": "^1.32.0",
     "vitest": "^4.1.4",
     "war3-objectdata-th": "^0.2.8",
     "war3-transformer": "^3.0.9",
