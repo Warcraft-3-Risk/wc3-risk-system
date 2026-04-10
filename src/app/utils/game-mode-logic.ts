@@ -10,13 +10,21 @@
 
 export type GameType = 'Standard' | 'Capitals';
 export type MatchState = 'modeSelection' | 'preMatch' | 'inProgress' | 'postMatch';
+export const PROMODE_SETTING = {
+	OFF: 0,
+	PROMODE: 1,
+	EQUALIZED: 2,
+	CHAOS: 3,
+} as const;
+
+export type PromodeSetting = (typeof PROMODE_SETTING)[keyof typeof PROMODE_SETTING];
 
 export type GameModeName = 'StandardMode' | 'PromodeMode' | 'EqualizedPromodeMode' | 'W3CMode' | 'CapitalsMode';
 
 export interface ModeSelectionSettings {
 	gameType: GameType;
 	isW3CMode: boolean;
-	promodeSetting: number; // 0=off, 1=promode, 2=equalized, 3=chaos
+	promodeSetting: PromodeSetting;
 }
 
 export interface RoundResult {
@@ -45,11 +53,11 @@ export function resolveGameMode(settings: ModeSelectionSettings): GameModeName {
 		return 'W3CMode';
 	}
 
-	if (settings.promodeSetting === 2) {
+	if (settings.promodeSetting === PROMODE_SETTING.EQUALIZED) {
 		return 'EqualizedPromodeMode';
 	}
 
-	if (settings.promodeSetting === 1 || settings.promodeSetting === 3) {
+	if (settings.promodeSetting === PROMODE_SETTING.PROMODE || settings.promodeSetting === PROMODE_SETTING.CHAOS) {
 		return 'PromodeMode';
 	}
 

@@ -13,6 +13,7 @@ import {
 	simulateStateMachine,
 	simulateMultipleGameCycles,
 	resolvePlayerEvent,
+	PROMODE_SETTING,
 	type GameModeName,
 	type ModeSelectionSettings,
 } from '../src/app/utils/game-mode-logic';
@@ -21,52 +22,52 @@ import {
 
 describe('resolveGameMode (mode selection routing)', () => {
 	it('should select StandardMode when no special flags are set', () => {
-		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: false, promodeSetting: 0 };
+		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: false, promodeSetting: PROMODE_SETTING.OFF };
 		expect(resolveGameMode(settings)).toBe('StandardMode');
 	});
 
 	it('should select PromodeMode when Promode=1', () => {
-		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: false, promodeSetting: 1 };
+		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: false, promodeSetting: PROMODE_SETTING.PROMODE };
 		expect(resolveGameMode(settings)).toBe('PromodeMode');
 	});
 
 	it('should select PromodeMode when ChaosPromode=3', () => {
-		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: false, promodeSetting: 3 };
+		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: false, promodeSetting: PROMODE_SETTING.CHAOS };
 		expect(resolveGameMode(settings)).toBe('PromodeMode');
 	});
 
 	it('should select EqualizedPromodeMode when Promode=2', () => {
-		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: false, promodeSetting: 2 };
+		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: false, promodeSetting: PROMODE_SETTING.EQUALIZED };
 		expect(resolveGameMode(settings)).toBe('EqualizedPromodeMode');
 	});
 
 	it('should select CapitalsMode when GameType=Capitals', () => {
-		const settings: ModeSelectionSettings = { gameType: 'Capitals', isW3CMode: false, promodeSetting: 0 };
+		const settings: ModeSelectionSettings = { gameType: 'Capitals', isW3CMode: false, promodeSetting: PROMODE_SETTING.OFF };
 		expect(resolveGameMode(settings)).toBe('CapitalsMode');
 	});
 
 	it('should select CapitalsMode even when Promode is set (Capitals overrides)', () => {
-		const settings: ModeSelectionSettings = { gameType: 'Capitals', isW3CMode: false, promodeSetting: 1 };
+		const settings: ModeSelectionSettings = { gameType: 'Capitals', isW3CMode: false, promodeSetting: PROMODE_SETTING.PROMODE };
 		expect(resolveGameMode(settings)).toBe('CapitalsMode');
 	});
 
 	it('should select W3CMode when W3C_MODE_ENABLED', () => {
-		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: true, promodeSetting: 0 };
+		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: true, promodeSetting: PROMODE_SETTING.OFF };
 		expect(resolveGameMode(settings)).toBe('W3CMode');
 	});
 
 	it('should select CapitalsMode over W3CMode (Capitals is checked first)', () => {
-		const settings: ModeSelectionSettings = { gameType: 'Capitals', isW3CMode: true, promodeSetting: 0 };
+		const settings: ModeSelectionSettings = { gameType: 'Capitals', isW3CMode: true, promodeSetting: PROMODE_SETTING.OFF };
 		expect(resolveGameMode(settings)).toBe('CapitalsMode');
 	});
 
 	it('should select W3CMode over promode settings', () => {
-		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: true, promodeSetting: 1 };
+		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: true, promodeSetting: PROMODE_SETTING.PROMODE };
 		expect(resolveGameMode(settings)).toBe('W3CMode');
 	});
 
 	it('should select W3CMode over equalized promode', () => {
-		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: true, promodeSetting: 2 };
+		const settings: ModeSelectionSettings = { gameType: 'Standard', isW3CMode: true, promodeSetting: PROMODE_SETTING.EQUALIZED };
 		expect(resolveGameMode(settings)).toBe('W3CMode');
 	});
 });
@@ -667,7 +668,7 @@ describe('resolvePlayerEvent', () => {
 describe('Full game scenarios', () => {
 	it('Standard game: select → play → victory → restart → play again', () => {
 		// Mode selection
-		const mode = resolveGameMode({ gameType: 'Standard', isW3CMode: false, promodeSetting: 0 });
+		const mode = resolveGameMode({ gameType: 'Standard', isW3CMode: false, promodeSetting: PROMODE_SETTING.OFF });
 		expect(mode).toBe('StandardMode');
 
 		// Get and validate state sequence
@@ -687,7 +688,7 @@ describe('Full game scenarios', () => {
 	});
 
 	it('Promode game: 3 consecutive matches with restarts', () => {
-		const mode = resolveGameMode({ gameType: 'Standard', isW3CMode: false, promodeSetting: 1 });
+		const mode = resolveGameMode({ gameType: 'Standard', isW3CMode: false, promodeSetting: PROMODE_SETTING.PROMODE });
 		expect(mode).toBe('PromodeMode');
 
 		const seq = getStateSequence(mode);
@@ -699,7 +700,7 @@ describe('Full game scenarios', () => {
 	});
 
 	it('Capitals game: full state sequence with capital-specific states', () => {
-		const mode = resolveGameMode({ gameType: 'Capitals', isW3CMode: false, promodeSetting: 0 });
+		const mode = resolveGameMode({ gameType: 'Capitals', isW3CMode: false, promodeSetting: PROMODE_SETTING.OFF });
 		expect(mode).toBe('CapitalsMode');
 
 		const seq = getStateSequence(mode);
@@ -710,7 +711,7 @@ describe('Full game scenarios', () => {
 	});
 
 	it('W3C game: best-of-3 with early termination check', () => {
-		const mode = resolveGameMode({ gameType: 'Standard', isW3CMode: true, promodeSetting: 0 });
+		const mode = resolveGameMode({ gameType: 'Standard', isW3CMode: true, promodeSetting: PROMODE_SETTING.OFF });
 		expect(mode).toBe('W3CMode');
 
 		const seq = getStateSequence(mode);
@@ -733,7 +734,7 @@ describe('Full game scenarios', () => {
 	});
 
 	it('Equalized Promode: 2-round system with position swap', () => {
-		const mode = resolveGameMode({ gameType: 'Standard', isW3CMode: false, promodeSetting: 2 });
+		const mode = resolveGameMode({ gameType: 'Standard', isW3CMode: false, promodeSetting: PROMODE_SETTING.EQUALIZED });
 		expect(mode).toBe('EqualizedPromodeMode');
 
 		const seq = getStateSequence(mode);
