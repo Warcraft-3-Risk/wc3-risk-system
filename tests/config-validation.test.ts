@@ -1,8 +1,14 @@
-import { describe, it, expect } from 'vitest';
-import { validateConfig } from '../scripts/utils';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { validateConfig, logger } from '../scripts/utils';
 
-// validateConfig throws on invalid configs and returns void on valid ones.
-// We suppress the winston logger output in tests by checking behavior only.
+// Suppress winston logger output during validation error tests
+let logSpy: ReturnType<typeof vi.spyOn>;
+beforeEach(() => {
+	logSpy = vi.spyOn(logger, 'error').mockImplementation(() => logger);
+});
+afterEach(() => {
+	logSpy.mockRestore();
+});
 
 describe('validateConfig', () => {
 	const validConfig = {
