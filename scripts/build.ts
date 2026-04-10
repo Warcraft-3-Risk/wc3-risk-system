@@ -53,8 +53,9 @@ function buildTerrain(terrain: string, minifyOverride?: boolean) {
 	}
 
 	logger.info(`Creating w3x archive...`);
-	if (!fs.existsSync(config.outputFolder)) {
-		fs.mkdirSync(config.outputFolder);
+	const outputFolder = config.outputFolder || './dist';
+	if (!fs.existsSync(outputFolder)) {
+		fs.mkdirSync(outputFolder, { recursive: true });
 	}
 
 	const w3cModeEnabled = `${config.w3cModeEnabled}` === 'true';
@@ -69,7 +70,7 @@ function buildTerrain(terrain: string, minifyOverride?: boolean) {
 		fs.renameSync(ddsDir, copyDest);
 	}
 
-	createMapFromDir(`${config.outputFolder}/${formattedMapName}`, distDir, config);
+	createMapFromDir(`${outputFolder}/${formattedMapName}`, distDir, config);
 }
 
 /**
