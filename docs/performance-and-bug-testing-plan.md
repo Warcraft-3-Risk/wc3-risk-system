@@ -154,9 +154,9 @@ as a parameter rather than looking them up per unit.
 ## Implementation Checklist
 
 - [x] Create markdown plan (this document)
-- [ ] Extract `shared-slot-allocation-logic.ts` with pure redistribution math
-- [ ] Write allocation performance tests (slot distribution + unit placement + change counting)
-- [ ] Extend `icon-lifecycle-logic.test.ts` with transport edge cases
-- [ ] Extend `guard-priority-logic.test.ts` with cross-owner shared slot scenarios
-- [ ] Run full test suite
-- [ ] Run lint
+- [x] Extract `shared-slot-allocation-logic.ts` with pure redistribution math
+- [x] Write allocation performance tests (slot distribution + unit placement + change counting)
+- [x] Extend `icon-lifecycle-logic.test.ts` with transport edge cases
+- [x] Extend `guard-priority-logic.test.ts` with cross-owner shared slot scenarios
+- [x] Run full test suite
+- [x] Run lint

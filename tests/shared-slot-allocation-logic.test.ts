@@ -98,7 +98,7 @@ describe('planUnitRedistribution', () => {
 		expect(planUnitRedistribution(units, [])).toEqual([]);
 	});
 
-	it('skips units already on the correct slot (no-op optimisation)', () => {
+	it('skips units already on the correct slot (no-op optimization)', () => {
 		const units: UnitPlacement[] = [
 			{ unitId: 1, currentSlotId: 0 },
 			{ unitId: 2, currentSlotId: 0 },
