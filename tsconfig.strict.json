@@ -8,6 +8,9 @@
     "src/app/managers/victory-logic.ts",
     "src/app/managers/income-logic.ts",
     "src/app/game/services/distribution-service/distribution-logic.ts",
-    "src/app/rating/rating-calculator.ts"
+    "src/app/rating/rating-calculator.ts",
+    "src/app/utils/guard-priority-logic.ts",
+    "src/app/utils/scoreboard-sort-logic.ts",
+    "src/app/utils/icon-lifecycle-logic.ts"
   ]
 }
