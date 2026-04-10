@@ -48,6 +48,12 @@ export function fourCCToInt(s: string): number {
 }
 
 /**
+ * FourCC representation of a null/unset object ID (four null bytes).
+ * In `war3-objectdata-th`, base-game objects use this as their `newId`.
+ */
+const NULL_FOURCC = '\0\0\0\0';
+
+/**
  * Create a fake unit whose stats come from real map object data.
  *
  * ```ts
@@ -60,7 +66,7 @@ export function fourCCToInt(s: string): number {
  * ```
  */
 export function createFakeUnit(unitData: Unit, owner: FakePlayerHandle, overrides?: Partial<FakeUnitHandle>): FakeUnitHandle {
-	const rawcode = unitData.newId !== '\0\0\0\0' ? unitData.newId : unitData.oldId;
+	const rawcode = unitData.newId !== NULL_FOURCC ? unitData.newId : unitData.oldId;
 	return {
 		rawcode,
 		typeId: fourCCToInt(rawcode),
