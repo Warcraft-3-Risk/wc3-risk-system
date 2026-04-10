@@ -341,7 +341,7 @@ describe('simulateRedistribution', () => {
 // ---------------------------------------------------------------------------
 
 describe('planUnitRedistribution — confirms unnecessary unit movement', () => {
-	it('moves units when a 3rd slot is added to an already-balanced 2-slot setup', () => {
+	it('confirms units are moved when a 3rd slot is added to an already-balanced 2-slot setup', () => {
 		// Player had 2 slots with 10 units each (balanced), now gets a 3rd slot.
 		// Current algorithm collects all 20 units and redistributes across 3 slots.
 		const units: UnitPlacement[] = [
@@ -364,7 +364,7 @@ describe('planUnitRedistribution — confirms unnecessary unit movement', () => 
 		expect(plan.length).toBeGreaterThan(0);
 	});
 
-	it('moves units when a 2nd slot is added to a 1-slot player with 20 units', () => {
+	it('confirms units are moved when a 2nd slot is added to a 1-slot player with 20 units', () => {
 		const units: UnitPlacement[] = Array.from({ length: 20 }, (_, i) => ({
 			unitId: i,
 			currentSlotId: 0,
@@ -378,7 +378,7 @@ describe('planUnitRedistribution — confirms unnecessary unit movement', () => 
 		expect(plan.length).toBe(10);
 	});
 
-	it('re-adding a slot to a player with 3 slots and 30 balanced units still moves', () => {
+	it('confirms units are moved when a 4th slot is added to a player with 3 balanced slots', () => {
 		// 3 slots × 10 units each. Player now gets a 4th slot.
 		const units: UnitPlacement[] = [
 			...Array.from({ length: 10 }, (_, i) => ({ unitId: i, currentSlotId: 0 })),
@@ -498,7 +498,7 @@ describe('selectSlotForNewUnit', () => {
 		expect(selectSlotForNewUnit(slots)!.slotId).toBe(1);
 	});
 
-	it('picks the first tied slot when multiple have the same lowest count', () => {
+	it('picks one of the tied slots when multiple have the same lowest count', () => {
 		const slots: SlotState[] = [
 			{ slotId: 0, unitCount: 5 },
 			{ slotId: 1, unitCount: 3 },
