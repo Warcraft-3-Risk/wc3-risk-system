@@ -24,12 +24,23 @@ const MAP_DIR = path.resolve(__dirname, '../../maps/risk_europe.w3x');
  * the ability/buff skin files in this map trigger edge-case parser errors
  * in `war3-objectdata-th`. Unit data is the primary need for fake-unit
  * fixtures. Additional file types can be added as the library is patched.
+ *
+ * @throws {Error} If the map file cannot be found or parsed. Ensure the
+ * `maps/risk_europe.w3x/` directory exists and contains `war3map.w3u`.
  */
 export function loadMapObjectData(): ObjectData {
 	if (cached) return cached;
 
+	const w3uPath = path.join(MAP_DIR, 'war3map.w3u');
+	let buffer: Buffer;
+	try {
+		buffer = readFileSync(w3uPath);
+	} catch {
+		throw new Error(`Failed to read map object data at ${w3uPath}. Ensure maps/risk_europe.w3x/ exists and contains war3map.w3u.`);
+	}
+
 	const w3u = new War3MapW3u();
-	w3u.load(readFileSync(path.join(MAP_DIR, 'war3map.w3u')).buffer);
+	w3u.load(buffer.buffer);
 
 	const objectData = new ObjectData();
 	objectData.load({ w3u });
