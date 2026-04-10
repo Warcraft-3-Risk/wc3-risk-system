@@ -128,6 +128,46 @@ export function countOwnershipChanges(plan: RedistributionPlan[]): number {
 	return plan.length;
 }
 
+// ---------------------------------------------------------------------------
+// Incremental allocation (no redistribution of existing units)
+// ---------------------------------------------------------------------------
+
+/**
+ * When new slots are added to a player, this returns the number of ownership
+ * changes that would be required if we do NOT redistribute existing units.
+ *
+ * The answer is always **zero** — adding slots should not move existing units.
+ * New units will be placed via {@link selectSlotForNewUnit} going forward.
+ */
+export function planIncrementalSlotAddition(
+	_existingUnits: UnitPlacement[],
+	_oldSlots: SlotState[],
+	_newSlots: SlotState[]
+): RedistributionPlan[] {
+	// Desired behaviour: no existing units are moved when slots are added.
+	return [];
+}
+
+/**
+ * Select the slot with the fewest units for a newly trained / spawned unit.
+ *
+ * Mirrors `SharedSlotManager.getSlotWithLowestUnitCount()` in production.
+ *
+ * If multiple slots are tied, returns the first one encountered (any is fine
+ * per the spec — "it just picks any, it is not that important").
+ */
+export function selectSlotForNewUnit(slots: SlotState[]): SlotState | undefined {
+	if (slots.length === 0) return undefined;
+
+	let best = slots[0];
+	for (let i = 1; i < slots.length; i++) {
+		if (slots[i].unitCount < best.unitCount) {
+			best = slots[i];
+		}
+	}
+	return best;
+}
+
 /**
  * Simulate the full redistribution pipeline:
  * 1. Calculate slots per player.
