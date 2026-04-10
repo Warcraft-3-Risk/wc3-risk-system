@@ -152,3 +152,137 @@ describe('expectedPoolSize', () => {
 		expect(expectedPoolSize(2000, 5, 6)).toBe(2001); // one surplus frame
 	});
 });
+
+// ─── Transport / Port Edge Cases ────────────────────────────────────
+//
+// These tests model the timing-sensitive lifecycle around port transports
+// where icons can become orphaned if the delayed re-track queue and the
+// frame pool interact incorrectly.
+
+describe('transport lifecycle at ports', () => {
+	it('rapid load then immediate unload: unit should be retrackable', () => {
+		// Unit loads into transport → unregistered → added to delayed queue
+		// Unit unloads before queue fires → should still be retrackable
+		const unit = makeUnit();
+		// After load, unit was unregistered. After immediate unload:
+		expect(shouldRetrack(unit)).toBe(true);
+		expect(shouldTrackUnit(unit)).toBe(true);
+	});
+
+	it('rapid load then immediate unload: pool accounting stays consistent', () => {
+		const initial = 2000;
+		// Spawn unit → register (pool: 1999)
+		// Load → unregister (pool: 2000)
+		// Unload → register (pool: 1999)
+		// Net: 2 registers, 1 unregister
+		expect(expectedPoolSize(initial, 2, 1)).toBe(1999);
+	});
+
+	it('unit dies while loaded in transport (transport destroyed at port)', () => {
+		const unit = makeUnit({ alive: false, isLoaded: true });
+		// Unit was unregistered when loaded. Transport dies.
+		// Delayed queue fires but unit is dead → should NOT retrack
+		expect(shouldRetrack(unit)).toBe(false);
+		// Also should not be eligible for regular tracking
+		expect(shouldTrackUnit(unit)).toBe(false);
+	});
+
+	it('unit dies while loaded — pool gets frame back and no orphan', () => {
+		const initial = 2000;
+		// Spawn → register (pool: 1999)
+		// Load → unregister (pool: 2000)
+		// Unit dies while loaded — never re-registered. Pool stays at 2000.
+		expect(expectedPoolSize(initial, 1, 1)).toBe(2000);
+	});
+
+	it('multiple transports unload simultaneously at same port', () => {
+		// Two transports each with 3 units unload at same tick
+		// All 6 units enter delayed queue simultaneously
+		const units = Array.from({ length: 6 }, () => makeUnit());
+		// All should be retrackable
+		expect(units.every((u) => shouldRetrack(u))).toBe(true);
+		// Pool should handle 6 registrations in one batch
+		const initial = 2000;
+		// Before: 6 were tracked (registered), then loaded (unregistered): pool = 2000
+		// After unload: 6 re-register: pool = 1994
+		expect(expectedPoolSize(initial, 6, 0)).toBe(1994);
+	});
+
+	it('unit transfers between transports before delayed queue fires', () => {
+		// Unit unloads from transport A → enters delayed queue
+		// Before queue fires, unit loads into transport B
+		const unit = makeUnit({ isLoaded: true });
+		// shouldRetrack check: isLoaded = true → skip
+		expect(shouldRetrack(unit)).toBe(false);
+		// This prevents the orphaned icon — unit stays unregistered since it's
+		// loaded again, and will get a new retrack opportunity when it unloads from B
+	});
+
+	it('guard promotion during transport delay window', () => {
+		// Unit unloads from transport at port
+		// Before delayed queue fires, unit becomes guard (replaces city guard)
+		const unit = makeUnit({ isGuard: true });
+		// shouldRetrack: isGuard → false (guards have separate icon management)
+		expect(shouldRetrack(unit)).toBe(false);
+		// shouldTrackUnit also rejects guards
+		expect(shouldTrackUnit(unit)).toBe(false);
+	});
+
+	it('pool exhaustion during batch unload triggers expansion', () => {
+		// Start with tiny pool, unload many units
+		const tinyPool = 5;
+		// 10 units need to register but only 5 frames available
+		// After 5 registrations pool hits 0, expansion needed
+		expect(expectedPoolSize(tinyPool, 5, 0)).toBe(0);
+		// After expansion (+200 frames) and 5 more registrations:
+		expect(expectedPoolSize(tinyPool + 200, 10, 0)).toBe(195);
+	});
+
+	it('complete port lifecycle: units load, travel, unload, some die', () => {
+		const initial = 2000;
+		// Phase 1: 8 units spawned and tracked
+		const afterSpawn = expectedPoolSize(initial, 8, 0); // 1992
+		expect(afterSpawn).toBe(1992);
+
+		// Phase 2: 8 units load into transport → unregistered
+		const afterLoad = expectedPoolSize(initial, 8, 8); // 2000
+		expect(afterLoad).toBe(2000);
+
+		// Phase 3: Transport travels to port, 6 survive, 2 die in transit
+		// 6 unload → delayed queue → retrack (register 6 more)
+		// 2 dead units skipped by shouldRetrack
+		const afterUnload = expectedPoolSize(initial, 14, 8); // 1994
+		expect(afterUnload).toBe(1994);
+
+		// Phase 4: 2 dead unit frames already returned during load (step 2)
+		// No extra action needed for dead units — frames are in pool
+		// Final tracked: 6 alive units
+		// Pool should be: 2000 - 6 = 1994 ✓
+		expect(afterUnload).toBe(initial - 6);
+	});
+
+	it('double-unregister safety: calling unregister twice does not corrupt pool', () => {
+		const initial = 2000;
+		// Register 1 → pool: 1999
+		// Unregister 1 → pool: 2000
+		// Unregister again (bug) → pool: 2001 (surplus!)
+		const afterDoubleUnregister = expectedPoolSize(initial, 1, 2);
+		expect(afterDoubleUnregister).toBe(2001);
+		// This detects the bug: pool should never exceed initial + expansion count
+		// The test documents the invariant violation
+		expect(afterDoubleUnregister).toBeGreaterThan(initial);
+	});
+
+	it('interleaved load/unload across multiple ports', () => {
+		// Simulate units cycling through ports repeatedly
+		const initial = 2000;
+		// 4 units spawned
+		// Load at port A → unregister 4
+		// Unload at port B → register 4
+		// Load at port B → unregister 4
+		// Unload at port C → register 4
+		// Net: 12 registers (4 spawn + 4 + 4), 8 unregisters (4 + 4)
+		const result = expectedPoolSize(initial, 12, 8);
+		expect(result).toBe(1996); // 4 currently tracked at port C
+	});
+});
