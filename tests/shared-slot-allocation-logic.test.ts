@@ -3,6 +3,8 @@ import {
 	calculateSlotsPerPlayer,
 	calculateSlotDeltas,
 	planUnitRedistribution,
+	planIncrementalSlotAddition,
+	selectSlotForNewUnit,
 	countOwnershipChanges,
 	simulateRedistribution,
 	type UnitPlacement,
@@ -330,5 +332,254 @@ describe('simulateRedistribution', () => {
 		const result = simulateRedistribution(activePlayers, unitsByPlayer);
 		expect(result.totalOwnershipChanges).toBe(0); // Optimal: zero moves
 		// Naive approach would have been 6 moves (move every unit)
+	});
+});
+
+// ---------------------------------------------------------------------------
+// planUnitRedistribution — confirms current redistribution DOES move units
+// when adding a new slot (the performance problem)
+// ---------------------------------------------------------------------------
+
+describe('planUnitRedistribution — confirms unnecessary unit movement', () => {
+	it('moves units when a 3rd slot is added to an already-balanced 2-slot setup', () => {
+		// Player had 2 slots with 10 units each (balanced), now gets a 3rd slot.
+		// Current algorithm collects all 20 units and redistributes across 3 slots.
+		const units: UnitPlacement[] = [
+			...Array.from({ length: 10 }, (_, i) => ({ unitId: i, currentSlotId: 0 })),
+			...Array.from({ length: 10 }, (_, i) => ({ unitId: i + 10, currentSlotId: 1 })),
+		];
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 10 },
+			{ slotId: 1, unitCount: 10 },
+			{ slotId: 2, unitCount: 0 }, // newly added
+		];
+		const plan = planUnitRedistribution(units, slots);
+		// 20 / 3 = 6 per slot + 2 remainder → slot 0: 7, slot 1: 7, slot 2: 6
+		// units[0..6] → slot 0 (first 7 stay, no-op)
+		// units[7..13] → slot 1 — but units[7..9] are on slot 0, units[10..13] on slot 1
+		//   units 7,8,9 (on slot 0) move to slot 1 = 3 moves
+		//   units 10,11,12,13 (on slot 1) stay = 0 moves
+		// units[14..19] → slot 2 — all on slot 1 → 6 moves
+		// Total: at least 9 moves for units that were already balanced
+		expect(plan.length).toBeGreaterThan(0);
+	});
+
+	it('moves units when a 2nd slot is added to a 1-slot player with 20 units', () => {
+		const units: UnitPlacement[] = Array.from({ length: 20 }, (_, i) => ({
+			unitId: i,
+			currentSlotId: 0,
+		}));
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 20 },
+			{ slotId: 1, unitCount: 0 }, // newly added
+		];
+		const plan = planUnitRedistribution(units, slots);
+		// 10 stay on slot 0, 10 move to slot 1 = 10 moves
+		expect(plan.length).toBe(10);
+	});
+
+	it('re-adding a slot to a player with 3 slots and 30 balanced units still moves', () => {
+		// 3 slots × 10 units each. Player now gets a 4th slot.
+		const units: UnitPlacement[] = [
+			...Array.from({ length: 10 }, (_, i) => ({ unitId: i, currentSlotId: 0 })),
+			...Array.from({ length: 10 }, (_, i) => ({ unitId: i + 10, currentSlotId: 1 })),
+			...Array.from({ length: 10 }, (_, i) => ({ unitId: i + 20, currentSlotId: 2 })),
+		];
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 10 },
+			{ slotId: 1, unitCount: 10 },
+			{ slotId: 2, unitCount: 10 },
+			{ slotId: 3, unitCount: 0 }, // newly added
+		];
+		const plan = planUnitRedistribution(units, slots);
+		// Units get redistributed: 30 / 4 = 7+7+8+8, many unnecessary moves
+		expect(plan.length).toBeGreaterThan(0);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// planIncrementalSlotAddition — desired behaviour: no unit moves when
+// slots are added
+// ---------------------------------------------------------------------------
+
+describe('planIncrementalSlotAddition', () => {
+	it('returns zero moves when a new slot is added to a balanced setup', () => {
+		const units: UnitPlacement[] = [
+			...Array.from({ length: 10 }, (_, i) => ({ unitId: i, currentSlotId: 0 })),
+			...Array.from({ length: 10 }, (_, i) => ({ unitId: i + 10, currentSlotId: 1 })),
+		];
+		const oldSlots: SlotState[] = [
+			{ slotId: 0, unitCount: 10 },
+			{ slotId: 1, unitCount: 10 },
+		];
+		const newSlots: SlotState[] = [...oldSlots, { slotId: 2, unitCount: 0 }];
+		const plan = planIncrementalSlotAddition(units, oldSlots, newSlots);
+		expect(plan).toEqual([]);
+	});
+
+	it('returns zero moves when going from 1 slot to 3 slots with 50 units', () => {
+		const units: UnitPlacement[] = Array.from({ length: 50 }, (_, i) => ({
+			unitId: i,
+			currentSlotId: 0,
+		}));
+		const oldSlots: SlotState[] = [{ slotId: 0, unitCount: 50 }];
+		const newSlots: SlotState[] = [
+			{ slotId: 0, unitCount: 50 },
+			{ slotId: 1, unitCount: 0 },
+			{ slotId: 2, unitCount: 0 },
+		];
+		const plan = planIncrementalSlotAddition(units, oldSlots, newSlots);
+		expect(plan).toEqual([]);
+	});
+
+	it('returns zero moves even when existing distribution is unbalanced', () => {
+		// Slot 0 has 18 units, slot 1 has 2 — still should not redistribute
+		const units: UnitPlacement[] = [
+			...Array.from({ length: 18 }, (_, i) => ({ unitId: i, currentSlotId: 0 })),
+			...Array.from({ length: 2 }, (_, i) => ({ unitId: i + 18, currentSlotId: 1 })),
+		];
+		const oldSlots: SlotState[] = [
+			{ slotId: 0, unitCount: 18 },
+			{ slotId: 1, unitCount: 2 },
+		];
+		const newSlots: SlotState[] = [...oldSlots, { slotId: 2, unitCount: 0 }];
+		const plan = planIncrementalSlotAddition(units, oldSlots, newSlots);
+		expect(plan).toEqual([]);
+	});
+
+	it('returns zero moves for the 23→11 player scenario', () => {
+		// Each of 11 players has 2 slots with 10 units each.
+		// They get a 3rd slot — no units should move.
+		for (let p = 0; p < 11; p++) {
+			const units: UnitPlacement[] = [
+				...Array.from({ length: 10 }, (_, i) => ({ unitId: p * 100 + i, currentSlotId: p })),
+				...Array.from({ length: 10 }, (_, i) => ({ unitId: p * 100 + 10 + i, currentSlotId: p + 11 })),
+			];
+			const oldSlots: SlotState[] = [
+				{ slotId: p, unitCount: 10 },
+				{ slotId: p + 11, unitCount: 10 },
+			];
+			const newSlots: SlotState[] = [...oldSlots, { slotId: p + 22, unitCount: 0 }];
+			const plan = planIncrementalSlotAddition(units, oldSlots, newSlots);
+			expect(plan).toEqual([]);
+		}
+	});
+});
+
+// ---------------------------------------------------------------------------
+// selectSlotForNewUnit — new unit placement
+// ---------------------------------------------------------------------------
+
+describe('selectSlotForNewUnit', () => {
+	it('returns undefined for empty slot list', () => {
+		expect(selectSlotForNewUnit([])).toBeUndefined();
+	});
+
+	it('picks the only slot when there is one', () => {
+		const slots: SlotState[] = [{ slotId: 0, unitCount: 5 }];
+		expect(selectSlotForNewUnit(slots)).toEqual({ slotId: 0, unitCount: 5 });
+	});
+
+	it('picks the slot with the fewest units', () => {
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 10 },
+			{ slotId: 1, unitCount: 3 },
+			{ slotId: 2, unitCount: 7 },
+		];
+		expect(selectSlotForNewUnit(slots)!.slotId).toBe(1);
+	});
+
+	it('picks a slot with 0 units when others have units', () => {
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 8 },
+			{ slotId: 1, unitCount: 0 },
+			{ slotId: 2, unitCount: 5 },
+		];
+		expect(selectSlotForNewUnit(slots)!.slotId).toBe(1);
+	});
+
+	it('picks the first tied slot when multiple have the same lowest count', () => {
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 5 },
+			{ slotId: 1, unitCount: 3 },
+			{ slotId: 2, unitCount: 3 },
+		];
+		const result = selectSlotForNewUnit(slots)!;
+		// "just picks any" — we verify it is one of the tied slots
+		expect(result.unitCount).toBe(3);
+		expect([1, 2]).toContain(result.slotId);
+	});
+
+	it('works for newly added empty slots', () => {
+		// Player has 2 balanced slots (10 each) and a new empty slot
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 10 },
+			{ slotId: 1, unitCount: 10 },
+			{ slotId: 2, unitCount: 0 },
+		];
+		expect(selectSlotForNewUnit(slots)!.slotId).toBe(2);
+	});
+
+	it('naturally fills new slots first across multiple spawn cycles', () => {
+		// Simulate 6 spawns: start with slots [10, 10, 0]
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 10 },
+			{ slotId: 1, unitCount: 10 },
+			{ slotId: 2, unitCount: 0 },
+		];
+		const assignedSlots: number[] = [];
+		for (let i = 0; i < 6; i++) {
+			const best = selectSlotForNewUnit(slots)!;
+			assignedSlots.push(best.slotId);
+			best.unitCount++;
+		}
+		// First 6 spawns should all go to slot 2 (starts at 0, reaches 6)
+		// because slot 2 stays lowest until it catches up at 10
+		expect(assignedSlots).toEqual([2, 2, 2, 2, 2, 2]);
+		expect(slots[2].unitCount).toBe(6);
+	});
+
+	it('spreads units evenly after new slot catches up', () => {
+		// Simulate 12 spawns starting from [10, 10, 0]
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 10 },
+			{ slotId: 1, unitCount: 10 },
+			{ slotId: 2, unitCount: 0 },
+		];
+		for (let i = 0; i < 12; i++) {
+			const best = selectSlotForNewUnit(slots)!;
+			best.unitCount++;
+		}
+		// After 10 spawns slot 2 catches up (10,10,10)
+		// Then 2 more → one goes to first tied (slot 0 or 1), another to next
+		// All slots should be within ±1 of each other
+		const counts = slots.map((s) => s.unitCount);
+		const min = Math.min(...counts);
+		const max = Math.max(...counts);
+		expect(max - min).toBeLessThanOrEqual(1);
+	});
+
+	it('handles the production scenario: player slot + shared slots', () => {
+		// Player 0 (main) has 15 units, shared slot 12 has 8, shared slot 13 has 12
+		const slots: SlotState[] = [
+			{ slotId: 0, unitCount: 15 },
+			{ slotId: 12, unitCount: 8 },
+			{ slotId: 13, unitCount: 12 },
+		];
+		// New unit should go to slot 12 (fewest units)
+		expect(selectSlotForNewUnit(slots)!.slotId).toBe(12);
+	});
+
+	it('matches getSlotWithLowestUnitCount production behaviour', () => {
+		// Mirrors the production method which includes the player's own slot
+		const playerSlot: SlotState = { slotId: 0, unitCount: 5 };
+		const sharedSlots: SlotState[] = [
+			{ slotId: 12, unitCount: 8 },
+			{ slotId: 13, unitCount: 3 },
+		];
+		const allSlots = [playerSlot, ...sharedSlots];
+		const result = selectSlotForNewUnit(allSlots)!;
+		expect(result.slotId).toBe(13);
+		expect(result.unitCount).toBe(3);
 	});
 });
