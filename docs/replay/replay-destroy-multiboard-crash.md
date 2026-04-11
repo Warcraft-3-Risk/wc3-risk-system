@@ -1,30 +1,31 @@
-# Replay Crash: DestroyMultiboard
+# Replay Safety: Multiboard Lifecycle
 
-## Problem
+## Motivation
 
-Watching a replay of an FFA game crashes with an `ACCESS_VIOLATION` (null pointer dereference at offset `0x8`) when the game-over state is reached. The crash occurs the moment `DestroyMultiboard` is called inside `ScoreboardManager.destroyBoards()`.
+Replay stability depends on handle behavior matching what replay playback expects. Multiboard destruction is a known crash risk and must follow a replay-safe lifecycle.
 
-Promode (1v1) replays were not affected because the `checkAndHandleVictoryAsync` shortcut in `W3CMode` fires `CustomVictoryBJ` before the game-over state is entered, so `destroyBoards()` is never reached.
+## Current Behavior
 
-## Root Cause
+Scoreboard teardown avoids destroying multiboard handles:
 
-`DestroyMultiboard` is a WC3 native that is unsafe to call during replay playback. The replay engine does not expect handle destruction that wasn't part of the original recorded game actions, and accessing the freed handle triggers a null pointer crash in the engine.
+- ScoreboardManager.destroyBoards() delegates to renderer.destroy()
+- ScoreboardRenderer.destroy() contract is to hide board handles, not destroy them
 
-This is consistent with the handle parity constraint documented in [replay-scoreboard-pov.md](replay-scoreboard-pov.md) — creating or destroying handles during replay diverges from the recorded handle state.
+This preserves replay stability while still removing UI visibility.
 
-## Fix
+## Constraints and Safety Rules
 
-`ScoreboardManager.destroyBoards()` now hides boards instead of destroying them unconditionally — no replay vs. live distinction needed:
+- Do not call DestroyMultiboard for active scoreboard boards.
+- Prefer hide/reuse patterns for replay-sensitive UI handles.
+- Keep scoreboard creation/update paths deterministic.
+- Treat replay safety as a higher priority than reclaiming trivial UI handles.
 
-```ts
-public destroyBoards() {
-    this.iterateBoards((board) => board.setVisibility(false));
-    this.scoreboards = { standard: undefined, obs: undefined };
-}
-```
+## Operational Tradeoff
 
-This is safe because `SetupState` creates fresh multiboards each round regardless. The old hidden boards leak a trivial handle (a few bytes per round in promode best-of series) but avoid the engine crash entirely. `MultiboardDisplay` is replay-safe since it operates on existing handles without destroying them.
+Hidden boards may retain a small handle footprint, but this is accepted to avoid replay crashes and handle parity issues.
 
-## Files Changed
+## Source of Truth in Code
 
-- `src/app/scoreboard/scoreboard-manager.ts` — Replay-safe `destroyBoards()`
+- src/app/scoreboard/scoreboard-manager.ts
+- src/app/scoreboard/scoreboard-renderer.ts
+- src/app/game/game-mode/base-game-mode/setup-state.ts

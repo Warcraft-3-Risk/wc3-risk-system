@@ -1,30 +1,26 @@
-# Replay Minimap FOW Fix
+# Replay Minimap Fog-of-War Behavior
 
-## Overview
+## Motivation
 
-Custom minimap icons (managed by `MinimapIconManager`) were showing all units on the minimap during replay — even those behind the observed player's fog of war.
+Replay viewers can switch POV. Minimap visibility and coloring must follow the observed POV, not the recording player.
 
-## Root Cause
+## Current Behavior
 
-`IsUnitVisible(unit, localPlayer)` was using `GetLocalPlayer()` for visibility checks. In a replay, `GetLocalPlayer()` always returns the **recording player**, not the player whose POV the viewer is watching. Since the recording player has `ALLIANCE_SHARED_VISION` with allies, all allied units appeared visible regardless of the observed player's actual fog state.
+Minimap icon logic uses an effective local player in replay:
 
-## Fix
+- effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer()
+- visibility and color decisions use effectiveLocal
 
-All `IsUnitVisible` calls in `MinimapIconManager` now use `effectiveLocal`:
+This keeps minimap icon visibility aligned with the observed player's fog state.
 
-```typescript
-const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
-```
+## Constraints and Safety Rules
 
-### Call Sites Fixed
+- Do not rely on GetLocalPlayer alone for replay POV-sensitive UI.
+- Replay-only behavior must avoid new replay-only handle creation paths.
+- Keep icon updates on existing update loops; avoid replay-specific timers.
 
-- `updateAllIcons()` — city visibility check
-- `updateAllIcons()` — unit visibility check
-- `registerTrackedUnit()` — initial registration visibility
-- `addCapitalBorder()` — capital icon color/visibility
+## Source of Truth in Code
 
-The coloring functions (`updateIconColor`, `updateUnitIconColor`) already received `effectiveLocal` correctly — only the visibility gating was wrong.
-
-## File Changed
-
-- `src/app/managers/minimap-icon-manager.ts`
+- src/app/managers/minimap-icon-manager.ts
+- src/app/utils/game-status.ts
+- docs/shared-slots/replay-pov-detection.md
