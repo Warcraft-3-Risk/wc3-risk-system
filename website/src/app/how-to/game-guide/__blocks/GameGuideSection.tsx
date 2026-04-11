@@ -2,6 +2,25 @@
 
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import mermaid from "mermaid";
+
+mermaid.initialize({
+  startOnLoad: false,
+  theme: "dark",
+  fontFamily: "var(--font-sans)",
+});
+
+function MermaidChart({ chart }: { chart: string }) {
+  const [svg, setSvg] = useState<string>("");
+  const id = "mermaid-svg-" + Math.round(Math.random() * 10000000);
+
+  useEffect(() => {
+    mermaid.render(id, chart).then((v) => setSvg(v.svg)).catch((e) => console.error(e));
+  }, [chart, id]);
+
+  return <div className="mermaid-chart flex justify-center my-6" dangerouslySetInnerHTML={{ __html: svg }} />;
+}
 
 interface GameGuideSectionProps {
   sectionId: string;
@@ -19,13 +38,10 @@ export function GameGuideSection({ sectionId, sourceFile }: GameGuideSectionProp
         return res.text();
       })
       .then((text) => {
-        // Fix relative image paths from docs to website public paths
         const fixed = text
           .replace(/\.\.\/.\.\/assets\/icons\/small-icons\//g, "/icons/small-icons/")
           .replace(/\.\.\/.\.\/assets\/icons\/characters\//g, "/icons/characters/")
-          .replace(/\.\.\/.\.\/assets\/icons\/skills\//g, "/icons/skills/")
-          // Remove mermaid code blocks (render as text description instead)
-          .replace(/```mermaid[\s\S]*?```/g, "*(Diagram)*");
+          .replace(/\.\.\/.\.\/assets\/icons\/skills\//g, "/icons/skills/");
         setContent(fixed);
         setLoading(false);
       })
@@ -46,11 +62,23 @@ export function GameGuideSection({ sectionId, sourceFile }: GameGuideSectionProp
   return (
     <div data-testid={`guide-content-${sectionId}`} className="markdown-content">
       <ReactMarkdown
+        remarkPlugins={[remarkGfm]}
         components={{
           img: ({ src, alt, ...props }) => (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={src} alt={alt || ""} className="inline-block max-h-8 align-middle" {...props} />
           ),
+          code({ className, children, ...props }) {
+            const match = /language-(\w+)/.exec(className || "");
+            if (match && match[1] === "mermaid") {
+              return <MermaidChart chart={String(children).replace(/\n$/, "")} />;
+            }
+            return (
+              <code className={className} {...props}>
+                {children}
+              </code>
+            );
+          },
         }}
       >
         {content || ""}

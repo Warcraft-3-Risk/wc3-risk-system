@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+@font-face {
+  font-family: 'Friz Quadrata';
+  src: url('/fonts/friz-quadrata-regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Montserrat';
+  src: url('/fonts/Montserrat.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @theme inline {
   --color-primary: #102535;
   --color-secondary: #1b3449;
@@ -10,7 +24,7 @@
   --color-text-secondary: #94a3b8;
   --color-border: #2d4a63;
   --font-sans: "Montserrat", system-ui, sans-serif;
-  --font-display: "Montserrat", system-ui, sans-serif;
+  --font-display: "Friz Quadrata", system-ui, serif;
 }
 
 body {
@@ -19,7 +33,6 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Markdown content styles */
 .markdown-content h1,
 .markdown-content h2,
 .markdown-content h3,
@@ -28,79 +41,84 @@ body {
   color: var(--color-text-primary);
   margin-top: 1.5em;
   margin-bottom: 0.5em;
+  font-weight: normal;
 }
-
-.markdown-content h1 { font-size: 2rem; font-weight: 700; }
-.markdown-content h2 { font-size: 1.5rem; font-weight: 600; color: var(--color-accent); }
-.markdown-content h3 { font-size: 1.25rem; font-weight: 600; }
-
+.markdown-content h1 { font-size: 2.2rem; }
+.markdown-content h2 { font-size: 1.8rem; color: var(--color-accent); }
+.markdown-content h3 { font-size: 1.5rem; color: var(--color-text-primary); }
 .markdown-content p {
   margin-bottom: 1em;
   line-height: 1.7;
   color: var(--color-text-secondary);
 }
-
 .markdown-content table {
   width: 100%;
   border-collapse: collapse;
-  margin: 1em 0;
+  margin: 1.5em 0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
-
 .markdown-content th,
 .markdown-content td {
   border: 1px solid var(--color-border);
-  padding: 0.5em 0.75em;
+  padding: 0.75em 1em;
   text-align: left;
 }
-
 .markdown-content th {
-  background-color: var(--color-surface);
-  font-weight: 600;
+  background-color: var(--color-secondary);
+  font-family: var(--font-display);
+  font-weight: normal;
   color: var(--color-accent);
 }
-
 .markdown-content td {
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
+  background-color: rgba(30, 58, 82, 0.4);
 }
-
 .markdown-content code {
-  background-color: var(--color-surface);
+  background-color: var(--color-secondary);
   padding: 0.15em 0.4em;
   border-radius: 4px;
   font-size: 0.9em;
+  font-family: monospace;
 }
-
 .markdown-content pre {
-  background-color: var(--color-surface);
-  padding: 1em;
+  background-color: var(--color-secondary);
+  padding: 1.25em;
   border-radius: 8px;
   overflow-x: auto;
-  margin: 1em 0;
+  margin: 1.5em 0;
+  border: 1px solid var(--color-border);
 }
-
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
 .markdown-content blockquote {
   border-left: 4px solid var(--color-accent);
-  padding-left: 1em;
-  margin: 1em 0;
-  color: var(--color-text-secondary);
+  background-color: rgba(30, 58, 82, 0.6);
+  padding: 1em 1.5em;
+  margin: 1.5em 0;
+  border-radius: 0 8px 8px 0;
+  color: var(--color-text-primary);
 }
-
 .markdown-content a {
   color: var(--color-accent);
   text-decoration: underline;
+  text-underline-offset: 4px;
 }
-
+.markdown-content a:hover {
+  color: var(--color-accent-hover);
+}
 .markdown-content ul,
 .markdown-content ol {
-  margin: 0.5em 0;
+  margin: 1em 0;
   padding-left: 1.5em;
-  color: var(--color-text-secondary);
+  color: var(--color-text-primary);
 }
-
 .markdown-content li {
-  margin-bottom: 0.25em;
+  margin-bottom: 0.5em;
 }
-
 .markdown-content img {
   max-width: 100%;
   height: auto;

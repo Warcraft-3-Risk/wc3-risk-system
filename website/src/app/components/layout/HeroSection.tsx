@@ -1,37 +1,51 @@
 import Link from "next/link";
+import Image from "next/image";
 
 export function HeroSection() {
   return (
     <section
       data-testid="hero-section"
-      className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[#0a1820] to-[--color-primary] text-center"
+      className="relative py-28 px-4 sm:px-6 lg:px-8 text-center overflow-hidden"
     >
-      <div className="max-w-4xl mx-auto">
-        <h1
-          data-testid="hero-heading"
-          className="text-4xl sm:text-5xl lg:text-6xl font-bold text-[--color-text-primary] mb-4 tracking-tight"
-        >
-          Risk <span className="text-[--color-accent]">Reforged</span>
-        </h1>
+      <div className="absolute inset-0 z-0">
+        <Image 
+          src="/hero-image.png" 
+          alt="Hero background" 
+          fill 
+          className="object-cover opacity-50 mix-blend-overlay"
+          priority 
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0a1820]/70 via-[--color-primary]/80 to-[--color-primary]" />
+      </div>
+
+      <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
+        <Image 
+          src="/icons/logo/risklogo-full.svg" 
+          alt="Risk Reforged" 
+          width={480} 
+          height={160} 
+          className="mb-8 drop-shadow-[0_10px_25px_rgba(0,0,0,0.5)]"
+        />
+        
         <p
           data-testid="hero-subtitle"
-          className="text-lg sm:text-xl text-[--color-text-secondary] mb-8 max-w-2xl mx-auto"
+          className="text-xl sm:text-2xl text-[--color-text-primary] mb-10 max-w-2xl mx-auto drop-shadow-md font-medium"
         >
           A strategic conquest and diplomacy game. Command armies, forge alliances,
           and conquer territories across Europe, Asia, and the World.
         </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <div className="flex flex-col sm:flex-row gap-5 justify-center mt-4">   
           <Link
             href="/how-to/game-guide"
             data-testid="hero-cta-guide"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-lg bg-[--color-accent] text-[--color-primary] font-semibold hover:bg-[--color-accent-hover] transition-colors"
+            className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-[--color-accent] text-[#0a1820] font-bold text-lg hover:bg-[--color-accent-hover] hover:scale-105 transition-transform shadow-[0_0_20px_rgba(249,199,1,0.4)] uppercase"
           >
             Game Guide
           </Link>
           <Link
             href="/how-to/units-page"
             data-testid="hero-cta-units"
-            className="inline-flex items-center justify-center px-6 py-3 rounded-lg border border-[--color-accent] text-[--color-accent] font-semibold hover:bg-[--color-accent] hover:text-[--color-primary] transition-colors"
+            className="inline-flex items-center justify-center px-8 py-4 rounded-lg border-2 border-[--color-accent] text-[--color-accent] font-bold text-lg hover:bg-[--color-surface] hover:scale-105 transition-all shadow-[0_0_20px_rgba(30,58,82,0.8)] uppercase"
           >
             Explore Units
           </Link>
