@@ -12,7 +12,7 @@ export function UICommand(chatManager: ChatManager) {
 		let isHidden: boolean = BlzFrameIsVisible(healthButton);
 
 		if (isHidden) {
-			if (player == GetLocalPlayer()) {
+			if (player === GetLocalPlayer()) {
 				File.write('risk/ui.pld', `false`);
 
 				BlzFrameSetVisible(healthButton, false);
@@ -20,7 +20,7 @@ export function UICommand(chatManager: ChatManager) {
 				BlzFrameSetVisible(labelButton, false);
 			}
 		} else {
-			if (player == GetLocalPlayer()) {
+			if (player === GetLocalPlayer()) {
 				File.write('risk/ui.pld', `true`);
 			}
 

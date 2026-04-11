@@ -112,9 +112,9 @@ export abstract class City implements Resetable, Ownable {
 		if (IsUnitLoaded(unit)) return false;
 		if (IsUnitType(unit, UNIT_TYPE_STRUCTURE)) return false;
 		if (IsUnitType(unit, UNIT_TYPE.TRANSPORT)) return false;
-		if (GetUnitTypeId(unit) == UNIT_ID.DUMMY_GUARD) return false;
-		if (unit == null || unit == undefined) return false;
-		if (IsUnitType(unit, UNIT_TYPE.GUARD) && unit != this.guard.unit) return false;
+		if (GetUnitTypeId(unit) === UNIT_ID.DUMMY_GUARD) return false;
+		if (unit === undefined) return false;
+		if (IsUnitType(unit, UNIT_TYPE.GUARD) && unit !== this.guard.unit) return false;
 
 		return true;
 	}
@@ -145,7 +145,7 @@ export abstract class City implements Resetable, Ownable {
 
 		const newOwner: player = SharedSlotManager.getInstance().getOwnerOfUnit(this.guard.unit);
 
-		if (this.owner != newOwner) {
+		if (this.owner !== newOwner) {
 			const currOwner = this.owner;
 
 			this.setOwner(newOwner);
@@ -157,6 +157,6 @@ export abstract class City implements Resetable, Ownable {
 	}
 
 	public isCapturedCapital(): boolean {
-		return GetUnitTypeId(this.barrack.unit) == UNIT_ID.CONQUERED_CAPITAL;
+		return GetUnitTypeId(this.barrack.unit) === UNIT_ID.CONQUERED_CAPITAL;
 	}
 }

@@ -122,7 +122,7 @@ export class SessionRenderer extends ScoreboardRenderer {
 			const stats = this.stats.get(player.getPlayer());
 			if (!stats) return;
 
-			const textColor = effectiveLocal == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
+			const textColor = effectiveLocal === player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 			const nameColor = NameManager.getInstance().getOriginalColorCode(player.getPlayer());
 
 			this.setItemValue(`${nameColor}${NameManager.getInstance().getBtag(player.getPlayer())}`, row, this.PLAYER_COL);

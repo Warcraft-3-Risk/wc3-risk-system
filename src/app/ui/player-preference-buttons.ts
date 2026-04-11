@@ -77,7 +77,7 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 			player.options.labels = !player.options.labels;
 
 			// Only update visuals for the local player
-			if (player.getPlayer() == GetLocalPlayer()) {
+			if (player.getPlayer() === GetLocalPlayer()) {
 				// Save labels preference to file
 				File.write('risk/labels.pld', `${player.options.labels}`);
 
@@ -109,7 +109,7 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
  * @param isRanked Whether the game is ranked
  */
 export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isRanked: boolean): void {
-	if (GetLocalPlayer() != player.getPlayer()) {
+	if (GetLocalPlayer() !== player.getPlayer()) {
 		return;
 	}
 
@@ -171,7 +171,7 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 		xOffset: 0.069,
 		initialTooltipText: `Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
 		action: (context: number, textures: { primary: string; secondary: string }, button) => {
-			if (GetLocalPlayer() == player.getPlayer()) {
+			if (GetLocalPlayer() === player.getPlayer()) {
 				// Import RatingManager at runtime to check ranked status
 				const { RatingManager } = require('src/app/rating/rating-manager');
 				const ratingManager = RatingManager.getInstance();

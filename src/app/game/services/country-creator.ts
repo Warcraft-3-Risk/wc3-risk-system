@@ -9,7 +9,7 @@ export interface CityCreate {
 export class CountryCreatorTracker {
     private countries: CountryCreate[] = [];
     private unassignedCities: CityCreate[] = [];
-    private unassignedSpawner: Coordinates | null = null;
+    private unassignedSpawner: Coordinates | undefined = undefined;
 
     getCountries(): readonly CountryCreate[] {
         return this.countries;
@@ -19,7 +19,7 @@ export class CountryCreatorTracker {
         return this.unassignedCities;
     }
 
-    getUnassignedSpawner(): Coordinates | null {
+    getUnassignedSpawner(): Coordinates | undefined {
         return this.unassignedSpawner;
     }
 
@@ -47,7 +47,7 @@ export class CountryCreatorTracker {
         });
     }
 
-    findCountryByCityCoordinates(coords: Coordinates): string | null {
+    findCountryByCityCoordinates(coords: Coordinates): string | undefined {
         for (const country of this.countries) {
             if (
                 country.getCities().some(
@@ -59,7 +59,7 @@ export class CountryCreatorTracker {
                 return country.getCountryName();
             }
         }
-        return null;
+        return undefined;
     }
 
     addUnassignedCity(city: CityCreate): void {
@@ -82,7 +82,7 @@ export class CountryCreatorTracker {
 
         this.countries.push(newCountry);
         this.unassignedCities = [];
-        this.unassignedSpawner = null;
+        this.unassignedSpawner = undefined;
 
         return newCountry;
     }
@@ -92,12 +92,12 @@ export class CountryCreatorTracker {
 export class CountryCreate {
     private countryName: string;
     private cities: CityCreate[];
-    private spawner: Coordinates | null;
+    private spawner: Coordinates | undefined;
 
     constructor(
         countryName: string,
         cities: CityCreate[] = [],
-        spawner: Coordinates | null = null
+        spawner: Coordinates | undefined = undefined
     ) {
         this.countryName = countryName;
         this.cities = cities;
@@ -112,7 +112,7 @@ export class CountryCreate {
         return this.cities;
     }
 
-    getSpawner(): Coordinates | null {
+    getSpawner(): Coordinates | undefined {
         return this.spawner;
     }
 

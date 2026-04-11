@@ -11,7 +11,7 @@ export class TooltipManager {
 
 	private tooltipBox: framehandle;
 	private tooltipText: framehandle;
-	private lastFocusUnit: unit = null;
+	private lastFocusUnit: unit = undefined;
 	private isVisible: boolean = false;
 	private tooltipOffsets: Map<number, number>;
 
@@ -21,7 +21,7 @@ export class TooltipManager {
 	}
 
 	static getInstance(): TooltipManager {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new TooltipManager();
 		}
 		return this.instance;
@@ -158,7 +158,7 @@ export class TooltipManager {
 	private getTooltipOffset(u: unit): number {
 		const typeId = GetUnitTypeId(u);
 		const offset = this.tooltipOffsets.get(typeId);
-		return offset != null ? offset : 0;
+		return offset !== undefined ? offset : 0;
 	}
 
 	// Screen-space Y offsets per unit type — tune these values in-game

@@ -104,7 +104,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	isMatchOver(): boolean {
-		return GlobalGameData.matchState == 'postMatch';
+		return GlobalGameData.matchState === 'postMatch';
 	}
 
 	onExitState(): void {
@@ -136,28 +136,28 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		// 3 = day
 
 		// dusk
-		if (phase == 0) {
+		if (phase === 0) {
 			if (DEBUG_PRINTS.master) debugPrint('Phase is dusk (0), turning on fog', DC.gameMode);
 			SetTimeOfDay(18.0);
 			FogManager.getInstance().turnFogOn();
 			return;
 		}
 
-		if (phase == 1) {
+		if (phase === 1) {
 			if (DEBUG_PRINTS.master) debugPrint('Phase is night (1), turning on fog', DC.gameMode);
 			SetTimeOfDay(0.0);
 			FogManager.getInstance().turnFogOn();
 			return;
 		}
 
-		if (phase == 2) {
+		if (phase === 2) {
 			if (DEBUG_PRINTS.master) debugPrint('Phase is dawn (2), turning off fog', DC.gameMode);
 			SetTimeOfDay(6.0);
 			FogManager.getInstance().turnFogOff();
 			return;
 		}
 
-		if (phase == 3) {
+		if (phase === 3) {
 			if (DEBUG_PRINTS.master) debugPrint('Phase is day (3), turning off fog', DC.gameMode);
 			SetTimeOfDay(12.0);
 			FogManager.getInstance().turnFogOff();
@@ -194,7 +194,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onEndTurn(turn: number): void {
-		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
+		if (VictoryManager.GAME_VICTORY_STATE === 'DECIDED') {
 			GlobalGameData.matchState = 'postMatch';
 		}
 
@@ -239,7 +239,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			return true;
 		});
 
-		if (playersToAnnounce.length == 0) return;
+		if (playersToAnnounce.length === 0) return;
 
 		// Find the maximum city count among players above win threshold (for determining actual ties)
 		const winThreshold = VictoryManager.getCityCountWin();
@@ -254,13 +254,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		function playerCityCountDescription(candidate: ActivePlayer, state: VictoryProgressState, maxCities: number) {
 			const playerCities = candidate.trackedData.cities.cities.length;
 			// Only show "TIED to win" if player has the maximum city count (actually tied)
-			if (state == 'TIE' && playerCities >= VictoryManager.getCityCountWin() && playerCities == maxCities) {
+			if (state === 'TIE' && playerCities >= VictoryManager.getCityCountWin() && playerCities === maxCities) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
 				const remainingCities = VictoryManager.getCityCountWin() - playerCities;
 				if (remainingCities < 0) {
 					return `satisfies the city count to win!`;
-				} else if (remainingCities == 0) {
+				} else if (remainingCities === 0) {
 					return `must maintain their city count this round to win!`;
 				} else {
 					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - playerCities}|r more to win!`;
@@ -279,13 +279,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		function teamCityCountDescription(candidate: Team, state: VictoryProgressState, maxCities: number) {
 			const teamCities = candidate.getCities();
 			// Only show "TIED to win" if team has the maximum city count (actually tied)
-			if (state == 'TIE' && teamCities >= VictoryManager.getCityCountWin() && teamCities == maxCities) {
+			if (state === 'TIE' && teamCities >= VictoryManager.getCityCountWin() && teamCities === maxCities) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
 				const remainingCities = VictoryManager.getCityCountWin() - teamCities;
 				if (remainingCities < 0) {
 					return `satisfies the city count to win!`;
-				} else if (remainingCities == 0) {
+				} else if (remainingCities === 0) {
 					return `must maintain their city count this round to win!`;
 				} else {
 					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - teamCities}|r more to win!`;
@@ -300,7 +300,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		}
 
 		const tiedMessage =
-			VictoryManager.GAME_VICTORY_STATE == 'TIE'
+			VictoryManager.GAME_VICTORY_STATE === 'TIE'
 				? `${OvertimeManager.isOvertimeActive() ? `${HexColors.RED}TIED!\nGAME EXTENDED BY ONE ROUND!|r` : ''}`
 				: '';
 		const overtimeMessage = OvertimeManager.isOvertimeActive() ? `${HexColors.RED}OVERTIME!|r` : '';
@@ -331,7 +331,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		const killingUnitOwner = cm.getOwnerOfUnit(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(killingUnitOwner));
 
-		if (killingUnitOwner == cm.getOwnerOfUnit(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
+		if (killingUnitOwner === cm.getOwnerOfUnit(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
 				AnnounceOnLocation(`${colorString}Denied`, GetUnitX(dyingUnit), GetUnitY(dyingUnit) + 20, 2.0, 3.0);
 			}

@@ -4,7 +4,7 @@ export function UnitUpgradeEvent() {
 	const t: trigger = CreateTrigger();
 
 	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
-		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_UPGRADE_FINISH, null);
+		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_UPGRADE_FINISH, undefined);
 	}
 
 	TriggerAddCondition(
@@ -16,7 +16,7 @@ export function UnitUpgradeEvent() {
 
 			UnitSetUsesAltIcon(
 				upgradedUnit,
-				GetUnitTypeId(upgradedUnit) == UNIT_ID.CAPITAL || GetUnitTypeId(upgradedUnit) == UNIT_ID.CONQUERED_CAPITAL
+				GetUnitTypeId(upgradedUnit) === UNIT_ID.CAPITAL || GetUnitTypeId(upgradedUnit) === UNIT_ID.CONQUERED_CAPITAL
 			);
 
 			return false;

@@ -63,10 +63,10 @@ describe('Country.setOwner', () => {
 			expect(mockLocalMessage).not.toHaveBeenCalled();
 		});
 
-		it('does not play any sound when setOwner is called with null', () => {
+		it('does not play any sound when setOwner is called with undefined', () => {
 			const country = makeCountry('France');
 
-			country.setOwner(null);
+			country.setOwner(undefined);
 
 			expect(mockLocalMessage).not.toHaveBeenCalled();
 		});

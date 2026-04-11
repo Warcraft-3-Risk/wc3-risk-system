@@ -111,7 +111,7 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 		// Create text tags for each player
 		const countrySet: Set<Country> = new Set(CityToCountry.values());
 		PlayerManager.getInstance().playersAndObservers.forEach((player) => {
-			if (GetLocalPlayer() == player.getPlayer()) {
+			if (GetLocalPlayer() === player.getPlayer()) {
 				// Create all country labels
 				countrySet.forEach((country) => country.createText());
 
@@ -147,8 +147,8 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 	 * Resets the builder state to its default values.
 	 */
 	public reset(): void {
-		this.name = null;
+		this.name = undefined;
 		this.cities = [];
-		this.spawn = null;
+		this.spawn = undefined;
 	}
 }

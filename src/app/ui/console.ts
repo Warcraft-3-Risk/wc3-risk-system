@@ -48,19 +48,19 @@ export function SetConsoleUI() {
 		BlzFrameSetVisible(BlzGetFrameByName('VisionCheckBox', i), false);
 	}
 
-	if (GetHandleId(BlzGetFrameByName('ChatPlayerLabel', 0)) == 0) {
+	if (GetHandleId(BlzGetFrameByName('ChatPlayerLabel', 0)) === 0) {
 		Location(0, 0);
 	} else {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerLabel', 0), false);
 	}
 
-	if (GetHandleId(BlzGetFrameByName('ChatPlayerRadioButton', 0)) == 0) {
+	if (GetHandleId(BlzGetFrameByName('ChatPlayerRadioButton', 0)) === 0) {
 		Location(0, 0);
 	} else {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerRadioButton', 0), false);
 	}
 
-	if (GetHandleId(BlzGetFrameByName('ChatPlayerMenu', 0)) == 0) {
+	if (GetHandleId(BlzGetFrameByName('ChatPlayerMenu', 0)) === 0) {
 		Location(0, 0);
 	} else {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerMenu', 0), false);
@@ -88,7 +88,7 @@ export function SetConsoleUI() {
 
 		if (IsPlayerObserver(player)) continue;
 
-		if (GetPlayerController(player) == MAP_CONTROL_USER) {
+		if (GetPlayerController(player) === MAP_CONTROL_USER) {
 			const errorFrame: framehandle = BlzCreateFrame(
 				'ErrorMessageFrame',
 				BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0),
@@ -106,7 +106,7 @@ export function SetConsoleUI() {
 			);
 
 			BlzFrameSetVisible(localMsgFrame, false);
-			if (player == GetLocalPlayer()) {
+			if (player === GetLocalPlayer()) {
 				BlzFrameSetVisible(errorFrame, true);
 				BlzFrameSetVisible(localMsgFrame, true);
 			}

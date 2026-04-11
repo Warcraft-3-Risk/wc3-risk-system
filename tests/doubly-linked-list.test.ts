@@ -9,10 +9,10 @@ describe('DoublyLinkedList', () => {
 			expect(list.length()).toBe(0);
 		});
 
-		test('getFirst and getLast return null on empty list', () => {
+		test('getFirst and getLast return undefined on empty list', () => {
 			const list = new DoublyLinkedList<number>();
-			expect(list.getFirst()).toBeNull();
-			expect(list.getLast()).toBeNull();
+			expect(list.getFirst()).toBeUndefined();
+			expect(list.getLast()).toBeUndefined();
 		});
 	});
 
@@ -173,15 +173,15 @@ describe('DoublyLinkedList', () => {
 			list.addLast(1);
 			list.remove(1);
 			expect(list.isEmpty()).toBe(true);
-			expect(list.getFirst()).toBeNull();
-			expect(list.getLast()).toBeNull();
+			expect(list.getFirst()).toBeUndefined();
+			expect(list.getLast()).toBeUndefined();
 		});
 	});
 
 	describe('removeFirst', () => {
-		test('returns null on empty list', () => {
+		test('returns undefined on empty list', () => {
 			const list = new DoublyLinkedList<number>();
-			expect(list.removeFirst()).toBeNull();
+			expect(list.removeFirst()).toBeUndefined();
 		});
 
 		test('removes and returns the first element', () => {
@@ -203,9 +203,9 @@ describe('DoublyLinkedList', () => {
 	});
 
 	describe('removeLast', () => {
-		test('returns null on empty list', () => {
+		test('returns undefined on empty list', () => {
 			const list = new DoublyLinkedList<number>();
-			expect(list.removeLast()).toBeNull();
+			expect(list.removeLast()).toBeUndefined();
 		});
 
 		test('removes and returns the last element', () => {

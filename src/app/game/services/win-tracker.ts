@@ -23,7 +23,7 @@ export class WinTracker {
 
 			if (IsPlayerObserver(player)) continue;
 
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_PLAYING) {
+			if (GetPlayerSlotState(player) === PLAYER_SLOT_STATE_PLAYING) {
 				entityList.push(player);
 			}
 		}
@@ -92,7 +92,7 @@ export class WinTracker {
 		let otherEntity: EntityData;
 
 		this.entityData.forEach((entityData, entity) => {
-			if (entity != this.currentLeader) {
+			if (entity !== this.currentLeader) {
 				otherEntity = this.entityData.get(entity);
 			}
 		});
@@ -112,7 +112,7 @@ export class WinTracker {
 		let otherEntity: EntityData;
 
 		this.entityData.forEach((entityData, entity) => {
-			if (entity != this.currentLeader) {
+			if (entity !== this.currentLeader) {
 				otherEntity = this.entityData.get(entity);
 			}
 		});

@@ -51,7 +51,7 @@ export class LandCity extends City {
 	public onUnitTrain(unit: unit): void {
 		//TODO remove the defaultguardtype dependancy here.
 		//Maybe just run player options instead
-		if (IsUnitMelee(this.guard.unit) && GetUnitTypeId(unit) == DefaultGuardType) {
+		if (IsUnitMelee(this.guard.unit) && GetUnitTypeId(unit) === DefaultGuardType) {
 			SetUnitPosition(unit, this.guard.defaultX, this.guard.defaultY);
 			UnitToCity.delete(this.guard.unit);
 			this.guard.replace(unit);
@@ -95,13 +95,13 @@ export class LandCity extends City {
 
 		// If captured capital then swap
 		const unitTypeId = GetUnitTypeId(this.barrack.unit);
-		if (unitTypeId == UNIT_ID.CONQUERED_CAPITAL) {
+		if (unitTypeId === UNIT_ID.CONQUERED_CAPITAL) {
 			this.castHandler(targetedUnit);
 			return;
 		}
 
 		// Owner of capital is alive
-		if (unitTypeId == UNIT_ID.CAPITAL) {
+		if (unitTypeId === UNIT_ID.CAPITAL) {
 			if (DEBUG_PRINTS.master) debugPrint('You can not swap the guard of an allied capital!', DC.city);
 			LocalMessage(triggerPlayer, `You can not swap the guard of an allied capital!`, 'Sound\\Interface\\Error.flac');
 			return;

@@ -15,7 +15,7 @@ export class ProModeGameLoopState extends GameLoopState<StateData> {
 		const participants: ParticipantEntity[] = ParticipantEntityManager.getParticipantEntities();
 
 		participants.forEach((participant) => {
-			const opponents = [...participants.filter((p) => p != participant)];
+			const opponents = [...participants.filter((p) => p !== participant)];
 
 			const participantCityCount = ParticipantEntityManager.getCityCount(participant);
 			const opponentCityCounts = opponents.map((p) => ParticipantEntityManager.getCityCount(p)).reduce((a, b) => a + b, 0);

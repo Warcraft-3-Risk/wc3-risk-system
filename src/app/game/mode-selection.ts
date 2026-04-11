@@ -27,7 +27,7 @@ export class ModeSelection {
 	}
 
 	public static getInstance() {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new ModeSelection();
 		}
 
@@ -52,7 +52,7 @@ export class ModeSelection {
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
 
-			if (player == GetLocalPlayer()) {
+			if (player === GetLocalPlayer()) {
 				for (let index = 0; index < 3; index++) {
 					PauseGame(true);
 					PauseGame(false);
@@ -79,7 +79,7 @@ export class ModeSelection {
 		}
 
 		this.ui.show();
-		if (NameManager.getInstance().getAcct(Player(23)) == 'RiskBot') {
+		if (NameManager.getInstance().getAcct(Player(23)) === 'RiskBot') {
 			const settingsContext: SettingsContext = SettingsContext.getInstance();
 			settingsContext.getSettings().Promode = 0;
 			settingsContext.getSettings().Fog = 0;

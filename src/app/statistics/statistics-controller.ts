@@ -23,7 +23,7 @@ export class StatisticsController {
 	}
 
 	public static getInstance(): StatisticsController {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new StatisticsController();
 		}
 
@@ -34,7 +34,7 @@ export class StatisticsController {
 	 * Reset the singleton instance. For testing purposes only.
 	 */
 	public static resetInstance(): void {
-		this.instance = null as unknown as StatisticsController;
+		this.instance = undefined as unknown as StatisticsController;
 	}
 
 	// Should be called on match startup, ensures that future statistics are based on the current match players pool at the start of the match.

@@ -262,13 +262,13 @@ export class SettingsView {
 	private hostSetup() {
 		BlzFrameSetEnable(BlzGetFrameByName('GameTypePopup', 0), true);
 
-		if (GetLocalPlayer() == Player(0)) {
+		if (GetLocalPlayer() === Player(0)) {
 			BlzFrameSetVisible(BlzGetFrameByName('PopupMenuOptions', 0), false);
 		}
 	}
 
 	private playerSetup() {
-		if (GetLocalPlayer() != Player(0)) {
+		if (GetLocalPlayer() !== Player(0)) {
 			BlzFrameSetVisible(BlzGetFrameByName('PopupMenus', 0), false);
 			BlzFrameSetVisible(BlzGetFrameByName('StartButton', 0), false);
 		}

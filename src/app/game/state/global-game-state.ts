@@ -26,7 +26,7 @@ export class GlobalGameData {
 	}
 
 	public static getInstance() {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new GlobalGameData();
 		}
 
@@ -37,7 +37,7 @@ export class GlobalGameData {
 	 * Reset the singleton instance. For testing purposes only.
 	 */
 	public static resetInstance(): void {
-		this.instance = null as unknown as GlobalGameData;
+		this.instance = undefined as unknown as GlobalGameData;
 	}
 
 	public static prepareMatchData(players: ActivePlayer[]) {
@@ -58,7 +58,7 @@ export class GlobalGameData {
 			ticks: TURN_DURATION_IN_SECONDS,
 			leader: undefined,
 			matchState: 'modeSelection',
-			gameType: null,
+			gameType: undefined,
 			matchCount: 0,
 			matchPlayers: [],
 		} as GameData;

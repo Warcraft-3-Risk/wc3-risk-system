@@ -19,7 +19,7 @@ export class EventEmitter {
 	 * Reset the singleton instance. For testing purposes only.
 	 */
 	public static resetInstance(): void {
-		EventEmitter.instance = null as unknown as EventEmitter;
+		EventEmitter.instance = undefined as unknown as EventEmitter;
 	}
 
 	public on<K extends keyof GameEventMap>(event: K, handler: (...args: GameEventMap[K]) => void | Promise<void>): void;

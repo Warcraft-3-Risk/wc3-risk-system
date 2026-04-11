@@ -125,7 +125,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 	}
 
 	private getStringColor(handle: player, effectiveLocal: player): string {
-		if (effectiveLocal == handle) return HexColors.TANGERINE;
+		if (effectiveLocal === handle) return HexColors.TANGERINE;
 		if (IsPlayerAlly(effectiveLocal, handle)) return HexColors.GREEN;
 		return HexColors.WHITE;
 	}
@@ -143,7 +143,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 
 		if (teamEliminated) {
 			const grey = HexColors.LIGHT_GRAY;
-			const elimColor = effectiveLocal == handle ? textColor : grey;
+			const elimColor = effectiveLocal === handle ? textColor : grey;
 
 			const nameColor = p.originalColorCode;
 			this.setItemValue(`${teamPrefix}${nameColor}${p.acctName}`, row, this.PLAYER_COL);

@@ -40,7 +40,7 @@ export class PlayerManager {
 
 			if (BAN_LIST_ACTIVE && !W3C_MODE_ENABLED) {
 				banList.forEach((name) => {
-					if (NameManager.getInstance().getBtag(player).toLowerCase() == name) {
+					if (NameManager.getInstance().getBtag(player).toLowerCase() === name) {
 						CustomDefeatBJ(player, 'You are map banned! Appeal: discord.gg/wc3risk');
 						ClearTextMessages();
 					}
@@ -57,11 +57,11 @@ export class PlayerManager {
 				continue;
 			}
 
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) == PLAYER_SLOT_STATE_LEFT) {
+			if (GetPlayerSlotState(player) === PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) === PLAYER_SLOT_STATE_LEFT) {
 				continue;
 			}
 
-			if (GetPlayerController(player) == MAP_CONTROL_USER || GetPlayerController(player) == MAP_CONTROL_COMPUTER) {
+			if (GetPlayerController(player) === MAP_CONTROL_USER || GetPlayerController(player) === MAP_CONTROL_COMPUTER) {
 				const humanPlayer = new HumanPlayer(player);
 				this._playerFromHandle.set(player, humanPlayer);
 				this._playerControllerHandle.set(player, MAP_CONTROL_USER);
@@ -75,13 +75,13 @@ export class PlayerManager {
 				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
 				const labelButton = buildLabelToggleButton(this._playerFromHandle.get(player));
 				// Only create rating stats button if rating system is enabled
-				const ratingButton = RATING_SYSTEM_ENABLED ? buildRatingStatsButton(this._playerFromHandle.get(player)) : null;
+				const ratingButton = RATING_SYSTEM_ENABLED ? buildRatingStatsButton(this._playerFromHandle.get(player)) : undefined;
 				let contents: string = '';
 
-				if (player == GetLocalPlayer()) {
+				if (player === GetLocalPlayer()) {
 					contents = File.read('risk/ui.pld');
 
-					if (contents == 'false') {
+					if (contents === 'false') {
 						BlzFrameSetVisible(healthButton, false);
 						BlzFrameSetVisible(valueButton, false);
 						BlzFrameSetVisible(labelButton, false);
@@ -99,7 +99,7 @@ export class PlayerManager {
 	}
 
 	public static getInstance(): PlayerManager {
-		if (this._instance == null) {
+		if (this._instance === undefined) {
 			this._instance = new PlayerManager();
 		}
 
@@ -111,7 +111,7 @@ export class PlayerManager {
 	 * Allows tests to start with a fresh PlayerManager.
 	 */
 	public static resetInstance(): void {
-		this._instance = null as unknown as PlayerManager;
+		this._instance = undefined as unknown as PlayerManager;
 	}
 
 	public getEmptyPlayerSlots(): player[] {
@@ -124,7 +124,7 @@ export class PlayerManager {
 				continue;
 			}
 
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY) {
+			if (GetPlayerSlotState(player) === PLAYER_SLOT_STATE_EMPTY) {
 				players.push(player);
 			}
 		}
@@ -144,7 +144,7 @@ export class PlayerManager {
 			}
 
 			// Only consider players that have left
-			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_LEFT) {
+			if (GetPlayerSlotState(player) !== PLAYER_SLOT_STATE_LEFT) {
 				continue;
 			}
 
@@ -181,11 +181,11 @@ export class PlayerManager {
 				continue;
 			}
 
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) == PLAYER_SLOT_STATE_LEFT) {
+			if (GetPlayerSlotState(player) === PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) === PLAYER_SLOT_STATE_LEFT) {
 				continue;
 			}
 
-			if (GetPlayerController(player) == MAP_CONTROL_USER) {
+			if (GetPlayerController(player) === MAP_CONTROL_USER) {
 				activePlayers.push(new HumanPlayer(player));
 			}
 		}

@@ -66,9 +66,9 @@ export class Spawner implements Resetable, Ownable {
 	 * Executes a step for the spawner, creating new units if conditions are met.
 	 */
 	public step() {
-		if (this.getOwner() == NEUTRAL_HOSTILE) return;
-		if (GetPlayerSlotState(this.getOwner()) != PLAYER_SLOT_STATE_PLAYING) return;
-		if (GlobalGameData.matchState != 'inProgress') return;
+		if (this.getOwner() === NEUTRAL_HOSTILE) return;
+		if (GetPlayerSlotState(this.getOwner()) !== PLAYER_SLOT_STATE_PLAYING) return;
+		if (GlobalGameData.matchState !== 'inProgress') return;
 
 		// Eliminated players (e.g. forfeited via -ff) still have PLAYER_SLOT_STATE_PLAYING,
 		// so we must explicitly check their status to prevent spawning in FFA.
@@ -82,7 +82,7 @@ export class Spawner implements Resetable, Ownable {
 
 		const amount: number = Math.min(this.spawnsPerStepWithMultiplier, this.maxSpawnsPerPlayerWithMultiplier - spawnCount);
 
-		const ownerMatchPlayer = GlobalGameData.matchPlayers.find((x) => x.getPlayer() == this.getOwner());
+		const ownerMatchPlayer = GlobalGameData.matchPlayers.find((x) => x.getPlayer() === this.getOwner());
 		const rallyLoc: location = GetUnitRallyPoint(this.unit);
 
 		for (let i = 0; i < amount; i++) {
@@ -104,21 +104,21 @@ export class Spawner implements Resetable, Ownable {
 			// Register for minimap tracking if valid (must be done after adding SPAWN type)
 			MinimapIconManager.getInstance().registerIfValid(u);
 
-			if (GetLocalPlayer() == this.getOwner()) {
+			if (GetLocalPlayer() === this.getOwner()) {
 				SetUnitVertexColor(u, 200, 200, 200, 150);
 			}
 			BlzSetUnitName(u, `${GetUnitName(u)} (${this.country})`);
 			this.spawnMap.get(this.getOwner()).add(u);
 			SPAWNER_UNITS.set(u, this);
 
-			if (rallyLoc != null) {
+			if (rallyLoc !== undefined) {
 				IssuePointOrderLoc(u, 'attack', rallyLoc);
 			}
 
-			u = null;
+			u = undefined;
 		}
 
-		if (rallyLoc != null) RemoveLocation(rallyLoc);
+		if (rallyLoc !== undefined) RemoveLocation(rallyLoc);
 
 		this.setName();
 	}
@@ -132,7 +132,7 @@ export class Spawner implements Resetable, Ownable {
 
 		this.spawnMap.clear();
 		RemoveUnit(this.unit);
-		this._unit = null;
+		this._unit = undefined;
 
 		this.rebuild(x, y);
 		this.setName();
@@ -143,7 +143,7 @@ export class Spawner implements Resetable, Ownable {
 	 * @param {player} player - The player to set as owner.
 	 */
 	public setOwner(player: player): void {
-		if (player == null) player = NEUTRAL_HOSTILE;
+		if (player === undefined) player = NEUTRAL_HOSTILE;
 
 		SetUnitOwner(this._unit, SharedSlotManager.getInstance().getOwner(player), true);
 
@@ -177,7 +177,7 @@ export class Spawner implements Resetable, Ownable {
 	 * Sets the name of the spawner based on its current state.
 	 */
 	private setName(): void {
-		if (GetOwningPlayer(this.unit) == NEUTRAL_HOSTILE) {
+		if (GetOwningPlayer(this.unit) === NEUTRAL_HOSTILE) {
 			BlzSetUnitName(this.unit, `${this.country} is unowned`);
 			SetUnitAnimation(this.unit, 'death');
 		} else {

@@ -52,7 +52,7 @@ export class PlayerRenderer extends ScoreboardRenderer {
 		let row = 2;
 
 		data.players.forEach((p) => {
-			const textColor = effectiveLocal == p.handle ? HexColors.TANGERINE : HexColors.WHITE;
+			const textColor = effectiveLocal === p.handle ? HexColors.TANGERINE : HexColors.WHITE;
 
 			if (p.isEliminated) {
 				this.renderEliminatedIncome(p, row, effectiveLocal);
@@ -70,7 +70,7 @@ export class PlayerRenderer extends ScoreboardRenderer {
 		let row = 2;
 
 		data.players.forEach((p) => {
-			const textColor = effectiveLocal == p.handle ? HexColors.TANGERINE : HexColors.WHITE;
+			const textColor = effectiveLocal === p.handle ? HexColors.TANGERINE : HexColors.WHITE;
 
 			if (p.isEliminated) {
 				this.renderEliminatedIncome(p, row, effectiveLocal);
@@ -110,7 +110,7 @@ export class PlayerRenderer extends ScoreboardRenderer {
 	private renderPlayerData(p: PlayerRow, row: number, textColor: string, effectiveLocal: player): void {
 		if (p.isEliminated) {
 			const grey = HexColors.LIGHT_GRAY;
-			const elimColor = effectiveLocal == p.handle ? textColor : grey;
+			const elimColor = effectiveLocal === p.handle ? textColor : grey;
 
 			this.setItemValue(`${p.originalColorCode}${p.acctName}`, row, this.PLAYER_COL);
 			this.setItemValue(`${elimColor}${p.cities}`, row, this.CITIES_COL);

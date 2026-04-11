@@ -28,10 +28,10 @@ export interface GuardSettings {
  * @returns The preferred candidate, or `initial` when no preference is expressed.
  */
 export function compareByValue(
-	compare: GuardCandidate | null,
-	initial: GuardCandidate | null,
+	compare: GuardCandidate | undefined,
+	initial: GuardCandidate | undefined,
 	settings: GuardSettings
-): GuardCandidate | null {
+): GuardCandidate | undefined {
 	if (!initial) return compare;
 	if (!compare) return initial;
 	if (compare.id === initial.id) return initial;
@@ -55,10 +55,10 @@ export function compareByValue(
  * Tiebreaker: compare two guard candidates by health.
  */
 export function compareByHealth(
-	compare: GuardCandidate | null,
-	initial: GuardCandidate | null,
+	compare: GuardCandidate | undefined,
+	initial: GuardCandidate | undefined,
 	settings: GuardSettings
-): GuardCandidate | null {
+): GuardCandidate | undefined {
 	if (!initial) return compare;
 	if (!compare) return initial;
 	if (compare.id === initial.id) return initial;
@@ -83,10 +83,10 @@ export function compareByHealth(
  *
  * @param candidates - Available guard candidates (non-empty).
  * @param settings - The **city owner's** guard priority settings.
- * @returns The best candidate, or `null` if the array is empty.
+ * @returns The best candidate, or `undefined` if the array is empty.
  */
-export function selectBestGuard(candidates: GuardCandidate[], settings: GuardSettings): GuardCandidate | null {
-	if (candidates.length === 0) return null;
+export function selectBestGuard(candidates: GuardCandidate[], settings: GuardSettings): GuardCandidate | undefined {
+	if (candidates.length === 0) return undefined;
 
 	let best: GuardCandidate = candidates[0];
 	for (let i = 1; i < candidates.length; i++) {

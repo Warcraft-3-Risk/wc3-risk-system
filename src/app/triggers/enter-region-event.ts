@@ -29,16 +29,16 @@ export function EnterRegionEvent() {
 			GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitOwnedByPlayer);
 
 			//No valid owned guards found, check for allies.
-			if (BlzGroupGetSize(g) == 0)
+			if (BlzGroupGetSize(g) === 0)
 				GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => UnitLagManager.IsUnitAlly(unit, player));
 
 			//No valid allies, check for enemies.
-			if (BlzGroupGetSize(g) == 0)
+			if (BlzGroupGetSize(g) === 0)
 				GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => UnitLagManager.IsUnitEnemy(unit, player));
 
 			const trigUnit: unit = GetTriggerUnit();
-			//Set guardChoice, Transports will be null
-			let guardChoice: unit = IsUnitType(trigUnit, UNIT_TYPE.TRANSPORT) ? null : getGuardChoice(g, trigUnit, city);
+			//Set guardChoice, Transports will be undefined
+			let guardChoice: unit = IsUnitType(trigUnit, UNIT_TYPE.TRANSPORT) ? undefined : getGuardChoice(g, trigUnit, city);
 
 			if (!guardChoice) {
 				guardChoice = CreateUnit(
@@ -59,8 +59,8 @@ export function EnterRegionEvent() {
 			city.guard.replace(guardChoice);
 			UnitToCity.set(guardChoice, city);
 			DestroyGroup(g);
-			g = null;
-			guardChoice = null;
+			g = undefined;
+			guardChoice = undefined;
 
 			return false;
 		})
