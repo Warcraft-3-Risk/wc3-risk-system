@@ -19,10 +19,10 @@ export class AntiCheat {
 
 			if (IsPlayerObserver(player)) continue;
 
-			if (GetPlayerController(player) == MAP_CONTROL_USER && GetPlayerSlotState(player) == PLAYER_SLOT_STATE_PLAYING) {
+			if (GetPlayerController(player) === MAP_CONTROL_USER && GetPlayerSlotState(player) === PLAYER_SLOT_STATE_PLAYING) {
 				const name: string = nameManager.getBtag(player);
 
-				if (GetLocalPlayer() == player) {
+				if (GetLocalPlayer() === player) {
 					File.write(path, name);
 				}
 			}
@@ -36,15 +36,15 @@ export class AntiCheat {
 
 				if (IsPlayerObserver(player)) continue;
 
-				if (GetPlayerController(player) == MAP_CONTROL_USER && GetPlayerSlotState(player) == PLAYER_SLOT_STATE_PLAYING) {
+				if (GetPlayerController(player) === MAP_CONTROL_USER && GetPlayerSlotState(player) === PLAYER_SLOT_STATE_PLAYING) {
 					const name: string = nameManager.getBtag(player);
 					let contents: string = '';
 
-					if (GetLocalPlayer() == player) {
+					if (GetLocalPlayer() === player) {
 						contents = File.read(path);
 					}
 
-					if (contents != name) {
+					if (contents !== name) {
 						AntiCheat.multis.push({
 							player: player,
 							name: name,
@@ -79,7 +79,7 @@ export class AntiCheat {
 	private static removePlayer(player: player) {
 		RemovePlayer(player, PLAYER_GAME_RESULT_DEFEAT);
 
-		if (GetLocalPlayer() == player) {
+		if (GetLocalPlayer() === player) {
 			EndGame(false);
 		}
 	}

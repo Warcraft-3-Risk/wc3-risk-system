@@ -21,7 +21,7 @@ export function onPlayerAliveHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.ALIVE;
 	player.trackedData.income.income = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
 
-	if (player.trackedData.income.max == 0) {
+	if (player.trackedData.income.max === 0) {
 		player.trackedData.income.max = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
 	}
 	ScoreboardManager.getInstance().updatePartial();
@@ -108,12 +108,12 @@ export function onPlayerNomadHandle(player: ActivePlayer): void {
 
 	TimerStart(nomadTimer, tick, true, () => {
 		if (!player.status.isAlive() && player.trackedData.cities.cities.length >= 1) {
-			if (GetPlayerSlotState(player.getPlayer()) == PLAYER_SLOT_STATE_LEFT) {
+			if (GetPlayerSlotState(player.getPlayer()) === PLAYER_SLOT_STATE_LEFT) {
 				player.status.set(PLAYER_STATUS.LEFT);
 			} else {
 				player.status.set(PLAYER_STATUS.ALIVE);
 				player.trackedData.countries.forEach((val, country) => {
-					if (country.getOwner() == player.getPlayer()) {
+					if (country.getOwner() === player.getPlayer()) {
 						player.trackedData.income.income += country.getCities().length;
 					}
 				});
@@ -122,7 +122,7 @@ export function onPlayerNomadHandle(player: ActivePlayer): void {
 			PauseTimer(nomadTimer);
 			DestroyTimer(nomadTimer);
 		} else if (player.trackedData.cities.cities.length <= 0 && player.trackedData.units.size <= 0) {
-			if (GetPlayerSlotState(player.getPlayer()) == PLAYER_SLOT_STATE_LEFT) {
+			if (GetPlayerSlotState(player.getPlayer()) === PLAYER_SLOT_STATE_LEFT) {
 				player.status.set(PLAYER_STATUS.LEFT);
 			} else {
 				player.status.set(PLAYER_STATUS.DEAD);
@@ -202,7 +202,7 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 		player.status.statusDuration--;
 
 		// Then check exit conditions
-		if (GetPlayerSlotState(player.getPlayer()) == PLAYER_SLOT_STATE_LEFT) {
+		if (GetPlayerSlotState(player.getPlayer()) === PLAYER_SLOT_STATE_LEFT) {
 			player.status.set(PLAYER_STATUS.LEFT);
 			timedEventManager.removeTimedEvent(event);
 		} else if (player.status.statusDuration <= 0) {
@@ -256,7 +256,7 @@ export function removeEliminatedBuff(u: unit): void {
  */
 export function hasEliminatedBuff(u: unit): boolean {
 	const buffAbility = ELIMINATED_BUFF_MAP.get(GetUnitTypeId(u));
-	return buffAbility != null && GetUnitAbilityLevel(u, buffAbility) > 0;
+	return buffAbility !== undefined && GetUnitAbilityLevel(u, buffAbility) > 0;
 }
 
 /**
@@ -285,7 +285,7 @@ export function applyEliminatedBuff(playerHandle: player): void {
 			if (resolvedOwner !== playerHandle) continue;
 
 			const g = CreateGroup();
-			GroupEnumUnitsOfPlayer(g, slot, null);
+			GroupEnumUnitsOfPlayer(g, slot, undefined);
 			ForGroup(g, () => {
 				const u = GetEnumUnit();
 				if (IsUnitType(u, UNIT_TYPE_DEAD) || IsUnitType(u, UNIT_TYPE_STRUCTURE) || IsUnitType(u, UNIT_TYPE.GUARD)) return;

@@ -54,7 +54,7 @@ export class TrackedData {
 		this._units = new Set<unit>();
 		this._trainedUnits = new Map<number, number>();
 		this._turnDied = -1;
-		this._lastUnitKilledBy = null;
+		this._lastUnitKilledBy = undefined;
 	}
 
 	public reset() {
@@ -78,7 +78,7 @@ export class TrackedData {
 		this.units.clear();
 		this._trainedUnits.clear();
 		this.turnDied = 0;
-		this._lastUnitKilledBy = null;
+		this._lastUnitKilledBy = undefined;
 	}
 
 	public setKDMaps() {

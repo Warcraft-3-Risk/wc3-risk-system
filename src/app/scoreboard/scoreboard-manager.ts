@@ -19,10 +19,10 @@ export class ScoreboardManager {
 	private static instance: ScoreboardManager;
 	private dataModel: ScoreboardDataModel;
 	private renderers: Record<ScoreboardViewType, ScoreboardRenderer | undefined>;
-	private sessionRenderer: SessionRenderer | null = null;
+	private sessionRenderer: SessionRenderer | undefined = undefined;
 	private activePlayers: ActivePlayer[] = [];
 	private observers: player[] = [];
-	private lastObservedPlayer: player | null = null;
+	private lastObservedPlayer: player | undefined = undefined;
 
 	private constructor() {
 		this.dataModel = new ScoreboardDataModel();
@@ -40,7 +40,7 @@ export class ScoreboardManager {
 	 * Reset the singleton instance. For testing purposes only.
 	 */
 	public static resetInstance(): void {
-		this.instance = null as unknown as ScoreboardManager;
+		this.instance = undefined as unknown as ScoreboardManager;
 	}
 
 	public ffaSetup(players: ActivePlayer[]) {
@@ -76,7 +76,7 @@ export class ScoreboardManager {
 			if (this.renderers.standard) this.renderers.standard.setVisibility(true);
 
 			observers.forEach((handle) => {
-				if (GetLocalPlayer() == handle) {
+				if (GetLocalPlayer() === handle) {
 					if (this.renderers.standard) this.renderers.standard.setVisibility(false);
 					obsRenderer.setVisibility(true);
 				}
@@ -95,7 +95,7 @@ export class ScoreboardManager {
 			if (this.renderers.standard) this.renderers.standard.setVisibility(true);
 
 			this.observers.forEach((handle) => {
-				if (GetLocalPlayer() == handle) {
+				if (GetLocalPlayer() === handle) {
 					if (this.renderers.standard) this.renderers.standard.setVisibility(false);
 					this.renderers.obs!.setVisibility(true);
 				}
@@ -159,7 +159,7 @@ export class ScoreboardManager {
 		}
 	}
 
-	public getSessionBoard(): SessionRenderer | null {
+	public getSessionBoard(): SessionRenderer | undefined {
 		return this.sessionRenderer;
 	}
 

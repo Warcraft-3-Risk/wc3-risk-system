@@ -63,8 +63,8 @@ export class StatisticsModel {
 		return this.columns;
 	}
 
-	public getRival(player: ActivePlayer): ActivePlayer | null {
-		let rival: ActivePlayer | null = null;
+	public getRival(player: ActivePlayer): ActivePlayer | undefined {
+		let rival: ActivePlayer | undefined = undefined;
 		let maxKills = 0;
 
 		this.matchPlayers

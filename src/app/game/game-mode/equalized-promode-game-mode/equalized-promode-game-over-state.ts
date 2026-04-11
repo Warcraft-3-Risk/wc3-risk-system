@@ -33,8 +33,8 @@ export class EqualizedPromodeGameOverState extends BaseState<EqualizedPromodeDat
 		});
 
 		// Get the winner of this round
-		const leaderEntity = GlobalGameData.leader ? ParticipantEntityManager.getHighestPriorityParticipant(GlobalGameData.leader) : null;
-		const roundWinner = leaderEntity ? leaderEntity.getPlayer() : null;
+		const leaderEntity = GlobalGameData.leader ? ParticipantEntityManager.getHighestPriorityParticipant(GlobalGameData.leader) : undefined;
+		const roundWinner = leaderEntity ? leaderEntity.getPlayer() : undefined;
 
 		// Check which round we just finished using static round number
 		const currentRound = EqualizedPromodeDistributionService.getRoundNumber();
@@ -52,7 +52,7 @@ export class EqualizedPromodeGameOverState extends BaseState<EqualizedPromodeDat
 	 * Handle the end of Round 1.
 	 * Store the winner and automatically start Round 2.
 	 */
-	private handleRound1End(round1Winner: player | null) {
+	private handleRound1End(round1Winner: player | undefined) {
 		// Use static methods to store data (survives state reset)
 		EqualizedPromodeDistributionService.setRound1Winner(round1Winner);
 		EqualizedPromodeDistributionService.setRoundNumber(2);
@@ -76,7 +76,7 @@ export class EqualizedPromodeGameOverState extends BaseState<EqualizedPromodeDat
 	 * Handle the end of Round 2.
 	 * Determine the overall winner and add wins accordingly.
 	 */
-	private handleRound2End(round2Winner: player | null) {
+	private handleRound2End(round2Winner: player | undefined) {
 		const round1Winner = EqualizedPromodeDistributionService.getRound1Winner();
 
 		// Hide match scoreboard and show names
@@ -96,7 +96,7 @@ export class EqualizedPromodeGameOverState extends BaseState<EqualizedPromodeDat
 
 		// Reset round data for next pair
 		EqualizedPromodeDistributionService.setRoundNumber(1);
-		EqualizedPromodeDistributionService.setRound1Winner(null);
+		EqualizedPromodeDistributionService.setRound1Winner(undefined);
 
 		FogManager.getInstance().turnFogOff();
 		SetTimeOfDayScale(0);

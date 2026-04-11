@@ -6,7 +6,7 @@ import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 
 export function AlliedKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (!UnitLagManager.IsUnitAlly(killingUnit, city.getOwner())) return null;
+	if (!UnitLagManager.IsUnitAlly(killingUnit, city.getOwner())) return undefined;
 
 	const searchGroup: group = CreateGroup();
 

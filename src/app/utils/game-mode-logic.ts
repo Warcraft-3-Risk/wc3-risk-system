@@ -30,7 +30,7 @@ export interface ModeSelectionSettings {
 export interface RoundResult {
 	action: 'continue' | 'winRecorded' | 'noWin';
 	nextRound: number;
-	overallWinner: string | null;
+	overallWinner: string | undefined;
 }
 
 // ─── Mode Selection ─────────────────────────────────────────────────
@@ -38,10 +38,10 @@ export interface RoundResult {
 /**
  * Determine which game mode to use based on settings.
  * Mirrors EventCoordinator.applyGameMode() priority logic:
- *   1. Capitals (GameType == 'Capitals') — highest priority
+ *   1. Capitals (GameType === 'Capitals') — highest priority
  *   2. W3C (W3C_MODE_ENABLED)
- *   3. EqualizedPromode (Promode == 2)
- *   4. Promode/ChaosPromode (Promode == 1 or 3)
+ *   3. EqualizedPromode (Promode === 2)
+ *   4. Promode/ChaosPromode (Promode === 1 or 3)
  *   5. Standard (default)
  */
 export function resolveGameMode(settings: ModeSelectionSettings): GameModeName {
@@ -203,25 +203,25 @@ export type MatchEvent = 'setupComplete' | 'gameLoopEnter' | 'victoryOrEliminati
 
 /**
  * Pure match state transition function.
- * Returns the next state given the current state and event, or null for invalid transitions.
+ * Returns the next state given the current state and event, or undefined for invalid transitions.
  */
-export function transitionMatchState(current: MatchState, event: MatchEvent): MatchState | null {
+export function transitionMatchState(current: MatchState, event: MatchEvent): MatchState | undefined {
 	switch (current) {
 		case 'modeSelection':
 			if (event === 'setupComplete') return 'preMatch';
-			return null;
+			return undefined;
 
 		case 'preMatch':
 			if (event === 'gameLoopEnter') return 'inProgress';
-			return null;
+			return undefined;
 
 		case 'inProgress':
 			if (event === 'victoryOrElimination') return 'postMatch';
-			return null;
+			return undefined;
 
 		case 'postMatch':
 			if (event === 'resetComplete') return 'preMatch';
-			return null;
+			return undefined;
 	}
 }
 
@@ -236,7 +236,7 @@ export function simulateMatchLifecycle(cycles: number): MatchState[] {
 	for (let cycle = 0; cycle < cycles; cycle++) {
 		for (const event of events) {
 			const next = transitionMatchState(current, event);
-			if (next !== null) {
+			if (next !== undefined) {
 				current = next;
 				visited.push(current);
 			}
@@ -283,18 +283,18 @@ export function shouldW3CTerminate(humanPlayerCount: number, terminateIfAlone: b
 
 /**
  * Determine if a player has won a best-of-N series.
- * Returns the winner player ID if someone has enough wins, or null.
+ * Returns the winner player ID if someone has enough wins, or undefined.
  */
 export function checkBestOfNWinner(
 	wins: Map<string, number>,
 	winsNeeded: number,
-): string | null {
+): string | undefined {
 	for (const [playerId, winCount] of wins) {
 		if (winCount >= winsNeeded) {
 			return playerId;
 		}
 	}
-	return null;
+	return undefined;
 }
 
 // ─── Equalized Promode Round Logic ──────────────────────────────────
@@ -310,24 +310,24 @@ export function checkBestOfNWinner(
  */
 export function resolveRound(
 	currentRound: number,
-	roundWinner: string | null,
-	round1Winner: string | null,
+	roundWinner: string | undefined,
+	round1Winner: string | undefined,
 ): RoundResult {
 	if (currentRound === 1) {
 		return {
 			action: 'continue',
 			nextRound: 2,
-			overallWinner: null,
+			overallWinner: undefined,
 		};
 	}
 
 	// Round 2
-	const sameWinner = round1Winner !== null && roundWinner !== null && round1Winner === roundWinner;
+	const sameWinner = round1Winner !== undefined && roundWinner !== undefined && round1Winner === roundWinner;
 
 	return {
 		action: sameWinner ? 'winRecorded' : 'noWin',
 		nextRound: 1,
-		overallWinner: sameWinner ? round1Winner : null,
+		overallWinner: sameWinner ? round1Winner : undefined,
 	};
 }
 

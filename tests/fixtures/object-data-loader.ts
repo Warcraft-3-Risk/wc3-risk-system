@@ -12,7 +12,7 @@ import * as path from 'path';
 import War3MapW3u from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/w3u/file';
 import { ObjectData } from 'war3-objectdata-th';
 
-let cached: ObjectData | null = null;
+let cached: ObjectData | undefined = undefined;
 
 /** Root of the canonical map source (europe = master). */
 const MAP_DIR = path.resolve(__dirname, '../../maps/risk_europe.w3x');

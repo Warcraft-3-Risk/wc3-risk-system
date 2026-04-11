@@ -51,7 +51,7 @@ export class Guard implements Resetable {
 	 * @param guard - The unit object that will become the new guard.
 	 */
 	public set(guard: unit): void {
-		if (GetUnitTypeId(this._unit) == UNIT_ID.DUMMY_GUARD) {
+		if (GetUnitTypeId(this._unit) === UNIT_ID.DUMMY_GUARD) {
 			this.remove();
 		}
 
@@ -67,10 +67,10 @@ export class Guard implements Resetable {
 	}
 
 	/**
-	 * Releases the guard, removing the guard type and setting the unit to null.
+	 * Releases the guard, removing the guard type and setting the unit to undefined.
 	 */
 	public release(): void {
-		if (this._unit == null) return;
+		if (this._unit === undefined) return;
 
 		UnitRemoveType(this._unit, UNIT_TYPE.GUARD);
 		UnitRemoveAbility(this._unit, ABILITY_ID.GUARD_INDICATOR);
@@ -79,7 +79,7 @@ export class Guard implements Resetable {
 		BlzSetUnitBooleanFieldBJ(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
 		UnitLagManager.getInstance().trackUnit(this._unit);
 
-		this._unit = null;
+		this._unit = undefined;
 	}
 
 	/**
@@ -92,7 +92,7 @@ export class Guard implements Resetable {
 			SharedSlotManager.getInstance().decrementUnitCount(owner);
 		}
 		RemoveUnit(this._unit);
-		this._unit = null;
+		this._unit = undefined;
 	}
 
 	/**
@@ -122,7 +122,7 @@ export class Guard implements Resetable {
 			return;
 		}
 
-		if (GetUnitTypeId(this._unit) == UNIT_ID.DUMMY_GUARD) {
+		if (GetUnitTypeId(this._unit) === UNIT_ID.DUMMY_GUARD) {
 			this.remove();
 		} else {
 			this.release();

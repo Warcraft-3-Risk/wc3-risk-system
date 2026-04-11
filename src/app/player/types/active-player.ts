@@ -19,7 +19,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 	private _options: Options;
 	private _admin: boolean;
 	private _killedBy: player;
-	private _ratingStatsUI: RatingStatsUI | null = null;
+	private _ratingStatsUI: RatingStatsUI | undefined = undefined;
 
 	constructor(player: player) {
 		this._player = player;
@@ -32,11 +32,11 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			board: 0,
 			labels: true,
 		};
-		this._killedBy = null;
+		this._killedBy = undefined;
 		this._admin = false;
 
 		adminList.forEach((name) => {
-			if (NameManager.getInstance().getBtag(this._player).toLowerCase() == name) {
+			if (NameManager.getInstance().getBtag(this._player).toLowerCase() === name) {
 				this._admin = true;
 			}
 		});
@@ -52,7 +52,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 	public reset(): void {
 		this.trackedData.reset();
 
-		this._killedBy = null;
+		this._killedBy = undefined;
 
 		this.status.set(PLAYER_STATUS.ALIVE);
 
@@ -66,7 +66,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 	}
 
 	public giveGold(val?: number): void {
-		if (GlobalGameData.matchState != 'inProgress') return;
+		if (GlobalGameData.matchState !== 'inProgress') return;
 
 		if (!val) val = this.trackedData.income.income;
 
@@ -97,7 +97,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 
 		this.trackedData.gold.end = GetPlayerState(handle, PLAYER_STATE_RESOURCE_GOLD);
 
-		if (handle == GetLocalPlayer()) {
+		if (handle === GetLocalPlayer()) {
 			BlzEnableSelections(false, false);
 		}
 
@@ -130,11 +130,11 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		return this._admin;
 	}
 
-	public get ratingStatsUI(): RatingStatsUI | null {
+	public get ratingStatsUI(): RatingStatsUI | undefined {
 		return this._ratingStatsUI;
 	}
 
-	public set ratingStatsUI(value: RatingStatsUI | null) {
+	public set ratingStatsUI(value: RatingStatsUI | undefined) {
 		this._ratingStatsUI = value;
 	}
 }

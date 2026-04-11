@@ -65,7 +65,7 @@ export class Country implements Resetable {
 	 * @param player - The player object representing the new owner.
 	 */
 	public setOwner(player: player): void {
-		if (player == null) player = NEUTRAL_HOSTILE;
+		if (player === undefined) player = NEUTRAL_HOSTILE;
 
 		const previousOwner = this.owner;
 		this.owner = player;
@@ -100,7 +100,7 @@ export class Country implements Resetable {
 	 * Triggers various game events.
 	 */
 	private onOwnerChange(previousOwner: player) {
-		if (this.owner == NEUTRAL_HOSTILE) return;
+		if (this.owner === NEUTRAL_HOSTILE) return;
 
 		this.cities.forEach((city) => {
 			const effect = AddSpecialEffect(
@@ -114,7 +114,7 @@ export class Country implements Resetable {
 
 		LocalMessage(this.owner, `${this.name} ${HexColors.WHITE}has been conquered!|r`, 'Sound\\Interface\\Rescue.flac');
 
-		if (previousOwner != null && previousOwner != NEUTRAL_HOSTILE) {
+		if (previousOwner !== undefined && previousOwner !== NEUTRAL_HOSTILE) {
 			LocalMessage(previousOwner, `${this.name} ${HexColors.WHITE}has been lost!|r`, 'Sound\\Interface\\QuestFailed.flac');
 		}
 	}

@@ -15,9 +15,9 @@ export async function removeUnits(batchSize = 50, intervalSeconds = 0.2): Promis
 			if (DEBUG_PRINTS.master) debugPrint(`Scanning units for player ${GetPlayerName(player)} index ${i}`, DC.gameMode);
 
 			const group: group = CreateGroup();
-			GroupEnumUnitsOfPlayer(group, player, null);
+			GroupEnumUnitsOfPlayer(group, player, undefined);
 
-			for (let unit = FirstOfGroup(group); unit !== null; unit = FirstOfGroup(group)) {
+			for (let unit = FirstOfGroup(group); unit !== undefined; unit = FirstOfGroup(group)) {
 				GroupRemoveUnit(group, unit);
 				if (!IsUnitType(unit, UNIT_TYPE.BUILDING) && !IsUnitType(unit, UNIT_TYPE.GUARD)) {
 					batch.push(unit);
@@ -36,7 +36,7 @@ export async function removeUnits(batchSize = 50, intervalSeconds = 0.2): Promis
 		}
 
 		for (const unit of batch) {
-			if (unit !== null && GetUnitTypeId(unit) !== 0) {
+			if (unit !== undefined && GetUnitTypeId(unit) !== 0) {
 				UnitLagManager.getInstance().untrackUnit(unit);
 				RemoveUnit(unit);
 				removedCount++;

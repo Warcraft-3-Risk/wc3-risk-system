@@ -21,14 +21,14 @@ const MIN_VALUE_MAX_HEALTH: GuardSettings = { value: false, health: true };
 // ─── compareByValue ─────────────────────────────────────────────────
 
 describe('compareByValue', () => {
-	it('returns compare when initial is null', () => {
+	it('returns compare when initial is undefined', () => {
 		const a = unit(1, 10, 100);
-		expect(compareByValue(a, null, MAXIMIZE)).toBe(a);
+		expect(compareByValue(a, undefined, MAXIMIZE)).toBe(a);
 	});
 
-	it('returns initial when compare is null', () => {
+	it('returns initial when compare is undefined', () => {
 		const a = unit(1, 10, 100);
-		expect(compareByValue(null, a, MAXIMIZE)).toBe(a);
+		expect(compareByValue(undefined, a, MAXIMIZE)).toBe(a);
 	});
 
 	it('returns initial when both are same reference', () => {
@@ -36,8 +36,8 @@ describe('compareByValue', () => {
 		expect(compareByValue(a, a, MAXIMIZE)).toBe(a);
 	});
 
-	it('returns null when both are null', () => {
-		expect(compareByValue(null, null, MAXIMIZE)).toBeNull();
+	it('returns undefined when both are undefined', () => {
+		expect(compareByValue(undefined, undefined, MAXIMIZE)).toBeUndefined();
 	});
 
 	describe('maximize mode (value=true)', () => {
@@ -112,14 +112,14 @@ describe('compareByValue', () => {
 // ─── compareByHealth ────────────────────────────────────────────────
 
 describe('compareByHealth', () => {
-	it('returns compare when initial is null', () => {
+	it('returns compare when initial is undefined', () => {
 		const a = unit(1, 10, 100);
-		expect(compareByHealth(a, null, MAXIMIZE)).toBe(a);
+		expect(compareByHealth(a, undefined, MAXIMIZE)).toBe(a);
 	});
 
-	it('returns initial when compare is null', () => {
+	it('returns initial when compare is undefined', () => {
 		const a = unit(1, 10, 100);
-		expect(compareByHealth(null, a, MAXIMIZE)).toBe(a);
+		expect(compareByHealth(undefined, a, MAXIMIZE)).toBe(a);
 	});
 
 	it('returns initial when both are same reference', () => {
@@ -149,8 +149,8 @@ describe('compareByHealth', () => {
 // ─── selectBestGuard ────────────────────────────────────────────────
 
 describe('selectBestGuard', () => {
-	it('returns null for empty array', () => {
-		expect(selectBestGuard([], MAXIMIZE)).toBeNull();
+	it('returns undefined for empty array', () => {
+		expect(selectBestGuard([], MAXIMIZE)).toBeUndefined();
 	});
 
 	it('returns the only candidate when array has one element', () => {

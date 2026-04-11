@@ -6,12 +6,12 @@ export class EnableControlsState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
 		PlayerManager.getInstance().players.forEach((player) => {
 			// foreach active player, enable select and drag select if local player
-			if (GetLocalPlayer() == player.getPlayer() && player.status.isActive()) {
+			if (GetLocalPlayer() === player.getPlayer() && player.status.isActive()) {
 				EnableSelect(true, true);
 				EnableDragSelect(true, true);
 			}
 
-			if (GetLocalPlayer() == player.getPlayer() && player.status.isEliminated()) {
+			if (GetLocalPlayer() === player.getPlayer() && player.status.isEliminated()) {
 				EnableSelect(false, false);
 				EnableDragSelect(false, false);
 			}
@@ -19,7 +19,7 @@ export class EnableControlsState<T extends StateData> extends BaseState<T> {
 
 		PlayerManager.getInstance().observers.forEach((player) => {
 			// foreach observer, enable select and drag select if local player
-			if (GetLocalPlayer() == player.getPlayer()) {
+			if (GetLocalPlayer() === player.getPlayer()) {
 				EnableSelect(true, true);
 				EnableDragSelect(true, true);
 			}

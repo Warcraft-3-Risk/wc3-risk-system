@@ -14,7 +14,7 @@ export class FogManager {
 	 * @returns The singleton instance.
 	 */
 	public static getInstance() {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new FogManager();
 		}
 		return this.instance;

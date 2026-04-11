@@ -18,11 +18,11 @@ export const CUSTOM_MAP_DATA_MATCH_DIRECTORY: string = `${CUSTOM_MAP_DATA_RISK_D
 export function PlayLocalSound(soundPath: string, player: player) {
 	let sound = CreateSound(soundPath, false, false, true, 10, 10, '');
 
-	if (GetLocalPlayer() != player) SetSoundVolume(sound, 0);
+	if (GetLocalPlayer() !== player) SetSoundVolume(sound, 0);
 
 	StartSound(sound);
 	KillSoundWhenDone(sound);
-	sound = null;
+	sound = undefined;
 }
 
 /**
@@ -34,7 +34,7 @@ export function PlayGlobalSound(soundPath: string) {
 
 	StartSound(sound);
 	KillSoundWhenDone(sound);
-	sound = null;
+	sound = undefined;
 }
 
 /**
@@ -101,13 +101,13 @@ export function IsUnitMelee(unit: unit): boolean {
 
 /**
  * Retrieves a random element from an array, removes it from the array, and then returns it.
- * If the array is empty, it returns null.
+ * If the array is empty, it returns undefined.
  * This will mutate the original array.
  * @param items The array of items from which a random element should be retrieved.
- * @return The randomly selected element or null if the array is empty.
+ * @return The randomly selected element or undefined if the array is empty.
  */
-export function GetRandomElementFromArray<T>(items: T[]): T | null {
-	if (items.length < 1) return null;
+export function GetRandomElementFromArray<T>(items: T[]): T | undefined {
+	if (items.length < 1) return undefined;
 
 	const randomIndex = Math.floor(Math.random() * items.length);
 	const lastIndex = items.length - 1;

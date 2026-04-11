@@ -28,7 +28,7 @@ export class SharedSlotManager implements Resetable {
 	 * Reset the singleton instance. For testing purposes only.
 	 */
 	public static resetInstance(): void {
-		SharedSlotManager.instance = null as unknown as SharedSlotManager;
+		SharedSlotManager.instance = undefined as unknown as SharedSlotManager;
 	}
 
 	private availableSlots: SharedSlot[];
@@ -452,7 +452,7 @@ export class SharedSlotManager implements Resetable {
 		const movableUnits: unit[] = [];
 		for (const slot of allSlots) {
 			const g = CreateGroup();
-			GroupEnumUnitsOfPlayer(g, slot, null);
+			GroupEnumUnitsOfPlayer(g, slot, undefined);
 			ForGroup(g, () => {
 				const u = GetEnumUnit();
 				if (
@@ -534,11 +534,11 @@ export class SharedSlotManager implements Resetable {
 			debugPrint(`SharedSlotManager: Found ${leftPlayers.length} players that have left with no units or cities`, DC.sharedSlots);
 
 		if (emptySlots && emptySlots.length > 0) {
-			sharedSlots.push(...emptySlots.filter((p) => p !== null && p !== undefined));
+			sharedSlots.push(...emptySlots.filter((p) => p !== undefined));
 		}
 
 		if (leftPlayers && leftPlayers.length > 0) {
-			sharedSlots.push(...leftPlayers.filter((p) => p !== null && p !== undefined));
+			sharedSlots.push(...leftPlayers.filter((p) => p !== undefined));
 		}
 
 		return sharedSlots;

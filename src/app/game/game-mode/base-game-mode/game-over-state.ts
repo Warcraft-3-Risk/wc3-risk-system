@@ -105,7 +105,7 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 			sessionBoard.recordMatchResult(winningTeam.getMembers(), losingPlayers);
 		} else if (leader instanceof ActivePlayer) {
 			// FFA/1v1 promode: leader wins, everyone else loses
-			const losingPlayers = GlobalGameData.matchPlayers.filter((p) => p.getPlayer() != leader.getPlayer());
+			const losingPlayers = GlobalGameData.matchPlayers.filter((p) => p.getPlayer() !== leader.getPlayer());
 			sessionBoard.recordMatchResult([leader], losingPlayers);
 		}
 

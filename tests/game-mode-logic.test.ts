@@ -276,27 +276,27 @@ describe('transitionMatchState (match lifecycle)', () => {
 	});
 
 	it('rejects modeSelection + gameLoopEnter (invalid)', () => {
-		expect(transitionMatchState('modeSelection', 'gameLoopEnter')).toBeNull();
+		expect(transitionMatchState('modeSelection', 'gameLoopEnter')).toBeUndefined();
 	});
 
 	it('rejects modeSelection + victoryOrElimination (invalid)', () => {
-		expect(transitionMatchState('modeSelection', 'victoryOrElimination')).toBeNull();
+		expect(transitionMatchState('modeSelection', 'victoryOrElimination')).toBeUndefined();
 	});
 
 	it('rejects preMatch + victoryOrElimination (invalid)', () => {
-		expect(transitionMatchState('preMatch', 'victoryOrElimination')).toBeNull();
+		expect(transitionMatchState('preMatch', 'victoryOrElimination')).toBeUndefined();
 	});
 
 	it('rejects inProgress + setupComplete (invalid)', () => {
-		expect(transitionMatchState('inProgress', 'setupComplete')).toBeNull();
+		expect(transitionMatchState('inProgress', 'setupComplete')).toBeUndefined();
 	});
 
 	it('rejects postMatch + gameLoopEnter (invalid)', () => {
-		expect(transitionMatchState('postMatch', 'gameLoopEnter')).toBeNull();
+		expect(transitionMatchState('postMatch', 'gameLoopEnter')).toBeUndefined();
 	});
 
 	it('rejects inProgress + resetComplete (invalid)', () => {
-		expect(transitionMatchState('inProgress', 'resetComplete')).toBeNull();
+		expect(transitionMatchState('inProgress', 'resetComplete')).toBeUndefined();
 	});
 });
 
@@ -391,7 +391,7 @@ describe('W3C mode wrapping', () => {
 				['player1', 0],
 				['player2', 0],
 			]);
-			expect(checkBestOfNWinner(wins, 2)).toBeNull();
+			expect(checkBestOfNWinner(wins, 2)).toBeUndefined();
 		});
 
 		it('no winner when both have 1 win', () => {
@@ -399,7 +399,7 @@ describe('W3C mode wrapping', () => {
 				['player1', 1],
 				['player2', 1],
 			]);
-			expect(checkBestOfNWinner(wins, 2)).toBeNull();
+			expect(checkBestOfNWinner(wins, 2)).toBeUndefined();
 		});
 
 		it('player1 wins with 2 wins', () => {
@@ -442,10 +442,10 @@ describe('W3C mode wrapping', () => {
 describe('Equalized Promode round system', () => {
 	describe('resolveRound', () => {
 		it('Round 1 end → continues to Round 2', () => {
-			const result = resolveRound(1, 'player1', null);
+			const result = resolveRound(1, 'player1', undefined);
 			expect(result.action).toBe('continue');
 			expect(result.nextRound).toBe(2);
-			expect(result.overallWinner).toBeNull();
+			expect(result.overallWinner).toBeUndefined();
 		});
 
 		it('Round 2 end → same player won both → win recorded', () => {
@@ -459,33 +459,33 @@ describe('Equalized Promode round system', () => {
 			const result = resolveRound(2, 'player2', 'player1');
 			expect(result.action).toBe('noWin');
 			expect(result.nextRound).toBe(1);
-			expect(result.overallWinner).toBeNull();
+			expect(result.overallWinner).toBeUndefined();
 		});
 
-		it('Round 2 end → null round1 winner → no win', () => {
-			const result = resolveRound(2, 'player1', null);
+		it('Round 2 end → undefined round1 winner → no win', () => {
+			const result = resolveRound(2, 'player1', undefined);
 			expect(result.action).toBe('noWin');
 			expect(result.nextRound).toBe(1);
-			expect(result.overallWinner).toBeNull();
+			expect(result.overallWinner).toBeUndefined();
 		});
 
-		it('Round 2 end → null round2 winner → no win', () => {
-			const result = resolveRound(2, null, 'player1');
+		it('Round 2 end → undefined round2 winner → no win', () => {
+			const result = resolveRound(2, undefined, 'player1');
 			expect(result.action).toBe('noWin');
 			expect(result.nextRound).toBe(1);
-			expect(result.overallWinner).toBeNull();
+			expect(result.overallWinner).toBeUndefined();
 		});
 
-		it('Round 2 end → both null → no win', () => {
-			const result = resolveRound(2, null, null);
+		it('Round 2 end → both undefined → no win', () => {
+			const result = resolveRound(2, undefined, undefined);
 			expect(result.action).toBe('noWin');
 			expect(result.nextRound).toBe(1);
-			expect(result.overallWinner).toBeNull();
+			expect(result.overallWinner).toBeUndefined();
 		});
 
 		it('Round 1 always returns nextRound=2 regardless of winner', () => {
-			expect(resolveRound(1, null, null).nextRound).toBe(2);
-			expect(resolveRound(1, 'player1', null).nextRound).toBe(2);
+			expect(resolveRound(1, undefined, undefined).nextRound).toBe(2);
+			expect(resolveRound(1, 'player1', undefined).nextRound).toBe(2);
 		});
 
 		it('Round 2 always resets to nextRound=1', () => {
@@ -726,7 +726,7 @@ describe('Full game scenarios', () => {
 
 		// Round 1: player1 wins
 		wins.set('player1', 1);
-		expect(checkBestOfNWinner(wins, 2)).toBeNull(); // no winner yet
+		expect(checkBestOfNWinner(wins, 2)).toBeUndefined(); // no winner yet
 
 		// Round 2: player1 wins again
 		wins.set('player1', 2);
@@ -742,7 +742,7 @@ describe('Full game scenarios', () => {
 		expect(seq).toContain('EqualizedPromodeGameOverState');
 
 		// Round 1: player1 wins
-		const r1 = resolveRound(1, 'player1', null);
+		const r1 = resolveRound(1, 'player1', undefined);
 		expect(r1.action).toBe('continue');
 		expect(r1.nextRound).toBe(2);
 
@@ -760,13 +760,13 @@ describe('Full game scenarios', () => {
 
 	it('Equalized Promode: split rounds → no win', () => {
 		// Round 1: player1 wins
-		const r1 = resolveRound(1, 'player1', null);
+		const r1 = resolveRound(1, 'player1', undefined);
 		expect(r1.action).toBe('continue');
 
 		// Round 2: player2 wins → no overall winner
 		const r2 = resolveRound(2, 'player2', 'player1');
 		expect(r2.action).toBe('noWin');
-		expect(r2.overallWinner).toBeNull();
+		expect(r2.overallWinner).toBeUndefined();
 	});
 
 	it('W3C mode: lone human auto-victory at any state', () => {

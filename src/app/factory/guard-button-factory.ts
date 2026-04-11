@@ -53,7 +53,7 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 	if (config.initialTooltipText) {
 		BlzFrameSetText(tooltipText, config.initialTooltipText);
 	} else {
-		const str = config.key == OSKEY_F6 ? 'Health' : 'Value';
+		const str = config.key === OSKEY_F6 ? 'Health' : 'Value';
 
 		BlzFrameSetText(
 			tooltipText,
@@ -80,7 +80,7 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 
 	BlzFrameSetVisible(button, false);
 
-	if (GetLocalPlayer() == config.player.getPlayer()) {
+	if (GetLocalPlayer() === config.player.getPlayer()) {
 		BlzFrameSetVisible(button, true);
 	}
 

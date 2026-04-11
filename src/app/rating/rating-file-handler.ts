@@ -49,26 +49,26 @@ export function validateChecksum(data: RatingFileData): boolean {
 /**
  * Read ratings from file (with optional decryption) - per-player file
  * @param filePath Path to ratings file (e.g., "risk/p1_abc123def456.txt")
- * @returns Rating file data or null if file doesn't exist or is invalid
+ * @returns Rating file data or undefined if file doesn't exist or is invalid
  */
-export function readRatings(filePath: string): RatingFileData | null {
+export function readRatings(filePath: string): RatingFileData | undefined {
 	try {
 		const rawContents = File.read(filePath);
 
 		// File doesn't exist or is empty
 		if (!rawContents || rawContents.trim() === '') {
-			return null;
+			return undefined;
 		}
 
 		// Conditionally decrypt based on config setting
-		let contents: string | null;
+		let contents: string | undefined;
 		if (RATING_FILE_ENCRYPTION_ENABLED) {
 			// Encryption enabled: decrypt the file
 			contents = decryptData(rawContents);
 			if (!contents) {
 				// Decryption failed - file is corrupted, will regenerate with starting rating
 				print(`${HexColors.RED}WARNING:|r Rating file decryption failed - file corrupted, will regenerate`);
-				return null;
+				return undefined;
 			}
 		} else {
 			// Encryption disabled: use raw contents as-is (plain text)
@@ -80,7 +80,7 @@ export function readRatings(filePath: string): RatingFileData | null {
 		let version = 0;
 		let seasonId = 0;
 		let checksum = '';
-		let playerData: PlayerRatingData | null = null;
+		let playerData: PlayerRatingData | undefined = undefined;
 
 		for (let i = 0; i < lines.length; i++) {
 			const line = lines[i].trim();
@@ -142,7 +142,7 @@ export function readRatings(filePath: string): RatingFileData | null {
 		}
 
 		if (!version || !seasonId || !checksum || !playerData) {
-			return null;
+			return undefined;
 		}
 
 		const data: RatingFileData = {
@@ -154,7 +154,7 @@ export function readRatings(filePath: string): RatingFileData | null {
 
 		return data;
 	} catch (error) {
-		return null;
+		return undefined;
 	}
 }
 

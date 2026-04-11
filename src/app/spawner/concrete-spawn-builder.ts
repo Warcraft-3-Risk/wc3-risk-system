@@ -107,10 +107,10 @@ export class ConcreteSpawnerBuilder implements SpawnerBuilder {
 	 * Resets the builder's properties to initial state.
 	 */
 	public reset(): void {
-		this.unit = null;
-		this.country = null;
-		this.spawnsPerStep = null;
-		this.maxSpawnsPerPlayer = null;
+		this.unit = undefined;
+		this.country = undefined;
+		this.spawnsPerStep = undefined;
+		this.maxSpawnsPerPlayer = undefined;
 		this.spawnMultiplier = 1;
 	}
 }

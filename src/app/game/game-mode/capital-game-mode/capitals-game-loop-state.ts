@@ -17,7 +17,7 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer): void {
 		super.onCityCapture(city, preOwner, owner);
-		if (preOwner == owner) return;
+		if (preOwner === owner) return;
 
 		if (this.stateData.capitals.get(preOwner.getPlayer()) === city) {
 			LocalMessage(
@@ -38,7 +38,7 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 				preOwner.status.set(PLAYER_STATUS.DEAD);
 			}
 
-			if (GetUnitTypeId(city.barrack.unit) == UNIT_ID.CAPITAL) {
+			if (GetUnitTypeId(city.barrack.unit) === UNIT_ID.CAPITAL) {
 				IssueImmediateOrderById(city.barrack.unit, UNIT_ID.CONQUERED_CAPITAL);
 			}
 

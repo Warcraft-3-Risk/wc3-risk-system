@@ -101,7 +101,7 @@ export class TreeManager implements Resetable {
 	 * Set up trees on the map by changing their model based on the terrain tile type they are on.
 	 */
 	private treeSetup() {
-		EnumDestructablesInRect(GetEntireMapRect(), null, () => {
+		EnumDestructablesInRect(GetEntireMapRect(), undefined, () => {
 			let enumObject = Destructable.fromHandle(GetEnumDestructable());
 			let treeTypeID: number = enumObject.typeId;
 			let objectX: number = enumObject.x;
@@ -137,8 +137,8 @@ export class TreeManager implements Resetable {
 			SetDestructableMaxLife(newTree, GetDestructableLife(newTree) / 2);
 			this.treeArray.push(newTree);
 
-			newTree = null;
-			enumObject = null;
+			newTree = undefined;
+			enumObject = undefined;
 		});
 	}
 

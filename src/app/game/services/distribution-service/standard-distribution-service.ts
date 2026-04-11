@@ -64,7 +64,7 @@ export class StandardDistributionService {
 					neutralCities.push(city);
 				}
 
-				if (this.players.length() == 0) break;
+				if (this.players.length() === 0) break;
 			}
 
 			//TODO
@@ -98,9 +98,9 @@ export class StandardDistributionService {
 	/**
 	 * Finds a valid player for a given city.
 	 * @param city - The city for which a player is needed.
-	 * @returns An ActivePlayer object if found, otherwise null.
+	 * @returns An ActivePlayer object if found, otherwise undefined.
 	 */
-	private getValidPlayerForCity(city: City): ActivePlayer | null {
+	private getValidPlayerForCity(city: City): ActivePlayer | undefined {
 		const maxIterations: number = this.players.length();
 		const country: Country = CityToCountry.get(city);
 
@@ -114,7 +114,7 @@ export class StandardDistributionService {
 			}
 		}
 
-		return null;
+		return undefined;
 	}
 
 	/**

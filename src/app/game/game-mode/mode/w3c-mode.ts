@@ -79,7 +79,7 @@ export class W3CMode extends BaseMode<W3CData> {
 		if (terminate) {
 			await Wait.forSeconds(1);
 
-			LocalMessage(GetLocalPlayer(), '', null);
+			LocalMessage(GetLocalPlayer(), '', undefined);
 
 			GlobalMessage(message, 'Sound\\Interface\\ItemReceived.flac', 10);
 			await Wait.forSeconds(1);

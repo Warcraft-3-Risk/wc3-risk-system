@@ -72,7 +72,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 
 		// Pause AI for all computer players so they don't issue commands
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			if (GetPlayerController(Player(i)) == MAP_CONTROL_COMPUTER) {
+			if (GetPlayerController(Player(i)) === MAP_CONTROL_COMPUTER) {
 				PauseCompAI(Player(i), true);
 			}
 		}

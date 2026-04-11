@@ -451,13 +451,13 @@ export class MinimapIconManager {
 		const allyColorMode = GetAllyColorFilterState();
 
 		// If the local player owns this city, show it in WHITE
-		if (owner == localPlayer) {
+		if (owner === localPlayer) {
 			this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[99], this.cityLastTexture);
 			return;
 		}
 
 		// Ally Color 2 is not allowed
-		if (allyColorMode == 2) {
+		if (allyColorMode === 2) {
 			SetAllyColorFilterState(0);
 		}
 		if (allyColorMode > 0) {
@@ -513,7 +513,7 @@ export class MinimapIconManager {
 		const allyColorMode = GetAllyColorFilterState();
 
 		// If the local player owns this unit (or owns the shared slot), show it in WHITE
-		if (owner == localPlayer) {
+		if (owner === localPlayer) {
 			this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[99], this.unitLastTexture);
 			return;
 		}

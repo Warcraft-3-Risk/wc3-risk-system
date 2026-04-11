@@ -77,27 +77,27 @@ function getOthersFilePath(hash: string, seasonId: number): string {
  * Read others ratings database from file
  * @param sanitizedName Sanitized player name (from sanitizePlayerName)
  * @param seasonId Season identifier
- * @returns Others rating data or null if file doesn't exist/is invalid
+ * @returns Others rating data or undefined if file doesn't exist/is invalid
  */
-export function readOthersRatings(sanitizedName: string, seasonId: number): OthersRatingFileData | null {
+export function readOthersRatings(sanitizedName: string, seasonId: number): OthersRatingFileData | undefined {
 	try {
 		const filePath = getOthersFilePath(sanitizedName, seasonId);
 		const rawContents = File.read(filePath);
 
 		// File doesn't exist or is empty - this is OK, will be created later
 		if (!rawContents || rawContents.trim() === '') {
-			return null;
+			return undefined;
 		}
 
 		// Conditionally decrypt based on config setting
-		let contents: string | null;
+		let contents: string | undefined;
 		if (RATING_FILE_ENCRYPTION_ENABLED) {
 			// Encryption enabled: decrypt the file
 			contents = decryptData(rawContents);
 			if (!contents) {
 				// Decryption failed - file is corrupted, will be regenerated
 				print(`${HexColors.RED}WARNING:|r External ratings decryption failed - file corrupted, will regenerate`);
-				return null;
+				return undefined;
 			}
 		} else {
 			// Encryption disabled: use raw contents as-is (plain text)
@@ -144,13 +144,13 @@ export function readOthersRatings(sanitizedName: string, seasonId: number): Othe
 		}
 
 		if (!version || !seasonIdParsed || !checksum) {
-			return null;
+			return undefined;
 		}
 
 		// Validate player count matches
 		if (playerCount !== players.length) {
 			print(`${HexColors.RED}WARNING:|r External ratings player count mismatch: expected ${playerCount}, got ${players.length}`);
-			return null;
+			return undefined;
 		}
 
 		const data: OthersRatingFileData = {
@@ -164,13 +164,13 @@ export function readOthersRatings(sanitizedName: string, seasonId: number): Othe
 		// Validate checksum
 		if (!validateOthersChecksum(data)) {
 			print(`${HexColors.RED}WARNING:|r External ratings checksum validation failed - file corrupted, will regenerate`);
-			return null;
+			return undefined;
 		}
 
 		return data;
 	} catch (error) {
 		print(`${HexColors.RED}WARNING:|r Error reading external ratings: ${error}`);
-		return null;
+		return undefined;
 	}
 }
 

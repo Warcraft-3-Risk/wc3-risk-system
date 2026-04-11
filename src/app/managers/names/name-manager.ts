@@ -32,7 +32,7 @@ export class NameManager {
 	 * @returns The singleton instance of NameManager.
 	 */
 	public static getInstance() {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new NameManager();
 		}
 
@@ -69,8 +69,8 @@ export class NameManager {
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p = Player(i);
 
-			if (GetPlayerSlotState(p) != PLAYER_SLOT_STATE_PLAYING) continue;
-			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(p) != null) continue;
+			if (GetPlayerSlotState(p) !== PLAYER_SLOT_STATE_PLAYING) continue;
+			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(p) !== undefined) continue;
 			if (filter && !filter(p)) continue;
 
 			const color = this.getColor(p);
@@ -109,19 +109,19 @@ export class NameManager {
 	/**
 	 * Gets a player by BattleTag substring.
 	 * @param string - The BattleTag substring to search for.
-	 * @returns The player object if found, null otherwise.
+	 * @returns The player object if found, undefined otherwise.
 	 */
-	public getPlayerFromBtag(string: string): player | null {
+	public getPlayerFromBtag(string: string): player | undefined {
 		// Lazy import to avoid circular dependency (SharedSlotManager imports NameManager)
 		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as { SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager };
 
-		let result: player = null;
+		let result: player = undefined;
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
 
-			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_PLAYING) continue;
-			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(player) != null) continue;
+			if (GetPlayerSlotState(player) !== PLAYER_SLOT_STATE_PLAYING) continue;
+			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(player) !== undefined) continue;
 
 			if (isNonEmptySubstring(string, this.getBtag(player))) {
 				result = player;

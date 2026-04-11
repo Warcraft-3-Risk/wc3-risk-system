@@ -34,14 +34,14 @@ export abstract class ScoreboardRenderer {
 		let mbI: multiboarditem = MultiboardGetItem(this.board, row - 1, col - 1);
 		MultiboardSetItemWidth(mbI, width / 100);
 		MultiboardReleaseItem(mbI);
-		mbI = null;
+		mbI = undefined;
 	}
 
 	protected setItemValue(value: string, row: number, col: number): void {
 		let mbI: multiboarditem = MultiboardGetItem(this.board, row - 1, col - 1);
 		MultiboardSetItemValue(mbI, value);
 		MultiboardReleaseItem(mbI);
-		mbI = null;
+		mbI = undefined;
 	}
 
 	protected finalizeSetup(): void {

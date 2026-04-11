@@ -163,7 +163,7 @@ export class ObserverRenderer extends ScoreboardRenderer {
 	}
 
 	private getIncomeDelta(delta: number): string {
-		if (delta == 0) return `${HexColors.LIGHT_GRAY}${delta}|r`;
+		if (delta === 0) return `${HexColors.LIGHT_GRAY}${delta}|r`;
 		if (delta >= 1) return `${HexColors.GREEN}${delta}|r`;
 		if (delta < 0) return `${HexColors.RED}${delta}|r`;
 	}

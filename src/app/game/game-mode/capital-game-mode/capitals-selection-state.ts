@@ -47,7 +47,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 				this.resetCapitalsForEliminatedPlayers();
 				CountdownMessage(`Left click on a city to\nchoose your capital\n\nSelection closes in\n${duration}`);
 
-				if (duration == 3) {
+				if (duration === 3) {
 					BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 				}
 				if (duration <= 0) {
@@ -105,7 +105,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 			return;
 		}
 
-		if (city.getOwner() != NEUTRAL_HOSTILE) {
+		if (city.getOwner() !== NEUTRAL_HOSTILE) {
 			LocalMessage(
 				player,
 				`${NameManager.getInstance().getDisplayName(city.getOwner())} has already selected this city!\nPlease choose another city as your capital.`,
@@ -125,7 +125,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 			return;
 		}
 
-		if (cities.find((x) => x.getOwner() != NEUTRAL_HOSTILE && x.getOwner() != player) !== undefined) {
+		if (cities.find((x) => x.getOwner() !== NEUTRAL_HOSTILE && x.getOwner() !== player) !== undefined) {
 			LocalMessage(
 				player,
 				`${NameManager.getInstance().getDisplayName(city.getOwner())} has already selected this city!\nPlease choose another city as your capital.`,

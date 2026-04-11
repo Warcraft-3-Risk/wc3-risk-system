@@ -104,8 +104,8 @@ export function pack(message: string): string {
   return `"${packed}"`;
 }
 
-function pickEmitter(): player | null {
-  let emitter: player | null = null;
+function pickEmitter(): player | undefined {
+  let emitter: player | undefined = undefined;
 
   for (let i = 0; i < bj_MAX_PLAYERS; i++) {
     const player = Player(i);

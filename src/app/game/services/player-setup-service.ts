@@ -6,7 +6,7 @@ export class PlayerSetupService {
 		PlayerManager.getInstance().players.forEach((val) => {
 			val.trackedData.setKDMaps();
 
-			if (GetPlayerSlotState(val.getPlayer()) == PLAYER_SLOT_STATE_PLAYING) {
+			if (GetPlayerSlotState(val.getPlayer()) === PLAYER_SLOT_STATE_PLAYING) {
 				val.status.set(PLAYER_STATUS.ALIVE);
 			} else {
 				val.status.set(PLAYER_STATUS.LEFT);

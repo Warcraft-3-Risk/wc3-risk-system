@@ -27,7 +27,7 @@ export interface PlayerRow {
 	lastCombat: number;
 	isInCombat: boolean;
 	teamNumber: number;
-	ratingChange: { effectiveChange: number; wasFloorProtected: boolean } | null;
+	ratingChange: { effectiveChange: number; wasFloorProtected: boolean } | undefined;
 	displayName: string;
 	acctName: string;
 	btag: string;
@@ -153,7 +153,7 @@ export class ScoreboardDataModel {
 		const requiredCities = VictoryManager.getCityCountWin();
 		const cities = data.cities.cities.length;
 
-		let ratingChange: PlayerRow['ratingChange'] = null;
+		let ratingChange: PlayerRow['ratingChange'] = undefined;
 		if (p.status.isEliminated()) {
 			const ratingManager = RatingManager.getInstance();
 			const btag = nameManager.getBtag(handle);
@@ -219,7 +219,7 @@ export class ScoreboardDataModel {
 			const members = team
 				.getMembers()
 				.map((m) => rowLookup.get(m.getPlayer()))
-				.filter((r): r is PlayerRow => r != null);
+				.filter((r): r is PlayerRow => r !== undefined);
 
 			// Sort members within each team by income descending, tie-break by playerID
 			members.sort((a, b) => {

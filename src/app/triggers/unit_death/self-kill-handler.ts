@@ -7,7 +7,7 @@ import { AlliedKillHandler } from './allied-kill-handler';
 import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 
 export function SelfKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (city.getOwner() != SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit)) return null;
+	if (city.getOwner() !== SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit)) return undefined;
 
 	const searchGroup: group = CreateGroup();
 

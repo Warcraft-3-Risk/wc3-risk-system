@@ -108,7 +108,7 @@ export class RatingManager {
 	 * @returns The singleton instance of RatingManager
 	 */
 	public static getInstance(): RatingManager {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new RatingManager();
 		}
 
@@ -119,7 +119,7 @@ export class RatingManager {
 	 * Reset the singleton instance. For testing purposes only.
 	 */
 	public static resetInstance(): void {
-		this.instance = null as unknown as RatingManager;
+		this.instance = undefined as unknown as RatingManager;
 	}
 
 	/**
@@ -180,7 +180,7 @@ export class RatingManager {
 		}
 
 		if (DEBUG_PRINTS.master) debugPrint(
-			`[RatingManager] loadPlayerRating: Checksum OK for ${btag}, rating=${data.player.rating}, hasPending=${data.player.pendingGame != null}`,
+			`[RatingManager] loadPlayerRating: Checksum OK for ${btag}, rating=${data.player.rating}, hasPending=${data.player.pendingGame !== undefined}`,
 			DC.ratingManager
 		);
 
@@ -216,7 +216,7 @@ export class RatingManager {
 				if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] loadPlayerRating: Finalization save result=${saved} for ${btag}`, DC.ratingManager);
 			} else {
 				if (DEBUG_PRINTS.master) debugPrint(
-					`[RatingManager] loadPlayerRating: FAILED to retrieve playerData from map for ${btag} (playerData=${playerData != null}, pendingGame=${playerData?.pendingGame != null})`,
+					`[RatingManager] loadPlayerRating: FAILED to retrieve playerData from map for ${btag} (playerData=${playerData !== undefined}, pendingGame=${playerData?.pendingGame !== undefined})`,
 					DC.ratingManager
 				);
 			}
@@ -411,9 +411,9 @@ export class RatingManager {
 	 * Get player's full rating data
 	 * Automatically loads player's rating file if not loaded yet
 	 * @param btag Player's BattleTag
-	 * @returns Player rating data or null if not found
+	 * @returns Player rating data or undefined if not found
 	 */
-	public getPlayerData(btag: string): PlayerRatingData | null {
+	public getPlayerData(btag: string): PlayerRatingData | undefined {
 		// Load player's rating if not loaded yet
 		if (!this.loadedPlayers.has(btag)) {
 			this.loadPlayerRating(btag);
@@ -421,7 +421,7 @@ export class RatingManager {
 
 		const data = this.ratingData.get(btag);
 		if (!data) {
-			return null;
+			return undefined;
 		}
 		return data;
 	}
@@ -1008,7 +1008,7 @@ export class RatingManager {
 			// Note: turnDied = -1 means "hasn't died yet" (alive), not "left before game started"
 			// We check slot state to detect players who actually disconnected/left
 			if (GetPlayerSlotState(player.getPlayer()) !== PLAYER_SLOT_STATE_PLAYING) {
-				if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] Filter: ${btag} excluded - player left the game (slot state != PLAYING)`, DC.ratingManager);
+				if (DEBUG_PRINTS.master) debugPrint(`[RatingManager] Filter: ${btag} excluded - player left the game (slot state !== PLAYING)`, DC.ratingManager);
 				return false;
 			}
 

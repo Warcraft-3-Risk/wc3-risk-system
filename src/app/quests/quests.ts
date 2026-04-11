@@ -28,7 +28,7 @@ type QuestType =
 	| 'QUEST_PLAYERS';
 
 export class Quests {
-	private static instance: Quests = null;
+	private static instance: Quests = undefined;
 	private quests: Map<QuestType, quest> = new Map();
 	private shuffledPlayerList: ActivePlayer[];
 
@@ -240,7 +240,7 @@ export class Quests {
 		const nameManager = NameManager.getInstance();
 		const ratingManager = RatingManager.getInstance();
 		playerManager.playersAndObservers.forEach((activePlayer) => {
-			if (activePlayer.getPlayer() == GetLocalPlayer()) {
+			if (activePlayer.getPlayer() === GetLocalPlayer()) {
 				const showRating = ratingManager.getShowRatingPreference(nameManager.getBtag(GetLocalPlayer()));
 
 				let description: string = `${HexColors.YELLOW}Initial Players|r`;
@@ -275,7 +275,7 @@ export class Quests {
 		if (!this.quests.has('QUEST_PLAYERS')) this.addPlayersQuest();
 
 		playerManager.playersAndObservers.forEach((activePlayer) => {
-			if (activePlayer.getPlayer() == GetLocalPlayer()) {
+			if (activePlayer.getPlayer() === GetLocalPlayer()) {
 				const showRating = ratingManager.getShowRatingPreference(nameManager.getBtag(GetLocalPlayer()));
 
 				let description: string = `${HexColors.YELLOW}Active Players|r`;

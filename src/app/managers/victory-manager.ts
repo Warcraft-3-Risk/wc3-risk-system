@@ -26,7 +26,7 @@ export class VictoryManager {
 	}
 
 	public static getInstance(): VictoryManager {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new VictoryManager();
 		}
 
@@ -37,7 +37,7 @@ export class VictoryManager {
 	 * Reset the singleton instance. For testing purposes only.
 	 */
 	public static resetInstance(): void {
-		this.instance = null as unknown as VictoryManager;
+		this.instance = undefined as unknown as VictoryManager;
 	}
 
 	public removePlayer(player: ActivePlayer, status: PLAYER_STATUS) {
@@ -53,7 +53,7 @@ export class VictoryManager {
 		// If current leader is eliminated, always replace them
 		const currentLeaderEliminated = GlobalGameData.leader instanceof ActivePlayer && GlobalGameData.leader.status.isEliminated();
 
-		if (GlobalGameData.leader == undefined || currentLeaderEliminated) {
+		if (GlobalGameData.leader === undefined || currentLeaderEliminated) {
 			GlobalGameData.leader = participant;
 		} else if (ParticipantEntityManager.getCityCount(participant) > ParticipantEntityManager.getCityCount(GlobalGameData.leader)) {
 			GlobalGameData.leader = participant;
@@ -81,13 +81,13 @@ export class VictoryManager {
 			return true; // Teams are already filtered by getActiveTeams()
 		});
 
-		if (potentialVictors.length == 0) {
+		if (potentialVictors.length === 0) {
 			return [];
 		}
 
 		// potentialVictors is already sorted in descending order, so the first element has the max city count
 		let max = ParticipantEntityManager.getCityCount(potentialVictors[0]);
-		return potentialVictors.filter((x) => ParticipantEntityManager.getCityCount(x) == max);
+		return potentialVictors.filter((x) => ParticipantEntityManager.getCityCount(x) === max);
 	}
 
 	public updateAndGetGameState(): VictoryProgressState {
@@ -107,9 +107,9 @@ export class VictoryManager {
 		// Check if there is a city victory condition met
 		let playerWinCandidates = this.victors();
 
-		if (playerWinCandidates.length == 0) {
+		if (playerWinCandidates.length === 0) {
 			VictoryManager.GAME_VICTORY_STATE = 'UNDECIDED';
-		} else if (playerWinCandidates.length == 1) {
+		} else if (playerWinCandidates.length === 1) {
 			if (DEBUG_PRINTS.master) debugPrint(
 				ParticipantEntityManager.getDisplayName(playerWinCandidates[0]) + ' has met the city count victory condition!',
 				DC.victory
@@ -166,7 +166,7 @@ export class VictoryManager {
 		const info = VictoryManager.getInstance().getPromodeInfo();
 		const participantNames = `${ParticipantEntityManager.getDisplayName(ParticipantEntityManager.getParticipantByPlayer(info.leader))} ${info.leaderScore} - ${info.otherScore} ${ParticipantEntityManager.getDisplayName(ParticipantEntityManager.getParticipantByPlayer(info.other))}`;
 
-		GlobalMessage(`${participantNames}`, null);
+		GlobalMessage(`${participantNames}`, undefined);
 	}
 
 	public wonBestOf(matches: number): player | undefined {
