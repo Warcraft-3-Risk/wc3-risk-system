@@ -28,8 +28,8 @@ export class EqualizedPromodeMode extends BaseMode<EqualizedPromodeData> {
 		return [
 			new UpdatePlayerStatusState(),
 			new SetupState(),
-			new EqualizedCityDistributeState(),
 			new ApplyFogState(),
+			new EqualizedCityDistributeState(),
 			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),
 			new EnableControlsState(),
