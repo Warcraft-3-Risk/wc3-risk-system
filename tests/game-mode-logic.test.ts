@@ -13,6 +13,7 @@ import {
 	simulateStateMachine,
 	simulateMultipleGameCycles,
 	resolvePlayerEvent,
+	resolveCapitalCapture,
 	PROMODE_SETTING,
 	type GameModeName,
 	type ModeSelectionSettings,
@@ -784,5 +785,39 @@ describe('Full game scenarios', () => {
 	it('Team promode game can restart after game over', () => {
 		const result = canRestart('postMatch', false);
 		expect(result).toBe('allowed');
+	});
+});
+
+// ─── Capital Capture Resolution ─────────────────────────────────────
+
+describe('resolveCapitalCapture', () => {
+	it('should skip when preOwner does not exist (neutral hostile city)', () => {
+		const result = resolveCapitalCapture(false, false, true, false);
+		expect(result.isCapitalCapture).toBe(false);
+		expect(result.eliminatePreOwner).toBe(false);
+	});
+
+	it('should skip when preOwner and owner are the same player', () => {
+		const result = resolveCapitalCapture(true, true, true, true);
+		expect(result.isCapitalCapture).toBe(false);
+		expect(result.eliminatePreOwner).toBe(false);
+	});
+
+	it('should not flag a non-capital city capture', () => {
+		const result = resolveCapitalCapture(true, false, false, true);
+		expect(result.isCapitalCapture).toBe(false);
+		expect(result.eliminatePreOwner).toBe(false);
+	});
+
+	it('should eliminate an active player when their capital is captured', () => {
+		const result = resolveCapitalCapture(true, false, true, true);
+		expect(result.isCapitalCapture).toBe(true);
+		expect(result.eliminatePreOwner).toBe(true);
+	});
+
+	it('should flag capital capture but not eliminate an already-inactive player', () => {
+		const result = resolveCapitalCapture(true, false, true, false);
+		expect(result.isCapitalCapture).toBe(true);
+		expect(result.eliminatePreOwner).toBe(false);
 	});
 });

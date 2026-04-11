@@ -453,3 +453,40 @@ export function resolvePlayerEvent(
 			return { shouldCheckVictory: false, shouldTransitionToPostMatch: false, shouldBlock: false };
 	}
 }
+
+// ─── Capital Capture Resolution ─────────────────────────────────────
+
+export interface CapitalCaptureResult {
+	isCapitalCapture: boolean;
+	eliminatePreOwner: boolean;
+}
+
+/**
+ * Determine how a city capture should be handled in Capitals mode.
+ * Returns whether the capture involves a capital and whether the previous owner
+ * should be eliminated. Mirrors CapitalsGameLoopState.onCityCapture() logic.
+ */
+export function resolveCapitalCapture(
+	preOwnerExists: boolean,
+	isSameOwner: boolean,
+	isCapturedCityACapital: boolean,
+	preOwnerIsActive: boolean
+): CapitalCaptureResult {
+	// Neutral hostile cities have no ActivePlayer — skip entirely
+	if (!preOwnerExists) {
+		return { isCapitalCapture: false, eliminatePreOwner: false };
+	}
+
+	// Self-capture (e.g. via swap) — no effect
+	if (isSameOwner) {
+		return { isCapitalCapture: false, eliminatePreOwner: false };
+	}
+
+	// Non-capital city captured — no capital-specific effect
+	if (!isCapturedCityACapital) {
+		return { isCapitalCapture: false, eliminatePreOwner: false };
+	}
+
+	// Capital captured — eliminate if still active
+	return { isCapitalCapture: true, eliminatePreOwner: preOwnerIsActive };
+}
