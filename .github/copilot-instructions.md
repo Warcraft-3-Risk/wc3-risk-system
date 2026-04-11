@@ -56,6 +56,18 @@ These instructions guide AI code generation for Warcraft III development in this
 - When changing order-sensitive systems (turn processing, elimination, victory, income), call out assumptions and maintain ordering guarantees.
 - If a refactor changes behavior, clearly separate functional changes from structural cleanup.
 
+## Documentation Hygiene (Knowledge-Only Docs)
+- Keep `docs/` focused on durable knowledge/intention/motivation that describes current behavior.
+- Prefer docs that explain: why a system exists, how it currently works, key constraints, and source-of-truth code paths.
+- Do not add or keep temporary execution plans, spikes, or one-off testing checklists unless explicitly requested.
+- When behavior changes in critical systems (replay, shared slots, scoreboard, game loop timing), update the related durable docs in the same change.
+- Follow the style in `docs/README.md` and keep sections consistent: Motivation, Current Behavior, Constraints and Safety Rules, Source of Truth in Code.
+
+## Known Pitfalls to Preserve
+- Do not implement wait utilities with a shared static timer; concurrent waits must use one timer per call.
+- In replay-sensitive UI systems, prefer hide/reuse over destroy for multiboards.
+- For replay POV-sensitive UI logic, do not rely only on `GetLocalPlayer()`; use existing replay POV detection utilities.
+
 ## Preferred Copilot Output Pattern
 When implementing features or fixes:
 1. Start from existing abstractions and conventions.
