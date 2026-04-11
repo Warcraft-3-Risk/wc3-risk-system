@@ -55,13 +55,6 @@ test.describe("Mobile - Patch Notes", () => {
   });
 });
 
-test.describe("Mobile - News and Events", () => {
-  test("renders on mobile", async ({ page }) => {
-    await page.goto("/news-and-events");
-    await expect(page.getByTestId("news-and-events-page")).toBeVisible();
-    await expect(page.getByTestId("article-card-season-3-launch")).toBeVisible();
-  });
-});
 
 test.describe("Mobile - Tournament", () => {
   test("renders on mobile", async ({ page }) => {

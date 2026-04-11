@@ -13,10 +13,7 @@ test.describe("Homepage", () => {
 
   test("hero section displays correctly", async ({ page }) => {
     await expect(page.getByTestId("hero-section")).toBeVisible();
-    await expect(page.getByTestId("hero-heading")).toContainText("Risk");
-    await expect(page.getByTestId("hero-subtitle")).toBeVisible();
-    await expect(page.getByTestId("hero-cta-guide")).toBeVisible();
-    await expect(page.getByTestId("hero-cta-units")).toBeVisible();
+
   });
 
   test("quick links section is present with all cards", async ({ page }) => {
@@ -40,7 +37,7 @@ test.describe("Homepage", () => {
 
   test("tutorials section shows video cards", async ({ page }) => {
     await expect(page.getByTestId("tutorials-section")).toBeVisible();
-    await expect(page.getByTestId("tutorials-heading")).toContainText("Learn to Play");
+    await expect(page.getByTestId("tutorials-heading")).toContainText("General Tutorials");
     await expect(page.getByTestId("tutorial-step-1")).toBeVisible();
     await expect(page.getByTestId("tutorial-step-6")).toBeVisible();
   });

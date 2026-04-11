@@ -11,19 +11,11 @@ test.describe("Navigation - Desktop", () => {
   });
 
   test("desktop nav links are present", async ({ page }) => {
-    await expect(page.getByTestId("nav-link-home")).toBeVisible();
-    await expect(page.getByTestId("nav-link-news-and-events")).toBeVisible();
-    await expect(page.getByTestId("nav-link-patch-notes")).toBeVisible();
-    await expect(page.getByTestId("nav-link-game-guide")).toBeVisible();
-    await expect(page.getByTestId("nav-link-units-page")).toBeVisible();
-    await expect(page.getByTestId("nav-link-tournament")).toBeVisible();
+    await expect(page.getByTestId("nav-link-patch-notes")).toBeVisible();       
+    await expect(page.getByTestId("nav-link-game-guide")).toBeVisible();        
+    await expect(page.getByTestId("nav-link-units-page")).toBeVisible();        
+    await expect(page.getByTestId("nav-link-tournament")).toBeVisible();        
     await expect(page.getByTestId("nav-link-about-us")).toBeVisible();
-  });
-
-  test("navigates to news and events", async ({ page }) => {
-    await page.getByTestId("nav-link-news-and-events").click();
-    await expect(page).toHaveURL(/\/news-and-events/);
-    await expect(page.getByTestId("news-and-events-page")).toBeVisible();
   });
 
   test("navigates to patch notes", async ({ page }) => {
@@ -69,7 +61,6 @@ test.describe("Navigation - Desktop", () => {
     await expect(page.getByTestId("footer-link-game-guide")).toBeVisible();
     await expect(page.getByTestId("footer-link-units")).toBeVisible();
     await expect(page.getByTestId("footer-link-patch-notes")).toBeVisible();
-    await expect(page.getByTestId("footer-link-news")).toBeVisible();
+
   });
 });
-

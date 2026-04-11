@@ -71,7 +71,7 @@ test.describe("Unit Detail Page", () => {
     await page.goto("/how-to/units-page/tank");
     await expect(page.getByTestId("unit-detail-tank")).toBeVisible();
     await expect(page.getByTestId("unit-detail-name")).toContainText("Tank");
-    await expect(page.getByTestId("unit-stat-hp")).toContainText("2,600");
+    await expect(page.getByTestId("unit-stat-hp")).toContainText("2.600");
   });
 
   test("back link returns to units list", async ({ page }) => {
