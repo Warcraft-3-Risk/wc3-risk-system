@@ -49,29 +49,29 @@ Land units are trained at land cities (barracks). They form the backbone of your
 
 | | Unit | ID | HP | Damage | Role | Cost Tier |
 |---|------|----|----|--------|------|-----------|
-| ![](../../assets/icons/small-icons/Rifleman_icon.webp) | **Riflemen** | `u000` | 200 | 20 | Basic ranged infantry | Low |
-| ![](../../assets/icons/small-icons/Medic_icon.webp) | **Medic** | `u001` | 250 | 9 | Healer support | Low |
-| ![](../../assets/icons/small-icons/Mortar_icon.webp) | **Mortar** | `u002` | 350 | 25 | Siege/AoE damage | Medium |
-| ![](../../assets/icons/small-icons/Roarer_icon.webp) | **Roarer** | `u003` | 425 | 31 | Buff/support (Roar ability) | Medium |
-| ![](../../assets/icons/small-icons/Knight_icon.webp) | **Knight** | `u004` | 900 | 43 | Heavy melee cavalry | High |
-| ![](../../assets/icons/small-icons/General_icon.webp) | **General** | `u005` | 1300 | 62 | Elite command unit | High |
-| ![](../../assets/icons/small-icons/Artillery_icon.webp) | **Artillery** | `u006` | 1000 | 62 | Long-range siege | High |
-| ![](../../assets/icons/small-icons/Tank_icon.webp) | **Tank** | `u007` | 2600 | 64 | Strongest land unit | Highest |
+| ![](../../assets/icons/small-icons/rifleman-icon.webp) | **Riflemen** | `u000` | 200 | 20 | Basic ranged infantry | Low |
+| ![](../../assets/icons/small-icons/medic-icon.webp) | **Medic** | `u001` | 250 | 9 | Healer support | Low |
+| ![](../../assets/icons/small-icons/mortar-icon.webp) | **Mortar** | `u002` | 350 | 25 | Siege/AoE damage | Medium |
+| ![](../../assets/icons/small-icons/roarer-icon.webp) | **Roarer** | `u003` | 425 | 31 | Buff/support (Roar ability) | Medium |
+| ![](../../assets/icons/small-icons/knight-icon.webp) | **Knight** | `u004` | 900 | 43 | Heavy melee cavalry | High |
+| ![](../../assets/icons/small-icons/general-icon.webp) | **General** | `u005` | 1300 | 62 | Elite command unit | High |
+| ![](../../assets/icons/small-icons/artillery-icon.webp) | **Artillery** | `u006` | 1000 | 62 | Long-range siege | High |
+| ![](../../assets/icons/small-icons/tank-icon.webp) | **Tank** | `u007` | 2600 | 64 | Strongest land unit | Highest |
 
-> **Note:** HP and damage values are sourced from `assets/icons/unitStats.ts`.
+> **Note:** HP and damage values are sourced from in-game object data.
 
 ### Unit Details
 
 | | Unit | Description |
 |---|------|-------------|
-| ![](../../assets/icons/characters/rifleman.webp) | **Riflemen** | Basic attack force, best used in large numbers. High ranged DPS and long attack range, scales well in numbers. Vulnerable to fast or diving units. |
-| ![](../../assets/icons/characters/Medic-unit.webp) | **Medic** | Support unit with Heal ability. Great force multiplier in drawn-out fights. No offensive capability, relies on protection. |
-| ![](../../assets/icons/characters/Mortar-unit.webp) | **Mortar** | Siege unit with long range and splash damage. Can attack the ground and target trees. Slow and vulnerable if caught out. |
-| ![](../../assets/icons/characters/Roarer-unit.webp) | **Roarer** | Magic unit with Roar (damage buff) and Dispel Magic. Valuable support in battles. Requires careful positioning. |
-| ![](../../assets/icons/characters/Knight-unit.webp) | **Knight** | Melee unit with Frenzy ability (attack + movement speed). Powerful for quick engagements. Vulnerable to ranged units. |
-| ![](../../assets/icons/characters/General-unit.webp) | **General** | Elite melee unit with Roar and Frenzy. Enhances nearby units while dealing high damage. Costly but strong. |
-| ![](../../assets/icons/characters/Artillery-unit.webp) | **Artillery** | Very long range siege with 170-range splash damage. Can attack ground and trees. Defensively weak, needs protection. |
-| ![](../../assets/icons/characters/Tank-unit.webp) | **Tank** | High-cost durable siege unit with regeneration. 500 range, 90-range splash. Cannot attack trees. Best used in mass. |
+| ![](../../assets/icons/characters/rifleman-unit.webp) | **Riflemen** | Basic attack force, best used in large numbers. High ranged DPS and long attack range, scales well in numbers. Vulnerable to fast or diving units. |
+| ![](../../assets/icons/characters/medic-unit.webp) | **Medic** | Support unit with Heal ability. Great force multiplier in drawn-out fights. No offensive capability, relies on protection. |
+| ![](../../assets/icons/characters/mortar-unit.webp) | **Mortar** | Siege unit with long range and splash damage. Can attack the ground and target trees. Slow and vulnerable if caught out. |
+| ![](../../assets/icons/characters/roarer-unit.webp) | **Roarer** | Magic unit with Roar (damage buff) and Dispel Magic. Valuable support in battles. Requires careful positioning. |
+| ![](../../assets/icons/characters/knight-unit.webp) | **Knight** | Melee unit with Frenzy ability (attack + movement speed). Powerful for quick engagements. Vulnerable to ranged units. |
+| ![](../../assets/icons/characters/general-unit.webp) | **General** | Elite melee unit with Roar and Frenzy. Enhances nearby units while dealing high damage. Costly but strong. |
+| ![](../../assets/icons/characters/artillery-unit.webp) | **Artillery** | Very long range siege with 170-range splash damage. Can attack ground and trees. Defensively weak, needs protection. |
+| ![](../../assets/icons/characters/tank-unit.webp) | **Tank** | High-cost durable siege unit with regeneration. 500 range, 90-range splash. Cannot attack trees. Best used in mass. |
 
 ### Unit Progression
 
@@ -106,11 +106,11 @@ Ships provide naval power and transport capabilities.
 
 | | Ship | ID | HP | Damage | Role |
 |---|------|----|-----|--------|------|
-| ![](../../assets/icons/small-icons/TransportShip.webp) | **Transport Ship** | `s000` | 300 | 0 | Carries land units across water |
-| ![](../../assets/icons/small-icons/ATS-icon.webp) | **Armored Transport** | `s001` | 800 | 0 | Tougher transport ship |
-| ![](../../assets/icons/small-icons/WarshipA.webp) | **Warship A** | `s002` | 550 | 38 | Combat vessel |
-| ![](../../assets/icons/small-icons/WarshipB.webp) | **Warship B** | `s003` | 2000 | 98 | Advanced combat vessel |
-| ![](../../assets/icons/small-icons/WarshipSS.webp) | **Battleship SS** | `s004` | 5000 | 138 | Capital ship, strongest naval unit |
+| ![](../../assets/icons/small-icons/transport-ship-icon.webp) | **Transport Ship** | `s000` | 300 | 0 | Carries land units across water |
+| ![](../../assets/icons/small-icons/armored-transport-icon.webp) | **Armored Transport** | `s001` | 800 | 0 | Tougher transport ship |
+| ![](../../assets/icons/small-icons/warship-a-icon.webp) | **Warship A** | `s002` | 550 | 38 | Combat vessel |
+| ![](../../assets/icons/small-icons/warship-b-icon.webp) | **Warship B** | `s003` | 2000 | 98 | Advanced combat vessel |
+| ![](../../assets/icons/small-icons/battleship-ss-icon.webp) | **Battleship SS** | `s004` | 5000 | 138 | Capital ship, strongest naval unit |
 
 ### Transport Mechanics
 
@@ -134,8 +134,8 @@ Structures are buildings placed on the map that define gameplay zones.
 
 | | Structure | ID | HP | Description |
 |---|-----------|----|----|-------------|
-| ![](../../assets/icons/small-icons/City_icon.webp) | **City** | `h000` | 1,500 | Land city / barracks — trains land units |
-| ![](../../assets/icons/small-icons/Port_icon.webp) | **Port** | `h001` | — | Port city — trains naval units and ships |
+| ![](../../assets/icons/small-icons/city-icon.webp) | **City** | `h000` | 1,500 | Land city / barracks — trains land units |
+| ![](../../assets/icons/small-icons/port-icon.webp) | **Port** | `h001` | — | Port city — trains naval units and ships |
 | **Control Point** | `h002` | — | Territory control marker |
 | **Spawner** | `h004` | — | Country spawner — generates free units |
 | **Capital** | `h005` | — | Capital city (Capitals mode) |
@@ -244,11 +244,11 @@ Active guards receive the **Guard Indicator** ability (`A006`), which visually m
 | | Ability | ID | Description |
 |---|--------|----|-------------|
 | ![](../../assets/icons/skills/medic-skill-icon.webp) | **Heal** | `a000` | Medic healing ability |
-| ![](../../assets/icons/skills/BattleRoar-icon.webp) | **Roar** | `a001` | Roarer buff ability |
-| ![](../../assets/icons/skills/Dispelmagic-icon.webp) | **Dispel Magic** | `a002` | Removes buffs/debuffs |
-| ![](../../assets/icons/skills/BloodLust-icon.webp) | **Frenzy** | `a003` | Attack speed boost |
-| ![](../../assets/icons/skills/BloodLust-icon.webp) | **Unholy Frenzy** | `a004` | Powerful attack buff |
-| ![](../../assets/icons/skills/BloodLust-icon.webp) | **Berserk** | `a005` | Maximum combat buff |
+| ![](../../assets/icons/skills/battle-roar-icon.webp) | **Roar** | `a001` | Roarer buff ability |
+| ![](../../assets/icons/skills/dispel-magic-icon.webp) | **Dispel Magic** | `a002` | Removes buffs/debuffs |
+| ![](../../assets/icons/skills/bloodlust-icon.webp) | **Frenzy** | `a003` | Attack speed boost |
+| ![](../../assets/icons/skills/bloodlust-icon.webp) | **Unholy Frenzy** | `a004` | Powerful attack buff |
+| ![](../../assets/icons/skills/bloodlust-icon.webp) | **Berserk** | `a005` | Maximum combat buff |
 
 ### Spawner Abilities
 

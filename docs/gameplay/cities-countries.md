@@ -64,7 +64,7 @@ flowchart LR
     end
 ```
 
-| Property | ![](../../assets/icons/small-icons/City_icon.webp) Land City | ![](../../assets/icons/small-icons/Port_icon.webp) Port City |
+| Property | ![](../../assets/icons/small-icons/city-icon.webp) Land City | ![](../../assets/icons/small-icons/port-icon.webp) Port City |
 |----------|-----------|-----------|
 | Building ID | `h000` (CITY) | `h001` (PORT) |
 | HP | 1,500 | — |

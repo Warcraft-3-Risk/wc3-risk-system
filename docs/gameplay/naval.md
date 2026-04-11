@@ -78,18 +78,18 @@ Ships are vessel units with unique naval capabilities.
 
 | | Ship | ID | HP | Damage | Type | Key Feature |
 |---|------|----|-----|--------|------|-------------|
-| ![](../../assets/icons/small-icons/TransportShip.webp) | **Transport Ship** | `s000` | 300 | 0 | Transport | Carries land units across water |
-| ![](../../assets/icons/small-icons/ATS-icon.webp) | **Armored Transport** | `s001` | 800 | 0 | Transport | Tougher transport with more cargo |
-| ![](../../assets/icons/small-icons/WarshipA.webp) | **Warship A** | `s002` | 550 | 38 | Combat | Naval combat vessel |
-| ![](../../assets/icons/small-icons/WarshipB.webp) | **Warship B** | `s003` | 2000 | 98 | Combat | Advanced naval combat |
-| ![](../../assets/icons/small-icons/WarshipSS.webp) | **Battleship SS** | `s004` | 5000 | 138 | Capital | Strongest naval unit in the game |
+| ![](../../assets/icons/small-icons/transport-ship-icon.webp) | **Transport Ship** | `s000` | 300 | 0 | Transport | Carries land units across water |
+| ![](../../assets/icons/small-icons/armored-transport-icon.webp) | **Armored Transport** | `s001` | 800 | 0 | Transport | Tougher transport with more cargo |
+| ![](../../assets/icons/small-icons/warship-a-icon.webp) | **Warship A** | `s002` | 550 | 38 | Combat | Naval combat vessel |
+| ![](../../assets/icons/small-icons/warship-b-icon.webp) | **Warship B** | `s003` | 2000 | 98 | Combat | Advanced naval combat |
+| ![](../../assets/icons/small-icons/battleship-ss-icon.webp) | **Battleship SS** | `s004` | 5000 | 138 | Capital | Strongest naval unit in the game |
 
 ### Ship Details
 
 | | Ship | Description |
 |---|------|-------------|
-| ![](../../assets/icons/characters/TransportShip_icon.webp) | **Transport Ship** | Carries up to 10 land units across water. Lightly armored and fast, suitable for quick troop movement but vulnerable to attacks. |
-| ![](../../assets/icons/characters/Armoured_Transport_Ship_image.webp) | **Armored Transport** | Upgraded transport with significantly higher HP and speed, still carries 10 units. Better protection for troop transport. |
+| ![](../../assets/icons/characters/transport-ship-unit.webp) | **Transport Ship** | Carries up to 10 land units across water. Lightly armored and fast, suitable for quick troop movement but vulnerable to attacks. |
+| ![](../../assets/icons/characters/armored-transport-unit.webp) | **Armored Transport** | Upgraded transport with significantly higher HP and speed, still carries 10 units. Better protection for troop transport. |
 | | **Warship A** | Early game naval unit with decent range and splash damage. Useful against early enemy ships or clustered groups, but vulnerable later. |
 | | **Warship B** | Strong naval unit with high damage and shorter range. Attacks cannot be dodged. Excels at chasing down enemy ships including Battleships. |
 | | **Battleship SS** | Most powerful naval unit. Very long range, high damage, significant HP with splash damage. Dominates late-game naval battles. |
