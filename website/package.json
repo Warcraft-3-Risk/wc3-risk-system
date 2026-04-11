@@ -6,7 +6,9 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node ./node_modules/@playwright/test/cli.js test",
+    "test:ui": "node ./node_modules/@playwright/test/cli.js test --ui"
   },
   "dependencies": {
     "github-markdown-css": "^5.9.0",

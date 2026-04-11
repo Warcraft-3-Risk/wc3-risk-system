@@ -16,15 +16,17 @@ export default defineConfig({
     {
       name: "desktop-chrome",
       use: { ...devices["Desktop Chrome"] },
+      testIgnore: ["**/*.mobile.spec.ts"],
     },
     {
       name: "mobile-chrome",
       use: { ...devices["Pixel 5"] },
+      testMatch: ["**/*.mobile.spec.ts"],
     },
   ],
   webServer: {
     command: "npx serve out -l 3000",
     port: 3000,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: true,
   },
 });
