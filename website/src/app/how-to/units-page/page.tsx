@@ -61,17 +61,32 @@ interface UnitData {
   damage: number;
   role: string;
   costTier: string;
+  category: string;
   icon: string;
   characterArt: string | null;
 }
 
 function UnitCard({ unit }: { unit: UnitData }) {
+  const isCityTrained = unit.category === "land";
+  const trainingIcon = isCityTrained ? "/icons/small-icons/city-icon.webp" : "/icons/small-icons/port-icon.webp";
+  const trainingTooltip = isCityTrained ? "Trained at City" : "Trained at Port";
+
   return (
     <Link
       href={`/how-to/units-page/${unit.id}`}
       data-testid={`unit-card-${unit.id}`}
-      className="block bg-[--color-surface] rounded-lg border border-[--color-border] hover:border-[--color-accent] transition-all p-4 group"
+      className="block bg-[--color-surface] rounded-lg border border-[--color-border] hover:border-[--color-accent] transition-all p-4 group relative"
     >
+      <div 
+        className="absolute top-2 right-2 opacity-80 group-hover:opacity-100 transition-opacity"
+        title={trainingTooltip}
+      >
+        <img
+          src={trainingIcon}
+          alt={trainingTooltip}
+          className="w-6 h-6 rounded-sm border border-[#2a455a] shadow-sm"
+        />
+      </div>
       <div className="flex items-center gap-3 mb-3">
         <img
           src={unit.icon}
@@ -80,7 +95,7 @@ function UnitCard({ unit }: { unit: UnitData }) {
           data-testid={`unit-icon-${unit.id}`}
         />
         <div>
-          <h3 className="font-semibold text-[--color-text-primary] group-hover:text-[--color-accent] transition-colors">
+          <h3 className="font-semibold text-[--color-text-primary] group-hover:text-[--color-accent] transition-colors pr-6">
             {unit.name}
           </h3>
           <span className="text-xs text-[--color-text-secondary]">{unit.costTier} tier</span>
