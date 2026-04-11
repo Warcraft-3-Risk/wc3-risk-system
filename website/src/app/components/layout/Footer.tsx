@@ -46,7 +46,7 @@ export function Footer() {
             <ul className="space-y-2 text-sm">
               <li>
                 <a
-                  href="https://discord.gg/riskReforged"
+                  href="https://discord.com/invite/wc3risk"
                   target="_blank"
                   rel="noopener noreferrer"
                   data-testid="footer-link-discord"

@@ -1,11 +1,24 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import sections from "../../data/game-guide-sections.json";
 import { GameGuideSection } from "./__blocks/GameGuideSection";
 
 export default function GameGuidePage() {
   const [activeSection, setActiveSection] = useState(sections[0].id);
+
+  useEffect(() => {
+    // If there is a hash in the URL like #maps, switch to that tab!
+    const hash = window.location.hash.replace("#", "");
+    if (hash && sections.some((s) => s.id === hash)) {
+      setActiveSection(hash);
+    }
+  }, []);
+
+  const handleSectionClick = (id: string) => {
+    setActiveSection(id);
+    window.history.pushState(null, "", `#${id}`);
+  };
 
   return (
     <div data-testid="game-guide-page" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -15,20 +28,21 @@ export default function GameGuidePage() {
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar */}
-        <aside data-testid="game-guide-sidebar" className="lg:w-64 shrink-0">
-          <nav className="sticky top-20 space-y-1">
+        <aside data-testid="game-guide-sidebar" className="lg:w-72 shrink-0">
+          <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto space-y-2 bg-[#0a1820]/40 p-4 rounded-xl border border-[--color-border] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1e3a52] [&::-webkit-scrollbar-thumb]:rounded-full">
             {sections.map((section) => (
               <button
                 key={section.id}
                 data-testid={`guide-nav-${section.id}`}
-                onClick={() => setActiveSection(section.id)}
-                className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                onClick={() => handleSectionClick(section.id)}
+                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition-all flex items-center gap-3 ${
                   activeSection === section.id
-                    ? "bg-[--color-accent] text-[--color-primary]"
-                    : "text-[--color-text-secondary] hover:text-[--color-accent] hover:bg-[--color-surface]"
+                    ? "bg-[#1e3a52] text-[#f9c701] border-l-4 border-[#f9c701] shadow-md translate-x-1"
+                    : "text-gray-400 hover:text-white hover:bg-[#1e3a52]/50 border-l-4 border-transparent hover:border-gray-500"
                 }`}
               >
-                {section.emoji} {section.title}
+                <span className="text-xl">{section.emoji}</span>
+                <span className="tracking-wide">{section.title}</span>
               </button>
             ))}
           </nav>

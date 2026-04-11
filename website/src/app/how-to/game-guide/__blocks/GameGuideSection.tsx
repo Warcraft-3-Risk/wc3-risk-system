@@ -3,24 +3,6 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import mermaid from "mermaid";
-
-mermaid.initialize({
-  startOnLoad: false,
-  theme: "dark",
-  fontFamily: "var(--font-sans)",
-});
-
-function MermaidChart({ chart }: { chart: string }) {
-  const [svg, setSvg] = useState<string>("");
-  const id = "mermaid-svg-" + Math.round(Math.random() * 10000000);
-
-  useEffect(() => {
-    mermaid.render(id, chart).then((v) => setSvg(v.svg)).catch((e) => console.error(e));
-  }, [chart, id]);
-
-  return <div className="mermaid-chart flex justify-center my-6" dangerouslySetInnerHTML={{ __html: svg }} />;
-}
 
 interface GameGuideSectionProps {
   sectionId: string;
@@ -38,10 +20,14 @@ export function GameGuideSection({ sectionId, sourceFile }: GameGuideSectionProp
         return res.text();
       })
       .then((text) => {
+        // Strip out mermaid blocks completely to improve performance and approachability.
+        // We will replace them with an empty string or a styled '💡 Strategy Diagram Skipped' block for now.
         const fixed = text
           .replace(/\.\.\/.\.\/assets\/icons\/small-icons\//g, "/icons/small-icons/")
           .replace(/\.\.\/.\.\/assets\/icons\/characters\//g, "/icons/characters/")
-          .replace(/\.\.\/.\.\/assets\/icons\/skills\//g, "/icons/skills/");
+          .replace(/\.\.\/.\.\/assets\/icons\/skills\//g, "/icons/skills/")     
+          .replace(/```mermaid[\s\S]*?```/g, "> 💡 *Visual diagram omitted for simplicity based on your device settings.*");
+
         setContent(fixed);
         setLoading(false);
       })
@@ -53,8 +39,11 @@ export function GameGuideSection({ sectionId, sourceFile }: GameGuideSectionProp
 
   if (loading) {
     return (
-      <div data-testid={`guide-loading-${sectionId}`} className="text-[--color-text-secondary] py-8">
-        Loading...
+      <div data-testid={`guide-loading-${sectionId}`} className="text-[--color-text-secondary] py-8 flex items-center justify-center">
+        <div className="animate-pulse flex items-center gap-3">
+          <div className="w-6 h-6 rounded-full bg-[--color-accent] opacity-50"></div>
+          <span className="font-display tracking-widest text-[#f9c701]">LOADING TOMES...</span>
+        </div>
       </div>
     );
   }
@@ -66,19 +55,8 @@ export function GameGuideSection({ sectionId, sourceFile }: GameGuideSectionProp
         components={{
           img: ({ src, alt, ...props }) => (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={src} alt={alt || ""} className="inline-block max-h-8 align-middle" {...props} />
-          ),
-          code({ className, children, ...props }) {
-            const match = /language-(\w+)/.exec(className || "");
-            if (match && match[1] === "mermaid") {
-              return <MermaidChart chart={String(children).replace(/\n$/, "")} />;
-            }
-            return (
-              <code className={className} {...props}>
-                {children}
-              </code>
-            );
-          },
+            <img src={src} alt={alt || ""} className="inline-block max-h-8 align-middle rounded shadow-sm" {...props} />
+          )
         }}
       >
         {content || ""}

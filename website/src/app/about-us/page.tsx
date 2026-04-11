@@ -97,7 +97,7 @@ export default function AboutUsPage() {
           </p>
           <div className="flex flex-wrap gap-4">
             <a
-              href="https://discord.gg/riskReforged"
+              href="https://discord.com/invite/wc3risk"
               target="_blank"
               rel="noopener noreferrer"
               data-testid="about-discord-link"

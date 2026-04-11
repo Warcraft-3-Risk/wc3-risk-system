@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
+import LiveLobbiesIndicator from "./LiveLobbiesIndicator";
 
 interface NavLink {
   label: string;
@@ -39,29 +40,52 @@ export function Navbar() {
             Risk Reforged
           </Link>
 
-          {/* Desktop nav */}
-          <div className="hidden md:flex items-center gap-1" data-testid="desktop-nav">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                data-testid={link.testId}
-                className="px-3 py-2 rounded-md text-sm font-medium text-[--color-text-primary] hover:text-[--color-accent] hover:bg-[--color-surface] transition-colors"
-              >
-                {link.label}
-              </Link>
-            ))}
-          </div>
+          {/* Right side group: Nav + Socials + Mobile Toggle */}
+          <div className="flex items-center gap-2 sm:gap-4">
+            {/* Desktop nav */}
+            <div className="hidden md:flex items-center gap-1" data-testid="desktop-nav">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  data-testid={link.testId}
+                  className="px-3 py-2 rounded-md text-sm font-medium text-[--color-text-primary] hover:text-[--color-accent] hover:bg-[--color-surface] transition-colors"
+                >
+                  {link.label}
+                </Link>
+              ))}
+            </div>
 
-          {/* Mobile burger */}
-          <button
-            data-testid="mobile-menu-toggle"
-            className="md:hidden p-2 rounded-md text-[--color-text-secondary] hover:text-[--color-accent] hover:bg-[--color-surface] transition-colors"
-            onClick={() => setMobileOpen(!mobileOpen)}
-            aria-label={mobileOpen ? "Close menu" : "Open menu"}
-          >
-            {mobileOpen ? <X size={24} /> : <Menu size={24} />}
-          </button>
+            <LiveLobbiesIndicator />
+
+            {/* Discord Link */}
+            <a
+              href="https://discord.com/invite/wc3risk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-md hover:bg-[--color-surface] transition-colors flex items-center justify-center opacity-80 hover:opacity-100 hover:scale-110"
+              title="Join our Discord"
+              data-testid="nav-discord-link"
+            >
+              <Image
+                src="/icons/social-media/Discord.svg"
+                alt="Discord"
+                width={24}
+                height={24}
+                className="drop-shadow-[0_0_5px_rgba(255,255,255,0.2)]"
+              />
+            </a>
+
+            {/* Mobile burger */}
+            <button
+              data-testid="mobile-menu-toggle"
+              className="md:hidden p-2 rounded-md text-[--color-text-secondary] hover:text-[--color-accent] hover:bg-[--color-surface] transition-colors"
+              onClick={() => setMobileOpen(!mobileOpen)}
+              aria-label={mobileOpen ? "Close menu" : "Open menu"}
+            >
+              {mobileOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </div>
       </div>
 

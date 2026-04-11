@@ -34,18 +34,18 @@ export function HeroSection() {
           A strategic conquest and diplomacy game. Command armies, forge alliances,
           and conquer territories across Europe, Asia, and the World.
         </p>
-        <div className="flex flex-col sm:flex-row gap-5 justify-center mt-4">   
+        <div className="flex flex-col sm:flex-row gap-6 justify-center mt-4">
           <Link
             href="/how-to/game-guide"
             data-testid="hero-cta-guide"
-            className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-[--color-accent] text-[#0a1820] font-bold text-lg hover:bg-[--color-accent-hover] hover:scale-105 transition-transform shadow-[0_0_20px_rgba(249,199,1,0.4)] uppercase"
+            className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-[#f9c701] text-black font-extrabold text-lg hover:bg-[#ffdb4d] hover:scale-105 transition-all shadow-[0_0_25px_rgba(249,199,1,0.6)] uppercase tracking-wider border-2 border-[#f9c701]"
           >
             Game Guide
           </Link>
           <Link
             href="/how-to/units-page"
             data-testid="hero-cta-units"
-            className="inline-flex items-center justify-center px-8 py-4 rounded-lg border-2 border-[--color-accent] text-[--color-accent] font-bold text-lg hover:bg-[--color-surface] hover:scale-105 transition-all shadow-[0_0_20px_rgba(30,58,82,0.8)] uppercase"
+            className="inline-flex items-center justify-center px-8 py-4 rounded-lg bg-black/40 backdrop-blur-sm border-2 border-white text-white font-extrabold text-lg hover:bg-white hover:text-black hover:scale-105 transition-all shadow-[0_0_20px_rgba(255,255,255,0.2)] uppercase tracking-wider"
           >
             Explore Units
           </Link>
