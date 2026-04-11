@@ -28,20 +28,20 @@ export default function GameGuidePage() {
 
       <div className="flex flex-col lg:flex-row gap-8">
         {/* Sidebar */}
-        <aside data-testid="game-guide-sidebar" className="lg:w-72 shrink-0">
-          <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto space-y-2 bg-[#0a1820]/40 p-4 rounded-xl border border-[--color-border] [&::-webkit-scrollbar]:w-2 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1e3a52] [&::-webkit-scrollbar-thumb]:rounded-full">
+        <aside data-testid="game-guide-sidebar" className="lg:w-64 shrink-0">   
+          <nav className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto space-y-0.5 bg-[#0a1820]/60 p-2.5 rounded-xl border border-[--color-border] shadow-sm [&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-transparent [&::-webkit-scrollbar-thumb]:bg-[#1e3a52] [&::-webkit-scrollbar-thumb]:rounded-full">
             {sections.map((section) => (
               <button
                 key={section.id}
                 data-testid={`guide-nav-${section.id}`}
                 onClick={() => handleSectionClick(section.id)}
-                className={`w-full text-left px-4 py-3 rounded-lg text-sm font-bold transition-all flex items-center gap-3 ${
+                className={`w-full text-left px-3 py-2 rounded-md text-sm font-medium transition-all flex items-center gap-2.5 ${
                   activeSection === section.id
-                    ? "bg-[#1e3a52] text-[#f9c701] border-l-4 border-[#f9c701] shadow-md translate-x-1"
-                    : "text-gray-400 hover:text-white hover:bg-[#1e3a52]/50 border-l-4 border-transparent hover:border-gray-500"
+                    ? "bg-[#1e3a52] text-[#f9c701]"
+                    : "text-gray-400 hover:text-white hover:bg-[#1e3a52]/50"
                 }`}
               >
-                <span className="text-xl">{section.emoji}</span>
+                <span className="text-lg opacity-90">{section.emoji}</span>
                 <span className="tracking-wide">{section.title}</span>
               </button>
             ))}

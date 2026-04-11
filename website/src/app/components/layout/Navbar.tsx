@@ -73,6 +73,7 @@ export function Navbar() {
                 width={24}
                 height={24}
                 className="drop-shadow-[0_0_5px_rgba(255,255,255,0.2)]"
+                style={{ width: 24, height: 24 }}
               />
             </a>
 

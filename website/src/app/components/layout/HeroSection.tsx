@@ -19,18 +19,15 @@ export function HeroSection() {
       </div>
 
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
-        <Image 
-          src="/icons/logo/risklogo-full.svg" 
-          alt="Risk Reforged" 
-          width={480} 
-          height={160} 
+        <Image
+          src="/icons/logo/risklogo-full.svg"
+          alt="Risk Reforged"
+          width={480}
+          height={160}
           className="mb-8 drop-shadow-[0_10px_25px_rgba(0,0,0,0.5)]"
+          style={{ width: "auto", height: "auto" }}
         />
-        
-        <p
-          data-testid="hero-subtitle"
-          className="text-xl sm:text-2xl text-[--color-text-primary] mb-10 max-w-2xl mx-auto drop-shadow-md font-medium"
-        >
+        <p className="text-xl sm:text-2xl text-[#d4e1eb] font-medium leading-relaxed text-center mb-12 drop-shadow-md max-w-2xl">
           A strategic conquest and diplomacy game. Command armies, forge alliances,
           and conquer territories across Europe, Asia, and the World.
         </p>
