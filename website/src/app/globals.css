@@ -1,0 +1,108 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-primary: #102535;
+  --color-secondary: #1b3449;
+  --color-accent: #f9c701;
+  --color-accent-hover: #e5b700;
+  --color-surface: #1e3a52;
+  --color-text-primary: #e8edf2;
+  --color-text-secondary: #94a3b8;
+  --color-border: #2d4a63;
+  --font-sans: "Montserrat", system-ui, sans-serif;
+  --font-display: "Montserrat", system-ui, sans-serif;
+}
+
+body {
+  background-color: var(--color-primary);
+  color: var(--color-text-primary);
+  font-family: var(--font-sans);
+}
+
+/* Markdown content styles */
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4 {
+  font-family: var(--font-display);
+  color: var(--color-text-primary);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.markdown-content h1 { font-size: 2rem; font-weight: 700; }
+.markdown-content h2 { font-size: 1.5rem; font-weight: 600; color: var(--color-accent); }
+.markdown-content h3 { font-size: 1.25rem; font-weight: 600; }
+
+.markdown-content p {
+  margin-bottom: 1em;
+  line-height: 1.7;
+  color: var(--color-text-secondary);
+}
+
+.markdown-content table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1em 0;
+}
+
+.markdown-content th,
+.markdown-content td {
+  border: 1px solid var(--color-border);
+  padding: 0.5em 0.75em;
+  text-align: left;
+}
+
+.markdown-content th {
+  background-color: var(--color-surface);
+  font-weight: 600;
+  color: var(--color-accent);
+}
+
+.markdown-content td {
+  color: var(--color-text-secondary);
+}
+
+.markdown-content code {
+  background-color: var(--color-surface);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+  font-size: 0.9em;
+}
+
+.markdown-content pre {
+  background-color: var(--color-surface);
+  padding: 1em;
+  border-radius: 8px;
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid var(--color-accent);
+  padding-left: 1em;
+  margin: 1em 0;
+  color: var(--color-text-secondary);
+}
+
+.markdown-content a {
+  color: var(--color-accent);
+  text-decoration: underline;
+}
+
+.markdown-content ul,
+.markdown-content ol {
+  margin: 0.5em 0;
+  padding-left: 1.5em;
+  color: var(--color-text-secondary);
+}
+
+.markdown-content li {
+  margin-bottom: 0.25em;
+}
+
+.markdown-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+}

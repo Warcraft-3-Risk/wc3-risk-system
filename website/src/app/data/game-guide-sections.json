@@ -1,0 +1,93 @@
+[
+  {
+    "id": "game-modes",
+    "title": "Game Modes",
+    "emoji": "🎮",
+    "description": "Standard, Promode, Capitals, W3C, and Equalized Promode modes",
+    "sourceFile": "game-modes.md"
+  },
+  {
+    "id": "game-loop",
+    "title": "Game Loop & Turns",
+    "emoji": "🔄",
+    "description": "Turn structure, tick system, phase timing, day/night cycle",
+    "sourceFile": "game-loop.md"
+  },
+  {
+    "id": "economy",
+    "title": "Economy & Income",
+    "emoji": "💰",
+    "description": "Income sources, country bonuses, gold mechanics, fight bonus",
+    "sourceFile": "economy.md"
+  },
+  {
+    "id": "units",
+    "title": "Units & Combat",
+    "emoji": "⚔️",
+    "description": "All unit types, stats, abilities, guard system, spawning",
+    "sourceFile": "units.md"
+  },
+  {
+    "id": "victory",
+    "title": "Victory & Elimination",
+    "emoji": "🏆",
+    "description": "Win conditions, overtime, elimination, nomad state",
+    "sourceFile": "victory.md"
+  },
+  {
+    "id": "maps",
+    "title": "Maps & Territories",
+    "emoji": "🗺️",
+    "description": "Europe, Asia, and World terrain overviews",
+    "sourceFile": "maps.md"
+  },
+  {
+    "id": "cities-countries",
+    "title": "Cities & Countries",
+    "emoji": "🏙️",
+    "description": "City types, country bonuses, distribution, capitals",
+    "sourceFile": "cities-countries.md"
+  },
+  {
+    "id": "naval",
+    "title": "Naval System",
+    "emoji": "🌊",
+    "description": "Ports, ships, transport mechanics",
+    "sourceFile": "naval.md"
+  },
+  {
+    "id": "rating",
+    "title": "Rating & Ranked",
+    "emoji": "📊",
+    "description": "ELO system, placement/kill pools, rank tiers",
+    "sourceFile": "rating.md"
+  },
+  {
+    "id": "diplomacy",
+    "title": "Diplomacy & Teams",
+    "emoji": "🤝",
+    "description": "Alliance modes, team play, shared control",
+    "sourceFile": "diplomacy.md"
+  },
+  {
+    "id": "commands",
+    "title": "Commands",
+    "emoji": "💬",
+    "description": "All chat commands and player tools",
+    "sourceFile": "commands.md"
+  },
+  {
+    "id": "advanced",
+    "title": "Advanced Mechanics",
+    "emoji": "🔧",
+    "description": "Shared slots, fog of war, minimap, replay system",
+    "sourceFile": "advanced.md"
+  },
+  {
+    "id": "scoreboard",
+    "title": "Scoreboard & Statistics",
+    "emoji": "📈",
+    "description": "Scoreboard layout, stat tracking, MMD",
+    "sourceFile": "scoreboard.md"
+  }
+]
