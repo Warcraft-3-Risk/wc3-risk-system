@@ -1,4 +1,4 @@
-# 💬 Commands
+# Commands
 
 > WC3 Risk provides a comprehensive set of chat commands for player interaction, game control, and customization. Type commands in the chat box during gameplay.
 
@@ -251,3 +251,4 @@ flowchart LR
 ---
 
 [← Diplomacy & Teams](./diplomacy.md) · [Back to Wiki Home](./README.md) · [Advanced Mechanics →](./advanced.md)
+

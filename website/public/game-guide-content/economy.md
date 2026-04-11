@@ -1,4 +1,4 @@
-# 💰 Economy & Income
+# Economy & Income
 
 > Gold is the primary resource in WC3 Risk. Players earn income each turn from base income, country bonuses, and combat rewards. This page covers all economic mechanics.
 
@@ -312,3 +312,4 @@ Turn 1 (Chaos Promode):
 ---
 
 [← Game Loop & Turns](./game-loop.md) · [Back to Wiki Home](./README.md) · [Units & Combat →](./units.md)
+

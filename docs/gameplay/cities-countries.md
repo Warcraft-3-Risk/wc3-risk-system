@@ -1,4 +1,4 @@
-# 🏙️ Cities & Countries
+# Cities & Countries
 
 > Cities are the fundamental territorial units in WC3 Risk. Countries group cities together and provide income bonuses when fully controlled. This page covers city types, country mechanics, distribution, and the Capitals mode system.
 
@@ -306,3 +306,4 @@ sequenceDiagram
 ---
 
 [← Maps & Territories](./maps.md) · [Back to Wiki Home](./README.md) · [Naval System →](./naval.md)
+

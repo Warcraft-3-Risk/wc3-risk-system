@@ -1,4 +1,4 @@
-# 🌊 Naval System
+# Naval System
 
 > Ports and ships add a maritime dimension to WC3 Risk. Control port cities to build fleets, transport armies across water, and dominate naval chokepoints.
 
@@ -218,3 +218,4 @@ flowchart TD
 ---
 
 [← Cities & Countries](./cities-countries.md) · [Back to Wiki Home](./README.md) · [Rating & Ranked →](./rating.md)
+

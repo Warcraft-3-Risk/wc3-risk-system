@@ -1,4 +1,4 @@
-# 📈 Scoreboard & Statistics
+# Scoreboard & Statistics
 
 > WC3 Risk features a real-time scoreboard that tracks player performance and a statistics system for post-game analysis. This page covers scoreboard mechanics, sorting, and stat tracking.
 
@@ -325,3 +325,4 @@ flowchart TD
 ---
 
 [← Advanced Mechanics](./advanced.md) · [Back to Wiki Home](./README.md)
+

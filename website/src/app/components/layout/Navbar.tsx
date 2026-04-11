@@ -13,8 +13,6 @@ interface NavLink {
 }
 
 const navLinks: NavLink[] = [
-  { label: "Home", href: "/", testId: "nav-link-home" },
-  { label: "News & Events", href: "/news-and-events", testId: "nav-link-news-and-events" },
   { label: "Patch Notes", href: "/patch-notes", testId: "nav-link-patch-notes" },
   { label: "Game Guide", href: "/how-to/game-guide", testId: "nav-link-game-guide" },
   { label: "Units", href: "/how-to/units-page", testId: "nav-link-units-page" },

@@ -18,7 +18,7 @@ export default function UnitsPage() {
       {/* Land Units */}
       <section className="mb-12">
         <h2 data-testid="land-units-heading" className="text-2xl font-semibold text-[--color-text-primary] mb-6">
-          ⚔️ Land Units
+          Land Units
         </h2>
         <div data-testid="unit-list" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {landUnits.map((unit) => (
@@ -30,7 +30,7 @@ export default function UnitsPage() {
       {/* Naval Units */}
       <section className="mb-12">
         <h2 data-testid="naval-units-heading" className="text-2xl font-semibold text-[--color-text-primary] mb-6">
-          🌊 Naval Units
+          Naval Units
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {navalUnits.map((unit) => (
@@ -42,7 +42,7 @@ export default function UnitsPage() {
       {/* Ships */}
       <section className="mb-12">
         <h2 data-testid="ships-heading" className="text-2xl font-semibold text-[--color-text-primary] mb-6">
-          🚢 Ships
+          Ships
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {ships.map((unit) => (
@@ -115,3 +115,5 @@ function UnitCard({ unit }: { unit: UnitData }) {
     </Link>
   );
 }
+
+

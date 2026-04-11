@@ -1,4 +1,4 @@
-# 🤝 Diplomacy & Teams
+# Diplomacy & Teams
 
 > WC3 Risk supports both free-for-all and team-based gameplay with five diplomacy modes. This page covers alliance mechanics, team configurations, and how teams affect gameplay.
 
@@ -267,3 +267,4 @@ In FFA mode, players can use the in-game alliance menu to:
 ---
 
 [← Rating & Ranked](./rating.md) · [Back to Wiki Home](./README.md) · [Commands →](./commands.md)
+

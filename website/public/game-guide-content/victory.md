@@ -1,4 +1,4 @@
-# 🏆 Victory & Elimination
+# Victory & Elimination
 
 > WC3 Risk games end when a player (or team) achieves dominance through city control or elimination of all opponents. This page covers win conditions, overtime mechanics, and player elimination.
 
@@ -304,3 +304,4 @@ Turn 12 (30 seconds later):
 ---
 
 [← Units & Combat](./units.md) · [Back to Wiki Home](./README.md) · [Maps & Territories →](./maps.md)
+

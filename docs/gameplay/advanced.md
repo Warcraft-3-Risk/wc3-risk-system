@@ -1,4 +1,4 @@
-# 🔧 Advanced Mechanics
+# Advanced Mechanics
 
 > This page covers the deeper systems that power WC3 Risk — shared slot allocation, fog of war, the minimap system, replay compatibility, and the event system.
 
@@ -302,3 +302,4 @@ Players on the ban list are automatically removed when they join:
 ---
 
 [← Commands](./commands.md) · [Back to Wiki Home](./README.md) · [Scoreboard & Statistics →](./scoreboard.md)
+

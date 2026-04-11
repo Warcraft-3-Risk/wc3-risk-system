@@ -41,7 +41,7 @@ export default function GameGuidePage() {
                     : "text-gray-400 hover:text-white hover:bg-[#1e3a52]/50"
                 }`}
               >
-                <span className="text-lg opacity-90">{section.emoji}</span>
+
                 <span className="tracking-wide">{section.title}</span>
               </button>
             ))}

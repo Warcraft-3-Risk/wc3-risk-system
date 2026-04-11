@@ -1,4 +1,4 @@
-# 📊 Rating & Ranked System
+# Rating & Ranked System
 
 > WC3 Risk features a comprehensive ELO-style rating system with 15 rank tiers across Bronze, Silver, and Gold. Ratings are calculated using a two-pool zero-sum system that rewards both placement and combat contribution.
 
@@ -401,3 +401,4 @@ Each player's rating is stored in a file keyed by their BattleTag:
 ---
 
 [← Naval System](./naval.md) · [Back to Wiki Home](./README.md) · [Diplomacy & Teams →](./diplomacy.md)
+

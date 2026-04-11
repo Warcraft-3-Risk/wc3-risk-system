@@ -1,4 +1,4 @@
-# 🗺️ Maps & Territories
+# Maps & Territories
 
 > WC3 Risk supports three terrain maps: Europe, Asia, and World. Each map features a unique set of countries and cities with strategic variety.
 
@@ -257,3 +257,4 @@ maxCitiesPerPlayer = min(⌊totalCities / numPlayers⌋, 22)
 ---
 
 [← Victory & Elimination](./victory.md) · [Back to Wiki Home](./README.md) · [Cities & Countries →](./cities-countries.md)
+

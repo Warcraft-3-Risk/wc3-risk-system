@@ -33,11 +33,6 @@ export function Footer() {
                   Patch Notes
                 </Link>
               </li>
-              <li>
-                <Link href="/news-and-events" data-testid="footer-link-news" className="text-[--color-text-secondary] hover:text-[--color-accent] transition-colors">
-                  News & Events
-                </Link>
-              </li>
             </ul>
           </div>
 

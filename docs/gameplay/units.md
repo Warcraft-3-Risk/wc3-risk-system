@@ -1,4 +1,4 @@
-# ⚔️ Units & Combat
+# Units & Combat
 
 > WC3 Risk features a diverse roster of land and naval units, each with unique stats and roles. This page covers all unit types, the spawning system, guard mechanics, and combat abilities.
 
@@ -348,3 +348,4 @@ Each player has a **Player Tools** unit (`H000`) that provides access to guard p
 ---
 
 [← Economy & Income](./economy.md) · [Back to Wiki Home](./README.md) · [Victory & Elimination →](./victory.md)
+

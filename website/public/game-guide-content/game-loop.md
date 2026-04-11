@@ -1,4 +1,4 @@
-# 🔄 Game Loop & Turns
+# Game Loop & Turns
 
 > The game loop is the heartbeat of WC3 Risk. Each turn lasts 60 seconds, divided into 60 ticks of 1 second each. This page covers the full turn lifecycle, timing, and day/night cycle.
 
@@ -262,3 +262,4 @@ flowchart TD
 ---
 
 [← Game Modes](./game-modes.md) · [Back to Wiki Home](./README.md) · [Economy & Income →](./economy.md)
+

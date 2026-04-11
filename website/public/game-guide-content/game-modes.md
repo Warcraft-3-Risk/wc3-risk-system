@@ -1,4 +1,4 @@
-# 🎮 Game Modes
+# Game Modes
 
 > WC3 Risk supports five distinct game modes, each with its own setup flow, state sequence, and gameplay rules. The mode is determined by lobby settings at game start.
 
@@ -286,3 +286,4 @@ flowchart TD
 ---
 
 [← Back to Wiki Home](./README.md) · [Game Loop & Turns →](./game-loop.md)
+
