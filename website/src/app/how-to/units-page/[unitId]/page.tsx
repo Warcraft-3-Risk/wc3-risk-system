@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ReactNode } from "react";
 import units from "../../../data/units.json";
 
 interface UnitDetailPageProps {
@@ -45,7 +46,7 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
                 src={unit.characterArt}
                 alt={unit.name}
                 data-testid="unit-detail-art"
-                className="max-w-full max-h-80 rounded-lg"
+                className="max-w-full max-h-80 w-auto h-auto object-contain rounded-lg drop-shadow-lg"
               />
             ) : (
               <div className="w-48 h-48 bg-[--color-primary] rounded-lg flex items-center justify-center">
@@ -73,6 +74,20 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
               <StatRow label="Role" value={unit.role} testId="unit-stat-role" />
               <StatRow label="Cost Tier" value={unit.costTier} testId="unit-stat-cost" />
               <StatRow label="Category" value={unit.category} testId="unit-stat-category" />
+              <StatRow 
+                label="Trained At" 
+                testId="unit-stat-trained"
+                value={
+                  <div className="flex items-center gap-1.5">
+                    <img 
+                      src={unit.category === "land" ? "/icons/small-icons/city-icon.webp" : "/icons/small-icons/port-icon.webp"} 
+                      alt={unit.category === "land" ? "City" : "Port"}
+                      className="w-4 h-4 rounded-sm border border-[#2a455a] shadow-sm"
+                    />
+                    <span>{unit.category === "land" ? "City" : "Port"}</span>
+                  </div>
+                } 
+              />
               <StatRow label="Unit ID" value={unit.unitId} testId="unit-stat-id" />
             </div>
 
@@ -119,15 +134,16 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
 
 interface StatRowProps {
   label: string;
-  value: string;
+  value: ReactNode;
   testId: string;
 }
 
 function StatRow({ label, value, testId }: StatRowProps) {
   return (
-    <div data-testid={testId} className="bg-[--color-primary] rounded px-3 py-2">
+    <div data-testid={testId} className="bg-[--color-primary] rounded px-3 py-2 flex flex-col justify-center">
       <div className="text-xs text-[--color-text-secondary]">{label}</div>
-      <div className="text-sm font-semibold text-[--color-text-primary]">{value}</div>
+      <div className="text-sm font-semibold text-[--color-text-primary] h-5 flex items-center">{value}</div>
+
     </div>
   );
 }
