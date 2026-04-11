@@ -44,7 +44,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			print('Resetting minimap icons...');
 			MinimapIconManager.getInstance().reinitialize(Array.from(CityToCountry.keys()));
 			print('Resetting trees...');
-			TreeManager.getInstance().reset();
+			await TreeManager.getInstance().reset();
 			await Wait.forSeconds(1);
 
 			SharedSlotManager.getInstance().reset();
