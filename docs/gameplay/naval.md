@@ -56,13 +56,19 @@ Some countries are fully naval (all cities are ports):
 
 Naval infantry units are trained at port cities and fight on water.
 
-| Unit | ID | Tier | Role |
-|------|----|------|------|
-| **Marine** | `u008` | Basic | Entry-level naval unit |
-| **Major** | `u009` | Mid | Experienced naval combatant |
-| **Admiral** | `u010` | Elite | Top-tier naval commander |
+| | Unit | ID | HP | Damage | Tier | Role |
+|---|------|----|-----|--------|------|------|
+| ![](../../assets/icons/small-icons/marine-icon.webp) | **Marine** | `u008` | 215 | 14 | Basic | Entry-level naval unit |
+| ![](../../assets/icons/small-icons/major-icon.webp) | **Major** | `u009` | 900 | 48 | Mid | Experienced naval combatant |
+| ![](../../assets/icons/small-icons/admiral-icon.webp) | **Admiral** | `u010` | 900 | 48 | Elite | Top-tier naval commander |
 
-Naval units function similarly to land units but operate on water terrain.
+### Naval Unit Details
+
+| | Unit | Description |
+|---|------|-------------|
+| ![](../../assets/icons/characters/marine-unit.webp) | **Marine** | Basic naval ground combat unit with standard damage and range. Most effective when deployed in groups. Vulnerable to fast or diving units. |
+| ![](../../assets/icons/characters/major-unit.webp) | **Major** | Melee naval unit with high damage and Frenzy ability (attack + movement speed). Ideal for aggressive pushes and chasing down enemy ships. |
+| ![](../../assets/icons/characters/admiral-unit.webp) | **Admiral** | Strongest melee naval unit with Berserk ability. Powerful choice for leading naval assaults. Buffs nearby sea units. |
 
 ---
 
@@ -70,27 +76,37 @@ Naval units function similarly to land units but operate on water terrain.
 
 Ships are vessel units with unique naval capabilities.
 
-| Ship | ID | Type | Key Feature |
-|------|----|------|-------------|
-| **Transport Ship** | `s000` | Transport | Carries land units across water |
-| **Armored Transport** | `s001` | Transport | Tougher transport with more cargo |
-| **Warship A** | `s002` | Combat | Naval combat vessel |
-| **Warship B** | `s003` | Combat | Advanced naval combat |
-| **Battleship SS** | `s004` | Capital | Strongest naval unit in the game |
+| | Ship | ID | HP | Damage | Type | Key Feature |
+|---|------|----|-----|--------|------|-------------|
+| ![](../../assets/icons/small-icons/TransportShip.webp) | **Transport Ship** | `s000` | 300 | 0 | Transport | Carries land units across water |
+| ![](../../assets/icons/small-icons/ATS-icon.webp) | **Armored Transport** | `s001` | 800 | 0 | Transport | Tougher transport with more cargo |
+| ![](../../assets/icons/small-icons/WarshipA.webp) | **Warship A** | `s002` | 550 | 38 | Combat | Naval combat vessel |
+| ![](../../assets/icons/small-icons/WarshipB.webp) | **Warship B** | `s003` | 2000 | 98 | Combat | Advanced naval combat |
+| ![](../../assets/icons/small-icons/WarshipSS.webp) | **Battleship SS** | `s004` | 5000 | 138 | Capital | Strongest naval unit in the game |
+
+### Ship Details
+
+| | Ship | Description |
+|---|------|-------------|
+| ![](../../assets/icons/characters/TransportShip_icon.webp) | **Transport Ship** | Carries up to 10 land units across water. Lightly armored and fast, suitable for quick troop movement but vulnerable to attacks. |
+| ![](../../assets/icons/characters/Armoured_Transport_Ship_image.webp) | **Armored Transport** | Upgraded transport with significantly higher HP and speed, still carries 10 units. Better protection for troop transport. |
+| | **Warship A** | Early game naval unit with decent range and splash damage. Useful against early enemy ships or clustered groups, but vulnerable later. |
+| | **Warship B** | Strong naval unit with high damage and shorter range. Attacks cannot be dodged. Excels at chasing down enemy ships including Battleships. |
+| | **Battleship SS** | Most powerful naval unit. Very long range, high damage, significant HP with splash damage. Dominates late-game naval battles. |
 
 ### Ship Hierarchy
 
 ```mermaid
 flowchart TD
     subgraph Transport ["Transport Class"]
-        TS["Transport Ship (s000)<br/>Basic transport"]
-        ATS["Armored Transport (s001)<br/>Armored transport"]
+        TS["Transport Ship (s000)<br/>300 HP, No attack"]
+        ATS["Armored Transport (s001)<br/>800 HP, No attack"]
     end
 
     subgraph Combat ["Combat Class"]
-        WA["Warship A (s002)<br/>Light warship"]
-        WB["Warship B (s003)<br/>Heavy warship"]
-        BS["Battleship SS (s004)<br/>Capital ship"]
+        WA["Warship A (s002)<br/>550 HP, 38 dmg"]
+        WB["Warship B (s003)<br/>2000 HP, 98 dmg"]
+        BS["Battleship SS (s004)<br/>5000 HP, 138 dmg"]
     end
 
     TS --> ATS
