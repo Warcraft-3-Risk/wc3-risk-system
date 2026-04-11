@@ -100,9 +100,9 @@ export class TreeManager implements Resetable {
 		const treeTimer: timer = CreateTimer();
 
 		TimerStart(treeTimer, 3.0, false, () => {
-			this.removeInvulnerabilityBatched(batchSize, intervalSeconds);
 			PauseTimer(treeTimer);
 			DestroyTimer(treeTimer);
+			this.removeInvulnerabilityBatched(batchSize, intervalSeconds);
 		});
 	}
 
