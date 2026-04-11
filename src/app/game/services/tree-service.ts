@@ -79,7 +79,7 @@ export class TreeManager implements Resetable {
 	 * Resets the trees to their maximum life if they are damaged.
 	 * Processes trees in batches to avoid frame spikes.
 	 */
-	public async reset(batchSize = 50, intervalSeconds = 0.1): Promise<void> {
+	public async reset(batchSize = 100, intervalSeconds = 0.1): Promise<void> {
 		for (let i = 0; i < this.treeArray.length; i += batchSize) {
 			const end = Math.min(i + batchSize, this.treeArray.length);
 
