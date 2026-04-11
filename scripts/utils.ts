@@ -32,8 +32,8 @@ export function loadJsonFile(fname: string) {
 		const rawConfig = fs.readFileSync(fname).toString();
 		const substitutedConfig = rawConfig.replace(/\$\{(\w+)\}/g, (_, envVar) => process.env[envVar] || '');
 		return JSON.parse(substitutedConfig);
-	} catch (e: any) {
-		logger.error(e.toString());
+	} catch (e: unknown) {
+		logger.error(String(e));
 		return {};
 	}
 }
@@ -247,8 +247,8 @@ export function compileMap(config: IProjectConfig) {
 		}
 
 		fs.writeFileSync(mapLua, contents);
-	} catch (err: any) {
-		logger.error(err.toString());
+	} catch (err: unknown) {
+		logger.error(String(err));
 		return false;
 	}
 

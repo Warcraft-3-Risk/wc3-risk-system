@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 // Re-implement EventEmitter for testing since the src version uses WC3's print()
 // which isn't available in Node.js. The logic is identical.
-type EventHandler = (...args: any[]) => void | Promise<void>;
+type EventHandler = (...args: unknown[]) => void | Promise<void>;
 
 class EventEmitter {
 	private events: Map<string, EventHandler[]> = new Map();
@@ -14,7 +14,7 @@ class EventEmitter {
 		this.events.get(event)?.push(handler);
 	}
 
-	public emit(event: string, ...args: any[]): void {
+	public emit(event: string, ...args: unknown[]): void {
 		const handlers = this.events.get(event) || [];
 		for (const handler of handlers) {
 			try {

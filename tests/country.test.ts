@@ -32,17 +32,23 @@ function makePlayer(id: number): player {
 }
 
 function makeCountry(name = 'France'): Country {
-	const fakeSpawn = { setOwner: vi.fn() };
-	const fakeCities = [{ barrack: { defaultX: 0, defaultY: 0 } }];
-	return new Country(name, fakeCities as any, fakeSpawn as any);
+	const fakeSpawn = { setOwner: vi.fn(), reset: vi.fn() } as unknown as import('src/app/spawner/spawner').Spawner;
+	const fakeCities = [{ barrack: { defaultX: 0, defaultY: 0 }, reset: vi.fn() }] as unknown as import('src/app/city/city').City[];
+	return new Country(name, fakeCities, fakeSpawn);
 }
 
 describe('Country.setOwner', () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		(globalThis as any).AddSpecialEffect = vi.fn().mockReturnValue({});
-		(globalThis as any).BlzSetSpecialEffectScale = vi.fn();
-		(globalThis as any).DestroyEffect = vi.fn();
+		const wc3Globals = globalThis as unknown as {
+			AddSpecialEffect: ReturnType<typeof vi.fn>;
+			BlzSetSpecialEffectScale: ReturnType<typeof vi.fn>;
+			DestroyEffect: ReturnType<typeof vi.fn>;
+		};
+
+		wc3Globals.AddSpecialEffect = vi.fn().mockReturnValue({} as effect);
+		wc3Globals.BlzSetSpecialEffectScale = vi.fn();
+		wc3Globals.DestroyEffect = vi.fn();
 	});
 
 	describe('conquered sound (new owner)', () => {

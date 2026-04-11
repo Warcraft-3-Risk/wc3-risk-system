@@ -41,14 +41,8 @@ function patchTeamGame(config: IProjectConfig) {
 	);
 
 	// Patch InitCustomTeams: put players 2-3 on team 1
-	contents = contents.replace(
-		/SetPlayerTeam\(Player\(2\), 0\)/,
-		'SetPlayerTeam(Player(2), 1)'
-	);
-	contents = contents.replace(
-		/SetPlayerTeam\(Player\(3\), 0\)/,
-		'SetPlayerTeam(Player(3), 1)'
-	);
+	contents = contents.replace(/SetPlayerTeam\(Player\(2\), 0\)/, 'SetPlayerTeam(Player(2), 1)');
+	contents = contents.replace(/SetPlayerTeam\(Player\(3\), 0\)/, 'SetPlayerTeam(Player(3), 1)');
 
 	fs.writeFileSync(mapLua, contents, 'utf8');
 	logger.info('Patched war3map.lua for 2v2 team game (P0+P1 vs P2+P3)');
@@ -99,7 +93,7 @@ function main() {
 			stdio: 'ignore',
 		});
 	} else {
-		execFile(config.gameExecutable, ['-loadfile', filename, ...config.launchArgs], (err: any) => {
+		execFile(config.gameExecutable, ['-loadfile', filename, ...config.launchArgs], (err: NodeJS.ErrnoException | null) => {
 			if (err && err.code === 'ENOENT') {
 				logger.error(
 					`No such file or directory "${config.gameExecutable}". Make sure your GAME_EXECUTABLE environment variable is configured properly in your local .env.`

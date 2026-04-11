@@ -23,7 +23,7 @@ export default class PlayerCameraPositionManager {
 	private toggleButton: framehandle;
 
 	public static getInstance() {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new PlayerCameraPositionManager();
 		}
 		return this.instance;
@@ -117,7 +117,7 @@ export default class PlayerCameraPositionManager {
 	private syncLocalPlayerPosition() {
 		const p = GetLocalPlayer();
 		// Only sync if dragging/playing, spectators might not need to sync unless they want to be watched too
-		if (GetPlayerController(p) == MAP_CONTROL_USER) {
+		if (GetPlayerController(p) === MAP_CONTROL_USER) {
 			const x = GetCameraTargetPositionX();
 			const y = GetCameraTargetPositionY();
 
