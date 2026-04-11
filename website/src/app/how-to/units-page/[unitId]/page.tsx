@@ -80,14 +80,33 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
               <div>
                 <h2 className="text-lg font-semibold text-[--color-text-primary] mb-2">Abilities</h2>
                 <div data-testid="unit-abilities" className="flex flex-wrap gap-2">
-                  {unit.abilities.map((ability) => (
-                    <span
-                      key={ability}
-                      className="px-3 py-1 rounded-full bg-[--color-primary] text-[--color-accent] text-sm font-medium border border-[--color-border]"
-                    >
-                      {ability}
-                    </span>
-                  ))}
+                  {unit.abilities.map((ability) => {
+                    const iconMap: Record<string, string> = {
+                      "Roar": "/icons/skills/battle-roar-icon.webp",
+                      "Dispel Magic": "/icons/skills/dispel-magic-icon.webp",
+                      "Heal": "/icons/skills/medic-skill-icon.webp",
+                      "Ground Attack": "/icons/skills/attack-ground-icon.webp",
+                      "Frenzy": "/icons/skills/BloodLust-icon.webp",
+                      "Regeneration": "/icons/skills/health-icon.webp",
+                    };
+                    const iconPath = iconMap[ability];
+
+                    return (
+                      <span
+                        key={ability}
+                        className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-[--color-primary] text-[--color-accent] text-sm font-medium border border-[--color-border] shadow-sm hover:brightness-110 transition-all"
+                      >
+                        {iconPath && (
+                          <img
+                            src={iconPath}
+                            alt={`${ability} icon`}
+                            className="w-5 h-5 rounded-sm object-cover"
+                          />
+                        )}
+                        {ability}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}
