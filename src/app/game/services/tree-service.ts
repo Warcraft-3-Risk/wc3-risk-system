@@ -1,6 +1,7 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { Destructable } from 'w3ts';
 import { Wait } from 'src/app/utils/wait';
+import { computeBatches } from 'src/app/utils/tree-reset-logic';
 
 // Tree type constants
 const BARRENS_TREE = FourCC('T000');
@@ -62,6 +63,10 @@ const ASHENV_CANOPY_DEFAULT_COLOR = FourCC('B00B');
  */
 export class TreeManager implements Resetable {
 	private treeArray: destructable[] = [];
+	/** Tracks trees that have died or been damaged since the last reset. */
+	private damagedOrDestroyed: Set<destructable> = new Set();
+	/** Single trigger shared by all trees for death event listening. */
+	private deathTrigger: trigger;
 	private static instance: TreeManager;
 
 	/**
@@ -76,57 +81,87 @@ export class TreeManager implements Resetable {
 	}
 
 	/**
-	 * Resets the trees to their maximum life if they are damaged.
-	 * Processes trees in batches to avoid frame spikes.
+	 * Resets only damaged and destroyed trees to their maximum life.
+	 * Trees at full health are skipped entirely.
+	 * Processes the affected trees in batches to avoid frame spikes.
 	 */
 	public async reset(batchSize = 100, intervalSeconds = 0.1): Promise<void> {
-		for (let i = 0; i < this.treeArray.length; i += batchSize) {
-			const end = Math.min(i + batchSize, this.treeArray.length);
+		// Snapshot and clear the tracked set so new damages during the
+		// async reset are captured for the next round.
+		const treesToReset = Array.from(this.damagedOrDestroyed);
+		this.damagedOrDestroyed.clear();
 
-			for (let j = i; j < end; j++) {
-				const tree = this.treeArray[j];
+		const batches = computeBatches(treesToReset, batchSize);
 
-				if (GetDestructableLife(tree) < GetDestructableMaxLife(tree)) {
-					DestructableRestoreLife(tree, GetDestructableMaxLife(tree), false);
-					SetDestructableInvulnerable(tree, true);
-				}
+		for (let b = 0; b < batches.length; b++) {
+			const batch = batches[b];
+
+			for (const tree of batch) {
+				DestructableRestoreLife(tree, GetDestructableMaxLife(tree), false);
+				SetDestructableInvulnerable(tree, true);
 			}
 
-			if (end < this.treeArray.length) {
+			if (b < batches.length - 1) {
 				await Wait.forSeconds(intervalSeconds);
 			}
 		}
 
-		const treeTimer: timer = CreateTimer();
+		if (treesToReset.length > 0) {
+			const treeTimer: timer = CreateTimer();
 
-		TimerStart(treeTimer, 3.0, false, () => {
-			PauseTimer(treeTimer);
-			DestroyTimer(treeTimer);
-			this.removeInvulnerabilityBatched(batchSize, intervalSeconds);
-		});
+			TimerStart(treeTimer, 3.0, false, () => {
+				PauseTimer(treeTimer);
+				DestroyTimer(treeTimer);
+				this.removeInvulnerabilityBatched(treesToReset, batchSize, intervalSeconds);
+			});
+		}
 	}
 
 	/**
-	 * Removes invulnerability from all trees in batches.
+	 * Removes invulnerability from the given trees in batches.
 	 */
-	private async removeInvulnerabilityBatched(batchSize: number, intervalSeconds: number): Promise<void> {
-		for (let i = 0; i < this.treeArray.length; i += batchSize) {
-			const end = Math.min(i + batchSize, this.treeArray.length);
+	private async removeInvulnerabilityBatched(trees: destructable[], batchSize: number, intervalSeconds: number): Promise<void> {
+		const batches = computeBatches(trees, batchSize);
 
-			for (let j = i; j < end; j++) {
-				SetDestructableInvulnerable(this.treeArray[j], false);
+		for (let b = 0; b < batches.length; b++) {
+			const batch = batches[b];
+
+			for (const tree of batch) {
+				SetDestructableInvulnerable(tree, false);
 			}
 
-			if (end < this.treeArray.length) {
+			if (b < batches.length - 1) {
 				await Wait.forSeconds(intervalSeconds);
 			}
 		}
 	}
 
 	/**
-	 * Set up trees on the map by changing their model based on the terrain tile type they are on.
+	 * Set up trees on the map by changing their model based on the terrain
+	 * tile type they are on. Registers a single death-event trigger so that
+	 * destroyed trees are automatically added to the reset tracking set.
+	 *
+	 * Note: WC3 has no native destructable-damage event, so only fully
+	 * destroyed trees (life === 0) are captured here. Trees that are damaged
+	 * but not killed will not appear in the tracking set. In practice this is
+	 * acceptable because trees in this map have their max life set to half
+	 * their initial HP (see treeSetup), so they are almost always killed
+	 * outright rather than left at partial health.
 	 */
 	private treeSetup() {
+		// One trigger for all tree deaths — more efficient than one per tree.
+		this.deathTrigger = CreateTrigger();
+		TriggerAddCondition(
+			this.deathTrigger,
+			Condition(() => {
+				const dying = GetTriggerDestructable();
+				if (dying !== undefined) {
+					this.damagedOrDestroyed.add(dying);
+				}
+				return false;
+			})
+		);
+
 		EnumDestructablesInRect(GetEntireMapRect(), undefined, () => {
 			let enumObject = Destructable.fromHandle(GetEnumDestructable());
 			let treeTypeID: number = enumObject.typeId;
@@ -162,6 +197,9 @@ export class TreeManager implements Resetable {
 			newTree = CreateDestructable(newType, objectX, objectY, 270, Math.random() * (1.2 - 0.8) + 0.8, Math.floor(Math.random() * 10) + 1);
 			SetDestructableMaxLife(newTree, GetDestructableLife(newTree) / 2);
 			this.treeArray.push(newTree);
+
+			// Register this tree for death event tracking.
+			TriggerRegisterDeathEvent(this.deathTrigger, newTree);
 
 			newTree = undefined;
 			enumObject = undefined;
