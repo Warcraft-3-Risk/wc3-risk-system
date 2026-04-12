@@ -36,7 +36,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			await removeUnits(50, 0.2);
 
 			print('Resetting countries...');
-			resetCountries();
+			await resetCountries();
 			await Wait.forSeconds(1);
 
 			print('Resetting kill tracker...');

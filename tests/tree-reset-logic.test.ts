@@ -7,8 +7,10 @@ import {
 	timerTicksRequired,
 	distanceSq,
 	selectNearbyTreeIds,
+	drainHitQueue,
 	type TreeState,
 	type TreePosition,
+	type HitPosition,
 } from '../src/app/utils/tree-reset-logic';
 
 // ---------------------------------------------------------------------------
@@ -307,6 +309,80 @@ describe('selectNearbyTreeIds', () => {
 		expect(result).toHaveLength(2);
 		expect(result).toContain(10);
 		expect(result).toContain(11);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// drainHitQueue
+// ---------------------------------------------------------------------------
+
+describe('drainHitQueue', () => {
+	it('returns empty array for an empty queue', () => {
+		const queue: HitPosition[] = [];
+		expect(drainHitQueue(queue)).toEqual([]);
+	});
+
+	it('returns all positions and empties the source queue', () => {
+		const queue: HitPosition[] = [
+			{ x: 100, y: 200 },
+			{ x: 300, y: 400 },
+		];
+		const result = drainHitQueue(queue);
+		expect(result).toEqual([
+			{ x: 100, y: 200 },
+			{ x: 300, y: 400 },
+		]);
+		expect(queue).toHaveLength(0);
+	});
+
+	it('allows new items to accumulate after drain', () => {
+		const queue: HitPosition[] = [{ x: 10, y: 20 }];
+		drainHitQueue(queue);
+		expect(queue).toHaveLength(0);
+
+		queue.push({ x: 50, y: 60 });
+		expect(queue).toHaveLength(1);
+	});
+
+	it('returns a snapshot that is independent of the original queue', () => {
+		const queue: HitPosition[] = [{ x: 1, y: 2 }];
+		const snapshot = drainHitQueue(queue);
+		queue.push({ x: 3, y: 4 });
+		expect(snapshot).toHaveLength(1);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// Integration: queue-to-tree-set pipeline
+// ---------------------------------------------------------------------------
+
+describe('Integration: queue-to-tree-set pipeline', () => {
+	it('drains positions and selects nearby trees into a set (deduplication)', () => {
+		const queue: HitPosition[] = [
+			{ x: 0, y: 0 },
+			{ x: 10, y: 10 }, // overlapping with first — same trees in range
+		];
+
+		const allTrees: TreePosition[] = [
+			makePos(1, 5, 5), // near both hits
+			makePos(2, 250, 0), // near first hit
+			makePos(3, 500, 500), // far from both
+		];
+
+		const positions = drainHitQueue(queue);
+		const treeSet = new Set<number>();
+		for (const pos of positions) {
+			for (const id of selectNearbyTreeIds(allTrees, pos.x, pos.y, 300)) {
+				treeSet.add(id);
+			}
+		}
+
+		// Tree 1 was near both hits but appears only once in the set
+		expect(treeSet.size).toBe(2);
+		expect(treeSet.has(1)).toBe(true);
+		expect(treeSet.has(2)).toBe(true);
+		expect(treeSet.has(3)).toBe(false);
+		expect(queue).toHaveLength(0);
 	});
 });
 

@@ -34,6 +34,34 @@ export interface TreePosition {
 	y: number;
 }
 
+/**
+ * A queued hit position from a mortar/artillery AoE attack.
+ */
+export interface HitPosition {
+	/** World X coordinate of the impact. */
+	x: number;
+	/** World Y coordinate of the impact. */
+	y: number;
+}
+
+// ---------------------------------------------------------------------------
+// Queue drain
+// ---------------------------------------------------------------------------
+
+/**
+ * Drains a hit-position queue, returning its contents and replacing it with
+ * an empty array.  This mirrors the swap-and-drain pattern in `TreeManager`
+ * so the behaviour can be unit-tested without WC3 globals.
+ *
+ * @returns The positions that were in the queue (may be empty).
+ */
+export function drainHitQueue(queue: HitPosition[]): HitPosition[] {
+	if (queue.length === 0) return [];
+	const snapshot = queue.slice();
+	queue.length = 0;
+	return snapshot;
+}
+
 // ---------------------------------------------------------------------------
 // Nearby-tree selection (for AoE attack tracking)
 // ---------------------------------------------------------------------------

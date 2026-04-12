@@ -68,10 +68,14 @@ export class TreeManager implements Resetable {
 	private treeSet: Set<destructable> = new Set();
 	/** Tracks trees that have died or been damaged since the last reset. */
 	private damagedOrDestroyed: Set<destructable> = new Set();
+	/** Queue of hit positions from mortar/artillery attacks awaiting batch processing. */
+	private hitQueue: Array<{ x: number; y: number }> = [];
 	/** Single trigger shared by all trees for death event listening. */
 	private deathTrigger: trigger;
 	/** Trigger fired when any unit is attacked — used to find mortar/artillery attacks. */
 	private attackTrigger: trigger;
+	/** Periodic timer that drains the hit queue and scans for nearby trees. */
+	private queueTimer: timer;
 	private static instance: TreeManager;
 
 	/**
@@ -80,12 +84,16 @@ export class TreeManager implements Resetable {
 	 */
 	private static readonly AOE_SCAN_RADIUS = 300;
 
+	/** How often (in seconds) the hit-position queue is drained and trees are scanned. */
+	private static readonly QUEUE_PROCESS_INTERVAL = 10;
+
 	/**
 	 * Constructor initializes the tree setup.
 	 */
 	private constructor() {
 		this.treeSetup();
 		this.setupAttackTracking();
+		this.setupQueueProcessor();
 	}
 
 	public static getInstance(): TreeManager {
@@ -232,9 +240,8 @@ export class TreeManager implements Resetable {
 
 	/**
 	 * Registers a trigger that fires whenever any unit is attacked.
-	 * When the attacker is a Mortar or Artillery unit, nearby trees are added
-	 * to the `damagedOrDestroyed` set so they will be restored on the next
-	 * round reset — even if they were only damaged (not killed) by the splash.
+	 * When the attacker is a Mortar or Artillery unit, the target's position
+	 * is pushed into the hit queue for deferred tree scanning.
 	 */
 	private setupAttackTracking() {
 		this.attackTrigger = CreateTrigger();
@@ -250,13 +257,39 @@ export class TreeManager implements Resetable {
 			const typeId = GetUnitTypeId(attacker);
 			if (typeId !== UNIT_ID.MORTAR && typeId !== UNIT_ID.ARTILLERY) return;
 
-			// The unit being attacked is the primary target. We scan trees
-			// in a radius around it because that is the AoE impact site.
 			const target = GetTriggerUnit();
 			if (target === undefined) return;
 
-			this.markNearbyTrees(GetUnitX(target), GetUnitY(target), TreeManager.AOE_SCAN_RADIUS);
+			this.hitQueue.push({ x: GetUnitX(target), y: GetUnitY(target) });
 		});
+	}
+
+	/**
+	 * Starts a periodic timer that drains the hit-position queue every
+	 * {@link QUEUE_PROCESS_INTERVAL} seconds, scanning for nearby trees
+	 * at each queued position.
+	 */
+	private setupQueueProcessor() {
+		this.queueTimer = CreateTimer();
+		TimerStart(this.queueTimer, TreeManager.QUEUE_PROCESS_INTERVAL, true, () => {
+			this.processHitQueue();
+		});
+	}
+
+	/**
+	 * Drains all queued hit positions, scanning for trees near each one.
+	 * Swaps the queue reference so new hits that arrive during processing
+	 * are captured in a fresh array.
+	 */
+	private processHitQueue() {
+		if (this.hitQueue.length === 0) return;
+
+		const positions = this.hitQueue;
+		this.hitQueue = [];
+
+		for (const pos of positions) {
+			this.markNearbyTrees(pos.x, pos.y, TreeManager.AOE_SCAN_RADIUS);
+		}
 	}
 
 	/**
