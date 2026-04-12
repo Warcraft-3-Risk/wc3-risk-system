@@ -5,7 +5,10 @@ import {
 	computeBatches,
 	batchCount,
 	timerTicksRequired,
+	distanceSq,
+	selectNearbyTreeIds,
 	type TreeState,
+	type TreePosition,
 } from '../src/app/utils/tree-reset-logic';
 
 // ---------------------------------------------------------------------------
@@ -14,6 +17,10 @@ import {
 
 function makeTree(id: number, life: number, maxLife: number): TreeState {
 	return { id, life, maxLife };
+}
+
+function makePos(id: number, x: number, y: number): TreePosition {
+	return { id, x, y };
 }
 
 // ---------------------------------------------------------------------------
@@ -190,6 +197,116 @@ describe('timerTicksRequired', () => {
 	it('counts correctly for non-divisible counts', () => {
 		// 101 items / 100 per batch = 2 batches → 1 wait
 		expect(timerTicksRequired(101, 100)).toBe(1);
+	});
+});
+
+// ---------------------------------------------------------------------------
+// distanceSq
+// ---------------------------------------------------------------------------
+
+describe('distanceSq', () => {
+	it('returns 0 for identical points', () => {
+		expect(distanceSq(5, 5, 5, 5)).toBe(0);
+	});
+
+	it('returns correct squared distance for axis-aligned points', () => {
+		// distance = 3  →  3² = 9
+		expect(distanceSq(0, 0, 3, 0)).toBe(9);
+		expect(distanceSq(0, 0, 0, 3)).toBe(9);
+	});
+
+	it('returns correct squared distance for diagonal', () => {
+		// 3-4-5 triangle → distance = 5, distanceSq = 25
+		expect(distanceSq(0, 0, 3, 4)).toBe(25);
+	});
+
+	it('is symmetric', () => {
+		expect(distanceSq(1, 2, 5, 6)).toBe(distanceSq(5, 6, 1, 2));
+	});
+});
+
+// ---------------------------------------------------------------------------
+// selectNearbyTreeIds
+// ---------------------------------------------------------------------------
+
+describe('selectNearbyTreeIds', () => {
+	it('returns empty array when there are no trees', () => {
+		expect(selectNearbyTreeIds([], 0, 0, 300)).toEqual([]);
+	});
+
+	it('returns empty array when radius is 0', () => {
+		const trees = [makePos(1, 100, 100)];
+		expect(selectNearbyTreeIds(trees, 100, 100, 0)).toEqual([]);
+	});
+
+	it('includes a tree exactly at the origin when radius covers it', () => {
+		const trees = [makePos(1, 0, 0)];
+		expect(selectNearbyTreeIds(trees, 0, 0, 300)).toEqual([1]);
+	});
+
+	it('includes trees within the radius', () => {
+		// Trees at distance 100 and 200 from origin; radius 250 → both included
+		const trees = [makePos(1, 100, 0), makePos(2, 200, 0)];
+		const result = selectNearbyTreeIds(trees, 0, 0, 250);
+		expect(result).toContain(1);
+		expect(result).toContain(2);
+	});
+
+	it('excludes trees outside the radius', () => {
+		// Tree at distance 400, radius 300 → excluded
+		const trees = [makePos(1, 400, 0)];
+		expect(selectNearbyTreeIds(trees, 0, 0, 300)).toEqual([]);
+	});
+
+	it('includes a tree exactly on the radius boundary', () => {
+		// distance = 300 exactly; 300² = 90000 ≤ 300² = 90000
+		const trees = [makePos(1, 300, 0)];
+		expect(selectNearbyTreeIds(trees, 0, 0, 300)).toEqual([1]);
+	});
+
+	it('excludes trees just outside the radius', () => {
+		const trees = [makePos(1, 301, 0)];
+		expect(selectNearbyTreeIds(trees, 0, 0, 300)).toEqual([]);
+	});
+
+	it('handles mixed in-range and out-of-range trees', () => {
+		const trees = [
+			makePos(1, 0, 0), // center — in range
+			makePos(2, 150, 150), // distance ≈ 212 — in range
+			makePos(3, 250, 250), // distance ≈ 354 — out of range
+		];
+		const result = selectNearbyTreeIds(trees, 0, 0, 300);
+		expect(result).toContain(1);
+		expect(result).toContain(2);
+		expect(result).not.toContain(3);
+	});
+
+	it('works with a non-origin center', () => {
+		// Center at (500, 500), tree at (600, 500) → distance 100, radius 200 → included
+		const trees = [makePos(1, 600, 500), makePos(2, 800, 500)]; // distances 100 and 300
+		const result = selectNearbyTreeIds(trees, 500, 500, 200);
+		expect(result).toContain(1);
+		expect(result).not.toContain(2);
+	});
+
+	it('handles negative coordinates correctly', () => {
+		const trees = [makePos(1, -100, 0), makePos(2, -400, 0)];
+		const result = selectNearbyTreeIds(trees, 0, 0, 300);
+		expect(result).toContain(1);
+		expect(result).not.toContain(2);
+	});
+
+	it('uses the typical AoE scan radius of 300', () => {
+		// Simulates scanning around a mortar/artillery attack impact
+		const trees = [
+			makePos(10, 0, 0), // exactly at impact — included
+			makePos(11, 200, 0), // within AoE — included
+			makePos(12, 350, 0), // outside AoE — excluded
+		];
+		const result = selectNearbyTreeIds(trees, 0, 0, 300);
+		expect(result).toHaveLength(2);
+		expect(result).toContain(10);
+		expect(result).toContain(11);
 	});
 });
 

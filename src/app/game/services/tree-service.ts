@@ -2,6 +2,7 @@ import { Resetable } from 'src/app/interfaces/resetable';
 import { Destructable } from 'w3ts';
 import { Wait } from 'src/app/utils/wait';
 import { computeBatches } from 'src/app/utils/tree-reset-logic';
+import { UNIT_ID } from 'src/configs/unit-id';
 
 // Tree type constants
 const BARRENS_TREE = FourCC('T000');
@@ -63,17 +64,28 @@ const ASHENV_CANOPY_DEFAULT_COLOR = FourCC('B00B');
  */
 export class TreeManager implements Resetable {
 	private treeArray: destructable[] = [];
+	/** O(1) membership lookup — populated in parallel with treeArray. */
+	private treeSet: Set<destructable> = new Set();
 	/** Tracks trees that have died or been damaged since the last reset. */
 	private damagedOrDestroyed: Set<destructable> = new Set();
 	/** Single trigger shared by all trees for death event listening. */
 	private deathTrigger: trigger;
+	/** Trigger fired when any unit is attacked — used to find mortar/artillery attacks. */
+	private attackTrigger: trigger;
 	private static instance: TreeManager;
+
+	/**
+	 * Scan radius around an AoE attack impact point.
+	 * Covers the maximum outer splash radius of both Mortar and Artillery.
+	 */
+	private static readonly AOE_SCAN_RADIUS = 300;
 
 	/**
 	 * Constructor initializes the tree setup.
 	 */
 	private constructor() {
 		this.treeSetup();
+		this.setupAttackTracking();
 	}
 
 	public static getInstance(): TreeManager {
@@ -197,6 +209,7 @@ export class TreeManager implements Resetable {
 			newTree = CreateDestructable(newType, objectX, objectY, 270, Math.random() * (1.2 - 0.8) + 0.8, Math.floor(Math.random() * 10) + 1);
 			SetDestructableMaxLife(newTree, GetDestructableLife(newTree) / 2);
 			this.treeArray.push(newTree);
+			this.treeSet.add(newTree);
 
 			// Register this tree for death event tracking.
 			TriggerRegisterDeathEvent(this.deathTrigger, newTree);
@@ -215,5 +228,64 @@ export class TreeManager implements Resetable {
 	 */
 	private getTreeColor(treeColorMap: Record<number, number>, terrainType: number, defaultColor: number) {
 		return treeColorMap[terrainType] ?? defaultColor;
+	}
+
+	/**
+	 * Registers a trigger that fires whenever any unit is attacked.
+	 * When the attacker is a Mortar or Artillery unit, nearby trees are added
+	 * to the `damagedOrDestroyed` set so they will be restored on the next
+	 * round reset — even if they were only damaged (not killed) by the splash.
+	 */
+	private setupAttackTracking() {
+		this.attackTrigger = CreateTrigger();
+
+		for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
+			TriggerRegisterPlayerUnitEvent(this.attackTrigger, Player(i), EVENT_PLAYER_UNIT_ATTACKED, undefined);
+		}
+
+		TriggerAddAction(this.attackTrigger, () => {
+			const attacker = GetAttacker();
+			if (attacker === undefined) return;
+
+			const typeId = GetUnitTypeId(attacker);
+			if (typeId !== UNIT_ID.MORTAR && typeId !== UNIT_ID.ARTILLERY) return;
+
+			// The unit being attacked is the primary target. We scan trees
+			// in a radius around it because that is the AoE impact site.
+			const target = GetTriggerUnit();
+			if (target === undefined) return;
+
+			this.markNearbyTrees(GetUnitX(target), GetUnitY(target), TreeManager.AOE_SCAN_RADIUS);
+		});
+	}
+
+	/**
+	 * Enumerates destructables within a square bounding box centred on
+	 * (`cx`, `cy`), then filters to trees within the circle of `radius` using
+	 * a squared-distance check.  Matching trees are added to the
+	 * `damagedOrDestroyed` tracking set.
+	 *
+	 * Using `EnumDestructablesInRect` (the only range-based destructable
+	 * enumeration available in WC3) with a subsequent circle check avoids
+	 * including corner trees from the bounding square.
+	 */
+	private markNearbyTrees(cx: number, cy: number, radius: number) {
+		const r = Rect(cx - radius, cy - radius, cx + radius, cy + radius);
+		const radiusSq = radius * radius;
+
+		try {
+			EnumDestructablesInRect(r, undefined, () => {
+				const d = GetEnumDestructable();
+				if (d === undefined || !this.treeSet.has(d)) return;
+
+				const dx = GetDestructableX(d) - cx;
+				const dy = GetDestructableY(d) - cy;
+				if (dx * dx + dy * dy <= radiusSq) {
+					this.damagedOrDestroyed.add(d);
+				}
+			});
+		} finally {
+			RemoveRect(r);
+		}
 	}
 }

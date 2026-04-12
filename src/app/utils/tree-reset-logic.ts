@@ -21,6 +21,53 @@ export interface TreeState {
 	maxLife: number;
 }
 
+/**
+ * Minimal positional data for a tree — used when scanning for nearby trees
+ * around an attack impact point.
+ */
+export interface TreePosition {
+	/** Unique identifier for the tree. */
+	id: number;
+	/** World X coordinate of the tree. */
+	x: number;
+	/** World Y coordinate of the tree. */
+	y: number;
+}
+
+// ---------------------------------------------------------------------------
+// Nearby-tree selection (for AoE attack tracking)
+// ---------------------------------------------------------------------------
+
+/**
+ * Computes the squared Euclidean distance between two 2D points.
+ * Using squared distance avoids the sqrt call and is sufficient for
+ * radius comparisons.
+ */
+export function distanceSq(ax: number, ay: number, bx: number, by: number): number {
+	const dx = ax - bx;
+	const dy = ay - by;
+	return dx * dx + dy * dy;
+}
+
+/**
+ * Returns the IDs of all trees whose centre lies within `radius` world units
+ * of the point (`cx`, `cy`).
+ *
+ * This mirrors the "scan trees near an AoE impact" logic in `TreeManager`
+ * so it can be unit-tested without WC3 engine globals.
+ */
+export function selectNearbyTreeIds(trees: TreePosition[], cx: number, cy: number, radius: number): number[] {
+	if (radius <= 0) return [];
+	const radiusSq = radius * radius;
+	const result: number[] = [];
+	for (const tree of trees) {
+		if (distanceSq(tree.x, tree.y, cx, cy) <= radiusSq) {
+			result.push(tree.id);
+		}
+	}
+	return result;
+}
+
 // ---------------------------------------------------------------------------
 // Filtering
 // ---------------------------------------------------------------------------
