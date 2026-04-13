@@ -14,6 +14,10 @@ The match reset flow (triggered by `-ng` after game over) previously executed al
 
 `removeUnits()` checks `SharedSlotManager.getUnitCount()` across all player slots before entering the enumeration loop. If no tracked field units exist, it returns immediately — skipping expensive `GroupEnumUnitsOfPlayer` calls entirely.
 
+### Tree Reset Batching
+
+`TreeManager.reset()` iterates all trees in batches of 100 with 0.1s yields. Only trees whose life is below their maximum are restored. After restoring life, trees are set invulnerable for 3 seconds (then invulnerability is removed in batches) to prevent immediate re-destruction during the async window.
+
 ## Constraints and Safety Rules
 
 - Each `Wait.forSeconds` call creates its own timer — see `wait-timer-concurrency-note.md`.
@@ -24,4 +28,6 @@ The match reset flow (triggered by `-ng` after game over) previously executed al
 
 - `src/app/game/game-mode/utillity/reset-countries.ts` — batched country reset
 - `src/app/game/game-mode/utillity/remove-units.ts` — early exit on zero unit count
+- `src/app/game/services/tree-service.ts` — batched tree reset and invulnerability removal
+- `src/app/utils/tree-reset-logic.ts` — pure logic (needsReset, computeBatches)
 - `src/app/game/game-mode/base-game-mode/reset-state.ts` — reset orchestration

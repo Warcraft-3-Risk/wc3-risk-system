@@ -1,6 +1,7 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { Destructable } from 'w3ts';
 import { Wait } from 'src/app/utils/wait';
+import { needsReset, computeBatches } from 'src/app/utils/tree-reset-logic';
 
 // Tree type constants
 const BARRENS_TREE = FourCC('T000');
@@ -80,19 +81,17 @@ export class TreeManager implements Resetable {
 	 * Processes trees in batches to avoid frame spikes.
 	 */
 	public async reset(batchSize = 100, intervalSeconds = 0.1): Promise<void> {
-		for (let i = 0; i < this.treeArray.length; i += batchSize) {
-			const end = Math.min(i + batchSize, this.treeArray.length);
+		const batches = computeBatches(this.treeArray, batchSize);
 
-			for (let j = i; j < end; j++) {
-				const tree = this.treeArray[j];
-
-				if (GetDestructableLife(tree) < GetDestructableMaxLife(tree)) {
+		for (let b = 0; b < batches.length; b++) {
+			for (const tree of batches[b]) {
+				if (needsReset(GetDestructableLife(tree), GetDestructableMaxLife(tree))) {
 					DestructableRestoreLife(tree, GetDestructableMaxLife(tree), false);
 					SetDestructableInvulnerable(tree, true);
 				}
 			}
 
-			if (end < this.treeArray.length) {
+			if (b < batches.length - 1) {
 				await Wait.forSeconds(intervalSeconds);
 			}
 		}
@@ -110,14 +109,14 @@ export class TreeManager implements Resetable {
 	 * Removes invulnerability from all trees in batches.
 	 */
 	private async removeInvulnerabilityBatched(batchSize: number, intervalSeconds: number): Promise<void> {
-		for (let i = 0; i < this.treeArray.length; i += batchSize) {
-			const end = Math.min(i + batchSize, this.treeArray.length);
+		const batches = computeBatches(this.treeArray, batchSize);
 
-			for (let j = i; j < end; j++) {
-				SetDestructableInvulnerable(this.treeArray[j], false);
+		for (let b = 0; b < batches.length; b++) {
+			for (const tree of batches[b]) {
+				SetDestructableInvulnerable(tree, false);
 			}
 
-			if (end < this.treeArray.length) {
+			if (b < batches.length - 1) {
 				await Wait.forSeconds(intervalSeconds);
 			}
 		}
