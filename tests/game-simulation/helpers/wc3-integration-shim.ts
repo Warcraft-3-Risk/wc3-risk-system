@@ -261,3 +261,14 @@ playerColorNames.forEach((name, i) => {
 (globalThis as any).QuestSetEnabled = (_q: any, _enabled: boolean) => {};
 (globalThis as any).FlashQuestDialogButton = () => {};
 (globalThis as any).ForceQuestDialogUpdate = () => {};
+
+// ─── Unit Type Constants ────────────────────────────────────────────
+(globalThis as any).UNIT_TYPE_UNDEAD = 'undead';
+(globalThis as any).UNIT_TYPE_SAPPER = 'sapper';
+(globalThis as any).UNIT_TYPE_GIANT = 'giant';
+(globalThis as any).UNIT_TYPE_TOWNHALL = 'townhall';
+(globalThis as any).UNIT_TYPE_ANCIENT = 'ancient';
+(globalThis as any).UNIT_TYPE_TAUREN = 'tauren';
+
+// ─── Unit Extended API ──────────────────────────────────────────────
+(globalThis as any).GetUnitCurrentOrder = (_u: any) => 0;

@@ -349,12 +349,7 @@ export class SharedSlotManager implements Resetable {
 
 		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Complete. Leftover unassigned: ${availablePool.length}`, DC.redistribute);
 
-		// 5. REBALANCE: Spread existing units across newly assigned slots
-		for (const receiver of receivers) {
-			this.redistributeExistingUnits(receiver.player);
-		}
-
-		// 6. FINALIZE: Update scoreboard
+		// 5. FINALIZE: Update scoreboard
 		ScoreboardManager.getInstance().toggleVisibility(false);
 		ScoreboardManager.getInstance().toggleVisibility(true);
 		ScoreboardManager.getInstance().updateFull();
@@ -435,84 +430,6 @@ export class SharedSlotManager implements Resetable {
 				`[SharedSlotManager] Player ${GetPlayerId(newOwner)} now has ${slots.length} shared slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`,
 				DC.sharedSlots
 			);
-	}
-
-	/**
-	 * Immediately redistributes all existing movable units of a player evenly
-	 * across their own slot and all shared slots. Skips transports, guards,
-	 * buildings, and minimap indicators.
-	 */
-	public redistributeExistingUnits(realPlayer: player): void {
-		const sharedSlots = this.getSharedSlotsByPlayer(realPlayer);
-		if (sharedSlots.length === 0) return;
-
-		const allSlots = [realPlayer, ...sharedSlots];
-
-		// Collect all movable units across every slot
-		const movableUnits: unit[] = [];
-		for (const slot of allSlots) {
-			const g = CreateGroup();
-			GroupEnumUnitsOfPlayer(g, slot, undefined);
-			ForGroup(g, () => {
-				const u = GetEnumUnit();
-				if (
-					!IsUnitType(u, UNIT_TYPE.TRANSPORT) &&
-					!IsUnitType(u, UNIT_TYPE.GUARD) &&
-					!IsUnitType(u, UNIT_TYPE.BUILDING) &&
-					GetUnitCurrentOrder(u) === 0 // Unit is currently not moving (changing ownership would cancel their current action)
-				) {
-					movableUnits.push(u);
-				}
-			});
-			GroupClear(g);
-			DestroyGroup(g);
-		}
-
-		if (movableUnits.length === 0) return;
-
-		const numSlots = allSlots.length;
-		const unitsPerSlot = Math.floor(movableUnits.length / numSlots);
-		const remainder = movableUnits.length % numSlots;
-
-		if (DEBUG_PRINTS.master)
-			debugPrint(
-				`[Redistribute] Spreading ${movableUnits.length} units for player ${GetPlayerId(realPlayer)} across ${numSlots} slots (${unitsPerSlot} each, +1 for first ${remainder})`,
-				DC.redistribute
-			);
-
-		// Lazy import to avoid circular dependency (UnitLagManager imports SharedSlotManager)
-		const { UnitLagManager } = require('./unit-lag-manager') as { UnitLagManager: typeof import('./unit-lag-manager').UnitLagManager };
-		const lagManager = UnitLagManager.getInstance();
-
-		// Walk through units and assign each to the correct target slot
-		let unitIndex = 0;
-		for (let slotIdx = 0; slotIdx < numSlots; slotIdx++) {
-			const targetSlot = allSlots[slotIdx];
-			const targetCount = unitsPerSlot + (slotIdx < remainder ? 1 : 0);
-
-			for (let j = 0; j < targetCount && unitIndex < movableUnits.length; j++) {
-				const u = movableUnits[unitIndex];
-				const currentOwner = GetOwningPlayer(u);
-
-				if (currentOwner !== targetSlot) {
-					// Untrack minimap icon before ownership change
-					lagManager.untrackUnit(u);
-
-					SetUnitOwner(u, targetSlot, true);
-
-					this.decrementUnitCount(currentOwner);
-					this.incrementUnitCount(targetSlot);
-
-					// Re-track: will register with MinimapIconManager if now on a shared slot
-					lagManager.trackUnit(u);
-				}
-
-				unitIndex++;
-			}
-		}
-
-		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Finished spreading units for player ${GetPlayerId(realPlayer)}`, DC.redistribute);
-		this.debugPrintSlotCounts();
 	}
 
 	public getSharedSlotByPlayer(player: player): player | undefined {
