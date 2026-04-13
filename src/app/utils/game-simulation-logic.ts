@@ -552,7 +552,7 @@ export class GameSimulation {
 				if (loser) {
 					loser.cityCount = Math.max(0, loser.cityCount - delta);
 					// If a player loses all cities, they are eliminated
-					if (loser.cityCount <= 0 && loser.isActive) {
+					if (loser.cityCount === 0 && loser.isActive) {
 						loser.isActive = false;
 						turnEliminated.push(loser.id);
 					}
