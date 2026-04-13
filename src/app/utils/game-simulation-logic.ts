@@ -223,27 +223,44 @@ export interface SimPlayer {
 	cityCount: number;
 	isActive: boolean;
 	isHuman: boolean;
+	/** Team number (undefined for FFA) */
+	teamId?: number;
+	/** For Capitals mode: the capital city assigned to this player */
+	capitalCity?: string;
 }
 
+export interface SimTeam {
+	id: number;
+	memberIds: string[];
+	/** Whether the team still has active members */
+	isActive: boolean;
+}
+
+export type SimMode = 'FFA' | 'Promode1v1' | 'PromodeTeam' | 'Capitals';
+
 export interface SimConfig {
-	mode: 'FFA' | 'Promode1v1';
+	mode: SimMode;
 	playerCount: number;
 	citiesToWin: number;
 	turnDuration: number;
 	nightFogEnabled: boolean;
 	/** Warning ratio for promode auto-loss (default 0.6 from CITIES_TO_WIN_WARNING_RATIO) */
 	warningRatio: number;
+	/** Team assignments: array of arrays of player IDs (e.g. [['P1','P2'], ['P3','P4']]) */
+	teams?: string[][];
 }
 
 export interface SimEvent {
 	turn: number;
 	tick?: number;
-	type: 'playerDead' | 'playerLeft' | 'cityCapture' | 'forfeit' | 'restart';
+	type: 'playerDead' | 'playerLeft' | 'cityCapture' | 'forfeit' | 'restart' | 'capitalCapture';
 	playerId: string;
 	/** For cityCapture: the player gaining cities / losing cities */
 	targetPlayerId?: string;
 	/** For cityCapture: number of cities changing hands (default 1) */
 	cityDelta?: number;
+	/** For capitalCapture: the city name being captured */
+	cityName?: string;
 }
 
 export interface SimTurnSnapshot {
@@ -251,23 +268,137 @@ export interface SimTurnSnapshot {
 	phase: DayPhase;
 	fogActive: boolean;
 	players: SimPlayer[];
+	teams?: SimTeam[];
 	matchState: MatchState;
 	victoryState: VictoryState;
+	/** For FFA/Capitals: player ID. For team games: team ID as string (e.g. "Team 1") */
 	leader: string | undefined;
 	eliminated: string[];
 	warnings: string[];
+}
+
+// ─── Team Victory Check ─────────────────────────────────────────────
+
+/**
+ * Check victory conditions based on team city counts.
+ * Mirrors VictoryManager with team aggregation:
+ *   - Each team's city count = sum of its active members' cities
+ *   - If one team has ≥ citiesToWin with a clear lead → DECIDED
+ *   - If multiple teams are tied at ≥ citiesToWin → TIE
+ */
+export function checkTeamVictory(
+	teams: SimTeam[],
+	players: Map<string, SimPlayer>,
+	citiesToWin: number,
+): { state: VictoryState; leaderTeamId: number | undefined } {
+	let maxCount = 0;
+	let leaderTeamId: number | undefined;
+	let tiedAtMax = 0;
+
+	for (const team of teams) {
+		if (!team.isActive) continue;
+		const teamCities = team.memberIds.reduce((sum, id) => {
+			const p = players.get(id);
+			return sum + (p ? p.cityCount : 0);
+		}, 0);
+
+		if (teamCities > maxCount) {
+			maxCount = teamCities;
+			leaderTeamId = team.id;
+			tiedAtMax = 1;
+		} else if (teamCities === maxCount && teamCities > 0) {
+			tiedAtMax++;
+		}
+	}
+
+	if (maxCount >= citiesToWin) {
+		if (tiedAtMax > 1) {
+			return { state: 'TIE', leaderTeamId: undefined };
+		}
+		return { state: 'DECIDED', leaderTeamId };
+	}
+
+	return { state: 'UNDECIDED', leaderTeamId };
+}
+
+/**
+ * Check promode auto-loss conditions for team games.
+ * Each team's total city count is compared against each opponent team's total.
+ * If opponent total ≥ 2x team's total → team is eliminated.
+ */
+export function checkTeamPromodeAutoLoss(
+	teams: SimTeam[],
+	players: Map<string, SimPlayer>,
+	warningRatio: number,
+): PromodeAutoLossResult {
+	const eliminated: string[] = [];
+	const warnings: string[] = [];
+
+	const activeTeams = teams.filter((t) => t.isActive);
+	const teamCities = new Map<number, number>();
+
+	for (const team of activeTeams) {
+		const total = team.memberIds.reduce((sum, id) => {
+			const p = players.get(id);
+			return sum + (p ? p.cityCount : 0);
+		}, 0);
+		teamCities.set(team.id, total);
+	}
+
+	for (const team of activeTeams) {
+		const myCities = teamCities.get(team.id) ?? 0;
+		const opponentCities = activeTeams
+			.filter((t) => t.id !== team.id)
+			.reduce((sum, t) => sum + (teamCities.get(t.id) ?? 0), 0);
+
+		if (opponentCities >= myCities * 2) {
+			// Eliminate all active members of this team
+			for (const memberId of team.memberIds) {
+				const p = players.get(memberId);
+				if (p?.isActive) eliminated.push(memberId);
+			}
+		} else if (opponentCities >= myCities * 2 * warningRatio) {
+			// Warn all active members
+			for (const memberId of team.memberIds) {
+				const p = players.get(memberId);
+				if (p?.isActive) warnings.push(memberId);
+			}
+		}
+	}
+
+	return { eliminated, warnings };
+}
+
+/**
+ * Whether a team should be marked inactive.
+ * A team is eliminated when all its members are inactive.
+ */
+export function isTeamEliminated(team: SimTeam, players: Map<string, SimPlayer>): boolean {
+	return team.memberIds.every((id) => {
+		const p = players.get(id);
+		return !p || !p.isActive;
+	});
+}
+
+/**
+ * Count active teams remaining.
+ */
+export function countActiveTeams(teams: SimTeam[], players: Map<string, SimPlayer>): number {
+	return teams.filter((t) => !isTeamEliminated(t, players)).length;
 }
 
 /**
  * Pure game simulation engine.
  *
  * Models a complete game from mode selection through termination.
- * All state transitions, victory checks, and player events are
- * resolved using the pure logic functions above — no WC3 API.
+ * Supports FFA, Promode (1v1, 2v2, 3v3, NvN up to 23 players),
+ * and Capitals mode. All state transitions, victory checks, and
+ * player events are resolved using the pure logic functions above — no WC3 API.
  */
 export class GameSimulation {
 	private config: SimConfig;
 	private players: Map<string, SimPlayer>;
+	private teams: SimTeam[];
 	private matchState: MatchState;
 	private victoryState: VictoryState;
 	private leader: string | undefined;
@@ -282,6 +413,7 @@ export class GameSimulation {
 	private constructor(config: SimConfig) {
 		this.config = config;
 		this.players = new Map();
+		this.teams = [];
 		this.matchState = 'modeSelection';
 		this.victoryState = 'UNDECIDED';
 		this.leader = undefined;
@@ -292,7 +424,13 @@ export class GameSimulation {
 		this.currentStateIndex = 0;
 
 		// Resolve mode
-		if (config.mode === 'Promode1v1') {
+		if (config.mode === 'Capitals') {
+			this.modeName = resolveGameMode({
+				gameType: 'Capitals',
+				isW3CMode: false,
+				promodeSetting: PROMODE_SETTING.OFF,
+			});
+		} else if (config.mode === 'Promode1v1' || config.mode === 'PromodeTeam') {
 			this.modeName = resolveGameMode({
 				gameType: 'Standard',
 				isW3CMode: false,
@@ -307,6 +445,21 @@ export class GameSimulation {
 		}
 
 		this.stateSequence = getStateSequence(this.modeName);
+	}
+
+	/** Whether this is a team game (non-FFA, non-Capitals-FFA) */
+	private isTeamGame(): boolean {
+		return this.teams.length > 0;
+	}
+
+	/** Whether this mode uses promode auto-loss checks */
+	private isPromodeMode(): boolean {
+		return this.config.mode === 'Promode1v1' || this.config.mode === 'PromodeTeam';
+	}
+
+	/** Whether this is FFA */
+	private isFFA(): boolean {
+		return this.config.mode === 'FFA';
 	}
 
 	/**
@@ -352,6 +505,96 @@ export class GameSimulation {
 		const citiesPerPlayer = Math.floor((totalCities ?? 40) / 2);
 		sim.players.set('P1', { id: 'P1', cityCount: citiesPerPlayer, isActive: true, isHuman: true });
 		sim.players.set('P2', { id: 'P2', cityCount: citiesPerPlayer, isActive: true, isHuman: true });
+
+		return sim;
+	}
+
+	/**
+	 * Create a Promode team game simulation (2v2, 3v3, NvN).
+	 * @param teamSizes Array of team sizes, e.g. [2, 2] for 2v2, [3, 3] for 3v3
+	 * @param citiesToWin City threshold for team victory (summed across team members)
+	 * @param totalCities Total cities on the map (distributed evenly among all players)
+	 */
+	static createPromodeTeams(
+		teamSizes: number[],
+		citiesToWin: number,
+		totalCities?: number,
+	): GameSimulation {
+		const totalPlayers = teamSizes.reduce((a, b) => a + b, 0);
+		const teams: string[][] = [];
+
+		const sim = new GameSimulation({
+			mode: 'PromodeTeam',
+			playerCount: totalPlayers,
+			citiesToWin,
+			turnDuration: 60,
+			nightFogEnabled: true,
+			warningRatio: 0.6,
+			teams: [],
+		});
+
+		const citiesPerPlayer = Math.floor((totalCities ?? totalPlayers * 5) / totalPlayers);
+		let playerIndex = 1;
+
+		for (let t = 0; t < teamSizes.length; t++) {
+			const teamMembers: string[] = [];
+			for (let m = 0; m < teamSizes[t]; m++) {
+				const id = `P${playerIndex}`;
+				sim.players.set(id, {
+					id,
+					cityCount: citiesPerPlayer,
+					isActive: true,
+					isHuman: true,
+					teamId: t + 1,
+				});
+				teamMembers.push(id);
+				playerIndex++;
+			}
+			teams.push(teamMembers);
+		}
+
+		sim.config.teams = teams;
+
+		// Create team objects
+		for (let t = 0; t < teams.length; t++) {
+			sim.teams.push({
+				id: t + 1,
+				memberIds: teams[t],
+				isActive: true,
+			});
+		}
+
+		return sim;
+	}
+
+	/**
+	 * Create a Capitals mode simulation.
+	 * Each player gets a capital city. Losing your capital = elimination.
+	 */
+	static createCapitals(
+		playerCount: number,
+		citiesToWin: number,
+		totalCities?: number,
+	): GameSimulation {
+		const sim = new GameSimulation({
+			mode: 'Capitals',
+			playerCount,
+			citiesToWin,
+			turnDuration: 60,
+			nightFogEnabled: true,
+			warningRatio: 0.6,
+		});
+
+		const citiesPerPlayer = Math.floor((totalCities ?? playerCount * 5) / playerCount);
+		for (let i = 0; i < playerCount; i++) {
+			sim.players.set(`P${i + 1}`, {
+				id: `P${i + 1}`,
+				cityCount: citiesPerPlayer,
+				isActive: true,
+				isHuman: true,
+				capitalCity: `Capital_P${i + 1}`,
+			});
+		}
 
 		return sim;
 	}
@@ -410,47 +653,93 @@ export class GameSimulation {
 			return snapshot;
 		}
 
-		// Check victory conditions (city count)
-		const cityCounts = new Map<string, number>();
-		for (const [id, player] of this.players) {
-			if (player.isActive) {
-				cityCounts.set(id, player.cityCount);
+		// Update team active status
+		this.updateTeamStatus();
+
+		// Check victory conditions (city count) — team or FFA
+		if (this.isTeamGame()) {
+			const teamVictory = checkTeamVictory(this.teams, this.players, this.config.citiesToWin);
+			this.victoryState = teamVictory.state;
+			this.leader = teamVictory.leaderTeamId !== undefined ? `Team ${teamVictory.leaderTeamId}` : undefined;
+
+			if (this.victoryState === 'DECIDED') {
+				this.matchState = 'postMatch';
 			}
-		}
 
-		const victory = checkVictory(cityCounts, this.config.citiesToWin);
-		this.victoryState = victory.state;
-		this.leader = victory.leader;
+			// Check if only 1 active team remains
+			const activeTeamCount = countActiveTeams(this.teams, this.players);
+			if (activeTeamCount <= 1 && this.matchState === 'inProgress') {
+				const remainingTeam = this.teams.find((t) => !isTeamEliminated(t, this.players));
+				if (remainingTeam) {
+					this.leader = `Team ${remainingTeam.id}`;
+					this.victoryState = 'DECIDED';
+				}
+				this.matchState = 'postMatch';
+			}
+		} else {
+			const cityCounts = new Map<string, number>();
+			for (const [id, player] of this.players) {
+				if (player.isActive) {
+					cityCounts.set(id, player.cityCount);
+				}
+			}
 
-		if (this.victoryState === 'DECIDED') {
-			this.matchState = 'postMatch';
+			const victory = checkVictory(cityCounts, this.config.citiesToWin);
+			this.victoryState = victory.state;
+			this.leader = victory.leader;
+
+			if (this.victoryState === 'DECIDED') {
+				this.matchState = 'postMatch';
+			}
 		}
 
 		// Promode auto-loss check at end of turn
-		if (this.config.mode === 'Promode1v1' && this.matchState === 'inProgress') {
-			const activeParticipants = Array.from(this.players.values())
-				.filter((p) => p.isActive)
-				.map((p) => ({ id: p.id, cityCount: p.cityCount }));
+		if (this.isPromodeMode() && this.matchState === 'inProgress') {
+			if (this.isTeamGame()) {
+				const autoLoss = checkTeamPromodeAutoLoss(this.teams, this.players, this.config.warningRatio);
 
-			const autoLoss = checkPromodeAutoLoss(activeParticipants, this.config.warningRatio);
-
-			for (const eliminatedId of autoLoss.eliminated) {
-				const player = this.players.get(eliminatedId);
-				if (player) {
-					player.isActive = false;
-					turnEliminated.push(eliminatedId);
+				for (const eliminatedId of autoLoss.eliminated) {
+					const player = this.players.get(eliminatedId);
+					if (player && player.isActive) {
+						player.isActive = false;
+						turnEliminated.push(eliminatedId);
+					}
 				}
-			}
-			turnWarnings.push(...autoLoss.warnings);
+				turnWarnings.push(...autoLoss.warnings);
 
-			// Re-check if match should end after auto-loss
-			const activeCount = Array.from(this.players.values()).filter((p) => p.isActive).length;
-			if (shouldMatchEnd(activeCount)) {
-				// Determine winner
-				const remaining = Array.from(this.players.values()).find((p) => p.isActive);
-				this.leader = remaining?.id;
-				this.victoryState = 'DECIDED';
-				this.matchState = 'postMatch';
+				// Re-check team status and match end
+				this.updateTeamStatus();
+				const activeTeamCount = countActiveTeams(this.teams, this.players);
+				if (activeTeamCount <= 1) {
+					const remaining = this.teams.find((t) => !isTeamEliminated(t, this.players));
+					this.leader = remaining ? `Team ${remaining.id}` : undefined;
+					this.victoryState = 'DECIDED';
+					this.matchState = 'postMatch';
+				}
+			} else {
+				const activeParticipants = Array.from(this.players.values())
+					.filter((p) => p.isActive)
+					.map((p) => ({ id: p.id, cityCount: p.cityCount }));
+
+				const autoLoss = checkPromodeAutoLoss(activeParticipants, this.config.warningRatio);
+
+				for (const eliminatedId of autoLoss.eliminated) {
+					const player = this.players.get(eliminatedId);
+					if (player) {
+						player.isActive = false;
+						turnEliminated.push(eliminatedId);
+					}
+				}
+				turnWarnings.push(...autoLoss.warnings);
+
+				// Re-check if match should end after auto-loss
+				const activeCount = Array.from(this.players.values()).filter((p) => p.isActive).length;
+				if (shouldMatchEnd(activeCount)) {
+					const remaining = Array.from(this.players.values()).find((p) => p.isActive);
+					this.leader = remaining?.id;
+					this.victoryState = 'DECIDED';
+					this.matchState = 'postMatch';
+				}
 			}
 		}
 
@@ -488,9 +777,8 @@ export class GameSimulation {
 	 * Returns whether the restart was accepted.
 	 */
 	attemptRestart(playerId: string): boolean {
-		const isFFA = this.config.mode === 'FFA';
 		const humanCount = Array.from(this.players.values()).filter((p) => p.isHuman).length;
-		const result = canRestart(this.matchState, isFFA, humanCount);
+		const result = canRestart(this.matchState, this.isFFA(), humanCount);
 
 		if (result === 'allowed') {
 			// Transition through postMatch → resetComplete → preMatch
@@ -539,7 +827,41 @@ export class GameSimulation {
 		return [...this.snapshots];
 	}
 
+	getTeams(): SimTeam[] {
+		return this.teams.map((t) => ({ ...t, memberIds: [...t.memberIds] }));
+	}
+
 	// ─── Internal ───────────────────────────────────────────────────
+
+	/** Update team isActive flags based on member status */
+	private updateTeamStatus(): void {
+		for (const team of this.teams) {
+			team.isActive = !isTeamEliminated(team, this.players);
+		}
+	}
+
+	/** Check if match should end (team or FFA) and update state accordingly */
+	private checkMatchEnd(turnEliminated: string[]): void {
+		if (this.isTeamGame()) {
+			this.updateTeamStatus();
+			const activeTeamCount = countActiveTeams(this.teams, this.players);
+			if (activeTeamCount <= 1) {
+				const remaining = this.teams.find((t) => !isTeamEliminated(t, this.players));
+				this.leader = remaining ? `Team ${remaining.id}` : undefined;
+				this.victoryState = 'DECIDED';
+				this.matchState = 'postMatch';
+			}
+		} else {
+			const activeCount = Array.from(this.players.values()).filter((p) => p.isActive).length;
+			const result = processElimination(this.isFFA(), activeCount);
+			if (result.matchShouldEnd) {
+				const remaining = Array.from(this.players.values()).find((p) => p.isActive);
+				this.leader = remaining?.id;
+				this.victoryState = 'DECIDED';
+				this.matchState = 'postMatch';
+			}
+		}
+	}
 
 	private processEvent(event: SimEvent, turnEliminated: string[]): void {
 		switch (event.type) {
@@ -555,6 +877,27 @@ export class GameSimulation {
 					if (loser.cityCount === 0 && loser.isActive) {
 						loser.isActive = false;
 						turnEliminated.push(loser.id);
+						this.checkMatchEnd(turnEliminated);
+					}
+				}
+				break;
+			}
+
+			case 'capitalCapture': {
+				// Capitals mode: capturing a capital eliminates the owner
+				const capturer = this.players.get(event.playerId);
+				const loser = event.targetPlayerId ? this.players.get(event.targetPlayerId) : undefined;
+				const delta = event.cityDelta ?? 1;
+
+				if (capturer) capturer.cityCount += delta;
+				if (loser) {
+					loser.cityCount = Math.max(0, loser.cityCount - delta);
+
+					// The capital is captured — eliminate the player
+					if (loser.isActive) {
+						loser.isActive = false;
+						turnEliminated.push(loser.id);
+						this.checkMatchEnd(turnEliminated);
 					}
 				}
 				break;
@@ -566,16 +909,7 @@ export class GameSimulation {
 				if (player && player.isActive) {
 					player.isActive = false;
 					turnEliminated.push(event.playerId);
-
-					const activeCount = Array.from(this.players.values()).filter((p) => p.isActive).length;
-					const result = processElimination(this.config.mode === 'FFA', activeCount);
-
-					if (result.matchShouldEnd) {
-						const remaining = Array.from(this.players.values()).find((p) => p.isActive);
-						this.leader = remaining?.id;
-						this.victoryState = 'DECIDED';
-						this.matchState = 'postMatch';
-					}
+					this.checkMatchEnd(turnEliminated);
 				}
 				break;
 			}
@@ -586,29 +920,32 @@ export class GameSimulation {
 					player.isActive = false;
 					turnEliminated.push(event.playerId);
 
-					const activeCount = Array.from(this.players.values()).filter((p) => p.isActive).length;
-					const eventResult = resolvePlayerEvent(
-						'forfeit',
-						this.matchState,
-						this.config.mode === 'FFA',
-						activeCount,
-						Array.from(this.players.values()).filter((p) => p.isHuman && p.isActive).length,
-					);
+					if (this.isTeamGame()) {
+						this.checkMatchEnd(turnEliminated);
+					} else {
+						const activeCount = Array.from(this.players.values()).filter((p) => p.isActive).length;
+						const eventResult = resolvePlayerEvent(
+							'forfeit',
+							this.matchState,
+							this.isFFA(),
+							activeCount,
+							Array.from(this.players.values()).filter((p) => p.isHuman && p.isActive).length,
+						);
 
-					if (eventResult.shouldTransitionToPostMatch) {
-						const remaining = Array.from(this.players.values()).find((p) => p.isActive);
-						this.leader = remaining?.id;
-						this.victoryState = 'DECIDED';
-						this.matchState = 'postMatch';
+						if (eventResult.shouldTransitionToPostMatch) {
+							const remaining = Array.from(this.players.values()).find((p) => p.isActive);
+							this.leader = remaining?.id;
+							this.victoryState = 'DECIDED';
+							this.matchState = 'postMatch';
+						}
 					}
 				}
 				break;
 			}
 
 			case 'restart': {
-				const isFFA = this.config.mode === 'FFA';
 				const humanCount = Array.from(this.players.values()).filter((p) => p.isHuman && p.isActive).length;
-				const restartResult = canRestart(this.matchState, isFFA, humanCount);
+				const restartResult = canRestart(this.matchState, this.isFFA(), humanCount);
 
 				if (restartResult === 'triggerPostMatch') {
 					this.matchState = 'postMatch';
@@ -626,6 +963,7 @@ export class GameSimulation {
 			phase,
 			fogActive: this.config.nightFogEnabled ? isFogActive(phase) : false,
 			players: Array.from(this.players.values()).map((p) => ({ ...p })),
+			teams: this.teams.length > 0 ? this.teams.map((t) => ({ ...t, memberIds: [...t.memberIds] })) : undefined,
 			matchState: this.matchState,
 			victoryState: this.victoryState,
 			leader: this.leader,
