@@ -1,160 +1,21 @@
 /**
  * Unit Tests for Rating Calculator
  *
- * This test file can run in isolation without WC3 dependencies because
- * the rating calculator functions are pure mathematical calculations.
+ * This test file imports directly from the production source so that any
+ * changes to src/app/rating/rating-calculator.ts are immediately caught here.
  *
  * Run with: npx ts-node scripts/test-rating-calculator.ts
  */
 
-// ============================================
-// Rating Calculator Implementation (Copy for Testing)
-// ============================================
-// We duplicate the core logic here to avoid import issues with the WC3 project.
-// Keep this in sync with src/app/rating/rating-calculator.ts
+import {
+	calculatePlacementPoints,
+	calculateOpponentStrengthModifier,
+	calculateKillPoolPoints,
+	calculateRatingChange,
+	getRankIcon,
+} from '../src/app/rating/rating-calculator';
 
-const TARGET_INFLATION_PER_GAME = 0;
-const MAX_WIN_POINTS = 15;
-const MAX_LOSS_POINTS = 15;
-const WINNER_BONUS = 8;
-const BREAKEVEN_PERCENTILE = 0.5;
-const OPPONENT_STRENGTH_FACTOR = 0.32;
-const KILL_POOL_MULTIPLIER = 55;
 const RANKED_STARTING_RATING = 1000;
-
-function calculateRawPlacementPoints(placement: number, playerCount: number): number {
-	if (playerCount <= 1) {
-		return 0;
-	}
-
-	const breakevenPos = Math.floor(playerCount * BREAKEVEN_PERCENTILE);
-
-	if (placement < breakevenPos) {
-		const posRatio = placement / breakevenPos;
-		let points = MAX_WIN_POINTS * (1 - posRatio * posRatio);
-		if (placement === 0) {
-			points += WINNER_BONUS;
-		}
-		return points;
-	} else if (placement === breakevenPos) {
-		return 0;
-	} else {
-		const lossZoneSize = playerCount - breakevenPos - 1;
-		if (lossZoneSize <= 0) {
-			return -MAX_LOSS_POINTS;
-		}
-		const posInLossZone = placement - breakevenPos - 1;
-		const posRatio = (posInLossZone + 1) / lossZoneSize;
-		return -MAX_LOSS_POINTS * posRatio * posRatio;
-	}
-}
-
-function calculateRawPlacementSum(playerCount: number): number {
-	let sum = 0;
-	for (let i = 0; i < playerCount; i++) {
-		sum += calculateRawPlacementPoints(i, playerCount);
-	}
-	return sum;
-}
-
-function calculatePlacementPoints(placement: number, playerCount: number): number {
-	if (playerCount <= 1) {
-		return 0;
-	}
-
-	const rawPoints = calculateRawPlacementPoints(placement, playerCount);
-	const rawSum = calculateRawPlacementSum(playerCount);
-	const adjustment = (TARGET_INFLATION_PER_GAME - rawSum) / playerCount;
-
-	return Math.round(rawPoints + adjustment);
-}
-
-function calculateOpponentStrengthModifier(
-	playerRating: number,
-	opponentRatings: number[],
-	isGain: boolean
-): number {
-	if (opponentRatings.length === 0) {
-		return 1.0;
-	}
-
-	let totalOpponentRating = 0;
-	for (let i = 0; i < opponentRatings.length; i++) {
-		totalOpponentRating += opponentRatings[i];
-	}
-	const avgOpponentRating = totalOpponentRating / opponentRatings.length;
-
-	const ratingDiff = playerRating - avgOpponentRating;
-	const scaledDiff = Math.max(-1, Math.min(1, ratingDiff / 400)) * OPPONENT_STRENGTH_FACTOR;
-
-	if (isGain) {
-		return 1.0 - scaledDiff;
-	} else {
-		return 1.0 + scaledDiff;
-	}
-}
-
-function calculateKillPoolPoints(playerKillValue: number, allKillValues: number[]): number {
-	if (allKillValues.length === 0) {
-		return 0;
-	}
-
-	let totalKills = 0;
-	for (let i = 0; i < allKillValues.length; i++) {
-		totalKills += allKillValues[i];
-	}
-
-	if (totalKills === 0) {
-		return 0;
-	}
-
-	const playerCount = allKillValues.length;
-	const killShare = playerKillValue / totalKills;
-	const averageShare = 1.0 / playerCount;
-	const deviation = killShare - averageShare;
-	const killPoints = deviation * KILL_POOL_MULTIPLIER;
-
-	return Math.round(killPoints);
-}
-
-function calculateRatingChange(
-	placement: number,
-	playerRating: number,
-	opponentRatings: number[],
-	playerCount: number,
-	playerKillValue?: number,
-	allKillValues?: number[]
-): number {
-	const basePlacementPoints = calculatePlacementPoints(placement, playerCount);
-	const isGain = basePlacementPoints >= 0;
-	const opponentStrengthModifier = calculateOpponentStrengthModifier(playerRating, opponentRatings, isGain);
-	const placementPoints = Math.round(basePlacementPoints * opponentStrengthModifier);
-
-	let killPoints = 0;
-	if (playerKillValue !== undefined && allKillValues !== undefined && allKillValues.length > 0) {
-		killPoints = calculateKillPoolPoints(playerKillValue, allKillValues);
-	}
-
-	return placementPoints + killPoints;
-}
-
-function getRankIcon(rating: number): string {
-	if (rating >= 2500) return 'Assets\\Ranks\\gold_5.blp';
-	if (rating >= 2375) return 'Assets\\Ranks\\gold_4.blp';
-	if (rating >= 2250) return 'Assets\\Ranks\\gold_3.blp';
-	if (rating >= 2125) return 'Assets\\Ranks\\gold_2.blp';
-	if (rating >= 2000) return 'Assets\\Ranks\\gold_1.blp';
-	if (rating >= 1900) return 'Assets\\Ranks\\silver_5.blp';
-	if (rating >= 1800) return 'Assets\\Ranks\\silver_4.blp';
-	if (rating >= 1700) return 'Assets\\Ranks\\silver_3.blp';
-	if (rating >= 1600) return 'Assets\\Ranks\\silver_2.blp';
-	if (rating >= 1500) return 'Assets\\Ranks\\silver_1.blp';
-	if (rating >= 1400) return 'Assets\\Ranks\\bronze_5.blp';
-	if (rating >= 1300) return 'Assets\\Ranks\\bronze_4.blp';
-	if (rating >= 1200) return 'Assets\\Ranks\\bronze_3.blp';
-	if (rating >= 1100) return 'Assets\\Ranks\\bronze_2.blp';
-	return 'Assets\\Ranks\\bronze_1.blp';
-}
 
 // ============================================
 // Test Framework

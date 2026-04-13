@@ -44,7 +44,7 @@ const MAX_WIN_POINTS = 15;
 const MAX_LOSS_POINTS = 15;
 
 // Bonus points for 1st place only (rewards winning over just placing high)
-const WINNER_BONUS = 8;
+const WINNER_BONUS = 0;
 
 // Breakeven percentile: top 50% gain, bottom 50% lose
 const BREAKEVEN_PERCENTILE = 0.50;
@@ -249,9 +249,9 @@ export function calculateOpponentStrengthModifier(
 	// For gains: higher rated = less gain (1.0 - scaledDiff)
 	// For losses: higher rated = more loss (1.0 + scaledDiff)
 	if (isGain) {
-		return 1.0 - scaledDiff;
-	} else {
 		return 1.0 + scaledDiff;
+	} else {
+		return 1.0 - scaledDiff;
 	}
 }
 
@@ -308,7 +308,7 @@ export function calculateKillPoolPoints(playerKillValue: number, allKillValues: 
 	const averageShare = 1.0 / playerCount;
 
 	// Calculate deviation from average share
-	const deviation = killShare - averageShare;
+	const deviation = averageShare - killShare;
 
 	// Convert deviation to points
 	// Positive deviation = above average kills = gain points
