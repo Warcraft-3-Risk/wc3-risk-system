@@ -263,20 +263,21 @@ describe('CapitalsGameLoopState.onCityCapture (production code)', () => {
 
 			// Mock GetUnitTypeId to return CAPITAL for our barracks unit
 			const origGetUnitTypeId = (globalThis as Record<string, unknown>).GetUnitTypeId as (u: unknown) => number;
-			(globalThis as Record<string, unknown>).GetUnitTypeId = (u: unknown) =>
-				u === mockBarrackUnit ? UNIT_ID.CAPITAL : origGetUnitTypeId(u);
-
-			const issueOrderSpy = vi.fn();
 			const origIssueOrder = (globalThis as Record<string, unknown>).IssueImmediateOrderById;
-			(globalThis as Record<string, unknown>).IssueImmediateOrderById = issueOrderSpy;
+			const issueOrderSpy = vi.fn();
 
-			capitalsLoop.onCityCapture(capital as never, p2 as never, p1 as never);
+			try {
+				(globalThis as Record<string, unknown>).GetUnitTypeId = (u: unknown) =>
+					u === mockBarrackUnit ? UNIT_ID.CAPITAL : origGetUnitTypeId(u);
+				(globalThis as Record<string, unknown>).IssueImmediateOrderById = issueOrderSpy;
 
-			expect(issueOrderSpy).toHaveBeenCalledWith(mockBarrackUnit, UNIT_ID.CONQUERED_CAPITAL);
+				capitalsLoop.onCityCapture(capital as never, p2 as never, p1 as never);
 
-			// Restore globals
-			(globalThis as Record<string, unknown>).GetUnitTypeId = origGetUnitTypeId;
-			(globalThis as Record<string, unknown>).IssueImmediateOrderById = origIssueOrder;
+				expect(issueOrderSpy).toHaveBeenCalledWith(mockBarrackUnit, UNIT_ID.CONQUERED_CAPITAL);
+			} finally {
+				(globalThis as Record<string, unknown>).GetUnitTypeId = origGetUnitTypeId;
+				(globalThis as Record<string, unknown>).IssueImmediateOrderById = origIssueOrder;
+			}
 		});
 	});
 
