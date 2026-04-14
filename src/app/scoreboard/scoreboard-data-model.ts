@@ -104,7 +104,13 @@ export class ScoreboardDataModel {
 
 		this._players = this._players.map((existing) => {
 			const ap = playerMap.get(existing.handle);
-			if (ap) return this.buildPlayerRow(ap);
+			if (ap) {
+				const row = this.buildPlayerRow(ap);
+				// Preserve income from last full refresh — income only updates at turn boundaries
+				row.income = existing.income;
+				row.incomeDelta = existing.incomeDelta;
+				return row;
+			}
 			return existing;
 		});
 
@@ -120,6 +126,7 @@ export class ScoreboardDataModel {
 	/**
 	 * Updates team row values in-place without re-sorting teams or members.
 	 * Preserves the ordering established by the last buildTeamRows() call.
+	 * Team income is preserved from the last full refresh — it only updates at turn boundaries.
 	 */
 	private refreshTeamValues(): void {
 		const rowLookup = new Map<player, PlayerRow>();
@@ -132,8 +139,7 @@ export class ScoreboardDataModel {
 				if (updated) teamRow.members[i] = updated;
 			}
 
-			// Update team-level totals
-			teamRow.totalIncome = teamRow.team.getIncome();
+			// Update team-level totals (income preserved from last full refresh)
 			teamRow.totalCities = teamRow.team.getCities();
 			teamRow.totalKills = teamRow.team.getKills();
 			teamRow.totalDeaths = teamRow.team.getDeaths();
