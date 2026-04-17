@@ -97,9 +97,9 @@ export class MinimapIconManager {
 
 		// Skip ally color mode 2 — only allow toggling between 0 and 1
 		// Poll the native button state and correct mode 2 back to 0
-		// Note: the main 0.5s update loop also corrects mode 2 inside updateIconColor()
+		// Note: the main update loop also corrects mode 2 inside updateIconColor()
 		const allyModeTimer = CreateTimer();
-		TimerStart(allyModeTimer, 0.5, true, () => {
+		TimerStart(allyModeTimer, 0.1, true, () => {
 			if (GetAllyColorFilterState() === 2) {
 				SetAllyColorFilterState(0);
 			}
@@ -360,9 +360,9 @@ export class MinimapIconManager {
 	private startUpdateTimer(): void {
 		this.updateTimer = CreateTimer();
 
-		TimerStart(this.updateTimer, 0.5, true, () => {
+		TimerStart(this.updateTimer, 0.2, true, () => {
 			// Update all icon positions and colors
-			// This runs every 0.5 seconds
+			// This runs every 0.2 seconds
 			this.updateAllIcons();
 		});
 	}

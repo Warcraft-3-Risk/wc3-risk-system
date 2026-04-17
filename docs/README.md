@@ -23,6 +23,7 @@ If a document does not describe the current system, it should be updated or remo
 - docs/replay/replay-scoreboard-pov.md
 - docs/shared-slots/replay-pov-detection.md
 - docs/shared-slots/shared-slots-current-behavior.md
+- docs/shared-slots/ally-color-mode-2-engine-limitation.md
 
 ## Excluded Document Types
 
