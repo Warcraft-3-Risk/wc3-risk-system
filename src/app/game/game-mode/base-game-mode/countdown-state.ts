@@ -114,6 +114,11 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 				BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 				this.countdownDisplay(duration);
+
+				if (duration >= 1 && duration <= 3) {
+					PlayGlobalSound('Sound\\Interface\\BattleNetTick.flac');
+				}
+
 				if (duration <= 0) {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);
