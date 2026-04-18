@@ -33,7 +33,7 @@ export class FrameScoreboard {
 	private static readonly COL_STATUS = 7;
 
 	// Layout constants (screen coordinates)
-	private static readonly BACKDROP_WIDTH = 0.30;
+	private static readonly BACKDROP_WIDTH = 0.23;
 	private static readonly ROW_HEIGHT = 0.0105;
 	private static readonly HEADER_HEIGHT = 0.0115;
 	private static readonly TITLE_HEIGHT = 0.018;
@@ -45,7 +45,7 @@ export class FrameScoreboard {
 	private static readonly TITLE_SCALE = 0.95;
 
 	// Column widths
-	private static readonly COL_WIDTHS = [0.07, 0.03, 0.022, 0.028, 0.028, 0.025, 0.025, 0.03];
+	private static readonly COL_WIDTHS = [0.06, 0.025, 0.018, 0.025, 0.028, 0.025, 0.025, 0.03];
 
 	// Gap before each column (extra spacing between columns)
 	private static readonly COL_GAPS = [0, 0, 0, 0, 0.005, 0.005, 0.005, 0.01];
