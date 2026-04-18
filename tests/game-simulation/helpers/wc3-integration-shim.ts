@@ -51,6 +51,16 @@ let fogEnabled = false;
 (globalThis as any).IsFogEnabled = () => fogEnabled;
 (globalThis as any).FogMaskEnable = (_enable: boolean) => {};
 (globalThis as any).IsFoggedToPlayer = (_x: number, _y: number, _p: any) => false;
+(globalThis as any).GetWorldBounds = () => 'world_bounds_rect';
+(globalThis as any).SetFogStateRect = (_p: any, _state: any, _rect: any, _shared: boolean) => {};
+(globalThis as any).SetFogStateRadius = (_p: any, _state: any, _x: number, _y: number, _r: number, _shared: boolean) => {};
+(globalThis as any).CreateFogModifierRect = (_p: any, _state: any, _rect: any, _shared: boolean, _afterUnits: boolean) => 0;
+(globalThis as any).FogModifierStart = (_mod: any) => {};
+(globalThis as any).FogModifierStop = (_mod: any) => {};
+(globalThis as any).DestroyFogModifier = (_mod: any) => {};
+(globalThis as any).FOG_OF_WAR_MASKED = 'masked';
+(globalThis as any).FOG_OF_WAR_FOGGED = 'fogged';
+(globalThis as any).FOG_OF_WAR_VISIBLE = 'visible';
 
 // Export getters for test assertions
 export function getTimeOfDay(): number {
