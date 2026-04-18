@@ -363,7 +363,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 Frame "BACKDROP" "BackdropTemplate" {
     DecorateFileNames,
     BackdropBackground  "MultiboardBackground",
-    BackdropBackgroundInsets 0.0 0.0 0.0 0.0,
+    BackdropBackgroundInsets 0.004 0.004 0.004 0.004,
     BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
     BackdropCornerSize  0.008,
     BackdropEdgeFile  "MultiboardBorder",
