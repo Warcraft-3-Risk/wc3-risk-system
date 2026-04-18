@@ -33,7 +33,7 @@ export class FrameScoreboard {
 	private static readonly COL_STATUS = 7;
 
 	// Layout constants (screen coordinates)
-	private static readonly BACKDROP_WIDTH = 0.34;
+	private static readonly BACKDROP_WIDTH = 0.30;
 	private static readonly ROW_HEIGHT = 0.0105;
 	private static readonly HEADER_HEIGHT = 0.0115;
 	private static readonly TITLE_HEIGHT = 0.018;
@@ -45,7 +45,10 @@ export class FrameScoreboard {
 	private static readonly TITLE_SCALE = 0.95;
 
 	// Column widths
-	private static readonly COL_WIDTHS = [0.085, 0.04, 0.025, 0.035, 0.035, 0.035, 0.035, 0.035];
+	private static readonly COL_WIDTHS = [0.07, 0.03, 0.022, 0.028, 0.028, 0.025, 0.025, 0.03];
+
+	// Gap before each column (extra spacing between columns)
+	private static readonly COL_GAPS = [0, 0, 0, 0, 0.005, 0.005, 0.005, 0.01];
 
 	// Per-column horizontal alignment: right for numbers, left for text
 	private static readonly COL_ALIGN = [
@@ -112,19 +115,22 @@ export class FrameScoreboard {
 		const headerY = -(FrameScoreboard.TOP_PADDING + FrameScoreboard.TITLE_HEIGHT);
 		const headerLabels = [
 			`${HexColors.TANGERINE}Player|r`,
-			`${HexColors.TANGERINE}Income|r`,
+			`${HexColors.TANGERINE}Inc|r`,
 			``,
-			`${HexColors.TANGERINE}Gold|r`,
-			`${HexColors.TANGERINE}Cities|r`,
-			`${HexColors.TANGERINE}Kills|r`,
-			`${HexColors.TANGERINE}Deaths|r`,
+			`${HexColors.TANGERINE}G|r`,
+			`${HexColors.TANGERINE}C|r`,
+			`${HexColors.TANGERINE}K|r`,
+			`${HexColors.TANGERINE}D|r`,
 			`${HexColors.TANGERINE}Status|r`,
 		];
 
 		let xOffset = FrameScoreboard.SIDE_PADDING;
+		// Per-column header nudge to align with scaled data cells
+		const headerNudges = [0, -0.004, -0.004, -0.005, -0.007, -0.007, -0.0075, -0.008];
 		for (let col = 0; col < FrameScoreboard.COL_COUNT; col++) {
+			xOffset += FrameScoreboard.COL_GAPS[col];
 			const cell = BlzCreateFrameByType('TEXT', `FSHeader${col}`, this.backdrop, '', ctx + col);
-			BlzFrameSetPoint(cell, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, xOffset, headerY);
+			BlzFrameSetPoint(cell, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, xOffset + headerNudges[col], headerY);
 			BlzFrameSetSize(cell, FrameScoreboard.COL_WIDTHS[col], FrameScoreboard.HEADER_HEIGHT);
 			BlzFrameSetText(cell, headerLabels[col]);
 			BlzFrameSetTextAlignment(cell, TEXT_JUSTIFY_MIDDLE, FrameScoreboard.COL_ALIGN[col]);
@@ -141,6 +147,7 @@ export class FrameScoreboard {
 			let cellX = FrameScoreboard.SIDE_PADDING;
 
 			for (let col = 0; col < FrameScoreboard.COL_COUNT; col++) {
+				cellX += FrameScoreboard.COL_GAPS[col];
 				const cellCtx = ctx + 100 + row * FrameScoreboard.COL_COUNT + col;
 				const cell = BlzCreateFrameByType('TEXT', `FSCell${row}_${col}`, this.backdrop, '', cellCtx);
 				BlzFrameSetPoint(cell, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, cellX, rowY);
