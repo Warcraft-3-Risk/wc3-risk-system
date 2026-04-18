@@ -41,8 +41,8 @@ export class FrameScoreboard {
 	private static readonly TOP_PADDING = 0.005;
 	private static readonly SIDE_PADDING = 0.008;
 	private static readonly CELL_SCALE = 0.82;
-	private static readonly HEADER_SCALE = 0.85;
-	private static readonly TITLE_SCALE = 0.95;
+	private static readonly HEADER_SCALE = 0.82;
+	private static readonly TITLE_SCALE = 0.82;
 
 	// Column widths
 	private static readonly COL_WIDTHS = [0.06, 0.025, 0.018, 0.025, 0.028, 0.025, 0.025, 0.03];
@@ -63,6 +63,7 @@ export class FrameScoreboard {
 	];
 
 	private backdrop: framehandle;
+	private container: framehandle;
 	private titleText: framehandle;
 	private headerCells: framehandle[] = [];
 	private cells: framehandle[][] = []; // [row][col]
@@ -91,9 +92,14 @@ export class FrameScoreboard {
 		this.backdrop = BlzCreateFrame('BackdropTemplate', gameUI, 0, ctx);
 		BlzFrameSetSize(this.backdrop, FrameScoreboard.BACKDROP_WIDTH, contentHeight);
 		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_TOPRIGHT, 0.8, 0.56);
+		BlzFrameSetAlpha(this.backdrop, 180);
+
+		// Transparent container for text so backdrop alpha doesn't affect readability
+		this.container = BlzCreateFrameByType('FRAME', 'FSContainer', gameUI, '', ctx + 2000);
+		BlzFrameSetAllPoints(this.container, this.backdrop);
 
 		// Title text
-		this.titleText = BlzCreateFrameByType('TEXT', 'FrameScoreboardTitle', this.backdrop, '', ctx);
+		this.titleText = BlzCreateFrameByType('TEXT', 'FrameScoreboardTitle', this.container, '', ctx);
 		BlzFrameSetPoint(
 			this.titleText,
 			FRAMEPOINT_TOP,
@@ -129,7 +135,7 @@ export class FrameScoreboard {
 		const headerNudges = [0, -0.004, -0.004, -0.005, -0.007, -0.007, -0.0075, -0.008];
 		for (let col = 0; col < FrameScoreboard.COL_COUNT; col++) {
 			xOffset += FrameScoreboard.COL_GAPS[col];
-			const cell = BlzCreateFrameByType('TEXT', `FSHeader${col}`, this.backdrop, '', ctx + col);
+			const cell = BlzCreateFrameByType('TEXT', `FSHeader${col}`, this.container, '', ctx + col);
 			BlzFrameSetPoint(cell, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, xOffset + headerNudges[col], headerY);
 			BlzFrameSetSize(cell, FrameScoreboard.COL_WIDTHS[col], FrameScoreboard.HEADER_HEIGHT);
 			BlzFrameSetText(cell, headerLabels[col]);
@@ -149,7 +155,7 @@ export class FrameScoreboard {
 			for (let col = 0; col < FrameScoreboard.COL_COUNT; col++) {
 				cellX += FrameScoreboard.COL_GAPS[col];
 				const cellCtx = ctx + 100 + row * FrameScoreboard.COL_COUNT + col;
-				const cell = BlzCreateFrameByType('TEXT', `FSCell${row}_${col}`, this.backdrop, '', cellCtx);
+				const cell = BlzCreateFrameByType('TEXT', `FSCell${row}_${col}`, this.container, '', cellCtx);
 				BlzFrameSetPoint(cell, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, cellX, rowY);
 				BlzFrameSetSize(cell, FrameScoreboard.COL_WIDTHS[col], FrameScoreboard.ROW_HEIGHT);
 				BlzFrameSetText(cell, '');
@@ -168,7 +174,7 @@ export class FrameScoreboard {
 		}
 
 		// Alert row at bottom
-		this.alertText = BlzCreateFrameByType('TEXT', 'FSAlert', this.backdrop, '', ctx + 1000);
+		this.alertText = BlzCreateFrameByType('TEXT', 'FSAlert', this.container, '', ctx + 1000);
 		const alertY = dataStartY - this.playerCount * FrameScoreboard.ROW_HEIGHT;
 		BlzFrameSetPoint(this.alertText, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, FrameScoreboard.SIDE_PADDING, alertY);
 		BlzFrameSetSize(
@@ -185,7 +191,7 @@ export class FrameScoreboard {
 		for (let row = 0; row < FrameScoreboard.MAX_ROWS; row++) {
 			this.rowPlayerHandles[row] = null;
 			const btnCtx = ctx + 500 + row;
-			const btn = BlzCreateFrameByType('GLUETEXTBUTTON', `FSHoverBtn${row}`, this.backdrop, 'ScriptDialogButton', btnCtx);
+			const btn = BlzCreateFrameByType('GLUETEXTBUTTON', `FSHoverBtn${row}`, this.container, 'ScriptDialogButton', btnCtx);
 			const rowY = dataStartY - row * FrameScoreboard.ROW_HEIGHT;
 			BlzFrameSetPoint(btn, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, FrameScoreboard.SIDE_PADDING, rowY);
 			BlzFrameSetSize(btn, FrameScoreboard.COL_WIDTHS[FrameScoreboard.COL_PLAYER], FrameScoreboard.ROW_HEIGHT);
@@ -223,6 +229,7 @@ export class FrameScoreboard {
 
 	public setVisibility(visible: boolean): void {
 		BlzFrameSetVisible(this.backdrop, visible);
+		BlzFrameSetVisible(this.container, visible);
 		this.isShowing = visible;
 	}
 

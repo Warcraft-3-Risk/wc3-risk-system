@@ -361,11 +361,12 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 }
 
 Frame "BACKDROP" "BackdropTemplate" {
-    BackdropBackground  "UI\Widgets\EscMenu\Human\quest-normal-background.blp",
-    BackdropBackgroundInsets 0.005 0.005 0.005 0.005,
+    DecorateFileNames,
+    BackdropBackground  "MultiboardBackground",
+    BackdropBackgroundInsets 0.0 0.0 0.0 0.0,
     BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
-    BackdropCornerSize  0.0125,
-    BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-menu-border.blp",
+    BackdropCornerSize  0.008,
+    BackdropEdgeFile  "MultiboardBorder",
 }
 
 Frame "SIMPLESTATUSBAR" "HoverTooltipBar" {
