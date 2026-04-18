@@ -6,6 +6,7 @@ import { FogOptionsColorFormatted } from './strategies/fog-strategy';
 import { GameTypeOptionsColorFormatted } from './strategies/game-type-strategy';
 import { OvertimeStringsColorFormatted } from './strategies/overtime-strategy';
 import { PromodeOptionsColorFormatted } from './strategies/promode-strategy';
+import { RandomEventsStringsColorFormatted } from './strategies/random-events-strategy';
 
 export class SettingsView {
 	private backdrop: framehandle;
@@ -19,6 +20,7 @@ export class SettingsView {
 		BlzFrameSetValue(BlzGetFrameByName('DiplomacyPopup', 0), 0);
 		BlzFrameSetValue(BlzGetFrameByName('OvertimePopup', 0), 0);
 		BlzFrameSetValue(BlzGetFrameByName('PromodePopup', 0), 0);
+		BlzFrameSetValue(BlzGetFrameByName('RandomEventsPopup', 0), 0);
 		this.buildStartButton();
 		this.buildTimer();
 		this.gameTypePopup();
@@ -26,6 +28,7 @@ export class SettingsView {
 		this.diplomacyPopup();
 		this.overtimePopup();
 		this.promodePopup();
+		this.randomEventsPopup();
 		this.disablePromodeIfMoreThanTwoTeams();
 		this.hostSetup();
 		this.playerSetup();
@@ -205,6 +208,7 @@ export class SettingsView {
 				const fogFrame: framehandle = BlzGetFrameByName('FogPopup', 0);
 				const diploFrame: framehandle = BlzGetFrameByName('DiplomacyPopup', 0);
 				const overtimeFrame: framehandle = BlzGetFrameByName('OvertimePopup', 0);
+				const eventsFrame: framehandle = BlzGetFrameByName('RandomEventsPopup', 0);
 
 				SettingsContext.getInstance().getSettings().Promode = frameValue;
 
@@ -213,6 +217,7 @@ export class SettingsView {
 					SettingsContext.getInstance().getSettings().GameType = 0;
 					SettingsContext.getInstance().getSettings().Fog = 1;
 					SettingsContext.getInstance().getSettings().Overtime.option = 3;
+					SettingsContext.getInstance().getSettings().RandomEvents = 0;
 
 					// If diplomacy is FFA, switch to Lobby Teams (Shared) — promode requires teams
 					if (SettingsContext.getInstance().getSettings().Diplomacy.option === 0) {
@@ -226,6 +231,8 @@ export class SettingsView {
 					BlzFrameSetEnable(fogFrame, false);
 					BlzFrameSetValue(overtimeFrame, 3);
 					BlzFrameSetEnable(overtimeFrame, false);
+					BlzFrameSetValue(eventsFrame, 0);
+					BlzFrameSetEnable(eventsFrame, false);
 				} else {
 					// ProMode Off (0): unlock other settings
 					SettingsContext.getInstance().getSettings().GameType = 0;
@@ -241,6 +248,7 @@ export class SettingsView {
 					BlzFrameSetEnable(diploFrame, true);
 					BlzFrameSetValue(overtimeFrame, 0);
 					BlzFrameSetEnable(overtimeFrame, true);
+					BlzFrameSetEnable(eventsFrame, true);
 				}
 
 				this.colorizeGameTypeText(BlzFrameGetValue(gameTypeFrame));
@@ -248,6 +256,7 @@ export class SettingsView {
 				this.colorizeDiplomacyText(BlzFrameGetValue(diploFrame));
 				this.colorizeOvertimeText(BlzFrameGetValue(overtimeFrame));
 				this.colorizePromodeText(frameValue);
+				this.colorizeRandomEventsText(BlzFrameGetValue(eventsFrame));
 			})
 		);
 
@@ -257,6 +266,28 @@ export class SettingsView {
 	private colorizePromodeText(value: number) {
 		BlzFrameSetText(BlzGetFrameByName('PromodeOption', 0), `${PromodeOptionsColorFormatted[value]}`);
 		BlzFrameSetText(BlzFrameGetChild(BlzGetFrameByName('PromodePopup', 0), 2), `${PromodeOptionsColorFormatted[value]}`);
+	}
+
+	private randomEventsPopup() {
+		const t: trigger = CreateTrigger();
+
+		BlzTriggerRegisterFrameEvent(t, BlzGetFrameByName('RandomEventsPopup', 0), FRAMEEVENT_POPUPMENU_ITEM_CHANGED);
+		TriggerAddCondition(
+			t,
+			Condition(() => {
+				const frameValue: number = R2I(BlzGetTriggerFrameValue());
+
+				SettingsContext.getInstance().getSettings().RandomEvents = frameValue;
+				this.colorizeRandomEventsText(frameValue);
+			})
+		);
+
+		this.colorizeRandomEventsText(BlzFrameGetValue(BlzGetFrameByName('RandomEventsPopup', 0)));
+	}
+
+	private colorizeRandomEventsText(value: number) {
+		BlzFrameSetText(BlzGetFrameByName('RandomEventsOption', 0), `${RandomEventsStringsColorFormatted[value]}`);
+		BlzFrameSetText(BlzFrameGetChild(BlzGetFrameByName('RandomEventsPopup', 0), 2), `${RandomEventsStringsColorFormatted[value]}`);
 	}
 
 	private hostSetup() {

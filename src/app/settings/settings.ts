@@ -7,4 +7,5 @@ export interface Settings {
 	Fog: number;
 	Promode: number;
 	Overtime: OvertimeOptions;
+	RandomEvents: number;
 }

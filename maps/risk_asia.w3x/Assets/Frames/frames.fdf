@@ -164,7 +164,7 @@ Frame "POPUPMENU" "MyPopupTemplate" {
 
 Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 	Width 0.25f,
-    Height 0.33f,
+    Height 0.37f,
 	SetPoint CENTER, "ConsoleUI", CENTER, 0.0,0.05,
 
 	Frame "TEXT" "SettingsTitle" {
@@ -235,6 +235,15 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 				MenuItem "Chaos",     -2,
 			}
 		}
+
+		Frame "POPUPMENU" "RandomEventsPopup" INHERITS WITHCHILDREN "MyPopupTemplate" {
+		SetPoint TOP,"PopupMenus",TOP,0.0,-0.20,
+		PopupMenuFrame "RandomEventsPopupMenu",
+			Frame "MENU" "RandomEventsPopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
+				MenuItem "Off",     -2,
+				MenuItem "On",     -2,
+			}
+		}
 	}
 
 	Frame "FRAME" "PopupLabels" {
@@ -296,6 +305,17 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			FontJustificationV JUSTIFYMIDDLE,
 			Text "Promode:",
 		}
+
+		Frame "TEXT" "RandomEventsLabel" {
+			SetPoint TOPLEFT,"PopupLabels",TOPLEFT, 0, -0.20,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Events:",
+		}
 	}
 
 	Frame "FRAME" "PopupMenuOptions" {
@@ -349,6 +369,17 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 
 		Frame "TEXT" "PromodeOption" {
 			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.16,
+			DecorateFileNames,
+			FrameFont "MasterFont", 0.012,"",
+			FontColor 1.0 0.8 0.0 1.0,
+			LayerStyle "IGNORETRACKEVENTS", 
+			FontJustificationH JUSTIFYLEFT,
+			FontJustificationV JUSTIFYMIDDLE,
+			Text "Off",
+		}
+
+		Frame "TEXT" "RandomEventsOption" {
+			SetPoint TOPLEFT,"PopupMenuOptions",TOPLEFT, 0, -0.20,
 			DecorateFileNames,
 			FrameFont "MasterFont", 0.012,"",
 			FontColor 1.0 0.8 0.0 1.0,

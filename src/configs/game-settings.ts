@@ -15,7 +15,7 @@ export const CHAOS_STARTING_INCOME: number = 25;
 export const STARTING_COUNTDOWN: number = 10;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
-export const TURN_DURATION_IN_SECONDS: number = 60;
+export const TURN_DURATION_IN_SECONDS: number = 10;
 
 //This is the duration of a tick in seconds. 1 second by default.
 export const TICK_DURATION_IN_SECONDS: number = 1;
@@ -58,6 +58,12 @@ export const W3C_DRAW_DURATION: number = 120;
 
 // Enable/disable emitting player statistics to W3MMD (MMD) during the match and on game end.
 export const MMD_ENABLED: boolean = true;
+
+//This is how often random events trigger (in turns). Every 5 turns by default.
+export const RANDOM_EVENT_INTERVAL: number = 5;
+
+//This is how many recent events to track for repeat prevention. 3 by default.
+export const RANDOM_EVENT_HISTORY_SIZE: number = 3;
 
 // Enable/disable shared slot allocation. Default is false.
 export const SHARED_SLOT_ALLOCATION_ENABLED = true;
@@ -145,6 +151,7 @@ export const DEBUG_PRINTS = {
 	minimap: false,
 	winTracker: false,
 	distribution: false,
+	randomEvents: false,
 };
 
 export type DebugCategory = keyof typeof DEBUG_PRINTS;

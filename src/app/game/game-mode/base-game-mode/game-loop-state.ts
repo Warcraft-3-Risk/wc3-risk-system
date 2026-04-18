@@ -24,6 +24,8 @@ import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { SharedSlotManager } from '../../services/shared-slot-manager';
 import { IncomeManager } from 'src/app/managers/income-manager';
+import { RandomEventManager } from 'src/app/events/random-event-manager';
+import { Quests } from 'src/app/quests/quests';
 import { RatingManager } from 'src/app/rating/rating-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { applyEliminatedBuff } from '../utillity/on-player-status';
@@ -191,6 +193,16 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		this.messageGameState();
 		ReplayManager.getInstance().onTurnStart();
+
+		if (SettingsContext.getInstance().isRandomEventsEnabled() && SettingsContext.getInstance().isFFA()) {
+			const eventManager = RandomEventManager.getInstance();
+			const logBefore = eventManager.getEventLog().length;
+			eventManager.onStartTurn(turn);
+
+			if (eventManager.getEventLog().length > logBefore) {
+				Quests.getInstance().updateEventsQuest(eventManager.getEventLog());
+			}
+		}
 	}
 
 	onEndTurn(turn: number): void {

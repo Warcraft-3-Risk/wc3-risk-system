@@ -12,6 +12,7 @@ import { W3C_MODE_ENABLED } from '../utils/map-info';
 import { LocalMessage } from '../utils/messages';
 import { RatingSyncManager } from 'src/app/rating/rating-sync-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
+import { registerAllEvents } from 'src/app/events/event-registry';
 
 export class ModeSelection {
 	private ui: SettingsView;
@@ -111,6 +112,7 @@ export class ModeSelection {
 		const settings: SettingsContext = SettingsContext.getInstance();
 
 		settings.initStrategies();
+		registerAllEvents();
 		settings.applyStrategy('GameType');
 		settings.applyStrategy('Overtime');
 

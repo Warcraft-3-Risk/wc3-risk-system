@@ -1,4 +1,5 @@
 import { Bonus } from './bonus';
+import { RandomEventManager } from '../../events/random-event-manager';
 
 export class Bounty implements Bonus {
 	public static readonly factor: number = 0.25;
@@ -19,7 +20,8 @@ export class Bounty implements Bonus {
 	public add(val: number): number {
 		let bonusAmount: number = 0;
 
-		this.delta += val * Bounty.factor;
+		const effectiveFactor = Bounty.factor * RandomEventManager.getInstance().bountyMultiplier;
+		this.delta += val * effectiveFactor;
 
 		if (this.delta >= Bounty.interval) {
 			bonusAmount = this.processBonus();

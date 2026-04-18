@@ -25,7 +25,8 @@ type QuestType =
 	| 'QUEST_CAMERA'
 	| 'QUEST_COMMANDS'
 	| 'QUEST_SETTINGS'
-	| 'QUEST_PLAYERS';
+	| 'QUEST_PLAYERS'
+	| 'QUEST_EVENTS';
 
 export class Quests {
 	private static instance: Quests = undefined;
@@ -233,6 +234,20 @@ export class Quests {
 		`;
 
 		this.BuildQuest('QUEST_SETTINGS', 'Settings', description, 'ReplaceableTextures\\CommandButtons\\BTNEngineeringUpgrade.blp', false);
+	}
+
+	public updateEventsQuest(eventLog: readonly { turn: number; name: string; description: string }[]): void {
+		if (eventLog.length === 0) return;
+
+		let description = `${HexColors.YELLOW}Random Event History|r\n`;
+
+		// Latest events first
+		for (let i = eventLog.length - 1; i >= 0; i--) {
+			const entry = eventLog[i];
+			description += `\n${HexColors.TANGERINE}Turn ${entry.turn}:|r ${entry.name}\n${entry.description}`;
+		}
+
+		this.BuildQuest('QUEST_EVENTS', 'Events', description, 'ReplaceableTextures\\CommandButtons\\BTNTomeOfRetraining.blp', false);
 	}
 
 	public addPlayersQuest(): void {

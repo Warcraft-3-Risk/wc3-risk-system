@@ -5,9 +5,10 @@ import { GameTypeStrategy } from './strategies/game-type-strategy';
 import { PromodeStrategy } from './strategies/promode-strategy';
 import { Settings } from './settings';
 import { OvertimeStrategy } from './strategies/overtime-strategy';
+import { RandomEventsStrategy } from './strategies/random-events-strategy';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 
-export type SettingsKey = 'GameType' | 'Diplomacy' | 'Fog' | 'Promode' | 'Overtime';
+export type SettingsKey = 'GameType' | 'Diplomacy' | 'Fog' | 'Promode' | 'Overtime' | 'RandomEvents';
 
 export class SettingsContext {
 	private static instance: SettingsContext;
@@ -32,6 +33,7 @@ export class SettingsContext {
 				Overtime: {
 					option: 0,
 				},
+				RandomEvents: 0,
 			});
 		}
 
@@ -51,6 +53,7 @@ export class SettingsContext {
 		this.strategies.set('Fog', new FogStrategy(this.settings.Fog));
 		this.strategies.set('Promode', new PromodeStrategy(this.settings.Promode));
 		this.strategies.set('Overtime', new OvertimeStrategy(this.settings.Overtime));
+		this.strategies.set('RandomEvents', new RandomEventsStrategy(this.settings.RandomEvents));
 	}
 
 	/**
@@ -166,6 +169,10 @@ export class SettingsContext {
 	 */
 	public isRandomTeams(): boolean {
 		return this.settings.Diplomacy.option === 3 || this.settings.Diplomacy.option === 4;
+	}
+
+	public isRandomEventsEnabled(): boolean {
+		return this.settings.RandomEvents === 1;
 	}
 
 	public isW3CMode(): boolean {
