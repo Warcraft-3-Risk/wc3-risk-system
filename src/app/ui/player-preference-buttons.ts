@@ -4,6 +4,8 @@ import { HexColors } from '../utils/hex-colors';
 import { CityToCountry } from '../country/country-map';
 import { Country } from '../country/country';
 import { File } from 'w3ts';
+import { RatingManager } from '../rating/rating-manager';
+import { NameManager } from '../managers/names/name-manager';
 
 export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
@@ -123,8 +125,6 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 
 	if (isRanked) {
 		// For ranked games, show icon based on player's preference
-		const { RatingManager } = require('src/app/rating/rating-manager');
-		const { NameManager } = require('src/app/managers/names/name-manager');
 		const ratingManager = RatingManager.getInstance();
 		const btag = NameManager.getInstance().getBtag(player.getPlayer());
 		const showRating = ratingManager.getShowRatingPreference(btag);
@@ -143,18 +143,10 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 		}
 	} else {
 		// For unranked games, always show disabled icon
-		BlzFrameSetTexture(
-			buttonBackdrop,
-			'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
-			0,
-			false
-		);
+		BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp', 0, false);
 
 		if (buttonTooltip) {
-			BlzFrameSetText(
-				buttonTooltip,
-				`Ranked Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`
-			);
+			BlzFrameSetText(buttonTooltip, `Ranked Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`);
 		}
 	}
 }
@@ -172,24 +164,17 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 		initialTooltipText: `Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
 		action: (context: number, textures: { primary: string; secondary: string }, button) => {
 			if (GetLocalPlayer() === player.getPlayer()) {
-				// Import RatingManager at runtime to check ranked status
-				const { RatingManager } = require('src/app/rating/rating-manager');
 				const ratingManager = RatingManager.getInstance();
 
 				// Check if this is a ranked game - if not, show message and do nothing
 				if (!ratingManager.isRankedGame()) {
-					DisplayTimedTextToPlayer(
-						player.getPlayer(),
-						0,
-						0,
-						3,
-						`${HexColors.TANGERINE}Ranked stats are unavailable in unranked games.|r`
-					);
+					DisplayTimedTextToPlayer(player.getPlayer(), 0, 0, 3, `${HexColors.TANGERINE}Ranked stats are unavailable in unranked games.|r`);
 					return;
 				}
 
-				// Import RatingSyncManager at runtime to check sync status
-				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager');
+				// Runtime require to avoid circular dependency:
+				// player-preference-buttons -> RatingSyncManager -> PlayerManager -> player-preference-buttons
+				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager') as typeof import('../rating/rating-sync-manager');
 
 				// Check if sync is complete before allowing UI access
 				if (!RatingSyncManager.getInstance().isSyncComplete()) {
