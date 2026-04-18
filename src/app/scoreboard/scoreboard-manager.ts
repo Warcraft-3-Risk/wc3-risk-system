@@ -12,6 +12,7 @@ import { PlayerRenderer } from './player-renderer';
 import { TeamRenderer } from './team-renderer';
 import { ObserverRenderer } from './observer-renderer';
 import { SessionRenderer } from './session-renderer';
+import { FrameScoreboard } from './frame-scoreboard';
 
 export type ScoreboardViewType = 'standard' | 'obs';
 
@@ -23,6 +24,7 @@ export class ScoreboardManager {
 	private activePlayers: ActivePlayer[] = [];
 	private observers: player[] = [];
 	private lastObservedPlayer: player | undefined = undefined;
+	private frameScoreboard: FrameScoreboard | undefined = undefined;
 
 	private constructor() {
 		this.dataModel = new ScoreboardDataModel();
@@ -50,6 +52,8 @@ export class ScoreboardManager {
 		const renderer = new PlayerRenderer(players.length);
 		renderer.renderFull(this.dataModel);
 		this.renderers.standard = renderer;
+
+		this.initFrameScoreboard(players);
 	}
 
 	public teamSetup(players: ActivePlayer[]) {
@@ -59,6 +63,8 @@ export class ScoreboardManager {
 		const renderer = new TeamRenderer(this.dataModel.teams);
 		renderer.renderFull(this.dataModel);
 		this.renderers.standard = renderer;
+
+		this.initFrameScoreboard(players);
 	}
 
 	public obsSetup(players: ActivePlayer[], observers: player[]) {
@@ -82,11 +88,20 @@ export class ScoreboardManager {
 				}
 			});
 		}
+
+		// Frame scoreboard overrides all multiboard visibility (testing)
+		if (this.frameScoreboard) {
+			this.iterateRenderers((r) => r.setVisibility(false));
+			this.frameScoreboard.setVisibility(true);
+		}
 	}
 
 	public toggleVisibility(bool: boolean) {
 		if (!bool) {
 			this.iterateRenderers((r) => r.setVisibility(false));
+			if (this.frameScoreboard) {
+				this.frameScoreboard.setVisibility(false);
+			}
 			return;
 		}
 
@@ -103,18 +118,30 @@ export class ScoreboardManager {
 		} else {
 			this.iterateRenderers((r) => r.setVisibility(true));
 		}
+
+		// Frame scoreboard shown for all (testing) — hide multiboard, show frame version
+		if (this.frameScoreboard) {
+			this.iterateRenderers((r) => r.setVisibility(false));
+			this.frameScoreboard.setVisibility(true);
+		}
 	}
 
 	public updateFull() {
 		this.checkReplayPovBoardSwap();
 		this.dataModel.refresh(this.activePlayers, this.isFFA());
 		this.iterateRenderers((r) => r.renderFull(this.dataModel));
+		if (this.frameScoreboard) {
+			this.frameScoreboard.renderFull(this.dataModel);
+		}
 	}
 
 	public updatePartial() {
 		this.checkReplayPovBoardSwap();
 		this.dataModel.refreshValues(this.activePlayers, this.isFFA());
 		this.iterateRenderers((r) => r.renderPartial(this.dataModel));
+		if (this.frameScoreboard) {
+			this.frameScoreboard.renderPartial(this.dataModel);
+		}
 	}
 
 	/**
@@ -127,10 +154,16 @@ export class ScoreboardManager {
 
 	public setTitle(str: string) {
 		this.iterateRenderers((r) => r.setTitle(str));
+		if (this.frameScoreboard) {
+			this.frameScoreboard.setTitle(str);
+		}
 	}
 
 	public setAlert(player: player, alert: string) {
 		this.iterateRenderers((r) => r.renderAlert(player, alert));
+		if (this.frameScoreboard) {
+			this.frameScoreboard.renderAlert(player, alert);
+		}
 	}
 
 	public destroyBoards() {
@@ -139,6 +172,10 @@ export class ScoreboardManager {
 			r.destroy();
 		});
 		this.renderers = { standard: undefined, obs: undefined };
+		if (this.frameScoreboard) {
+			this.frameScoreboard.destroy();
+			this.frameScoreboard = undefined;
+		}
 	}
 
 	public sessionSetup(players: ActivePlayer[]): void {
@@ -173,6 +210,19 @@ export class ScoreboardManager {
 
 	private isFFA(): boolean {
 		return SettingsContext.getInstance().isFFA() || this.activePlayers.length <= 2;
+	}
+
+	/**
+	 * Creates the custom frame-based scoreboard and hides the native multiboard.
+	 * For testing: shown to all players. Eventually: observer-only.
+	 */
+	private initFrameScoreboard(players: ActivePlayer[]): void {
+		this.frameScoreboard = new FrameScoreboard(players.length);
+		this.frameScoreboard.renderFull(this.dataModel);
+
+		// For testing: hide multiboard and show frame scoreboard for everyone
+		this.iterateRenderers((r) => r.setVisibility(false));
+		this.frameScoreboard.setVisibility(true);
 	}
 
 	private checkReplayPovBoardSwap(): void {

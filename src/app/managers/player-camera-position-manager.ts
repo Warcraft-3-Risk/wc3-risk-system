@@ -260,4 +260,8 @@ export default class PlayerCameraPositionManager {
 		this.camPositionData.delete(p);
 		this.displayPositionData.delete(p);
 	}
+
+	public getCameraPosition(p: player): CamPositionData | undefined {
+		return this.camPositionData.get(p);
+	}
 }
