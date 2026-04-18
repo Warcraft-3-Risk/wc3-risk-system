@@ -1,6 +1,6 @@
 import { StringToCountry } from 'src/app/country/country-map';
 import { VictoryManager, VictoryProgressState } from 'src/app/managers/victory-manager';
-import { CITIES_TO_WIN_WARNING_RATIO, TICK_DURATION_IN_SECONDS, TURN_DURATION_IN_SECONDS } from 'src/configs/game-settings';
+import { CITIES_TO_WIN_WARNING_RATIO, ENABLE_UNIT_SNAPSHOTS, TICK_DURATION_IN_SECONDS, TURN_DURATION_IN_SECONDS } from 'src/configs/game-settings';
 import { File } from 'w3ts';
 import { GlobalGameData } from '../../state/global-game-state';
 import { updateTickUI } from '../utillity/update-ui';
@@ -27,6 +27,7 @@ import { IncomeManager } from 'src/app/managers/income-manager';
 import { RatingManager } from 'src/app/rating/rating-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { applyEliminatedBuff } from '../utillity/on-player-status';
+import { UnitSnapshotService } from '../../services/unit-snapshot-service';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -199,6 +200,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		}
 
 		ScoreboardManager.getInstance().updateFull();
+
+		if (ENABLE_UNIT_SNAPSHOTS) {
+			print(`[UnitSnapshot] onEndTurn hook firing for turn ${turn}`);
+			UnitSnapshotService.getInstance().capture(turn);
+		}
 
 		// Save preliminary ratings for crash recovery (only for ranked games)
 		const ratingManager = RatingManager.getInstance();

@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Unit Snapshot Replay</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #1a1a2e; color: #e0e0e0; font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+  h1 { margin: 12px 0 4px; font-size: 1.3rem; color: #c0c0ff; }
+  #controls { display: flex; gap: 10px; align-items: center; margin: 8px 0; flex-wrap: wrap; justify-content: center; }
+  #controls button { background: #2a2a4e; color: #e0e0e0; border: 1px solid #555; padding: 6px 14px; border-radius: 4px; cursor: pointer; font-size: 0.9rem; }
+  #controls button:hover { background: #3a3a6e; }
+  #controls button.active { background: #4a4a8e; border-color: #88f; }
+  #controls label { font-size: 0.85rem; }
+  #controls input[type=range] { width: 120px; }
+  #turn-display { font-size: 0.95rem; min-width: 80px; text-align: center; color: #ffd700; }
+  #canvas-wrap { position: relative; margin: 8px; border: 1px solid #333; }
+  canvas { display: block; background: #0d1117; }
+  #drop-zone { border: 2px dashed #555; border-radius: 8px; padding: 40px; text-align: center; margin: 20px; cursor: pointer; transition: border-color .2s; }
+  #drop-zone:hover, #drop-zone.drag-over { border-color: #88f; }
+  #drop-zone p { font-size: 1rem; color: #aaa; }
+  #info { font-size: 0.8rem; color: #888; margin: 4px 0 12px; }
+  .color-swatch { width: 12px; height: 12px; display: inline-block; border-radius: 2px; margin-right: 4px; vertical-align: middle; }
+  #legend { display: flex; gap: 12px; flex-wrap: wrap; margin: 4px 0; font-size: 0.8rem; }
+</style>
+</head>
+<body>
+
+<h1>Unit Snapshot Replay</h1>
+
+<div id="drop-zone">
+  <p>Drop a <code>unit_snapshots.txt</code> file here, or click to browse</p>
+  <input type="file" id="file-input" accept=".txt" style="display:none" />
+</div>
+
+<div id="controls" style="display:none">
+  <button id="btn-prev">&#9664; Prev</button>
+  <button id="btn-play" class="active">&#9654; Play</button>
+  <button id="btn-next">Next &#9654;</button>
+  <span id="turn-display">Turn 0</span>
+  <label>Speed <input type="range" id="speed-slider" min="0.1" max="5" step="0.1" value="1" /></label>
+  <span id="speed-label">1.0x</span>
+  <label>Size <input type="range" id="size-slider" min="4" max="20" step="1" value="10" /></label>
+</div>
+
+<div id="legend" style="display:none"></div>
+<div id="canvas-wrap" style="display:none"><canvas id="canvas"></canvas></div>
+<div id="info"></div>
+
+<script>
+// -----------------------------------------------------------------------
+// WC3 Player colors (indices 0-23)
+// -----------------------------------------------------------------------
+const PLAYER_COLORS = [
+  '#ff0303', '#0042ff', '#1ce6b9', '#540081',
+  '#fffc01', '#fe8a0e', '#20c000', '#e55bb0',
+  '#959697', '#7ebff1', '#106246', '#4e2a04',
+  '#9b0000', '#0000c3', '#00eaff', '#be00fe',
+  '#ebcd87', '#f8a48b', '#bfff80', '#dcb9eb',
+  '#282828', '#ebf0ff', '#00781e', '#a46f33',
+];
+
+// -----------------------------------------------------------------------
+// FourCC → icon mapping
+// -----------------------------------------------------------------------
+const FOURCC_ICON = {
+  'u000': 'rifleman-unit.webp',
+  'u001': 'Medic-unit.webp',
+  'u002': 'Mortar-unit.webp',
+  'u003': 'Roarer-unit.webp',
+  'u004': 'Knight-unit.webp',
+  'u005': 'General-unit.webp',
+  'u006': 'Artillery-unit.webp',
+  'u007': 'Tank-unit.webp',
+  'u008': 'marine-unit.webp',
+  'u009': 'major-unit.webp',
+  'u010': 'admiral-unit.webp',
+  's000': 'transport-ship-unit.webp',
+  's001': 'armored-transport-unit.webp',
+};
+
+const iconCache = {};
+function getIcon(fourcc) {
+  if (iconCache[fourcc]) return iconCache[fourcc];
+  const file = FOURCC_ICON[fourcc];
+  if (!file) return null;
+  const img = new Image();
+  img.src = `../assets/icons/characters/${file}`;
+  iconCache[fourcc] = img;
+  return img;
+}
+
+// -----------------------------------------------------------------------
+// Parse the WC3 Preload file format
+// -----------------------------------------------------------------------
+function parsePreloadFile(text) {
+  // Extract all Preload("...") string contents and concatenate
+  // Use [\s\S]*? to match across newlines within a Preload string
+  const preloadRegex = /call Preload\(\s*"([\s\S]*?)"\s*\)/g;
+  let raw = '';
+  let m;
+  while ((m = preloadRegex.exec(text)) !== null) {
+    raw += m[1];
+  }
+
+  // The raw string contains snapshot lines separated by newlines
+  const lines = raw.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+  const snapshots = [];
+  for (const line of lines) {
+    const parts = line.split(';');
+    const turn = parseInt(parts[0], 10);
+    if (isNaN(turn)) continue;
+
+    const units = [];
+    for (let i = 1; i < parts.length; i++) {
+      const f = parts[i].split('|');
+      if (f.length < 5) continue;
+      units.push({
+        id: parseInt(f[0], 10),
+        type: f[1],
+        owner: parseInt(f[2], 10),
+        x: parseInt(f[3], 10),
+        y: parseInt(f[4], 10),
+      });
+    }
+    snapshots.push({ turn, units });
+  }
+  return snapshots;
+}
+
+// Also support raw format (no Preload wrapper)
+function parseRawFormat(text) {
+  const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  const snapshots = [];
+  for (const line of lines) {
+    const parts = line.split(';');
+    const turn = parseInt(parts[0], 10);
+    if (isNaN(turn)) continue;
+    const units = [];
+    for (let i = 1; i < parts.length; i++) {
+      const f = parts[i].split('|');
+      if (f.length < 5) continue;
+      units.push({
+        id: parseInt(f[0], 10),
+        type: f[1],
+        owner: parseInt(f[2], 10),
+        x: parseInt(f[3], 10),
+        y: parseInt(f[4], 10),
+      });
+    }
+    snapshots.push({ turn, units });
+  }
+  return snapshots;
+}
+
+function parseFile(text) {
+  if (text.includes('call Preload')) return parsePreloadFile(text);
+  return parseRawFormat(text);
+}
+
+// -----------------------------------------------------------------------
+// Compute world bounds from all snapshots
+// -----------------------------------------------------------------------
+function computeBounds(snapshots) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const snap of snapshots) {
+    for (const u of snap.units) {
+      if (u.x < minX) minX = u.x;
+      if (u.x > maxX) maxX = u.x;
+      if (u.y < minY) minY = u.y;
+      if (u.y > maxY) maxY = u.y;
+    }
+  }
+  const pad = 500;
+  return { minX: minX - pad, maxX: maxX + pad, minY: minY - pad, maxY: maxY + pad };
+}
+
+// -----------------------------------------------------------------------
+// Main app
+// -----------------------------------------------------------------------
+let snapshots = [];
+let bounds = {};
+let playing = false;
+let currentTurn = 0;  // float for lerp (0.0, 0.5, 1.0, 1.5, ...)
+let speed = 1.0;
+let unitSize = 10;
+let animFrameId = null;
+let lastTime = 0;
+
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+function worldToCanvas(wx, wy) {
+  const cx = ((wx - bounds.minX) / (bounds.maxX - bounds.minX)) * canvas.width;
+  // WC3 Y is inverted relative to screen Y
+  const cy = (1 - (wy - bounds.minY) / (bounds.maxY - bounds.minY)) * canvas.height;
+  return [cx, cy];
+}
+
+function lerp(a, b, t) {
+  return a + (b - a) * t;
+}
+
+function getInterpolatedUnits(t) {
+  const idx = Math.floor(t);
+  const frac = t - idx;
+
+  if (idx < 0) return snapshots[0]?.units || [];
+  if (idx >= snapshots.length - 1) return snapshots[snapshots.length - 1]?.units || [];
+
+  const curr = snapshots[idx];
+  const next = snapshots[idx + 1];
+
+  // Build lookup of next positions by unit id
+  const nextMap = new Map();
+  for (const u of next.units) nextMap.set(u.id, u);
+
+  const result = [];
+
+  // Lerp units that exist in current frame
+  for (const u of curr.units) {
+    const n = nextMap.get(u.id);
+    if (n) {
+      result.push({
+        id: u.id,
+        type: u.type,
+        owner: u.owner,
+        x: lerp(u.x, n.x, frac),
+        y: lerp(u.y, n.y, frac),
+      });
+      nextMap.delete(u.id);
+    } else {
+      // Unit dies next turn — fade: still show at current pos
+      result.push({ ...u, alpha: 1 - frac });
+    }
+  }
+
+  // Units that appear next turn — fade in
+  for (const [, u] of nextMap) {
+    result.push({ ...u, alpha: frac });
+  }
+
+  return result;
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Grid
+  ctx.strokeStyle = '#1a2030';
+  ctx.lineWidth = 1;
+  const gridStep = canvas.width / 20;
+  for (let i = 0; i <= 20; i++) {
+    const x = i * gridStep;
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+    const y = i * gridStep;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+  }
+
+  const units = getInterpolatedUnits(currentTurn);
+  const half = unitSize / 2;
+
+  for (const u of units) {
+    const [cx, cy] = worldToCanvas(u.x, u.y);
+    const alpha = u.alpha !== undefined ? u.alpha : 1;
+
+    ctx.globalAlpha = alpha;
+
+    const icon = getIcon(u.type);
+    if (icon && icon.complete && icon.naturalWidth > 0) {
+      ctx.drawImage(icon, cx - half, cy - half, unitSize, unitSize);
+      // Tint with player color via overlay
+      ctx.fillStyle = PLAYER_COLORS[u.owner] || '#fff';
+      ctx.globalAlpha = alpha * 0.35;
+      ctx.fillRect(cx - half, cy - half, unitSize, unitSize);
+      ctx.globalAlpha = alpha;
+    } else {
+      // Fallback: colored circle
+      ctx.fillStyle = PLAYER_COLORS[u.owner] || '#fff';
+      ctx.beginPath();
+      ctx.arc(cx, cy, half, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
+  // HUD
+  const turnIdx = Math.floor(currentTurn);
+  const displayTurn = turnIdx < snapshots.length ? snapshots[turnIdx].turn : snapshots[snapshots.length - 1].turn;
+  document.getElementById('turn-display').textContent = `Turn ${displayTurn}`;
+}
+
+function animate(timestamp) {
+  if (!lastTime) lastTime = timestamp;
+  const dt = (timestamp - lastTime) / 1000; // seconds
+  lastTime = timestamp;
+
+  if (playing) {
+    currentTurn += dt * speed;
+    if (currentTurn >= snapshots.length - 1) {
+      currentTurn = snapshots.length - 1;
+      playing = false;
+      document.getElementById('btn-play').textContent = '\u25B6 Play';
+      document.getElementById('btn-play').classList.remove('active');
+    }
+  }
+
+  draw();
+  animFrameId = requestAnimationFrame(animate);
+}
+
+function startApp(data) {
+  snapshots = parseFile(data);
+  if (snapshots.length === 0) { alert('No snapshot data found in file.'); return; }
+
+  bounds = computeBounds(snapshots);
+
+  // Size canvas to maintain aspect ratio
+  const aspect = (bounds.maxX - bounds.minX) / (bounds.maxY - bounds.minY);
+  const maxW = Math.min(window.innerWidth - 40, 1200);
+  const maxH = Math.min(window.innerHeight - 200, 800);
+  if (aspect > maxW / maxH) {
+    canvas.width = maxW;
+    canvas.height = Math.round(maxW / aspect);
+  } else {
+    canvas.height = maxH;
+    canvas.width = Math.round(maxH * aspect);
+  }
+
+  // Show controls
+  document.getElementById('drop-zone').style.display = 'none';
+  document.getElementById('controls').style.display = 'flex';
+  document.getElementById('canvas-wrap').style.display = 'block';
+  document.getElementById('legend').style.display = 'flex';
+
+  // Build legend from players present
+  const owners = new Set();
+  for (const s of snapshots) for (const u of s.units) owners.add(u.owner);
+  const legend = document.getElementById('legend');
+  legend.innerHTML = '';
+  for (const o of [...owners].sort((a, b) => a - b)) {
+    legend.innerHTML += `<span><span class="color-swatch" style="background:${PLAYER_COLORS[o]}"></span>Player ${o}</span>`;
+  }
+
+  // Info
+  const totalUnique = new Set();
+  for (const s of snapshots) for (const u of s.units) totalUnique.add(u.id);
+  document.getElementById('info').textContent =
+    `${snapshots.length} turns, ${totalUnique.size} unique units, bounds: [${bounds.minX}, ${bounds.minY}] → [${bounds.maxX}, ${bounds.maxY}]`;
+
+  // Preload all icons
+  const types = new Set();
+  for (const s of snapshots) for (const u of s.units) types.add(u.type);
+  for (const t of types) getIcon(t);
+
+  currentTurn = 0;
+  playing = true;
+  lastTime = 0;
+  document.getElementById('btn-play').textContent = '\u23F8 Pause';
+  document.getElementById('btn-play').classList.add('active');
+  if (animFrameId) cancelAnimationFrame(animFrameId);
+  animFrameId = requestAnimationFrame(animate);
+}
+
+// -----------------------------------------------------------------------
+// UI wiring
+// -----------------------------------------------------------------------
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('file-input');
+
+dropZone.addEventListener('click', () => fileInput.click());
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) file.text().then(startApp);
+});
+fileInput.addEventListener('change', () => {
+  const file = fileInput.files[0];
+  if (file) file.text().then(startApp);
+});
+
+document.getElementById('btn-play').addEventListener('click', () => {
+  if (currentTurn >= snapshots.length - 1) currentTurn = 0; // restart if at end
+  playing = !playing;
+  const btn = document.getElementById('btn-play');
+  btn.textContent = playing ? '\u23F8 Pause' : '\u25B6 Play';
+  btn.classList.toggle('active', playing);
+  lastTime = 0;
+});
+
+document.getElementById('btn-prev').addEventListener('click', () => {
+  currentTurn = Math.max(0, Math.floor(currentTurn) - 1);
+  playing = false;
+  document.getElementById('btn-play').textContent = '\u25B6 Play';
+  document.getElementById('btn-play').classList.remove('active');
+  draw();
+});
+
+document.getElementById('btn-next').addEventListener('click', () => {
+  currentTurn = Math.min(snapshots.length - 1, Math.floor(currentTurn) + 1);
+  playing = false;
+  document.getElementById('btn-play').textContent = '\u25B6 Play';
+  document.getElementById('btn-play').classList.remove('active');
+  draw();
+});
+
+document.getElementById('speed-slider').addEventListener('input', (e) => {
+  speed = parseFloat(e.target.value);
+  document.getElementById('speed-label').textContent = speed.toFixed(1) + 'x';
+});
+
+document.getElementById('size-slider').addEventListener('input', (e) => {
+  unitSize = parseInt(e.target.value, 10);
+});
+</script>
+</body>
+</html>

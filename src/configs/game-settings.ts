@@ -15,7 +15,7 @@ export const CHAOS_STARTING_INCOME: number = 25;
 export const STARTING_COUNTDOWN: number = 10;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
-export const TURN_DURATION_IN_SECONDS: number = 60;
+export const TURN_DURATION_IN_SECONDS: number = 10;
 
 //This is the duration of a tick in seconds. 1 second by default.
 export const TICK_DURATION_IN_SECONDS: number = 1;
@@ -46,6 +46,9 @@ export const ENABLE_EXPORT_GAME_SETTINGS: boolean = false;
 
 //This represents whether end game score should be exported
 export const ENABLE_EXPORT_END_GAME_SCORE: boolean = false;
+
+// Enable per-turn unit position snapshots written to CustomMapData.
+export const ENABLE_UNIT_SNAPSHOTS: boolean = true;
 
 //This represents how long the capitals selection phase should last in seconds. Default is 30 seconds.
 export const CAPITALS_SELECTION_PHASE: number = 30;
