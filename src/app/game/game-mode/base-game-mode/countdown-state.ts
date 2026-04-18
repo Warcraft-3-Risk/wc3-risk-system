@@ -147,6 +147,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 	}
 
 	countdownDisplay(duration: number): void {
-		CountdownMessage(`The Game will start in\n${duration}`);
+		const durationText = duration <= 3 ? `${HexColors.TANGERINE}${duration}|r` : `${duration}`;
+		CountdownMessage(`The Game will start in\n${durationText}`);
 	}
 }
