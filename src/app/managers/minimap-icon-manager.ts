@@ -355,6 +355,14 @@ export class MinimapIconManager {
 	}
 
 	/**
+	 * Clears the last seen owners cache.
+	 * Should be called right after initial fog application to reset the system.
+	 */
+	public clearSeenCache(): void {
+		this.lastSeenOwners.clear();
+	}
+
+	/**
 	 * Starts the periodic update timer.
 	 */
 	private startUpdateTimer(): void {
@@ -431,6 +439,11 @@ export class MinimapIconManager {
 		let owner: player;
 
 		if (isVisible) {
+			if (GetLocalPlayer() === localPlayer) {
+				SetUnitVertexColor(city.barrack.unit, 255, 255, 255, 255);
+				SetUnitVertexColor(city.cop, 255, 255, 255, 255);
+			}
+
 			// City is visible - update and remember the owner
 			owner = city.getOwner();
 			this.lastSeenOwners.set(city, owner);
@@ -440,6 +453,10 @@ export class MinimapIconManager {
 			if (!lastSeenOwner) {
 				// Never seen this city - show as neutral gray
 				this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[90], this.cityLastTexture);
+				if (GetLocalPlayer() === localPlayer) {
+					SetUnitVertexColor(city.barrack.unit, 0, 0, 0, 255);
+					SetUnitVertexColor(city.cop, 0, 0, 0, 255);
+				}
 				return;
 			}
 			// Use the last seen owner

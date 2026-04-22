@@ -47,6 +47,16 @@ export abstract class City implements Resetable, Ownable {
 		UnitToCity.set(this.guard.unit, this);
 	}
 
+	public HideMinimap() {
+		BlzSetUnitBooleanField(this._barrack.unit, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, false);
+		BlzSetUnitBooleanField(this._cop, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, false);
+		this.changeOwner(NEUTRAL_HOSTILE);
+		SetUnitVertexColor(this._barrack.unit, 0, 0, 0, 255);
+		SetUnitVertexColor(this._cop, 0, 0, 0, 255);
+		BlzSetUnitBooleanField(this._barrack.unit, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, true);
+		BlzSetUnitBooleanField(this._cop, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, true);
+	}
+
 	/**
 	 * @param player The player to set as the city's owner
 	 */

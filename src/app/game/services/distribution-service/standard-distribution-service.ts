@@ -148,7 +148,8 @@ export class StandardDistributionService {
 	protected changeCityOwner(city: City, player: ActivePlayer) {
 		city.setOwner(player.getPlayer());
 		SetUnitOwner(city.guard.unit, player.getPlayer(), true);
-		if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`, DC.sharedSlots);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`[SharedSlots] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`, DC.sharedSlots);
 		SharedSlotManager.getInstance().incrementUnitCount(player.getPlayer());
 	}
 

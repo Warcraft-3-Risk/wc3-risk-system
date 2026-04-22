@@ -33,7 +33,6 @@ import { CitySelectedEvent } from './app/triggers/city-selected-event';
 import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
 import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST, EDITOR_DEVELOPER_MODE } from './configs/game-settings';
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
-import { FogManager } from './app/managers/fog-manager';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
 import { SharedSlotManager } from './app/game/services/shared-slot-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
@@ -42,6 +41,7 @@ import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCrea
 import { TooltipManager } from './app/managers/tooltip-manager';
 import { ChatUIManager } from './app/managers/chat-ui-manager';
 import { detectGameStatus } from './app/utils/game-status';
+import { CityToCountry } from './app/country/country-map';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -136,8 +136,18 @@ function tsMain() {
 			clearTickUI();
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
+
+			// Start with Fog enabled so that the initial HideMinimap toggle respects the engine's fog state
+			FogEnable(true);
+			FogMaskEnable(true);
+
+			CityToCountry.forEach((country, city) => {
+				city.HideMinimap();
+			});
+
 			FogEnable(false);
 			FogMaskEnable(false);
+
 			SetConsoleUI();
 			// UnitKillDisplay.getInstance(); // Removed - using button tooltip instead
 			PlayerCameraPositionManager.getInstance();
@@ -151,7 +161,7 @@ function tsMain() {
 
 			EnableSelect(false, false);
 			EnableDragSelect(false, false);
-			FogManager.getInstance().turnFogOff();
+			// FogManager.getInstance().turnFogOff();
 
 			EventEmitter.getInstance();
 			EventCoordinator.getInstance();
