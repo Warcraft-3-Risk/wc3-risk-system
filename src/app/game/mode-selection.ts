@@ -49,13 +49,16 @@ export class ModeSelection {
 		}
 
 		// Consuming pauses to maintain continous gameplay
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			const player = Player(i);
+		if (PlayerManager.getInstance().players.size >= 16) {
+			// Consuming pauses to maintain continous gameplay
+			for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+				const player = Player(i);
 
-			if (player === GetLocalPlayer()) {
-				for (let index = 0; index < 3; index++) {
-					PauseGame(true);
-					PauseGame(false);
+				if (player === GetLocalPlayer()) {
+					for (let index = 0; index < 3; index++) {
+						PauseGame(true);
+						PauseGame(false);
+					}
 				}
 			}
 		}
