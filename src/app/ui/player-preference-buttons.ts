@@ -104,6 +104,57 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 		},
 	});
 }
+
+export function buildColorblindModeButton(player: ActivePlayer): framehandle {
+	// Initialize from saved preference for local player
+	if (player.getPlayer() === GetLocalPlayer()) {
+		const savedPreference = File.read('risk/colorblind.pld');
+		if (savedPreference === 'true') {
+			player.options.colorblind = true;
+		}
+	}
+
+	const button = createGuardButton({
+		player: player,
+		createContext: GetPlayerId(player.getPlayer()) + 400,
+		key: OSKEY_F5,
+		textures: {
+			primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNSentryWard.blp',
+			secondary: 'ReplaceableTextures\\CommandButtons\\BTNSentryWard.blp',
+		},
+		xOffset: 0.092,
+		initialTooltipText: `Colorblind Mode ${HexColors.TANGERINE}(F5)|r\nToggles ally minimap color between Teal and Yellow in Color Mode 1.\nCurrent preference: ${player.options.colorblind ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`,
+		action: (context: number, textures: { primary: string; secondary: string }) => {
+			player.options.colorblind = !player.options.colorblind;
+
+			if (player.getPlayer() === GetLocalPlayer()) {
+				File.write('risk/colorblind.pld', `${player.options.colorblind}`);
+
+				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+				const texture = player.options.colorblind ? textures.secondary : textures.primary;
+
+				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+				BlzFrameSetText(
+					buttonTooltip,
+					`Colorblind Mode ${HexColors.TANGERINE}(F5)|r\nToggles ally minimap color between Teal and Yellow in Color Mode 1.\nCurrent preference: ` +
+						`${player.options.colorblind ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`
+				);
+			}
+		},
+	});
+
+	// Set initial texture state for the button since createGuardButton defaults to primary
+	if (player.getPlayer() === GetLocalPlayer() && player.options.colorblind) {
+		const context = GetPlayerId(player.getPlayer()) + 400;
+		const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+		BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNSentryWard.blp', 0, false);
+	}
+
+	return button;
+}
+
 /**
  * Update the F4 rating stats button appearance based on ranked game status
  * Should be called after ranked status is determined in countdown phase

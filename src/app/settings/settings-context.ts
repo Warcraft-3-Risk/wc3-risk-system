@@ -6,6 +6,8 @@ import { PromodeStrategy } from './strategies/promode-strategy';
 import { Settings } from './settings';
 import { OvertimeStrategy } from './strategies/overtime-strategy';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
+import { MatchFormat } from '../game/match-format-enum';
+import { GlobalGameData } from '../game/state/global-game-state';
 
 export type SettingsKey = 'GameType' | 'Diplomacy' | 'Fog' | 'Promode' | 'Overtime';
 
@@ -143,6 +145,26 @@ export class SettingsContext {
 	 */
 	public isLobbyTeams(): boolean {
 		return this.settings.Diplomacy.option === 1 || this.settings.Diplomacy.option === 2;
+	}
+
+	/**
+	 * Determines the current match format based on game settings and player count
+	 * @returns The match format (FFA, 1v1, or Teams)
+	 */
+	public getMatchFormat(): MatchFormat {
+		if (this.isFFA()) {
+			return MatchFormat.FFA;
+		}
+
+		if (GlobalGameData.matchPlayers.length <= 2) {
+			return MatchFormat.VERSUS_1V1;
+		}
+
+		return MatchFormat.TEAMS;
+	}
+
+	public isTeamMatch(): boolean {
+		return this.getMatchFormat() === MatchFormat.TEAMS;
 	}
 
 	/**

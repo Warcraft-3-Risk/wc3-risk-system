@@ -4,11 +4,11 @@ import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { SHARED_SLOT_ALLOCATION_ENABLED, DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { GlobalGameData } from '../state/global-game-state';
 import { PLAYER_COLORS } from '../../utils/player-colors';
 import { NameManager } from '../../managers/names/name-manager';
+import { MatchFormat } from '../match-format-enum';
 
 interface SharedSlot extends player {}
 
@@ -123,6 +123,14 @@ export class SharedSlotManager implements Resetable {
 			return false;
 		}
 
+		// Due to issues with alliances and shared slots in team-based game modes, we are disabling shared slot allocation for lobby teams modes for now.
+		// Ally/enemy mode 2 colors shared slots as allies regardless of team, which can lead to confusion and issues with the redistribution algorithm.
+		// This is something we may revisit in the future if we can find a reliable solution.
+		if (SettingsContext.getInstance().isTeamMatch()) {
+			if (DEBUG_PRINTS.master) debugPrint('[Redistribute] Shared slots are disabled for Lobby Teams', DC.redistribute);
+			return false;
+		}
+
 		if (DEBUG_PRINTS.master) debugPrint('[Redistribute] === Running evaluateAndRedistribute() ===', DC.redistribute);
 
 		// 1. COLLECT: Build the current picture
@@ -186,9 +194,9 @@ export class SharedSlotManager implements Resetable {
 				}
 			}
 
-			// Only reclaim if they have no units AND no cities, otherwise we could end up in a situation 
-			// where a player is eliminated but still has a city on the map and we accidentally free their slot 
-			// to someone else, causing ownership issues with that city. 
+			// Only reclaim if they have no units AND no cities, otherwise we could end up in a situation
+			// where a player is eliminated but still has a city on the map and we accidentally free their slot
+			// to someone else, causing ownership issues with that city.
 			const activePlayerData = PlayerManager.getInstance().players.get(elimPlayer);
 			const hasCities = activePlayerData && activePlayerData.trackedData.cities.cities.length > 0;
 

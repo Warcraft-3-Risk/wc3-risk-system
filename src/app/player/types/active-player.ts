@@ -8,7 +8,6 @@ import { PLAYER_STATUS } from '../status/status-enum';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
 import { RatingStatsUI } from 'src/app/ui/rating-stats-ui';
 
-
 //Use lowercase for simplicity here
 const adminList: string[] = [];
 
@@ -31,6 +30,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 			labels: true,
+			colorblind: false,
 		};
 		this._killedBy = undefined;
 		this._admin = false;
@@ -62,6 +62,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 			labels: true,
+			colorblind: false,
 		};
 	}
 

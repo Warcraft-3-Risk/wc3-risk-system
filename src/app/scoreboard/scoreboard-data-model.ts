@@ -32,6 +32,7 @@ export interface PlayerRow {
 	acctName: string;
 	btag: string;
 	originalColorCode: string;
+	displayColorCode: string;
 	cityCountHighlighted: boolean;
 }
 
@@ -202,6 +203,7 @@ export class ScoreboardDataModel {
 			acctName: nameManager.getAcct(handle),
 			btag: nameManager.getBtag(handle),
 			originalColorCode: nameManager.getOriginalColorCode(handle),
+			displayColorCode: nameManager.getDisplayColorCode(handle),
 			cityCountHighlighted: cities >= requiredCities,
 		};
 	}

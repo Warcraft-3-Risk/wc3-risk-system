@@ -58,7 +58,9 @@ export class NameManager {
 	 */
 	private findPlayersByName(search: string, filter?: (p: player) => boolean): player[] {
 		// Lazy import to avoid circular dependency (SharedSlotManager imports NameManager)
-		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as { SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager };
+		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as {
+			SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager;
+		};
 
 		const resolved = this.resolveColorAlias(search);
 		const resolvedLower = resolved.toLowerCase().trim();
@@ -113,7 +115,9 @@ export class NameManager {
 	 */
 	public getPlayerFromBtag(string: string): player | undefined {
 		// Lazy import to avoid circular dependency (SharedSlotManager imports NameManager)
-		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as { SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager };
+		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as {
+			SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager;
+		};
 
 		let result: player = undefined;
 
@@ -151,7 +155,8 @@ export class NameManager {
 				this.names.get(p).displayName = `${PLAYER_COLOR_CODES_MAP.get(this.getOriginalColor(p))}${this.names.get(p).country}|r`;
 				break;
 			case 'obs':
-				this.names.get(p).displayName = `${PLAYER_COLOR_CODES_MAP.get(this.getOriginalColor(p))}${this.names.get(p).color} (${this.names.get(p).acct})|r`;
+				this.names.get(p).displayName =
+					`${PLAYER_COLOR_CODES_MAP.get(this.getOriginalColor(p))}${this.names.get(p).color} (${this.names.get(p).acct})|r`;
 				break;
 			default:
 				break;
@@ -199,6 +204,14 @@ export class NameManager {
 	 */
 	public getColor(p: player): string {
 		return this.names.get(p).color;
+	}
+
+	/**
+	 * @param p - The player object.
+	 * @returns The current display color code of the player.
+	 */
+	public getDisplayColorCode(p: player): string {
+		return this.names.get(p).displayColorCode;
 	}
 
 	/**
@@ -255,12 +268,6 @@ export class NameManager {
 		target.displayName = source.displayName;
 		target.displayColorCode = source.displayColorCode;
 		SetPlayerName(slot, source.displayName);
-	}
-	/**
-	 * @returns The display color code of the player.
-	 */
-	public getDisplayColorCode(p: player): string {
-		return this.names.get(p).displayColorCode;
 	}
 
 	/**

@@ -127,11 +127,11 @@ export const SHOW_PLAYER_CAMERA_POSITIONS: boolean = true;
 // Per-category toggles for debug output. Set individual categories to false to silence them.
 // master = global kill switch (overrides all others).
 export const DEBUG_PRINTS = {
-	master: false,
+	master: true,
 	ratingSync: false,
 	ratingManager: false,
 	sharedSlots: false,
-	redistribute: false,
+	redistribute: true,
 	killTracker: false,
 	victory: false,
 	drawManager: false,

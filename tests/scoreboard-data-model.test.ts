@@ -18,6 +18,7 @@ vi.mock('src/app/managers/names/name-manager', () => ({
 			getAcct: () => 'acct',
 			getBtag: () => 'btag#0000',
 			getOriginalColorCode: () => '|cFFFFFFFF',
+			getDisplayColorCode: () => '|cFFFFFFFF',
 		}),
 	},
 }));
