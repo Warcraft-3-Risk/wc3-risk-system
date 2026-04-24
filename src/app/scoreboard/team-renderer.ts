@@ -3,10 +3,6 @@ import { HexColors } from '../utils/hex-colors';
 import { ScoreboardRenderer } from './scoreboard-renderer';
 import { ScoreboardDataModel, PlayerRow, TeamRow } from './scoreboard-data-model';
 import { TeamManager } from '../teams/team-manager';
-import { PlayerManager } from '../player/player-manager';
-import { SettingsContext } from '../settings/settings-context';
-import { isReplay } from '../utils/game-status';
-import { MatchFormat } from '../game/match-format-enum';
 
 export class TeamRenderer extends ScoreboardRenderer {
 	private readonly PLAYER_COL = 1;
@@ -137,29 +133,6 @@ export class TeamRenderer extends ScoreboardRenderer {
 	private renderPlayerData(p: PlayerRow, row: number, textColor: string, effectiveLocal: player, teamRow: TeamRow): void {
 		const handle = p.handle;
 
-		let targetColorCode = p.originalColorCode;
-		let allyColorMode = GetAllyColorFilterState();
-
-		if (allyColorMode === 2 && SettingsContext.getInstance().getMatchFormat() !== MatchFormat.TEAMS) {
-			allyColorMode = 0; // Mode 2 falls back to 0 when not in TEAMS, per Minimap conventions
-		}
-
-		if (!isReplay() && allyColorMode === 2) {
-			if (p.handle === effectiveLocal) {
-				targetColorCode = HexColors.BLUE;
-			} else if (IsPlayerAlly(p.handle, effectiveLocal)) {
-				const localActivePlayer = PlayerManager.getInstance().players.get(effectiveLocal);
-				const isDeadInFFA = localActivePlayer && localActivePlayer.status.isDead() && SettingsContext.getInstance().isFFA();
-				const isColorBlind = localActivePlayer && localActivePlayer.options.colorblind;
-
-				const allyColor = isColorBlind ? HexColors.YELLOW : HexColors.TEAL;
-
-				targetColorCode = isDeadInFFA ? HexColors.RED : allyColor;
-			} else if (IsPlayerEnemy(p.handle, effectiveLocal)) {
-				targetColorCode = HexColors.RED;
-			}
-		}
-
 		let teamPrefix = '';
 		if (!this.showTeamTotals) {
 			teamPrefix = `${HexColors.TANGERINE}[${TeamManager.getInstance().getTeamNumberFromPlayer(handle)}]|r`;
@@ -172,7 +145,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 			const grey = HexColors.LIGHT_GRAY;
 			const elimColor = effectiveLocal === handle ? textColor : grey;
 
-			this.setItemValue(`${teamPrefix}${targetColorCode}${p.acctName}`, row, this.PLAYER_COL);
+			this.setItemValue(`${teamPrefix}${p.originalColorCode}${p.acctName}`, row, this.PLAYER_COL);
 			this.setItemValue(`${elimColor}${p.cities}`, row, this.CITIES_COL);
 			this.setItemValue(`${elimColor}${p.kills}`, row, this.KILLS_COL);
 			this.setItemValue(`${elimColor}${p.deaths}`, row, this.DEATHS_COL);
@@ -183,12 +156,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 				this.setItemValue(`${p.status}`, row, this.STATUS_COL);
 			}
 		} else {
-			let displayName = p.displayName;
-			if (targetColorCode !== p.originalColorCode && p.displayColorCode) {
-				displayName = displayName.replace(p.displayColorCode, targetColorCode);
-			}
-
-			this.setItemValue(`${teamPrefix}${displayName}`, row, this.PLAYER_COL);
+			this.setItemValue(`${teamPrefix}${p.displayName}`, row, this.PLAYER_COL);
 
 			const cityTextColor = p.cityCountHighlighted ? HexColors.RED : textColor;
 			this.setItemValue(`${cityTextColor}${p.cities}`, row, this.CITIES_COL);

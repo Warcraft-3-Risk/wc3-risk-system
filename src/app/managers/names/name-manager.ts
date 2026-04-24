@@ -208,14 +208,6 @@ export class NameManager {
 
 	/**
 	 * @param p - The player object.
-	 * @returns The current display color code of the player.
-	 */
-	public getDisplayColorCode(p: player): string {
-		return this.names.get(p).displayColorCode;
-	}
-
-	/**
-	 * @param p - The player object.
 	 * @returns The original playercolor from the first setColor call (after randomization), before shared-slot-manager overrides.
 	 */
 	public getOriginalColor(p: player): playercolor {
