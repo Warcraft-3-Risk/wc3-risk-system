@@ -263,6 +263,13 @@ export class NameManager {
 	}
 
 	/**
+	 * @returns The display color code of the player.
+	 */
+	public getDisplayColorCode(p: player): string {
+		return this.names.get(p).displayColorCode;
+	}
+
+	/**
 	 * Sets the country of a player.
 	 * @param p - The player object.
 	 * @param country - The new country name.
