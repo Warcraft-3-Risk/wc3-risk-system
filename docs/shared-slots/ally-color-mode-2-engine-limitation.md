@@ -24,7 +24,7 @@ Instead of blocking native Mode 2 entirely, the project intercepts its logic:
 
 - Treat native mode 2 as an engine limitation for this map's ruleset. The engine does not understand "Shared Slots".
 - All new unit generation (Spawns, Training, Guard Changes) must be passed through `AllyColorFilterManager.getInstance().applyColorFilter(unit)`.
-- When rendering custom names/tooltips, you must strip legacy W3 color tags via a 10-length substring check (because `|c` and `|C` can be followed by lowercase *or* uppercase hex digits) before prepending the `getTooltipColorHex()` prefix.
+- When rendering custom names/tooltips, you must strip legacy W3 color tags using `ColorStringUtil.stripColorTags(text)` (because `|c` and `|C` can be followed by lowercase *or* uppercase hex digits) before prepending the `getTooltipColorHex()` prefix.
 
 ## Source of Truth in Code
 
@@ -32,3 +32,4 @@ Instead of blocking native Mode 2 entirely, the project intercepts its logic:
 - src/app/managers/tooltip-manager.ts
 - src/app/managers/minimap-icon-manager.ts
 - src/app/game/services/shared-slot-manager.ts
+- src/app/utils/color-string-util.ts
