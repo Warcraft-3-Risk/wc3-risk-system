@@ -6,7 +6,7 @@
 export const CITIES_TO_WIN_RATIO: number = 0.6;
 
 //This is the starting gold for each player. 4 gold by default.
-export const STARTING_INCOME: number = 400;
+export const STARTING_INCOME: number = 4;
 
 //This is the starting gold for each player in Chaos promode. 25 gold by default.
 export const CHAOS_STARTING_INCOME: number = 25;
@@ -127,11 +127,11 @@ export const SHOW_PLAYER_CAMERA_POSITIONS: boolean = true;
 // Per-category toggles for debug output. Set individual categories to false to silence them.
 // master = global kill switch (overrides all others).
 export const DEBUG_PRINTS = {
-	master: true,
+	master: false,
 	ratingSync: false,
 	ratingManager: false,
 	sharedSlots: false,
-	redistribute: true,
+	redistribute: false,
 	killTracker: false,
 	victory: false,
 	drawManager: false,
