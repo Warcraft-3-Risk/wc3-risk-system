@@ -123,10 +123,12 @@ export class MinimapIconManager {
 						});
 					});
 					this.cityIcons.forEach((_, city) => {
-						if (city.guard && city.guard.unit) {
-							AllyColorFilterManager.getInstance().applyColorFilter(city.guard.unit);
-						}
-					});
+										AllyColorFilterManager.getInstance().applyColorFilter(city.barrack.unit);
+										AllyColorFilterManager.getInstance().applyColorFilter(city.cop);
+										if (city.guard && city.guard.unit) {
+											AllyColorFilterManager.getInstance().applyColorFilter(city.guard.unit);
+										}
+									});
 				};
 
 				if (currentColorMode === 2) {

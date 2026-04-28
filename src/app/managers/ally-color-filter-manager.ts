@@ -31,19 +31,24 @@ export class AllyColorFilterManager {
 
 		const isColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
 
-                if (isColorContrast) {
+		if (isColorContrast) {
 			if (owner === NEUTRAL_HOSTILE) {
 				SetUnitVertexColor(u, 0, 0, 0, alpha);
+				SetUnitColor(u, GetPlayerColor(owner));
 			} else if (isLocalOwner) {
 				SetUnitVertexColor(u, 0, 0, 255, alpha);
+				SetUnitColor(u, ConvertPlayerColor(1)); // Blue
 			} else if (IsPlayerAlly(GetLocalPlayer(), owner)) {
 				if (isColorBlind) {
 					SetUnitVertexColor(u, 255, 255, 0, alpha); // Yellow
+					SetUnitColor(u, ConvertPlayerColor(4)); // Yellow
 				} else {
 					SetUnitVertexColor(u, 0, 255, 255, alpha); // Teal
+					SetUnitColor(u, ConvertPlayerColor(2)); // Teal
 				}
 			} else {
 				SetUnitVertexColor(u, 255, 50, 50, alpha);
+				SetUnitColor(u, ConvertPlayerColor(0)); // Red
 			}
 		} else {
 			if (isLocalOwner && isSpawn) {
@@ -51,6 +56,7 @@ export class AllyColorFilterManager {
 			} else {
 				SetUnitVertexColor(u, 255, 255, 255, 255);
 			}
+			SetUnitColor(u, GetPlayerColor(owner));
 		}
 	}
 
@@ -67,7 +73,7 @@ export class AllyColorFilterManager {
 
 		const isColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
 
-                if (isColorContrast) {
+		if (isColorContrast) {
 			if (owner === NEUTRAL_HOSTILE) {
 				return '|cFF888888'; // Gray is more readable than black for tooltips
 			} else if (isLocalOwner) {
@@ -86,4 +92,3 @@ export class AllyColorFilterManager {
 		return undefined;
 	}
 }
-

@@ -26,6 +26,7 @@ describe('AllyColorFilterManager', () => {
 	let activeLocalPlayer: any;
 
 	let mockVertexColors: Map<FakeUnitHandle, { r: number; g: number; b: number; a: number }>;
+	let mockUnitColors: Map<FakeUnitHandle, any>;
 	let mockAllyColorFilterState: number;
 
 	beforeEach(() => {
@@ -47,6 +48,8 @@ describe('AllyColorFilterManager', () => {
 		(globalThis as any).GetAllyColorFilterState = () => mockAllyColorFilterState;
 
 		mockVertexColors = new Map();
+		mockUnitColors = new Map();
+		(globalThis as any).SetUnitColor = (u: any, c: any) => mockUnitColors.set(u, c);
 		(globalThis as any).SetUnitVertexColor = (u: any, r: number, g: number, b: number, a: number) => {
 			mockVertexColors.set(u, { r, g, b, a });
 		};
