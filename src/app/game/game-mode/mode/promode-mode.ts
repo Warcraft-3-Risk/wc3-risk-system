@@ -11,12 +11,14 @@ import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-state';
 import { UpdatePlayerStatusState } from '../base-game-mode/update-player-status-state';
 import { EnableControlsState } from '../base-game-mode/enable-controls-state';
+import { ActivePlayer } from 'src/app/player/types/active-player';
+import { TeamManager } from 'src/app/teams/team-manager';
 
 export class PromodeData implements StateData {}
 
 export class PromodeMode extends BaseMode<PromodeData> {
 	protected setupStates() {
-		return [
+		const states = [
 			new UpdatePlayerStatusState(),
 			new SetupState(),
 			new ApplyFogState(),
@@ -28,9 +30,51 @@ export class PromodeMode extends BaseMode<PromodeData> {
 			new GameOverState(),
 			new ResetState(),
 		] as BaseState<PromodeData>[];
+
+		return states.map((s) => this.wrapState(s));
 	}
 
 	protected setupData(): PromodeData {
 		return new PromodeData();
+	}
+
+	wrapState<T extends StateData>(state: BaseState<T>): BaseState<T> {
+		const originalOnPlayerForfeit = state.onPlayerForfeit.bind(state);
+		const originalOnPlayerLeft = state.onPlayerLeft.bind(state);
+
+		const handleTeamForfeit = (player: ActivePlayer) => {
+			const team = TeamManager.getInstance().getTeamFromPlayer(player.getPlayer());
+			if (team) {
+				const members = team.getMembers();
+				if (members.length > 1) {
+					let forfeitCount = 0;
+					members.forEach((member) => {
+						if (member.status.isEliminated()) {
+							forfeitCount++;
+						}
+					});
+
+					if (forfeitCount / members.length >= 0.5) {
+						members.forEach((member) => {
+							if (member.status.isActive()) {
+								originalOnPlayerForfeit(member);
+							}
+						});
+					}
+				}
+			}
+		};
+
+		state.onPlayerForfeit = (player: ActivePlayer) => {
+			originalOnPlayerForfeit(player);
+			handleTeamForfeit(player);
+		};
+
+		state.onPlayerLeft = (player: ActivePlayer) => {
+			originalOnPlayerLeft(player);
+			handleTeamForfeit(player);
+		};
+
+		return state;
 	}
 }
