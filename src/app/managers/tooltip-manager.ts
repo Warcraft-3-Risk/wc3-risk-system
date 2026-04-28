@@ -3,6 +3,8 @@ import { NameManager } from './names/name-manager';
 import { PlayerManager } from '../player/player-manager';
 import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
 import { UNIT_ID } from 'src/configs/unit-id';
+import { AllyColorFilterManager } from './ally-color-filter-manager';
+import { ColorStringUtil } from '../utils/color-string-util';
 
 export class TooltipManager {
 	private static instance: TooltipManager;
@@ -10,6 +12,8 @@ export class TooltipManager {
 	private tooltipBox: framehandle;
 	private tooltipText: framehandle;
 	private lastFocusUnit: unit = undefined;
+	private lastColorMode: number = -1;
+	private lastColorBlind: boolean = false;
 	private isVisible: boolean = false;
 	private tooltipOffsets: Map<number, number>;
 
@@ -48,7 +52,15 @@ export class TooltipManager {
 	private onTick(): void {
 		const focusUnit = BlzGetMouseFocusUnit();
 
-		if (focusUnit !== this.lastFocusUnit) {
+		const currentColorMode = GetAllyColorFilterState();
+		const activeLocalPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());
+		const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
+
+		const needsRefresh = currentColorMode !== this.lastColorMode || isColorBlind !== this.lastColorBlind;
+		this.lastColorMode = currentColorMode;
+		this.lastColorBlind = isColorBlind;
+
+		if (focusUnit !== this.lastFocusUnit || (needsRefresh && focusUnit)) {
 			this.lastFocusUnit = focusUnit;
 			this.updateTooltip(focusUnit);
 		}
@@ -58,16 +70,12 @@ export class TooltipManager {
 			let unitYPosition = GetUnitY(this.lastFocusUnit);
 			let unitZPosition = BlzGetUnitZ(this.lastFocusUnit);
 
-			if(BlzGetUnitCollisionSize(this.lastFocusUnit) < 31.5 || BlzGetUnitCollisionSize(this.lastFocusUnit) > 47.5) {
+			if (BlzGetUnitCollisionSize(this.lastFocusUnit) < 31.5 || BlzGetUnitCollisionSize(this.lastFocusUnit) > 47.5) {
 				unitXPosition = unitXPosition - 16;
 				unitYPosition = unitYPosition - 16;
 			}
 
-			const [sx, sy, onScreen] = World2Screen(
-				unitXPosition,
-				unitYPosition,
-				(unitZPosition + this.getTooltipOffset(this.lastFocusUnit)) || 0
-			);
+			const [sx, sy, onScreen] = World2Screen(unitXPosition, unitYPosition, unitZPosition + this.getTooltipOffset(this.lastFocusUnit) || 0);
 
 			if (onScreen) {
 				BlzFrameSetAbsPoint(this.tooltipText, FRAMEPOINT_BOTTOM, sx, sy + 0.015);
@@ -100,42 +108,27 @@ export class TooltipManager {
 		// Resolve shared slots to their real player owner (used for isActive check)
 		const effectiveOwner = cm.getOwnerOfUnit(unit);
 
+		let name = '';
+
 		// Player-owned unit — show owner's colored display name
 		// In dev mode: show raw slot owner so shared slots display their own color (e.g. Purple),
 		// not the real player who controls them (e.g. Red)
 		if (PlayerManager.getInstance().isActive(effectiveOwner)) {
 			const displayOwner = EDITOR_DEVELOPER_MODE ? GetOwningPlayer(unit) : effectiveOwner;
-			const name = NameManager.getInstance().getDisplayName(displayOwner);
-			this.show(name, this.visibleLength(name));
-			return;
+			name = NameManager.getInstance().getDisplayName(displayOwner);
+		} else {
+			// Neutral/non-player unit — show unit name
+			name = GetUnitName(unit);
 		}
 
-		// Neutral/non-player unit — show unit name
-		const name = GetUnitName(unit);
-		this.show(name, this.visibleLength(name));
-	}
-
-	// Returns the number of visible characters, stripping |cFFRRGGBB (10 chars) and |r (2 chars)
-	private visibleLength(text: string): number {
-		let overhead = 0;
-		let i = 0;
-		while (i < text.length) {
-			if (text.charAt(i) === '|' && i + 1 < text.length) {
-				const next = text.charAt(i + 1);
-				if (next === 'c' || next === 'C') {
-					overhead += 10;
-					i += 10;
-				} else if (next === 'r') {
-					overhead += 2;
-					i += 2;
-				} else {
-					i++;
-				}
-			} else {
-				i++;
-			}
+		// Apply Ally Color Filter if active
+		const allyFilterHex = AllyColorFilterManager.getInstance().getTooltipColorHex(unit);
+		if (allyFilterHex) {
+			name = ColorStringUtil.stripColorTags(name);
+			name = `${allyFilterHex}${name}|r`;
 		}
-		return text.length - overhead;
+
+		this.show(name, ColorStringUtil.visibleLength(name));
 	}
 
 	private show(text: string, visibleLength: number): void {

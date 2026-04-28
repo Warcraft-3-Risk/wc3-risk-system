@@ -11,7 +11,7 @@ import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 import { MinimapIconManager } from '../managers/minimap-icon-manager';
-
+import { AllyColorFilterManager } from '../managers/ally-color-filter-manager';
 export const SPAWNER_UNITS: Map<unit, Spawner> = new Map<unit, Spawner>();
 
 export class Spawner implements Resetable, Ownable {
@@ -104,9 +104,7 @@ export class Spawner implements Resetable, Ownable {
 			// Register for minimap tracking if valid (must be done after adding SPAWN type)
 			MinimapIconManager.getInstance().registerIfValid(u);
 
-			if (GetLocalPlayer() === this.getOwner()) {
-				SetUnitVertexColor(u, 200, 200, 200, 150);
-			}
+			AllyColorFilterManager.getInstance().applyColorFilter(u);
 			BlzSetUnitName(u, `${GetUnitName(u)} (${this.country})`);
 			this.spawnMap.get(this.getOwner()).add(u);
 			SPAWNER_UNITS.set(u, this);

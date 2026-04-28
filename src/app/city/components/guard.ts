@@ -8,6 +8,7 @@ import { debugPrint } from 'src/app/utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { ABILITY_ID } from 'src/configs/ability-id';
 import { removeEliminatedBuff } from 'src/app/game/game-mode/utillity/on-player-status';
+import { AllyColorFilterManager } from 'src/app/managers/ally-color-filter-manager';
 
 /**
  * Represents a Guard entity in the game, implementing the `Resetable` interface.
@@ -64,6 +65,8 @@ export class Guard implements Resetable {
 		// then hide the native minimap icon. Order matters — reversing these causes the native dot to leak through.
 		UnitLagManager.getInstance().untrackUnit(guard);
 		BlzSetUnitBooleanFieldBJ(guard, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+
+		AllyColorFilterManager.getInstance().applyColorFilter(guard);
 	}
 
 	/**

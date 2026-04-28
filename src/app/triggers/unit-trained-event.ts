@@ -6,6 +6,7 @@ import { ActivePlayer } from '../player/types/active-player';
 import { debugPrint } from '../utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
+import { AllyColorFilterManager } from '../managers/ally-color-filter-manager';
 
 export const UnitTrainedTrigger: trigger = CreateTrigger();
 
@@ -60,6 +61,8 @@ export function UnitTrainedEvent() {
 			if (!IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
 				player.trackedData.units.add(trainedUnit);
 			}
+
+			AllyColorFilterManager.getInstance().applyColorFilter(trainedUnit);
 
 			return false;
 		})

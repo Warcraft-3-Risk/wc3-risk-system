@@ -10,6 +10,8 @@ import { NameManager } from './names/name-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 import { MatchFormat } from '../game/match-format-enum';
+import { GlobalGameData } from '../game/state/global-game-state';
+import { AllyColorFilterManager } from './ally-color-filter-manager';
 
 /**
  * Manages custom minimap icons using SimpleFrames for cities.
@@ -98,13 +100,37 @@ export class MinimapIconManager {
 
 		// Poll the native button state and correct mode 2 back to 0 if not in Lobby Teams mode
 		// Note: the main update loop also corrects mode 2 inside updateIconColor()
+		let lastColorMode = -1;
+		let lastColorBlind = false;
+
 		const allyModeTimer = CreateTimer();
 		TimerStart(allyModeTimer, 0.1, true, () => {
-			// Due to issues with alliances and shared slots in team-based game modes, we are disabling shared slot allocation for lobby teams modes for now.
-			// Ally/enemy mode 2 colors shared slots as allies regardless of team, which can lead to confusion and issues with the redistribution algorithm.
-			// This is something we may revisit in the future if we can find a reliable solution.
-			if (GetAllyColorFilterState() === 2 && !SettingsContext.getInstance().isTeamMatch()) {
-				SetAllyColorFilterState(0);
+			const currentColorMode = GetAllyColorFilterState();
+			const activeLocalPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());
+			const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
+
+			if (currentColorMode !== lastColorMode || isColorBlind !== lastColorBlind) {
+				lastColorMode = currentColorMode;
+				lastColorBlind = isColorBlind;
+
+				const applyFilter = () => {
+					PlayerManager.getInstance().players.forEach((activePlayer) => {
+						activePlayer.trackedData.units.forEach((u) => {
+							AllyColorFilterManager.getInstance().applyColorFilter(u);
+						});
+					});
+					this.cityIcons.forEach((_, city) => {
+						if (city.guard && city.guard.unit) {
+							AllyColorFilterManager.getInstance().applyColorFilter(city.guard.unit);
+						}
+					});
+				};
+
+				if (currentColorMode === 2) {
+					applyFilter();
+				} else {
+					applyFilter();
+				}
 			}
 		});
 
@@ -440,11 +466,15 @@ export class MinimapIconManager {
 	 */
 	private updateIconColor(iconFrame: framehandle, city: City, isVisible: boolean, localPlayer: player): void {
 		let owner: player;
+		let allyColorMode = GetAllyColorFilterState();
 
 		if (isVisible) {
 			if (GetLocalPlayer() === localPlayer) {
-				SetUnitVertexColor(city.barrack.unit, 255, 255, 255, 255);
-				SetUnitVertexColor(city.cop, 255, 255, 255, 255);
+				AllyColorFilterManager.getInstance().applyColorFilter(city.barrack.unit);
+				AllyColorFilterManager.getInstance().applyColorFilter(city.cop);
+				if (city.guard && city.guard.unit) {
+					AllyColorFilterManager.getInstance().applyColorFilter(city.guard.unit);
+				}
 			}
 
 			// City is visible - update and remember the owner
@@ -468,13 +498,6 @@ export class MinimapIconManager {
 
 		// Check ally color filter mode
 		// 0 = Player colors, 1/2 = Ally/Enemy colors
-		let allyColorMode = GetAllyColorFilterState();
-
-		// Ally Color 2 is not allowed unless it's Lobby Teams
-		if (allyColorMode === 2 && SettingsContext.getInstance().getMatchFormat() !== MatchFormat.TEAMS) {
-			SetAllyColorFilterState(0);
-			allyColorMode = 0;
-		}
 
 		// If the local player owns this city, show it in WHITE (Mode 0/1) or BLUE (Mode 2)
 		if (owner === localPlayer) {
@@ -536,12 +559,6 @@ export class MinimapIconManager {
 		// Used the SharedSlotManager to resolve the real owner (maps SharedSlot -> Player)
 		const owner = SharedSlotManager.getInstance().getOwnerOfUnit(unit);
 		let allyColorMode = GetAllyColorFilterState();
-
-		// Ally Color 2 is not allowed unless it's Lobby Teams
-		if (allyColorMode === 2 && SettingsContext.getInstance().getMatchFormat() !== MatchFormat.TEAMS) {
-			SetAllyColorFilterState(0);
-			allyColorMode = 0;
-		}
 
 		// If the local player owns this unit (or owns the shared slot), show it in WHITE (Mode 0/1) or BLUE (Mode 2)
 		if (owner === localPlayer) {
