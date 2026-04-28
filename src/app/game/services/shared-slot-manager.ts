@@ -586,7 +586,6 @@ export class SharedSlotManager implements Resetable {
 	reset(): void {
 		// Reset all player colors and names to default
 		if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Resetting all player colors and names to default', DC.sharedSlots);
-		NameManager.getInstance().resetOriginalColors();
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p = Player(i);
 

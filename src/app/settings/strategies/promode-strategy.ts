@@ -59,7 +59,7 @@ export class PromodeStrategy implements SettingsStrategy {
 		const nameManager: NameManager = NameManager.getInstance();
 
 		playerManager.players.forEach((val, playerHandle) => {
-			nameManager.setColor(playerHandle, GetPlayerColor(playerHandle));
+			nameManager.setColor(playerHandle, nameManager.getOriginalColor(playerHandle));
 			nameManager.setName(playerHandle, 'acct');
 			val.trackedData.bonus.disable();
 		});
