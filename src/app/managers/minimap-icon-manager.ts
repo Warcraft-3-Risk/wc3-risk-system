@@ -102,16 +102,19 @@ export class MinimapIconManager {
 		// Note: the main update loop also corrects mode 2 inside updateIconColor()
 		let lastColorMode = -1;
 		let lastColorBlind = false;
+		let lastColorContrast = false;
 
 		const allyModeTimer = CreateTimer();
 		TimerStart(allyModeTimer, 0.1, true, () => {
 			const currentColorMode = GetAllyColorFilterState();
 			const activeLocalPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());
 			const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
+			const isColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
 
-			if (currentColorMode !== lastColorMode || isColorBlind !== lastColorBlind) {
+			if (currentColorMode !== lastColorMode || isColorBlind !== lastColorBlind || isColorContrast !== lastColorContrast) {
 				lastColorMode = currentColorMode;
 				lastColorBlind = isColorBlind;
+				lastColorContrast = isColorContrast;
 
 				const applyFilter = () => {
 					PlayerManager.getInstance().players.forEach((activePlayer) => {
@@ -127,10 +130,9 @@ export class MinimapIconManager {
 				};
 
 				if (currentColorMode === 2) {
-					applyFilter();
-				} else {
-					applyFilter();
+					SetAllyColorFilterState(0);
 				}
+				applyFilter();
 			}
 		});
 
@@ -467,6 +469,10 @@ export class MinimapIconManager {
 	private updateIconColor(iconFrame: framehandle, city: City, isVisible: boolean, localPlayer: player): void {
 		let owner: player;
 		let allyColorMode = GetAllyColorFilterState();
+		const activeLocalPlayerForColor = PlayerManager.getInstance().players.get(localPlayer);
+		if (activeLocalPlayerForColor && activeLocalPlayerForColor.options.colorContrast) {
+			allyColorMode = 2;
+		}
 
 		if (isVisible) {
 			if (GetLocalPlayer() === localPlayer) {
@@ -559,6 +565,10 @@ export class MinimapIconManager {
 		// Used the SharedSlotManager to resolve the real owner (maps SharedSlot -> Player)
 		const owner = SharedSlotManager.getInstance().getOwnerOfUnit(unit);
 		let allyColorMode = GetAllyColorFilterState();
+		const activeLocalPlayerForColor = PlayerManager.getInstance().players.get(localPlayer);
+		if (activeLocalPlayerForColor && activeLocalPlayerForColor.options.colorContrast) {
+			allyColorMode = 2;
+		}
 
 		// If the local player owns this unit (or owns the shared slot), show it in WHITE (Mode 0/1) or BLUE (Mode 2)
 		if (owner === localPlayer) {
@@ -766,3 +776,6 @@ export class MinimapIconManager {
 		}
 	}
 }
+
+
+

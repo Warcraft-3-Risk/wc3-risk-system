@@ -249,3 +249,54 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 		},
 	});
 }
+
+
+export function buildColorContrastModeButton(player: ActivePlayer): framehandle {
+        // Initialize from saved preference for local player
+        if (player.getPlayer() === GetLocalPlayer()) {
+                const savedPreference = File.read('risk/colorcontrast.pld');
+                if (savedPreference === 'true') {
+                        player.options.colorContrast = true;
+                }
+        }
+
+        const button = createGuardButton({
+                player: player,
+                createContext: GetPlayerId(player.getPlayer()) + 500,
+                key: OSKEY_F3,
+                textures: {
+                        primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNLocustSwarm.blp',
+                        secondary: 'ReplaceableTextures\\CommandButtons\\BTNLocustSwarm.blp',
+                },
+                xOffset: 0.115,
+                initialTooltipText: `Color Contrast Mode ${HexColors.TANGERINE}(F3)|r\nToggles high contrast colors for units on the map.\nCurrent preference: ${player.options.colorContrast ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`,
+                action: (context: number, textures: { primary: string; secondary: string }) => {
+                        player.options.colorContrast = !player.options.colorContrast;
+
+                        if (player.getPlayer() === GetLocalPlayer()) {
+                                File.write('risk/colorcontrast.pld', `${player.options.colorContrast}`);
+
+                                const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+                                const texture = player.options.colorContrast ? textures.secondary : textures.primary;
+
+                                BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+                                const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+                                BlzFrameSetText(
+                                        buttonTooltip,
+                                        `Color Contrast Mode ${HexColors.TANGERINE}(F3)|r\nToggles high contrast colors for units on the map.\nCurrent preference: ` +
+                                                `${player.options.colorContrast ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`
+                                );
+                        }
+                },
+        });
+
+        // Set initial texture state for the button since createGuardButton defaults to primary
+        if (player.getPlayer() === GetLocalPlayer() && player.options.colorContrast) {
+                const context = GetPlayerId(player.getPlayer()) + 500;
+                const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+                BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNLocustSwarm.blp', 0, false);
+        }
+
+        return button;
+}

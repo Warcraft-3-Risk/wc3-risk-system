@@ -31,6 +31,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			board: 0,
 			labels: true,
 			colorblind: false,
+			colorContrast: false,
 		};
 		this._killedBy = undefined;
 		this._admin = false;
@@ -63,6 +64,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			board: 0,
 			labels: true,
 			colorblind: false,
+			colorContrast: false,
 		};
 	}
 

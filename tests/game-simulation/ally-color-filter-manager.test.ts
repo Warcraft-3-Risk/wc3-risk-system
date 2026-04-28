@@ -64,7 +64,7 @@ describe('AllyColorFilterManager', () => {
 
 		// Mock PlayerManager
 		activeLocalPlayer = {
-			options: { colorblind: false },
+			options: { colorblind: false, colorContrast: true },
 		};
 		const pmMock = {
 			players: new Map([[localPlayer, activeLocalPlayer]]),
@@ -112,7 +112,7 @@ describe('AllyColorFilterManager', () => {
 		});
 
 		it('resets color to white in Mode 0', () => {
-			mockAllyColorFilterState = 0;
+			activeLocalPlayer.options.colorContrast = false;
 			const unit = { owner: enemyPlayer } as unknown as FakeUnitHandle;
 			AllyColorFilterManager.getInstance().applyColorFilter(unit as any);
 			expect(mockVertexColors.get(unit)).toEqual({ r: 255, g: 255, b: 255, a: 255 });
@@ -152,7 +152,7 @@ describe('AllyColorFilterManager', () => {
 		});
 
 		it('returns undefined if not in Mode 2', () => {
-			mockAllyColorFilterState = 0;
+			activeLocalPlayer.options.colorContrast = false;
 			const unit = { owner: enemyPlayer } as unknown as FakeUnitHandle;
 			const hex = AllyColorFilterManager.getInstance().getTooltipColorHex(unit as any);
 			expect(hex).toBeUndefined();

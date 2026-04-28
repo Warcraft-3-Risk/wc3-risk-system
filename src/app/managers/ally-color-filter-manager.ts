@@ -29,9 +29,9 @@ export class AllyColorFilterManager {
 		const activeLocalPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());
 		const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
 
-		const allyColorMode = GetAllyColorFilterState();
+		const isColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
 
-		if (allyColorMode === 2) {
+                if (isColorContrast) {
 			if (owner === NEUTRAL_HOSTILE) {
 				SetUnitVertexColor(u, 0, 0, 0, alpha);
 			} else if (isLocalOwner) {
@@ -65,9 +65,9 @@ export class AllyColorFilterManager {
 		const activeLocalPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());
 		const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
 
-		const allyColorMode = GetAllyColorFilterState();
+		const isColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
 
-		if (allyColorMode === 2) {
+                if (isColorContrast) {
 			if (owner === NEUTRAL_HOSTILE) {
 				return '|cFF888888'; // Gray is more readable than black for tooltips
 			} else if (isLocalOwner) {
@@ -86,3 +86,4 @@ export class AllyColorFilterManager {
 		return undefined;
 	}
 }
+

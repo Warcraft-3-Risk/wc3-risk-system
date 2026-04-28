@@ -14,6 +14,7 @@ export class TooltipManager {
 	private lastFocusUnit: unit = undefined;
 	private lastColorMode: number = -1;
 	private lastColorBlind: boolean = false;
+	private lastColorContrast: boolean = false;
 	private isVisible: boolean = false;
 	private tooltipOffsets: Map<number, number>;
 
@@ -55,10 +56,12 @@ export class TooltipManager {
 		const currentColorMode = GetAllyColorFilterState();
 		const activeLocalPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());
 		const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
+		const isColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
 
-		const needsRefresh = currentColorMode !== this.lastColorMode || isColorBlind !== this.lastColorBlind;
+		const needsRefresh = currentColorMode !== this.lastColorMode || isColorBlind !== this.lastColorBlind || isColorContrast !== this.lastColorContrast;
 		this.lastColorMode = currentColorMode;
 		this.lastColorBlind = isColorBlind;
+		this.lastColorContrast = isColorContrast;
 
 		if (focusUnit !== this.lastFocusUnit || (needsRefresh && focusUnit)) {
 			this.lastFocusUnit = focusUnit;
@@ -183,3 +186,4 @@ export class TooltipManager {
 		return offsets;
 	}
 }
+
