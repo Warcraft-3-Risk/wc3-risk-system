@@ -49,7 +49,7 @@ export class ModeSelection {
 		}
 
 		// Consuming pauses to maintain continous gameplay
-		if (PlayerManager.getInstance().players.size >= 16) {
+		if (PlayerManager.getInstance().players.size >= 14) {
 			// Consuming pauses to maintain continous gameplay
 			for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 				const player = Player(i);
