@@ -123,14 +123,6 @@ export class SharedSlotManager implements Resetable {
 			return false;
 		}
 
-		// Due to issues with alliances and shared slots in team-based game modes, we are disabling shared slot allocation for lobby teams modes for now.
-		// Ally/enemy mode 2 colors shared slots as allies regardless of team, which can lead to confusion and issues with the redistribution algorithm.
-		// This is something we may revisit in the future if we can find a reliable solution.
-		if (SettingsContext.getInstance().isTeamMatch()) {
-			if (DEBUG_PRINTS.master) debugPrint('[Redistribute] Shared slots are disabled for Lobby Teams', DC.redistribute);
-			return false;
-		}
-
 		if (DEBUG_PRINTS.master) debugPrint('[Redistribute] === Running evaluateAndRedistribute() ===', DC.redistribute);
 
 		// 1. COLLECT: Build the current picture
