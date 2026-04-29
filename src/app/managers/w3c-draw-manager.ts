@@ -1,4 +1,5 @@
 import { debugPrint } from '../utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { NameManager } from './names/name-manager';
 import { PlayerManager } from '../player/player-manager';
 import { getElapsedTime } from 'w3ts';
@@ -32,7 +33,7 @@ export class W3CDrawManager {
 		}
 
 		if (this.playersVoted.has(triggeringPlayer)) {
-			debugPrint('[DrawManager] Player already voted for draw.');
+			if (DEBUG_PRINTS.master) debugPrint('[DrawManager] Player already voted for draw.', DC.drawManager);
 			return;
 		}
 
@@ -42,7 +43,7 @@ export class W3CDrawManager {
 		const remainingPlayers = PlayerManager.getInstance().getCurrentActiveHumanPlayers();
 		let remainingPlayerVoteCount = remainingPlayers.length - this.playersVoted.size;
 
-		if (this.playersVoted.size == 1) {
+		if (this.playersVoted.size === 1) {
 			print(
 				`|cff00ff00[W3C]:|r|cffFF4500 ${NameManager.getInstance().getDisplayName(triggeringPlayer)}|r is proposing to cancel this game. \nType|cffffff00 -draw|r to cancel the game. ${remainingPlayerVoteCount} player(s) remaining.`
 			);

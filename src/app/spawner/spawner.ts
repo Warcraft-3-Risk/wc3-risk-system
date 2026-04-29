@@ -1,20 +1,24 @@
 import { UNIT_ID } from '../../configs/unit-id';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
+import { PlayerManager } from '../player/player-manager';
+import { SettingsContext } from 'src/app/settings/settings-context';
 import { debugPrint } from '../utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
-
+import { MinimapIconManager } from '../managers/minimap-icon-manager';
+import { AllyColorFilterManager } from '../managers/ally-color-filter-manager';
 export const SPAWNER_UNITS: Map<unit, Spawner> = new Map<unit, Spawner>();
 
 export class Spawner implements Resetable, Ownable {
 	private _unit: unit;
 	private country: string;
 	private spawnsPerStep: number;
-	private spawnMap: Map<player, unit[]>;
+	private spawnMap: Map<player, Set<unit>>;
 	private spawnType: number;
 	private multiplier: number;
 	private spawnsPerPlayer: number;
@@ -40,7 +44,7 @@ export class Spawner implements Resetable, Ownable {
 		this.spawnsPerStep = spawnsPerStep;
 		this.spawnsPerPlayer = spawnsPerPlayer;
 		this.spawnType = spawnTypdID;
-		this.spawnMap = new Map<player, unit[]>();
+		this.spawnMap = new Map<player, Set<unit>>();
 		this.multiplier = multiplier;
 		this.setName();
 	}
@@ -62,47 +66,57 @@ export class Spawner implements Resetable, Ownable {
 	 * Executes a step for the spawner, creating new units if conditions are met.
 	 */
 	public step() {
-		if (this.getOwner() == NEUTRAL_HOSTILE) return;
-		if (GetPlayerSlotState(this.getOwner()) != PLAYER_SLOT_STATE_PLAYING) return;
-		if (GlobalGameData.matchState != 'inProgress') return;
+		if (this.getOwner() === NEUTRAL_HOSTILE) return;
+		if (GetPlayerSlotState(this.getOwner()) !== PLAYER_SLOT_STATE_PLAYING) return;
+		if (GlobalGameData.matchState !== 'inProgress') return;
 
-		const spawnCount: number = this.spawnMap.get(this.getOwner()).length;
+		// Eliminated players (e.g. forfeited via -ff) still have PLAYER_SLOT_STATE_PLAYING,
+		// so we must explicitly check their status to prevent spawning in FFA.
+		// In team games, eliminated players keep spawning so teammates can use those units.
+		const matchPlayer = PlayerManager.getInstance().players.get(this.getOwner());
+		if (SettingsContext.getInstance().isFFA() && matchPlayer && matchPlayer.status.isEliminated()) return;
+
+		const spawnCount: number = this.spawnMap.get(this.getOwner()).size;
 
 		if (spawnCount >= this.maxSpawnsPerPlayerWithMultiplier) return;
 
 		const amount: number = Math.min(this.spawnsPerStepWithMultiplier, this.maxSpawnsPerPlayerWithMultiplier - spawnCount);
 
+		const ownerMatchPlayer = GlobalGameData.matchPlayers.find((x) => x.getPlayer() === this.getOwner());
+		const rallyLoc: location = GetUnitRallyPoint(this.unit);
+
 		for (let i = 0; i < amount; i++) {
-			let u: unit = CreateUnit(
-				ClientManager.getInstance().getClientOrPlayer(this.getOwner()),
-				this.spawnType,
-				GetUnitX(this.unit),
-				GetUnitY(this.unit),
-				270
-			);
+			const owningSlot = SharedSlotManager.getInstance().getSlotWithLowestUnitCount(this.getOwner());
+			let u: unit = CreateUnit(owningSlot, this.spawnType, GetUnitX(this.unit), GetUnitY(this.unit), 270);
+			if (DEBUG_PRINTS.master)
+				debugPrint(
+					`[SharedSlots] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`,
+					DC.sharedSlots
+				);
+			SharedSlotManager.getInstance().incrementUnitCount(owningSlot);
 			UnitLagManager.getInstance().trackUnit(u);
-			let loc: location = GetUnitRallyPoint(this.unit);
 
 			if (!IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
-				GlobalGameData.matchPlayers.find((x) => x.getPlayer() == this.getOwner()).trackedData.units.add(u);
+				ownerMatchPlayer?.trackedData.units.add(u);
 			}
 
 			UnitAddType(u, UNIT_TYPE.SPAWN);
-			if (GetLocalPlayer() == this.getOwner()) {
-				SetUnitVertexColor(u, 200, 200, 200, 150);
-			}
+			// Register for minimap tracking if valid (must be done after adding SPAWN type)
+			MinimapIconManager.getInstance().registerIfValid(u);
+
+			AllyColorFilterManager.getInstance().applyColorFilter(u);
 			BlzSetUnitName(u, `${GetUnitName(u)} (${this.country})`);
-			this.spawnMap.get(this.getOwner()).push(u);
+			this.spawnMap.get(this.getOwner()).add(u);
 			SPAWNER_UNITS.set(u, this);
 
-			if (loc != null) {
-				IssuePointOrderLoc(u, 'attack', loc);
-				RemoveLocation(loc);
+			if (rallyLoc !== undefined) {
+				IssuePointOrderLoc(u, 'attack', rallyLoc);
 			}
 
-			loc = null;
-			u = null;
+			u = undefined;
 		}
+
+		if (rallyLoc !== undefined) RemoveLocation(rallyLoc);
 
 		this.setName();
 	}
@@ -116,7 +130,7 @@ export class Spawner implements Resetable, Ownable {
 
 		this.spawnMap.clear();
 		RemoveUnit(this.unit);
-		this._unit = null;
+		this._unit = undefined;
 
 		this.rebuild(x, y);
 		this.setName();
@@ -127,12 +141,12 @@ export class Spawner implements Resetable, Ownable {
 	 * @param {player} player - The player to set as owner.
 	 */
 	public setOwner(player: player): void {
-		if (player == null) player = NEUTRAL_HOSTILE;
+		if (player === undefined) player = NEUTRAL_HOSTILE;
 
-		SetUnitOwner(this._unit, ClientManager.getInstance().getOwner(player), true);
+		SetUnitOwner(this._unit, SharedSlotManager.getInstance().getOwner(player), true);
 
 		if (!this.spawnMap.has(this.getOwner())) {
-			this.spawnMap.set(this.getOwner(), []);
+			this.spawnMap.set(this.getOwner(), new Set());
 		}
 
 		this.setName();
@@ -141,7 +155,7 @@ export class Spawner implements Resetable, Ownable {
 
 	/** @returns The player that owns the spawner. */
 	public getOwner(): player {
-		return ClientManager.getInstance().getOwnerOfUnit(this._unit);
+		return SharedSlotManager.getInstance().getOwnerOfUnit(this._unit);
 	}
 
 	/**
@@ -150,9 +164,7 @@ export class Spawner implements Resetable, Ownable {
 	 * @param {unit} unit - The deceased unit.
 	 */
 	public onDeath(player: player, unit: unit): void {
-		const index = this.spawnMap.get(ClientManager.getInstance().getOwner(player)).indexOf(unit);
-
-		this.spawnMap.get(ClientManager.getInstance().getOwner(player)).splice(index, 1);
+		this.spawnMap.get(SharedSlotManager.getInstance().getOwner(player))?.delete(unit);
 
 		SPAWNER_UNITS.delete(unit);
 
@@ -163,11 +175,11 @@ export class Spawner implements Resetable, Ownable {
 	 * Sets the name of the spawner based on its current state.
 	 */
 	private setName(): void {
-		if (GetOwningPlayer(this.unit) == NEUTRAL_HOSTILE) {
+		if (GetOwningPlayer(this.unit) === NEUTRAL_HOSTILE) {
 			BlzSetUnitName(this.unit, `${this.country} is unowned`);
 			SetUnitAnimation(this.unit, 'death');
 		} else {
-			const spawnCount: number = this.spawnMap.get(this.getOwner()).length;
+			const spawnCount: number = this.spawnMap.get(this.getOwner()).size;
 
 			BlzSetUnitName(this.unit, `${this.country}  ${spawnCount} / ${this.maxSpawnsPerPlayerWithMultiplier}`);
 			SetUnitAnimation(this.unit, 'stand');

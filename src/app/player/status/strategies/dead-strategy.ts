@@ -7,7 +7,7 @@ import { GlobalGameData } from 'src/app/game/state/global-game-state';
 export class DeadStrategy implements StatusStrategy {
 	run(gamePlayer: ActivePlayer): void {
 		if (gamePlayer.status.isEliminated()) return;
-		if (GlobalGameData.matchState != 'inProgress') return;
+		if (GlobalGameData.matchState !== 'inProgress') return;
 		EventEmitter.getInstance().emit(EVENT_ON_PLAYER_DEAD, gamePlayer);
 	}
 }

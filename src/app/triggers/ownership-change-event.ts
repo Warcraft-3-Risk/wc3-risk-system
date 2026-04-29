@@ -17,27 +17,27 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_CITY_CAPTURE } from '../utils/events/event-constants';
 import { ParticipantEntityManager } from '../utils/participant-entity';
-import { debugPrint } from '../utils/debug-print';
+import { PlayLocalSound } from '../utils/utils';
 
 export function OwnershipChangeEvent() {
 	const t: trigger = CreateTrigger();
 
 	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
-		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_CHANGE_OWNER, null);
+		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_CHANGE_OWNER, undefined);
 	}
 
 	TriggerAddCondition(
 		t,
 		Condition(() => {
 			if (!IsUnitType(GetChangingUnit(), UNIT_TYPE.CITY)) return false;
-			if (GlobalGameData.matchState == 'postMatch') return false;
+			if (GlobalGameData.matchState === 'postMatch') return false;
 
 			const city: City = UnitToCity.get(GetChangingUnit());
 			const country: Country = CityToCountry.get(city);
 			const region: Region = CountryToRegion.get(country);
 			const prevOwner: ActivePlayer | undefined = PlayerManager.getInstance().players.get(GetChangingUnitPrevOwner());
 			const owner: ActivePlayer | undefined = PlayerManager.getInstance().players.get(city.getOwner());
-			const teamManager: TeamManager = SettingsContext.getInstance().isFFA() ? null : TeamManager.getInstance();
+			const teamManager: TeamManager = SettingsContext.getInstance().isFFA() ? undefined : TeamManager.getInstance();
 
 			if (prevOwner) {
 				const prevOwnerData: TrackedData = prevOwner.trackedData;
@@ -46,12 +46,14 @@ export function OwnershipChangeEvent() {
 				prevOwnerData.cities.cities.splice(prevOwnerData.cities.cities.indexOf(city), 1);
 				prevOwnerData.countries.set(country, prevOwnerData.countries.get(country) - 1);
 
-				if (country.getOwner() == prevOwnerHandle) {
-					country.setOwner(null);
+				if (country.getOwner() === prevOwnerHandle) {
+					country.setOwner(undefined);
 
 					if (prevOwner.status.isAlive()) {
 						prevOwner.trackedData.income.income -= country.getCities().length;
 						prevOwner.trackedData.income.delta -= country.getCities().length;
+
+						PlayLocalSound('Sound\\Interface\\CreepAggroWhat1.flac', prevOwnerHandle);
 					}
 
 					if (teamManager) {
@@ -59,8 +61,8 @@ export function OwnershipChangeEvent() {
 					}
 				}
 
-				if (region && region.owner == prevOwnerHandle) {
-					region.setOwner(null);
+				if (region && region.owner === prevOwnerHandle) {
+					region.setOwner(undefined);
 					prevOwner.trackedData.income.income -= region.goldBonus;
 					prevOwner.trackedData.income.delta -= region.goldBonus;
 
@@ -70,7 +72,7 @@ export function OwnershipChangeEvent() {
 				}
 
 				// Makes no sense to set a player as nomad during the game setup. Only during the game.
-				if (prevOwnerData.cities.cities.length == 0 && GlobalGameData.matchState == 'inProgress') {
+				if (prevOwnerData.cities.cities.length === 0 && GlobalGameData.matchState === 'inProgress') {
 					prevOwner.status.set(PLAYER_STATUS.NOMAD);
 				}
 
@@ -92,11 +94,11 @@ export function OwnershipChangeEvent() {
 					ownerData.countries.set(country, 1);
 				}
 
-				if (GlobalGameData.matchState == 'inProgress') {
+				if (GlobalGameData.matchState === 'inProgress') {
 					VictoryManager.getInstance().setLeader(ParticipantEntityManager.getParticipantByActivePlayer(owner));
 				}
 
-				if (ownerData.countries.get(country) == country.getCities().length) {
+				if (ownerData.countries.get(country) === country.getCities().length) {
 					country.setOwner(ownerHandle);
 
 					if (owner.status.isAlive()) {
@@ -122,7 +124,7 @@ export function OwnershipChangeEvent() {
 						}
 					}
 
-					if (GlobalGameData.matchState == 'inProgress') {
+					if (GlobalGameData.matchState === 'inProgress') {
 						ScoreboardManager.getInstance().setAlert(ownerHandle, country.getName());
 					}
 				}

@@ -1,12 +1,14 @@
 import { ABILITY_ID } from '../../configs/ability-id';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { TimedEvent } from '../libs/timer/timed-event';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { debugPrint } from '../utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { ORDER_ID } from '../../configs/order-id';
+import { MinimapIconManager } from './minimap-icon-manager';
 
 enum PatrolState {
 	LOADING,
@@ -18,14 +20,14 @@ enum PatrolState {
 type Transport = {
 	unit: unit;
 	cargo: unit[];
-	effect: effect | null;
+	effect: effect | undefined;
 	duration: number;
 	autoloadEnabled: boolean;
 	loadTarget: unit;
 	unloadTargetX: number;
 	unloadTargetY: number;
-	floatingTextCargo: texttag | null;
-	floatingTextCapacity: texttag | null;
+	floatingTextCargo: texttag | undefined;
+	floatingTextCapacity: texttag | undefined;
 	patrolEnabled: boolean;
 	patrolState: PatrolState;
 	patrolDestX: number;
@@ -33,7 +35,7 @@ type Transport = {
 	patrolOriginX: number;
 	patrolOriginY: number;
 	patrolLoadTimer: number;
-	patrolEvent: TimedEvent | null;
+	patrolEvent: TimedEvent | undefined;
 	isScriptOrdering: boolean;
 	pathingDisableDuration: number;
 	orderedUnits: unit[];
@@ -55,10 +57,10 @@ const MAX_UNLOAD_DISTANCE: number = 300;
  * - IsUnitLoaded: Check if given unit is loaded into any transport.
  */
 export class TransportManager {
-	// Static queue and timer for delayed tracking
+	// Global queue for delayed minimap re-tracking after unload.
+	// A persistent 0.1s repeating timer drains this queue each tick.
 	private static delayedTrackQueue: unit[] = [];
 	private static delayedTrackTimer: timer = CreateTimer();
-	private static delayedTrackTimerRunning: boolean = false;
 	private static instance: TransportManager;
 	private transports: Map<unit, Transport>;
 	private autoLoadingTransports: Transport[] = [];
@@ -70,7 +72,7 @@ export class TransportManager {
 	 * @returns The singleton instance.
 	 */
 	public static getInstance() {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new TransportManager();
 		}
 
@@ -84,6 +86,9 @@ export class TransportManager {
 		this.transports = new Map<unit, Transport>();
 
 		TimerStart(this.autoLoadTimer, 1.0, true, () => this.onAutoLoadTick());
+
+		// Persistent timer to process delayed minimap re-tracking after unloads
+		TimerStart(TransportManager.delayedTrackTimer, 0.1, true, () => this.processDelayedTrackQueue());
 
 		// Unit load management
 		// Handler for order queued for the load ability start
@@ -119,14 +124,14 @@ export class TransportManager {
 		const transport: Transport = {
 			unit: unit,
 			cargo: [],
-			effect: null,
+			effect: undefined,
 			duration: 0,
 			autoloadEnabled: false,
-			loadTarget: null,
-			unloadTargetX: null,
-			unloadTargetY: null,
-			floatingTextCargo: null,
-			floatingTextCapacity: null,
+			loadTarget: undefined,
+			unloadTargetX: undefined,
+			unloadTargetY: undefined,
+			floatingTextCargo: undefined,
+			floatingTextCapacity: undefined,
 			patrolEnabled: false,
 			patrolState: PatrolState.LOADING,
 			patrolDestX: 0,
@@ -134,13 +139,39 @@ export class TransportManager {
 			patrolOriginX: 0,
 			patrolOriginY: 0,
 			patrolLoadTimer: 0,
-			patrolEvent: null,
+			patrolEvent: undefined,
 			isScriptOrdering: false,
 			pathingDisableDuration: 0,
 			orderedUnits: [],
 		};
 
 		this.transports.set(unit, transport);
+	}
+
+	/**
+	 * Processes the delayed track queue each tick.
+	 * Units are queued here after unloading from transports because WC3 cannot
+	 * reliably handle minimap registration on the same frame a unit is unloaded.
+	 */
+	private processDelayedTrackQueue(): void {
+		if (TransportManager.delayedTrackQueue.length === 0) return;
+
+		TransportManager.delayedTrackQueue.forEach((unit) => {
+			if (DEBUG_PRINTS.master) debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`, DC.transport);
+			// Skip units that died, became guards, or were reloaded into a transport during the delay
+			if (!UnitAlive(unit) || IsUnitType(unit, UNIT_TYPE.GUARD) || IsUnitLoaded(unit)) return;
+			UnitLagManager.getInstance().trackUnit(unit);
+			MinimapIconManager.getInstance().registerIfValid(unit);
+		});
+		TransportManager.delayedTrackQueue = [];
+	}
+
+	/**
+	 * Returns the cargo units loaded in the given transport, or undefined if not tracked.
+	 */
+	public getCargo(unit: unit): unit[] | undefined {
+		const transport = this.transports.get(unit);
+		return transport ? transport.cargo : undefined;
 	}
 
 	/**
@@ -165,13 +196,14 @@ export class TransportManager {
 		const transportData: Transport = this.transports.get(unit);
 
 		if (transportData.cargo) {
-			// Track all cargo units (clients) again since the transport is dead
+			// Track all cargo units (shared slots) again since the transport is dead
 			transportData.cargo.forEach((unit) => {
 				UnitLagManager.getInstance().trackUnit(unit);
+				MinimapIconManager.getInstance().registerIfValid(unit);
 			});
 		}
 
-		transportData.cargo = null;
+		transportData.cargo = undefined;
 
 		this.removeAutoLoadEffect(transportData);
 
@@ -186,9 +218,9 @@ export class TransportManager {
 
 		transportData.patrolEnabled = false;
 
-		if (transportData.patrolEvent != null) {
+		if (transportData.patrolEvent !== undefined) {
 			TimedEventManager.getInstance().removeTimedEvent(transportData.patrolEvent);
-			transportData.patrolEvent = null;
+			transportData.patrolEvent = undefined;
 		}
 
 		this.transports.delete(unit);
@@ -201,7 +233,7 @@ export class TransportManager {
 		const t: trigger = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_LOADED, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_LOADED, undefined);
 		}
 
 		TriggerAddCondition(
@@ -214,6 +246,7 @@ export class TransportManager {
 
 				// Untrack the unit since it's now loaded and managed by the transport
 				UnitLagManager.getInstance().untrackUnit(loadedUnit);
+				MinimapIconManager.getInstance().unregisterTrackedUnit(loadedUnit);
 
 				const transportData = this.transports.get(transport);
 				transportData.cargo.push(loadedUnit);
@@ -228,8 +261,8 @@ export class TransportManager {
 					}
 				}
 
-				transport = null;
-				loadedUnit = null;
+				transport = undefined;
+				loadedUnit = undefined;
 
 				return true;
 			})
@@ -240,7 +273,7 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, undefined);
 		}
 
 		TriggerAddCondition(
@@ -263,7 +296,7 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CHANNEL, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CHANNEL, undefined);
 		}
 
 		TriggerAddCondition(
@@ -296,14 +329,14 @@ export class TransportManager {
 						BlzPauseUnitEx(transport.unit, true);
 						BlzPauseUnitEx(transport.unit, false);
 						IssueImmediateOrder(transport.unit, 'stop');
-						ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+						ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 						return false;
 					} else {
 						if (this.isTargetTerrainInvalid(abilityTargetX, abilityTargetY)) {
 							BlzPauseUnitEx(transport.unit, true);
 							BlzPauseUnitEx(transport.unit, false);
 							IssueImmediateOrder(transport.unit, 'stop');
-							ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+							ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 							return false;
 						}
 					}
@@ -318,7 +351,7 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, undefined);
 		}
 
 		TriggerAddCondition(
@@ -334,7 +367,7 @@ export class TransportManager {
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
 
 					return false;
 				}
@@ -348,20 +381,6 @@ export class TransportManager {
 					unloadedUnits.forEach((unit) => {
 						TransportManager.delayedTrackQueue.push(unit);
 					});
-
-					// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
-					// Consider moving the timer into the UnitLagManager.
-					if (!TransportManager.delayedTrackTimerRunning) {
-						TransportManager.delayedTrackTimerRunning = true;
-						TimerStart(TransportManager.delayedTrackTimer, 0.1, false, () => {
-							TransportManager.delayedTrackQueue.forEach((unit) => {
-								debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
-								UnitLagManager.getInstance().trackUnit(unit);
-							});
-							TransportManager.delayedTrackQueue = [];
-							TransportManager.delayedTrackTimerRunning = false;
-						});
-					}
 				}
 			})
 		);
@@ -374,7 +393,7 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, undefined);
 		}
 
 		TriggerAddCondition(
@@ -398,7 +417,7 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, undefined);
 		}
 
 		TriggerAddCondition(
@@ -412,7 +431,7 @@ export class TransportManager {
 
 				if (this.isTerrainInvalid(transport.unit)) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
@@ -431,13 +450,13 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, undefined);
 		}
 
 		TriggerAddCondition(
 			t,
 			Condition(() => {
-				debugPrint('Transport Patrol Casted');
+				if (DEBUG_PRINTS.master) debugPrint('Transport Patrol Casted', DC.transport);
 				const transport: Transport = this.transports.get(GetTriggerUnit());
 
 				if (!transport || GetSpellAbilityId() !== ABILITY_ID.TRANSPORT_PATROL) {
@@ -446,18 +465,18 @@ export class TransportManager {
 
 				if (this.isTerrainInvalid(transport.unit)) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
-				debugPrint('Transport Patrol Valid');
+				if (DEBUG_PRINTS.master) debugPrint('Transport Patrol Valid', DC.transport);
 
 				if (transport.patrolEnabled) {
-					debugPrint('Transport Patrol Already Enabled - Stopping Previous Patrol');
+					if (DEBUG_PRINTS.master) debugPrint('Transport Patrol Already Enabled - Stopping Previous Patrol', DC.transport);
 					this.stopPatrol(transport);
 				}
 
-				debugPrint('Transport Patrol Starting');
+				if (DEBUG_PRINTS.master) debugPrint('Transport Patrol Starting', DC.transport);
 
 				transport.patrolEnabled = true;
 				transport.patrolState = PatrolState.LOADING;
@@ -468,16 +487,16 @@ export class TransportManager {
 				transport.patrolOriginY = GetUnitY(u);
 				transport.patrolLoadTimer = 0;
 
-				debugPrint(`Patrol Origin: (${transport.patrolOriginX}, ${transport.patrolOriginY})`);
-				debugPrint(`Patrol Destination: (${transport.patrolDestX}, ${transport.patrolDestY})`);
+				if (DEBUG_PRINTS.master) debugPrint(`Patrol Origin: (${transport.patrolOriginX}, ${transport.patrolOriginY})`, DC.transport);
+				if (DEBUG_PRINTS.master) debugPrint(`Patrol Destination: (${transport.patrolDestX}, ${transport.patrolDestY})`, DC.transport);
 
 				this.addAutoLoadEffect(transport);
 
 				const timedEventManager: TimedEventManager = TimedEventManager.getInstance();
 
-				debugPrint('Registering Patrol Timed Event');
+				if (DEBUG_PRINTS.master) debugPrint('Registering Patrol Timed Event', DC.transport);
 				transport.patrolEvent = timedEventManager.registerTimedEvent(1000000, () => {
-					debugPrint('Transport Patrol Tick');
+					if (DEBUG_PRINTS.master) debugPrint('Transport Patrol Tick', DC.transport);
 					this.handlePatrol(transport);
 				});
 
@@ -490,9 +509,9 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, null);
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, null);
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_ORDER, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_POINT_ORDER, undefined);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_TARGET_ORDER, undefined);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_ISSUED_ORDER, undefined);
 		}
 
 		TriggerAddCondition(
@@ -506,11 +525,11 @@ export class TransportManager {
 
 				if (!transport.isScriptOrdering) {
 					// Check if order is LOAD (allow manual loading without cancelling patrol)
-					if (GetIssuedOrderId() == ORDER_ID.LOAD) return false;
+					if (GetIssuedOrderId() === ORDER_ID.LOAD) return false;
 					// Check if order is UNLOAD (allow manual unloading without cancelling patrol)
-					if (GetIssuedOrderId() == ORDER_ID.UNLOAD_UNIT) return false;
+					if (GetIssuedOrderId() === ORDER_ID.UNLOAD_UNIT) return false;
 					// Check if order is UNLOAD ALL (allow manual unloading without cancelling patrol)
-					if (GetIssuedOrderId() == ORDER_ID.UNLOAD_ALL) return false;
+					if (GetIssuedOrderId() === ORDER_ID.UNLOAD_ALL) return false;
 
 					// Player issued order, cancel patrol
 					this.stopPatrol(transport);
@@ -528,7 +547,7 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, undefined);
 		}
 
 		TriggerAddCondition(
@@ -548,7 +567,7 @@ export class TransportManager {
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
@@ -564,7 +583,7 @@ export class TransportManager {
 		const t = CreateTrigger();
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_ENDCAST, null);
+			TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_SPELL_ENDCAST, undefined);
 		}
 
 		TriggerAddCondition(
@@ -576,11 +595,11 @@ export class TransportManager {
 					return false;
 				}
 
-				// Track unloaded units
+				// Queue unloaded units for delayed minimap re-tracking (same queue as onUnloadUnitStart)
 				const unloadedUnits = transport.cargo.filter((unit) => !IsUnitInTransport(unit, transport.unit));
 				transport.cargo = transport.cargo.filter((unit) => IsUnitInTransport(unit, transport.unit));
 				unloadedUnits.forEach((unit) => {
-					UnitLagManager.getInstance().trackUnit(unit);
+					TransportManager.delayedTrackQueue.push(unit);
 					const index = transport.orderedUnits.indexOf(unit);
 					if (index > -1) {
 						this.unregisterOrder(transport, unit);
@@ -612,7 +631,7 @@ export class TransportManager {
 	 */
 	private isTerrainInvalid(u: unit): boolean {
 		const terrainType = GetTerrainType(GetUnitX(u), GetUnitY(u));
-		return terrainType != FourCC('Vcbp');
+		return terrainType !== FourCC('Vcbp');
 	}
 
 	/**
@@ -620,7 +639,7 @@ export class TransportManager {
 	 */
 	private isTargetTerrainInvalid(positionX: number, positionY: number): boolean {
 		const terrainType = GetTerrainType(positionX, positionY);
-		return terrainType != FourCC('Vcbp');
+		return terrainType !== FourCC('Vcbp');
 	}
 
 	private addAutoLoadEffect(transport: Transport) {
@@ -636,7 +655,7 @@ export class TransportManager {
 	private removeAutoLoadEffect(transport: Transport) {
 		if (transport.effect) {
 			DestroyEffect(transport.effect);
-			transport.effect = null;
+			transport.effect = undefined;
 		}
 	}
 
@@ -687,6 +706,8 @@ export class TransportManager {
 
 		if (transport.cargo.length + transport.orderedUnits.length >= 10) return;
 
+		// Resolve real owner once (handles multi-shared slots)
+		const transportRealOwner = SharedSlotManager.getInstance().getOwnerOfUnit(transport.unit);
 		let group: group = CreateGroup();
 
 		GroupEnumUnitsInRange(
@@ -700,7 +721,7 @@ export class TransportManager {
 				if (IsUnitType(unit, UNIT_TYPE.SHIP)) return;
 				if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
 				if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
-				if (GetOwningPlayer(unit) != GetOwningPlayer(transport.unit)) return;
+				if (SharedSlotManager.getInstance().getOwnerOfUnit(unit) !== transportRealOwner) return;
 				
 				// Global check for already ordered units
 				if (this.allOrderedUnits.has(unit)) return;
@@ -713,7 +734,7 @@ export class TransportManager {
 		);
 
 		DestroyGroup(group);
-		group = null;
+		group = undefined;
 	}
 
 	/**
@@ -759,7 +780,7 @@ export class TransportManager {
 
 		if (transport.patrolEvent) {
 			TimedEventManager.getInstance().removeTimedEvent(transport.patrolEvent);
-			transport.patrolEvent = null;
+			transport.patrolEvent = undefined;
 		}
 
 		this.cancelLoadingOrders(transport);
@@ -812,7 +833,7 @@ export class TransportManager {
 
 					IssuePointOrder(transport.unit, 'unloadall', transport.patrolDestX, transport.patrolDestY);
 					transport.isScriptOrdering = false;
-				} else if (GetUnitCurrentOrder(transport.unit) != 851986) {
+				} else if (GetUnitCurrentOrder(transport.unit) !== 851986) {
 					transport.isScriptOrdering = true;
 					IssuePointOrder(transport.unit, 'move', transport.patrolDestX, transport.patrolDestY);
 					transport.isScriptOrdering = false;
@@ -820,7 +841,7 @@ export class TransportManager {
 				break;
 
 			case PatrolState.UNLOADING:
-				if (transport.cargo.length == 0) {
+				if (transport.cargo.length === 0) {
 					transport.patrolState = PatrolState.RETURNING;
 					transport.isScriptOrdering = true;
 					IssuePointOrder(transport.unit, 'move', transport.patrolOriginX, transport.patrolOriginY);
@@ -828,7 +849,7 @@ export class TransportManager {
 
 					SetUnitPathing(transport.unit, false);
 					transport.pathingDisableDuration = 5;
-				} else if (GetUnitCurrentOrder(transport.unit) != 852048) {
+				} else if (GetUnitCurrentOrder(transport.unit) !== 852048) {
 					transport.isScriptOrdering = true;
 					IssuePointOrder(transport.unit, 'unloadall', transport.patrolDestX, transport.patrolDestY);
 					transport.isScriptOrdering = false;
@@ -847,7 +868,7 @@ export class TransportManager {
 					transport.isScriptOrdering = false;
 
 					this.addAutoLoadEffect(transport);
-				} else if (GetUnitCurrentOrder(transport.unit) != 851986) {
+				} else if (GetUnitCurrentOrder(transport.unit) !== 851986) {
 					transport.isScriptOrdering = true;
 					IssuePointOrder(transport.unit, 'move', transport.patrolOriginX, transport.patrolOriginY);
 					transport.isScriptOrdering = false;

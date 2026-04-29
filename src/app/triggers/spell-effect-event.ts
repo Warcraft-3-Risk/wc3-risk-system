@@ -5,15 +5,14 @@ import { ActivePlayer } from '../player/types/active-player';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_SWAP_GUARD } from '../utils/events/event-constants';
 import { AnnounceOnLocationObserverOnly, AnnounceOnUnitObserverOnly } from '../game/announcer/announce';
-import { debugPrint } from '../utils/debug-print';
 
 export function SpellEffectEvent() {
 	const tSpellEffect: trigger = CreateTrigger();
 	const tSpellCast: trigger = CreateTrigger();
 
 	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-		TriggerRegisterPlayerUnitEvent(tSpellEffect, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, null);
-		TriggerRegisterPlayerUnitEvent(tSpellCast, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, null);
+		TriggerRegisterPlayerUnitEvent(tSpellEffect, Player(i), EVENT_PLAYER_UNIT_SPELL_EFFECT, undefined);
+		TriggerRegisterPlayerUnitEvent(tSpellCast, Player(i), EVENT_PLAYER_UNIT_SPELL_CAST, undefined);
 	}
 
 	onSpellEffect(tSpellEffect);
@@ -52,16 +51,16 @@ function onSpellEffect(trigger: trigger) {
 				// 	break;
 				case ABILITY_ID.SPWN_3000:
 				case ABILITY_ID.SPWN_6000:
-					const radius: number = GetSpellAbilityId() == ABILITY_ID.SPWN_3000 ? 3000 : 6000;
+					const radius: number = GetSpellAbilityId() === ABILITY_ID.SPWN_3000 ? 3000 : 6000;
 
 					player.trackedData.countries.forEach((val, country) => {
-						if (country.getOwner() == player.getPlayer()) {
+						if (country.getOwner() === player.getPlayer()) {
 							const spawner: unit = country.getSpawn().unit;
 
 							if (IsUnitInRangeXY(spawner, GetUnitX(GetTriggerUnit()), GetUnitY(GetTriggerUnit()), radius)) {
 								IssuePointOrder(spawner, 'setrally', x, y);
 
-								if (player.getPlayer() == GetLocalPlayer()) {
+								if (player.getPlayer() === GetLocalPlayer()) {
 									SelectUnit(spawner, true);
 								}
 							}
@@ -70,12 +69,12 @@ function onSpellEffect(trigger: trigger) {
 					break;
 				case ABILITY_ID.SPWN_ALL:
 					player.trackedData.countries.forEach((val, country) => {
-						if (country.getOwner() == player.getPlayer()) {
+						if (country.getOwner() === player.getPlayer()) {
 							const spawner: unit = country.getSpawn().unit;
 
 							IssuePointOrder(spawner, 'setrally', x, y);
 
-							if (player.getPlayer() == GetLocalPlayer()) {
+							if (player.getPlayer() === GetLocalPlayer()) {
 								SelectUnit(spawner, true);
 							}
 						}
@@ -83,7 +82,7 @@ function onSpellEffect(trigger: trigger) {
 					break;
 				case ABILITY_ID.SPWN_RESET:
 					player.trackedData.countries.forEach((val, country) => {
-						if (country.getOwner() == player.getPlayer()) {
+						if (country.getOwner() === player.getPlayer()) {
 							const spawner: unit = country.getSpawn().unit;
 							IssuePointOrder(spawner, 'setrally', GetUnitX(spawner), GetUnitY(spawner));
 						}

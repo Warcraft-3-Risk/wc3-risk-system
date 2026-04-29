@@ -1,5 +1,5 @@
 import { addScriptHook, W3TS_HOOK } from 'w3ts/hooks';
-import { MAP_NAME } from './app/utils/map-info';
+import { MAP_NAME, MAP_TYPE } from './app/utils/map-info';
 import { ConcreteCityBuilder } from './app/city/concrete-city-builder';
 import { ConcreteCountryBuilder } from './app/country/concrete-country-builder';
 import { CountrySettings } from './app/country/countries';
@@ -19,6 +19,7 @@ import { UnitTrainedEvent } from './app/triggers/unit-trained-event';
 import { KeyEvents } from './app/triggers/key-events';
 import { Quests } from './app/quests/quests';
 import CameraManager from './app/managers/camera-manager';
+import PlayerCameraPositionManager from './app/managers/player-camera-position-manager';
 import { TimedEventManager } from './app/libs/timer/timed-event-manager';
 import { AntiSpam } from './app/triggers/anti-spam';
 import { SetCommands } from './app/commands/commands';
@@ -32,12 +33,15 @@ import { CitySelectedEvent } from './app/triggers/city-selected-event';
 import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
 import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST, EDITOR_DEVELOPER_MODE } from './configs/game-settings';
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
-import { FogManager } from './app/managers/fog-manager';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
-import { ClientManager } from './app/game/services/client-manager';
+import { SharedSlotManager } from './app/game/services/shared-slot-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 import { PlayerManager } from './app/player/player-manager';
 import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCreatorSaveEvent } from './app/triggers/country-creator-event';
+import { TooltipManager } from './app/managers/tooltip-manager';
+import { ChatUIManager } from './app/managers/chat-ui-manager';
+import { detectGameStatus } from './app/utils/game-status';
+import { CityToCountry } from './app/country/country-map';
 
 //const BUILD_DATE = compiletime(() => new Date().toUTCString());
 
@@ -48,7 +52,8 @@ function tsMain() {
 			return;
 		}
 
-		if (!BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
+		// Only load custom minimap texture if file exists
+		if (MAP_TYPE !== 'world' && !BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
 			print('Failed to load minimap file!');
 		}
 
@@ -59,11 +64,14 @@ function tsMain() {
 		SetTimeOfDay(12.0);
 		SetTimeOfDayScale(0.0);
 		SetAllyColorFilterState(0);
+		SetCreepCampFilterState(false);
 
 		//Handle names to prevent namebug
 		NameManager.getInstance();
-		ClientManager.getInstance();
+		SharedSlotManager.getInstance();
 		PlayerManager.getInstance();
+		ChatUIManager.getInstance();
+		TooltipManager.getInstance();
 
 		//Set up countries
 		SetCountries();
@@ -124,13 +132,25 @@ function tsMain() {
 		const onLoadTimer: timer = CreateTimer();
 
 		TimerStart(onLoadTimer, 0.0, false, () => {
+			detectGameStatus();
 			clearTickUI();
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
+
+			// Start with Fog enabled so that the initial HideMinimap toggle respects the engine's fog state
+			FogEnable(true);
+			FogMaskEnable(true);
+
+			CityToCountry.forEach((country, city) => {
+				city.HideMinimap();
+			});
+
 			FogEnable(false);
 			FogMaskEnable(false);
+
 			SetConsoleUI();
 			// UnitKillDisplay.getInstance(); // Removed - using button tooltip instead
+			PlayerCameraPositionManager.getInstance();
 			CameraManager.getInstance();
 			ChatManager.getInstance();
 			TransportManager.getInstance();
@@ -141,7 +161,7 @@ function tsMain() {
 
 			EnableSelect(false, false);
 			EnableDragSelect(false, false);
-			FogManager.getInstance().turnFogOff();
+			// FogManager.getInstance().turnFogOff();
 
 			EventEmitter.getInstance();
 			EventCoordinator.getInstance();

@@ -8,6 +8,7 @@ import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
 import { LocalMessage } from 'src/app/utils/messages';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 
 export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 	onEnterState() {
@@ -16,7 +17,8 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer): void {
 		super.onCityCapture(city, preOwner, owner);
-		if (preOwner == owner) return;
+		// preOwner is nil when capturing a neutral hostile city (no ActivePlayer entry)
+		if (!preOwner || preOwner === owner) return;
 
 		if (this.stateData.capitals.get(preOwner.getPlayer()) === city) {
 			LocalMessage(
@@ -37,7 +39,7 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 				preOwner.status.set(PLAYER_STATUS.DEAD);
 			}
 
-			if (GetUnitTypeId(city.barrack.unit) == UNIT_ID.CAPITAL) {
+			if (GetUnitTypeId(city.barrack.unit) === UNIT_ID.CAPITAL) {
 				IssueImmediateOrderById(city.barrack.unit, UNIT_ID.CONQUERED_CAPITAL);
 			}
 
@@ -49,7 +51,7 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 	}
 
 	override onSwapGuard(targetedUnit: unit, city: City, triggerPlayer: player): void {
-		debugPrint('onSwapGuard');
+		if (DEBUG_PRINTS.master) debugPrint('onSwapGuard', DC.gameMode);
 		city.onCast(targetedUnit, triggerPlayer);
 	}
 }

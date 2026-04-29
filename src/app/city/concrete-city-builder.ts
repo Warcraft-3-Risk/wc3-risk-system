@@ -142,10 +142,10 @@ export class ConcreteCityBuilder implements CityBuilder, Resetable {
 	 * Resets the builder, clearing all set properties.
 	 */
 	public reset(): void {
-		this._barracks = null;
-		this._guard = null;
-		this._cop = null;
-		this._cityType = null;
+		this._barracks = undefined;
+		this._guard = undefined;
+		this._cop = undefined;
+		this._cityType = undefined;
 	}
 
 	/**
@@ -162,8 +162,8 @@ export class ConcreteCityBuilder implements CityBuilder, Resetable {
 		const region = CreateRegion();
 		RegionAddRect(region, rect);
 		RemoveRect(rect);
-		TriggerRegisterEnterRegion(EnterRegionTrigger, region, null);
-		TriggerRegisterLeaveRegion(LeaveRegionTrigger, region, null);
+		TriggerRegisterEnterRegion(EnterRegionTrigger, region, undefined);
+		TriggerRegisterLeaveRegion(LeaveRegionTrigger, region, undefined);
 		RegionToCity.set(region, city);
 	}
 }

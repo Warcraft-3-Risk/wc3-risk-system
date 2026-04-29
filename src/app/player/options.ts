@@ -4,6 +4,8 @@ export type Options = {
 	ping: boolean;
 	board: number;
 	labels: boolean;
+	colorblind: boolean;
+	colorContrast: boolean;
 	// Note: showRating preference is now stored in the rating file itself
 	// via RatingManager.getShowRatingPreference() / setShowRatingPreference()
 };

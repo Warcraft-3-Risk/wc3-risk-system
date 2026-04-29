@@ -16,13 +16,13 @@ import { RegionToCity } from 'src/app/city/city-map';
  */
 export class EqualizedPromodeDistributionService extends StandardDistributionService {
 	// Save "x_y" coordinate string -> player mapping (coordinates persist across resets, City objects don't)
-	private static savedAllocations: Map<string, player> | null = null;
+	private static savedAllocations: Map<string, player> | undefined = undefined;
 
 	// Track which round we're on (survives state resets, unlike stateData)
 	private static currentRoundNumber: number = 1;
 
 	// Track who won Round 1 (survives state resets, unlike stateData)
-	private static round1Winner: player | null = null;
+	private static round1Winner: player | undefined = undefined;
 
 	/**
 	 * Implements the equalized distribution algorithm.
@@ -144,14 +144,14 @@ export class EqualizedPromodeDistributionService extends StandardDistributionSer
 	/**
 	 * Sets the Round 1 winner (called from GameOverState).
 	 */
-	public static setRound1Winner(winner: player | null): void {
+	public static setRound1Winner(winner: player | undefined): void {
 		EqualizedPromodeDistributionService.round1Winner = winner;
 	}
 
 	/**
 	 * Gets the Round 1 winner.
 	 */
-	public static getRound1Winner(): player | null {
+	public static getRound1Winner(): player | undefined {
 		return EqualizedPromodeDistributionService.round1Winner;
 	}
 
@@ -159,8 +159,8 @@ export class EqualizedPromodeDistributionService extends StandardDistributionSer
 	 * Resets the saved allocations. Should be called when starting a new pair of rounds.
 	 */
 	public static resetAllocations(): void {
-		EqualizedPromodeDistributionService.savedAllocations = null;
+		EqualizedPromodeDistributionService.savedAllocations = undefined;
 		EqualizedPromodeDistributionService.currentRoundNumber = 1;
-		EqualizedPromodeDistributionService.round1Winner = null;
+		EqualizedPromodeDistributionService.round1Winner = undefined;
 	}
 }

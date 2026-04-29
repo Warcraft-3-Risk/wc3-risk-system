@@ -32,8 +32,8 @@ export function loadJsonFile(fname: string) {
 		const rawConfig = fs.readFileSync(fname).toString();
 		const substitutedConfig = rawConfig.replace(/\$\{(\w+)\}/g, (_, envVar) => process.env[envVar] || '');
 		return JSON.parse(substitutedConfig);
-	} catch (e: any) {
-		logger.error(e.toString());
+	} catch (e: unknown) {
+		logger.error(String(e));
 		return {};
 	}
 }
@@ -53,7 +53,52 @@ export function loadTerrainConfig(terrain: string): IProjectConfig {
 	}
 
 	logger.info(`Loading config from: ${configPath}`);
-	return loadJsonFile(configPath);
+	const config = loadJsonFile(configPath);
+	validateConfig(config, configPath);
+	return config;
+}
+
+/**
+ * Required fields and their expected types for a terrain config.
+ */
+const REQUIRED_CONFIG_FIELDS: Record<string, string> = {
+	mapFolder: 'string',
+	mapType: 'string',
+	mapName: 'string',
+	mapVersion: 'string',
+	mapNameStringId: 'number',
+	minifyScript: 'boolean',
+	launchArgs: 'object', // arrays are typeof 'object'
+};
+
+/**
+ * Validate a terrain config against the IProjectConfig schema.
+ * Logs warnings for missing or mistyped required fields.
+ * @param config The loaded config object
+ * @param configPath Path to the config file (for error messages)
+ */
+export function validateConfig(config: Record<string, unknown>, configPath: string): void {
+	const errors: string[] = [];
+
+	for (const [field, expectedType] of Object.entries(REQUIRED_CONFIG_FIELDS)) {
+		if (!(field in config)) {
+			errors.push(`  Missing required field: '${field}'`);
+		} else if (typeof config[field] !== expectedType) {
+			errors.push(`  Field '${field}' should be ${expectedType}, got ${typeof config[field]}`);
+		}
+	}
+
+	if ('launchArgs' in config && !Array.isArray(config['launchArgs'])) {
+		errors.push(`  Field 'launchArgs' should be an array`);
+	}
+
+	if (errors.length > 0) {
+		logger.error(`Config validation errors for ${configPath}:`);
+		for (const error of errors) {
+			logger.error(error);
+		}
+		throw new Error(`Config validation failed for ${configPath}. See errors above.`);
+	}
 }
 
 /**
@@ -61,9 +106,9 @@ export function loadTerrainConfig(terrain: string): IProjectConfig {
  * @param buf
  */
 export function toArrayBuffer(b: Buffer): ArrayBuffer {
-	var ab = new ArrayBuffer(b.length);
-	var view = new Uint8Array(ab);
-	for (var i = 0; i < b.length; ++i) {
+	const ab = new ArrayBuffer(b.length);
+	const view = new Uint8Array(ab);
+	for (let i = 0; i < b.length; ++i) {
 		view[i] = b[i];
 	}
 	return ab;
@@ -74,9 +119,9 @@ export function toArrayBuffer(b: Buffer): ArrayBuffer {
  * @param ab
  */
 export function toBuffer(ab: ArrayBuffer) {
-	var buf = Buffer.alloc(ab.byteLength);
-	var view = new Uint8Array(ab);
-	for (var i = 0; i < buf.length; ++i) {
+	const buf = Buffer.alloc(ab.byteLength);
+	const view = new Uint8Array(ab);
+	for (let i = 0; i < buf.length; ++i) {
 		buf[i] = view[i];
 	}
 	return buf;
@@ -89,7 +134,7 @@ export function toBuffer(ab: ArrayBuffer) {
 export function getFilesInDirectory(dir: string) {
 	const files: string[] = [];
 	fs.readdirSync(dir).forEach((file) => {
-		let fullPath = path.join(dir, file);
+		const fullPath = path.join(dir, file);
 		if (fs.lstatSync(fullPath).isDirectory()) {
 			const d = getFilesInDirectory(fullPath);
 			for (const n of d) {
@@ -111,6 +156,17 @@ function updateTSConfig(mapFolder: string) {
 	plugin.outputDir = path.relative('dist', mapFolder).replace(/\\/g, '/');
 
 	writeFileSync('tsconfig.json', JSON.stringify(tsconfig, undefined, 2));
+}
+
+/**
+ * Save the original tsconfig.json content before modification.
+ * Returns a restore function that writes the original content back.
+ */
+export function saveTSConfig(): () => void {
+	const original = fs.readFileSync('tsconfig.json', 'utf8');
+	return () => {
+		fs.writeFileSync('tsconfig.json', original);
+	};
 }
 
 /**
@@ -138,10 +194,16 @@ export function compileMap(config: IProjectConfig) {
 	syncObjectEditorFiles(config.mapType, config.mapFolder);
 
 	logger.info('Modifying tsconfig.json to work with war3-transformer...');
+	const restoreTSConfig = saveTSConfig();
 	updateTSConfig(config.mapFolder);
 
 	logger.info('Transpiling TypeScript to Lua...');
-	execSync('tstl -p tsconfig.json', { stdio: 'inherit' });
+	try {
+		execSync('tstl -p tsconfig.json', { stdio: 'inherit' });
+	} finally {
+		restoreTSConfig();
+		logger.info('Restored original tsconfig.json');
+	}
 
 	if (!fs.existsSync(tsLua)) {
 		logger.error(`Could not find "${tsLua}"`);
@@ -159,10 +221,24 @@ export function compileMap(config: IProjectConfig) {
 		// --- Merge everything ---
 		let contents = '';
 
-		let war3mapContents = fs.readFileSync(mapLua, 'utf8');
+		const war3mapContents = fs.readFileSync(mapLua, 'utf8');
 		const tstlOutput = fs.readFileSync(tsLua, 'utf8');
 
-		contents += war3mapContents + '\n' + tstlOutput;
+		// Inject raw Lua files from src/lua/ before the tstl bundle.
+		// Must come before tstlOutput because tstl may end with a top-level
+		// `return`, after which Lua rejects any further statements.
+		let rawLuaInjection = '';
+		const luaDir = path.join(__dirname, '..', 'src', 'lua');
+		if (fs.existsSync(luaDir)) {
+			const luaFiles = fs.readdirSync(luaDir).filter((f) => f.endsWith('.lua'));
+			for (const luaFile of luaFiles) {
+				const luaContent = fs.readFileSync(path.join(luaDir, luaFile), 'utf8');
+				rawLuaInjection += luaContent + '\n';
+				logger.info(`Injected raw Lua: ${luaFile}`);
+			}
+		}
+
+		contents += war3mapContents + '\n' + rawLuaInjection + tstlOutput;
 
 		// --- Optional minify ---
 		if (config.minifyScript) {
@@ -171,8 +247,8 @@ export function compileMap(config: IProjectConfig) {
 		}
 
 		fs.writeFileSync(mapLua, contents);
-	} catch (err: any) {
-		logger.error(err.toString());
+	} catch (err: unknown) {
+		logger.error(String(err));
 		return false;
 	}
 
@@ -183,7 +259,7 @@ export function compileMap(config: IProjectConfig) {
  * Formatter for log messages.
  */
 const loggerFormatFunc = printf(({ level, message, timestamp }) => {
-	// @ts-ignore
+	// @ts-expect-error timestamp is present but not in the type definition
 	return `[${timestamp.replace('T', ' ').split('.')[0]}] ${level}: ${message}`;
 });
 
@@ -209,7 +285,7 @@ export const logger = createLogger({
  */
 export function updateTsFileWithConfig(config: IProjectConfig) {
 	const tsFilePath = path.join(__dirname, '..', 'src/app/utils', 'map-info.ts');
-	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
+	const w3cModeEnabled = `${config.w3cModeEnabled}` === 'true';
 
 	const fileContent = `
 	//Do not edit - this will automatically update based on the project config.json upon building the map
@@ -288,6 +364,7 @@ export function syncObjectEditorFiles(targetTerrain: string, mapFolder: string) 
 		'war3mapSkin.w3a',
 		'war3mapSkin.w3b',
 		'war3mapSkin.w3h',
+		'war3mapSkin.txt',
 	];
 
 	logger.info(`Syncing object editor files from risk_europe.w3x to dist/${mapFolder}...`);

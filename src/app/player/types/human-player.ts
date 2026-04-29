@@ -12,7 +12,7 @@ export class HumanPlayer extends ActivePlayer {
 		const killer: player = this.getPlayer();
 
 		if (!this.status.isAlive() && !this.status.isNomad()) return;
-		if (victim == killer) {
+		if (victim === killer) {
 			this.trackedData.denies++;
 			return;
 		}
@@ -52,7 +52,7 @@ export class HumanPlayer extends ActivePlayer {
 		const val: number = GetUnitPointValue(unit);
 
 		// For denies (killing own units), don't track as kill/death or add to fight bonus
-		if (victim == killer) {
+		if (victim === killer) {
 			return;
 		}
 

@@ -5,7 +5,7 @@ import { UNIT_TYPE } from '../utils/unit-types';
 import { GetUnitsInRangeByAllegiance } from '../utils/guard-filters';
 import { CompareUnitByValue } from '../utils/unit-comparisons';
 import { UNIT_ID } from 'src/configs/unit-id';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { UnitLagManager } from '../game/services/unit-lag-manager';
 
 export const EnterRegionTrigger: trigger = CreateTrigger();
@@ -29,20 +29,20 @@ export function EnterRegionEvent() {
 			GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitOwnedByPlayer);
 
 			//No valid owned guards found, check for allies.
-			if (BlzGroupGetSize(g) == 0)
+			if (BlzGroupGetSize(g) === 0)
 				GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => UnitLagManager.IsUnitAlly(unit, player));
 
 			//No valid allies, check for enemies.
-			if (BlzGroupGetSize(g) == 0)
+			if (BlzGroupGetSize(g) === 0)
 				GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => UnitLagManager.IsUnitEnemy(unit, player));
 
 			const trigUnit: unit = GetTriggerUnit();
-			//Set guardChoice, Transports will be null
-			let guardChoice: unit = IsUnitType(trigUnit, UNIT_TYPE.TRANSPORT) ? null : getGuardChoice(g, trigUnit, city);
+			//Set guardChoice, Transports will be undefined
+			let guardChoice: unit = IsUnitType(trigUnit, UNIT_TYPE.TRANSPORT) ? undefined : getGuardChoice(g, trigUnit, city);
 
 			if (!guardChoice) {
 				guardChoice = CreateUnit(
-					ClientManager.getInstance().getOwnerOfUnit(trigUnit),
+					SharedSlotManager.getInstance().getOwnerOfUnit(trigUnit),
 					UNIT_ID.DUMMY_GUARD,
 					city.guard.defaultX,
 					city.guard.defaultY,
@@ -52,15 +52,15 @@ export function EnterRegionEvent() {
 
 			//Change owner if guardChoice is an enemy of the city.
 			if (UnitLagManager.IsUnitEnemy(guardChoice, city.getOwner())) {
-				city.setOwner(ClientManager.getInstance().getOwnerOfUnit(guardChoice));
+				city.setOwner(SharedSlotManager.getInstance().getOwnerOfUnit(guardChoice));
 			}
 
 			UnitToCity.delete(city.guard.unit);
 			city.guard.replace(guardChoice);
 			UnitToCity.set(guardChoice, city);
 			DestroyGroup(g);
-			g = null;
-			guardChoice = null;
+			g = undefined;
+			guardChoice = undefined;
 
 			return false;
 		})

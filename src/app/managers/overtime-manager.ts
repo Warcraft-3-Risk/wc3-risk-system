@@ -8,7 +8,7 @@ export class OvertimeManager {
 	private constructor() {}
 
 	public static getInstance(): OvertimeManager {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new OvertimeManager();
 		}
 

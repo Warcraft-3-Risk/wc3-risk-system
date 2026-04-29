@@ -2,6 +2,7 @@ import { GameLoopState } from '../base-game-mode/game-loop-state';
 import { ParticipantEntity, ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { CITIES_TO_WIN_WARNING_RATIO } from 'src/configs/game-settings';
 import { StateData } from '../state/state-data';
 
@@ -14,13 +15,15 @@ export class ProModeGameLoopState extends GameLoopState<StateData> {
 		const participants: ParticipantEntity[] = ParticipantEntityManager.getParticipantEntities();
 
 		participants.forEach((participant) => {
-			const opponents = [...participants.filter((p) => p != participant)];
+			const opponents = [...participants.filter((p) => p !== participant)];
 
 			const participantCityCount = ParticipantEntityManager.getCityCount(participant);
 			const opponentCityCounts = opponents.map((p) => ParticipantEntityManager.getCityCount(p)).reduce((a, b) => a + b, 0);
-			debugPrint(
-				`Checking city count for participant ${ParticipantEntityManager.getDisplayName(participant)}: ${participantCityCount} vs opponents: ${opponentCityCounts}`
-			);
+			if (DEBUG_PRINTS.master)
+				debugPrint(
+					`Checking city count for participant ${ParticipantEntityManager.getDisplayName(participant)}: ${participantCityCount} vs opponents: ${opponentCityCounts}`,
+					DC.gameMode
+				);
 			if (opponentCityCounts >= participantCityCount * 2) {
 				ParticipantEntityManager.localMessage(
 					participant,
@@ -39,16 +42,22 @@ export class ProModeGameLoopState extends GameLoopState<StateData> {
 				ParticipantEntityManager.executeByParticipantEntity(
 					participant,
 					(activePlayer) => {
-						debugPrint(`Setting status of ${ParticipantEntityManager.getDisplayName(activePlayer)} to DEAD due to city count.`);
+						if (DEBUG_PRINTS.master)
+							debugPrint(
+								`Setting status of ${ParticipantEntityManager.getDisplayName(activePlayer)} to DEAD due to city count.`,
+								DC.gameMode
+							);
 						activePlayer.status.set(PLAYER_STATUS.DEAD);
 					},
 					(team) => {
-						debugPrint(`Setting status of ${ParticipantEntityManager.getDisplayName(team)} to DEAD due to city count.`);
-						team.getMembers().forEach((activePlayer) => activePlayer.status.set(PLAYER_STATUS.DEAD));
+						if (DEBUG_PRINTS.master)
+							debugPrint(`Setting status of ${ParticipantEntityManager.getDisplayName(team)} to DEAD due to city count.`, DC.gameMode);
+						[...team.getMembers()].forEach((activePlayer) => activePlayer.status.set(PLAYER_STATUS.DEAD));
 					}
 				);
 			} else if (opponentCityCounts >= participantCityCount * 2 * CITIES_TO_WIN_WARNING_RATIO) {
-				debugPrint(`Participant ${ParticipantEntityManager.getDisplayName(participant)} is losing in city count.`);
+				if (DEBUG_PRINTS.master)
+					debugPrint(`Participant ${ParticipantEntityManager.getDisplayName(participant)} is losing in city count.`, DC.gameMode);
 				ParticipantEntityManager.localMessage(
 					participant,
 					"You are losing in city count!\n\nYou will automatically lose if you dip below half of your opponent's city count!",

@@ -1,4 +1,4 @@
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { Options } from '../player/options';
 import { PlayerManager } from '../player/player-manager';
 
@@ -12,11 +12,11 @@ import { PlayerManager } from '../player/player-manager';
 export function CompareUnitByValue(compareUnit: unit, initialUnit: unit): unit {
 	if (!initialUnit) return compareUnit;
 	if (!compareUnit) return initialUnit;
-	if (compareUnit == initialUnit) return initialUnit;
+	if (compareUnit === initialUnit) return initialUnit;
 
 	const initialUnitValue: number = GetUnitPointValue(initialUnit);
 	const compareUnitValue: number = GetUnitPointValue(compareUnit);
-	const playerSettings: Options = PlayerManager.getInstance().players.get(ClientManager.getInstance().getOwnerOfUnit(compareUnit)).options;
+	const playerSettings: Options = PlayerManager.getInstance().players.get(SharedSlotManager.getInstance().getOwnerOfUnit(compareUnit)).options;
 
 	if (!playerSettings.value && compareUnitValue < initialUnitValue) {
 		return compareUnit;
@@ -26,7 +26,7 @@ export function CompareUnitByValue(compareUnit: unit, initialUnit: unit): unit {
 		return compareUnit;
 	}
 
-	if (compareUnitValue == initialUnitValue) {
+	if (compareUnitValue === initialUnitValue) {
 		return CompareUnitByHealth(compareUnit, initialUnit, playerSettings);
 	}
 
@@ -42,7 +42,7 @@ export function CompareUnitByValue(compareUnit: unit, initialUnit: unit): unit {
  * @returns The unit that fits the player's settings.
  */
 export function CompareUnitByHealth(compareUnit: unit, initialUnit: unit, playerSettings: Options): unit {
-	if (compareUnit == initialUnit) return initialUnit;
+	if (compareUnit === initialUnit) return initialUnit;
 
 	const initialUnitValue: number = GetUnitState(initialUnit, UNIT_STATE_LIFE);
 	const compareUnitValue: number = GetUnitState(compareUnit, UNIT_STATE_LIFE);

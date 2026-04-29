@@ -4,6 +4,8 @@ import { HexColors } from '../utils/hex-colors';
 import { CityToCountry } from '../country/country-map';
 import { Country } from '../country/country';
 import { File } from 'w3ts';
+import { RatingManager } from '../rating/rating-manager';
+import { NameManager } from '../managers/names/name-manager';
 
 export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
@@ -77,7 +79,7 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 			player.options.labels = !player.options.labels;
 
 			// Only update visuals for the local player
-			if (player.getPlayer() == GetLocalPlayer()) {
+			if (player.getPlayer() === GetLocalPlayer()) {
 				// Save labels preference to file
 				File.write('risk/labels.pld', `${player.options.labels}`);
 
@@ -102,6 +104,57 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 		},
 	});
 }
+
+export function buildColorblindModeButton(player: ActivePlayer): framehandle {
+	// Initialize from saved preference for local player
+	if (player.getPlayer() === GetLocalPlayer()) {
+		const savedPreference = File.read('risk/colorblind.pld');
+		if (savedPreference === 'true') {
+			player.options.colorblind = true;
+		}
+	}
+
+	const button = createGuardButton({
+		player: player,
+		createContext: GetPlayerId(player.getPlayer()) + 400,
+		key: OSKEY_F5,
+		textures: {
+			primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNSentryWard.blp',
+			secondary: 'ReplaceableTextures\\CommandButtons\\BTNSentryWard.blp',
+		},
+		xOffset: 0.092,
+		initialTooltipText: `Colorblind Mode ${HexColors.TANGERINE}(F5)|r\nToggles ally minimap color between Teal and Yellow in Color Mode 1.\nCurrent preference: ${player.options.colorblind ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`,
+		action: (context: number, textures: { primary: string; secondary: string }) => {
+			player.options.colorblind = !player.options.colorblind;
+
+			if (player.getPlayer() === GetLocalPlayer()) {
+				File.write('risk/colorblind.pld', `${player.options.colorblind}`);
+
+				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+				const texture = player.options.colorblind ? textures.secondary : textures.primary;
+
+				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+				BlzFrameSetText(
+					buttonTooltip,
+					`Colorblind Mode ${HexColors.TANGERINE}(F5)|r\nToggles ally minimap color between Teal and Yellow in Color Mode 1.\nCurrent preference: ` +
+						`${player.options.colorblind ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`
+				);
+			}
+		},
+	});
+
+	// Set initial texture state for the button since createGuardButton defaults to primary
+	if (player.getPlayer() === GetLocalPlayer() && player.options.colorblind) {
+		const context = GetPlayerId(player.getPlayer()) + 400;
+		const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+		BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNSentryWard.blp', 0, false);
+	}
+
+	return button;
+}
+
 /**
  * Update the F4 rating stats button appearance based on ranked game status
  * Should be called after ranked status is determined in countdown phase
@@ -109,7 +162,7 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
  * @param isRanked Whether the game is ranked
  */
 export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isRanked: boolean): void {
-	if (GetLocalPlayer() != player.getPlayer()) {
+	if (GetLocalPlayer() !== player.getPlayer()) {
 		return;
 	}
 
@@ -123,8 +176,6 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 
 	if (isRanked) {
 		// For ranked games, show icon based on player's preference
-		const { RatingManager } = require('src/app/rating/rating-manager');
-		const { NameManager } = require('src/app/managers/names/name-manager');
 		const ratingManager = RatingManager.getInstance();
 		const btag = NameManager.getInstance().getBtag(player.getPlayer());
 		const showRating = ratingManager.getShowRatingPreference(btag);
@@ -143,18 +194,10 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 		}
 	} else {
 		// For unranked games, always show disabled icon
-		BlzFrameSetTexture(
-			buttonBackdrop,
-			'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
-			0,
-			false
-		);
+		BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp', 0, false);
 
 		if (buttonTooltip) {
-			BlzFrameSetText(
-				buttonTooltip,
-				`Ranked Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`
-			);
+			BlzFrameSetText(buttonTooltip, `Ranked Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`);
 		}
 	}
 }
@@ -171,25 +214,18 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 		xOffset: 0.069,
 		initialTooltipText: `Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
 		action: (context: number, textures: { primary: string; secondary: string }, button) => {
-			if (GetLocalPlayer() == player.getPlayer()) {
-				// Import RatingManager at runtime to check ranked status
-				const { RatingManager } = require('src/app/rating/rating-manager');
+			if (GetLocalPlayer() === player.getPlayer()) {
 				const ratingManager = RatingManager.getInstance();
 
 				// Check if this is a ranked game - if not, show message and do nothing
 				if (!ratingManager.isRankedGame()) {
-					DisplayTimedTextToPlayer(
-						player.getPlayer(),
-						0,
-						0,
-						3,
-						`${HexColors.TANGERINE}Ranked stats are unavailable in unranked games.|r`
-					);
+					DisplayTimedTextToPlayer(player.getPlayer(), 0, 0, 3, `${HexColors.TANGERINE}Ranked stats are unavailable in unranked games.|r`);
 					return;
 				}
 
-				// Import RatingSyncManager at runtime to check sync status
-				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager');
+				// Runtime require to avoid circular dependency:
+				// player-preference-buttons -> RatingSyncManager -> PlayerManager -> player-preference-buttons
+				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager') as typeof import('../rating/rating-sync-manager');
 
 				// Check if sync is complete before allowing UI access
 				if (!RatingSyncManager.getInstance().isSyncComplete()) {
@@ -212,4 +248,55 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 			}
 		},
 	});
+}
+
+
+export function buildColorContrastModeButton(player: ActivePlayer): framehandle {
+        // Initialize from saved preference for local player
+        if (player.getPlayer() === GetLocalPlayer()) {
+                const savedPreference = File.read('risk/colorcontrast.pld');
+                if (savedPreference === 'true') {
+                        player.options.colorContrast = true;
+                }
+        }
+
+        const button = createGuardButton({
+                player: player,
+                createContext: GetPlayerId(player.getPlayer()) + 500,
+                key: OSKEY_F3,
+                textures: {
+                        primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNLocustSwarm.blp',
+                        secondary: 'ReplaceableTextures\\CommandButtons\\BTNLocustSwarm.blp',
+                },
+                xOffset: 0.115,
+                initialTooltipText: `Color Contrast Mode ${HexColors.TANGERINE}(F3)|r\nToggles high contrast colors for units on the map.\nCurrent preference: ${player.options.colorContrast ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`,
+                action: (context: number, textures: { primary: string; secondary: string }) => {
+                        player.options.colorContrast = !player.options.colorContrast;
+
+                        if (player.getPlayer() === GetLocalPlayer()) {
+                                File.write('risk/colorcontrast.pld', `${player.options.colorContrast}`);
+
+                                const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+                                const texture = player.options.colorContrast ? textures.secondary : textures.primary;
+
+                                BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+                                const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+                                BlzFrameSetText(
+                                        buttonTooltip,
+                                        `Color Contrast Mode ${HexColors.TANGERINE}(F3)|r\nToggles high contrast colors for units on the map.\nCurrent preference: ` +
+                                                `${player.options.colorContrast ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`
+                                );
+                        }
+                },
+        });
+
+        // Set initial texture state for the button since createGuardButton defaults to primary
+        if (player.getPlayer() === GetLocalPlayer() && player.options.colorContrast) {
+                const context = GetPlayerId(player.getPlayer()) + 500;
+                const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+                BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNLocustSwarm.blp', 0, false);
+        }
+
+        return button;
 }

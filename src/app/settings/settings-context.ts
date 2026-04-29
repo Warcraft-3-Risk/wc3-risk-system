@@ -6,6 +6,8 @@ import { PromodeStrategy } from './strategies/promode-strategy';
 import { Settings } from './settings';
 import { OvertimeStrategy } from './strategies/overtime-strategy';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
+import { MatchFormat } from '../game/match-format-enum';
+import { GlobalGameData } from '../game/state/global-game-state';
 
 export type SettingsKey = 'GameType' | 'Diplomacy' | 'Fog' | 'Promode' | 'Overtime';
 
@@ -21,7 +23,7 @@ export class SettingsContext {
 	}
 
 	public static getInstance(): SettingsContext {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new SettingsContext(<Settings>{
 				GameType: 0,
 				Diplomacy: {
@@ -36,6 +38,13 @@ export class SettingsContext {
 		}
 
 		return this.instance;
+	}
+
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 */
+	public static resetInstance(): void {
+		this.instance = undefined as unknown as SettingsContext;
 	}
 
 	public initStrategies() {
@@ -79,7 +88,7 @@ export class SettingsContext {
 	 * @returns true if game is "promode"
 	 */
 	public isPromode(): boolean {
-		return this.settings.Promode == 1;
+		return this.settings.Promode === 1;
 	}
 
 	/**
@@ -87,7 +96,15 @@ export class SettingsContext {
 	 * @returns true if game is "equalized promode"
 	 */
 	public isEqualizedPromode(): boolean {
-		return this.settings.Promode == 2;
+		return this.settings.Promode === 2;
+	}
+
+	/**
+	 * Checks if the game setting is chaos promode
+	 * @returns true if game is "chaos promode"
+	 */
+	public isChaosPromode(): boolean {
+		return this.settings.Promode === 3;
 	}
 
 	/**
@@ -95,7 +112,7 @@ export class SettingsContext {
 	 * @returns true if fog is off
 	 */
 	public isFogOff(): boolean {
-		return this.settings.Fog == 0;
+		return this.settings.Fog === 0;
 	}
 
 	/**
@@ -103,7 +120,7 @@ export class SettingsContext {
 	 * @returns true if fog is on
 	 */
 	public isFogOn(): boolean {
-		return this.settings.Fog == 1;
+		return this.settings.Fog === 1;
 	}
 
 	/**
@@ -111,7 +128,7 @@ export class SettingsContext {
 	 * @returns true if fog is on
 	 */
 	public isNightFogOn(): boolean {
-		return this.settings.Fog == 2;
+		return this.settings.Fog === 2;
 	}
 
 	/**
@@ -119,14 +136,42 @@ export class SettingsContext {
 	 * @returns true if FFA
 	 */
 	public isFFA(): boolean {
-		return this.settings.Diplomacy.option == 0;
+		return this.settings.Diplomacy.option === 0;
+	}
+
+	/**
+	 * Checks if the game setting for Diplomacy is set to Lobby Teams or Lobby Teams (Shared)
+	 * @returns true if Lobby Teams or Lobby Teams (Shared)
+	 */
+	public isLobbyTeams(): boolean {
+		return this.settings.Diplomacy.option === 1 || this.settings.Diplomacy.option === 2;
+	}
+
+	/**
+	 * Determines the current match format based on game settings and player count
+	 * @returns The match format (FFA, 1v1, or Teams)
+	 */
+	public getMatchFormat(): MatchFormat {
+		if (this.isFFA()) {
+			return MatchFormat.FFA;
+		}
+
+		if (GlobalGameData.matchPlayers.length <= 2) {
+			return MatchFormat.VERSUS_1V1;
+		}
+
+		return MatchFormat.TEAMS;
+	}
+
+	public isTeamMatch(): boolean {
+		return this.getMatchFormat() === MatchFormat.TEAMS;
 	}
 
 	/**
 	 * Checks if the game type is set to Capitals
 	 */
 	public isCapitals(): boolean {
-		return this.settings.GameType == 1;
+		return this.settings.GameType === 1;
 	}
 
 	/**
@@ -134,7 +179,15 @@ export class SettingsContext {
 	 * @returns true if overtime is on
 	 */
 	public isOvertimeOn(): boolean {
-		return this.settings.Overtime.option != 3;
+		return this.settings.Overtime.option !== 3;
+	}
+
+	/**
+	 * Checks if the game setting for Diplomacy is set to Random Teams or Random Teams (Shared)
+	 * @returns true if Random Teams or Random Teams (Shared)
+	 */
+	public isRandomTeams(): boolean {
+		return this.settings.Diplomacy.option === 3 || this.settings.Diplomacy.option === 4;
 	}
 
 	public isW3CMode(): boolean {

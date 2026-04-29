@@ -4,7 +4,7 @@ import { StandardDistributionService } from '../../services/distribution-service
 import { GlobalGameData } from '../../state/global-game-state';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
-import { ClientManager } from '../../services/client-manager';
+import { SharedSlotManager } from '../../services/shared-slot-manager';
 
 export class CityDistributeState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -14,9 +14,9 @@ export class CityDistributeState<T extends StateData> extends BaseState<T> {
 				//Prevent guards from moving and update unit counts
 				IssueImmediateOrder(city.guard.unit, 'stop');
 
-				if (ClientManager.getInstance().getOwnerOfUnit(city.guard.unit) != NEUTRAL_HOSTILE) {
+				if (SharedSlotManager.getInstance().getOwnerOfUnit(city.guard.unit) !== NEUTRAL_HOSTILE) {
 					GlobalGameData.matchPlayers
-						.find((x) => x.getPlayer() == ClientManager.getInstance().getOwnerOfUnit(city.guard.unit))
+						.find((x) => x.getPlayer() === SharedSlotManager.getInstance().getOwnerOfUnit(city.guard.unit))
 						.trackedData.units.add(city.guard.unit);
 				}
 

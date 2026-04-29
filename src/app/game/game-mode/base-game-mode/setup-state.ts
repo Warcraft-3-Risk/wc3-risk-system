@@ -9,6 +9,7 @@ import { StateData } from '../state/state-data';
 import { Quests } from 'src/app/quests/quests';
 import { clearTickUI } from '../utillity/update-ui';
 import { TeamManager } from 'src/app/teams/team-manager';
+import { CHAOS_STARTING_INCOME, STARTING_INCOME } from 'src/configs/game-settings';
 import { TreeManager } from '../../services/tree-service';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { CountdownMessage } from '../../../utils/messages';
@@ -16,10 +17,10 @@ import { HexColors } from '../../../utils/hex-colors';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
-		this.run();
+		this.runAsync();
 	}
 
-	run(): void {
+	async runAsync(): Promise<void> {
 		CountdownMessage('Initializing the game');
 
 		// Only show help message on the first match (not on restarts)
@@ -36,6 +37,19 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 
 		StatisticsController.getInstance().setViewVisibility(false);
 
+		// Create session board for modes that use between-matches scoring (promode, chaos promode, random teams)
+		const needsSessionBoard =
+			SettingsContext.getInstance().isPromode() ||
+			SettingsContext.getInstance().isChaosPromode() ||
+			SettingsContext.getInstance().isRandomTeams();
+
+		if (needsSessionBoard) {
+			if (!ScoreboardManager.getInstance().getSessionBoard()) {
+				ScoreboardManager.getInstance().sessionSetup([...GlobalGameData.matchPlayers]);
+			}
+			ScoreboardManager.getInstance().hideSessionBoard();
+		}
+
 		SettingsContext.getInstance().applyStrategy('Promode');
 		SettingsContext.getInstance().applyStrategy('Diplomacy');
 
@@ -46,14 +60,22 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			GlobalGameData.leader = GlobalGameData.matchPlayers[Math.floor(Math.random() * GlobalGameData.matchPlayers.length)];
 		} else {
 			const teams = [...TeamManager.getInstance().getTeams()];
-			teams.forEach((team) => team.reset());
+			const teamStartingIncome = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
+			teams.forEach((team) => team.reset(teamStartingIncome));
 			// get random team from list
 			GlobalGameData.leader = teams[Math.floor(Math.random() * teams.length)];
-			ScoreboardManager.getInstance().teamSetup();
+			ScoreboardManager.getInstance().teamSetup(GlobalGameData.matchPlayers);
 		}
 
 		const observerKeys = [...PlayerManager.getInstance().observers.keys()];
 		ScoreboardManager.getInstance().obsSetup(GlobalGameData.matchPlayers, observerKeys);
+
+		// Pause AI for all computer players so they don't issue commands
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			if (GetPlayerController(Player(i)) === MAP_CONTROL_COMPUTER) {
+				PauseCompAI(Player(i), true);
+			}
+		}
 
 		VictoryManager.getInstance().reset();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
@@ -65,7 +87,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 
 		// To reset and reduce tree hp on first turn
 		if (GlobalGameData.turnCount === 0) {
-			TreeManager.getInstance().reset();
+			await TreeManager.getInstance().reset();
 		}
 
 		this.nextState(this.stateData);

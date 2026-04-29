@@ -12,24 +12,24 @@ import { truncateWithColorCode } from '../utils/utils';
 
 export class RatingStatsUI {
 	private player: ActivePlayer;
-	private frameBackdrop: framehandle | null = null;
+	private frameBackdrop: framehandle | undefined = undefined;
 	private isVisible: boolean = false;
-	private titleText: framehandle | null = null;
-	private rankIconBadge: framehandle | null = null;
-	private ratingText: framehandle | null = null;
-	private seasonText: framehandle | null = null;
-	private averageRankText: framehandle | null = null;
-	private gamesText: framehandle | null = null;
-	private winBarFill: framehandle | null = null;
-	private winPercentText: framehandle | null = null;
-	private killBarFill: framehandle | null = null;
-	private killPercentText: framehandle | null = null;
-	private toggleButton: framehandle | null = null;
-	private closeButton: framehandle | null = null;
-	private enableDisableButton: framehandle | null = null;
-	private enableDisableButtonText: framehandle | null = null;
-	private leaderboardFrame: framehandle | null = null;
-	private leaderboardCloseButton: framehandle | null = null;
+	private titleText: framehandle | undefined = undefined;
+	private rankIconBadge: framehandle | undefined = undefined;
+	private ratingText: framehandle | undefined = undefined;
+	private seasonText: framehandle | undefined = undefined;
+	private averageRankText: framehandle | undefined = undefined;
+	private gamesText: framehandle | undefined = undefined;
+	private winBarFill: framehandle | undefined = undefined;
+	private winPercentText: framehandle | undefined = undefined;
+	private killBarFill: framehandle | undefined = undefined;
+	private killPercentText: framehandle | undefined = undefined;
+	private toggleButton: framehandle | undefined = undefined;
+	private closeButton: framehandle | undefined = undefined;
+	private enableDisableButton: framehandle | undefined = undefined;
+	private enableDisableButtonText: framehandle | undefined = undefined;
+	private leaderboardFrame: framehandle | undefined = undefined;
+	private leaderboardCloseButton: framehandle | undefined = undefined;
 	private leaderboardRankIconFrames: framehandle[] = [];
 	private leaderboardRankFrames: framehandle[] = [];
 	private leaderboardELOFrames: framehandle[] = [];
@@ -38,17 +38,17 @@ export class RatingStatsUI {
 	private leaderboardWinsFrames: framehandle[] = [];
 	private leaderboardLossesFrames: framehandle[] = [];
 	private leaderboardGamesFrames: framehandle[] = [];
-	private leaderboardPrevButton: framehandle | null = null;
-	private leaderboardNextButton: framehandle | null = null;
-	private leaderboardMyPlaceButton: framehandle | null = null;
-	private leaderboardPageText: framehandle | null = null;
+	private leaderboardPrevButton: framehandle | undefined = undefined;
+	private leaderboardNextButton: framehandle | undefined = undefined;
+	private leaderboardMyPlaceButton: framehandle | undefined = undefined;
+	private leaderboardPageText: framehandle | undefined = undefined;
 	private isLeaderboardVisible: boolean = false;
 	private isInitialized: boolean = false;
 	private isLeaderboardInitialized: boolean = false;
 	private currentPage: number = 0;
 	private totalPages: number = 1;
 	private readonly PLAYERS_PER_PAGE: number = 10;
-	private escTrigger: trigger | null = null;
+	private escTrigger: trigger | undefined = undefined;
 
 	constructor(player: ActivePlayer) {
 		this.player = player;
@@ -61,7 +61,7 @@ export class RatingStatsUI {
 	 * Should be called during countdown or setup phase
 	 */
 	public preInitialize(): void {
-		if (GetLocalPlayer() == this.player.getPlayer()) {
+		if (GetLocalPlayer() === this.player.getPlayer()) {
 			// Initialize main rating stats frames
 			if (!this.isInitialized) {
 				this.initializeFrames();
@@ -118,7 +118,7 @@ export class RatingStatsUI {
 			BlzTriggerRegisterFrameEvent(toggleTrigger, this.toggleButton, FRAMEEVENT_CONTROL_CLICK);
 			TriggerAddAction(toggleTrigger, () => {
 				// Only execute for the player who owns this UI instance
-				if (GetTriggerPlayer() == this.player.getPlayer()) {
+				if (GetTriggerPlayer() === this.player.getPlayer()) {
 					// Check if leaderboard has data before showing
 					const ratingManager = RatingManager.getInstance();
 					if (!ratingManager.hasLeaderboardData()) {
@@ -142,7 +142,7 @@ export class RatingStatsUI {
 				BlzTriggerRegisterFrameEvent(closeTrigger, this.closeButton, FRAMEEVENT_CONTROL_CLICK);
 				TriggerAddAction(closeTrigger, () => {
 					// Only execute for the player who owns this UI instance
-					if (GetTriggerPlayer() == this.player.getPlayer()) {
+					if (GetTriggerPlayer() === this.player.getPlayer()) {
 						this.hide();
 					}
 				});
@@ -154,7 +154,7 @@ export class RatingStatsUI {
 				BlzTriggerRegisterFrameEvent(enableDisableTrigger, this.enableDisableButton, FRAMEEVENT_CONTROL_CLICK);
 				TriggerAddAction(enableDisableTrigger, () => {
 					// Only execute for the player who owns this UI instance
-					if (GetTriggerPlayer() == this.player.getPlayer()) {
+					if (GetTriggerPlayer() === this.player.getPlayer()) {
 						this.toggleShowRatingPreference();
 
 						// Reset frame to global context so hotkeys work
@@ -185,7 +185,7 @@ export class RatingStatsUI {
 	}
 
 	public show(): void {
-		if (GetLocalPlayer() == this.player.getPlayer()) {
+		if (GetLocalPlayer() === this.player.getPlayer()) {
 			if (!this.isInitialized) {
 				this.initializeFrames();
 				if (!this.isInitialized) {
@@ -212,7 +212,7 @@ export class RatingStatsUI {
 	}
 
 	public hide(): void {
-		if (GetLocalPlayer() == this.player.getPlayer()) {
+		if (GetLocalPlayer() === this.player.getPlayer()) {
 			if (this.frameBackdrop) {
 				BlzFrameSetEnable(this.frameBackdrop, false);
 				BlzFrameSetVisible(this.frameBackdrop, false);
@@ -339,7 +339,7 @@ export class RatingStatsUI {
 	}
 
 	public refresh(): void {
-		if (GetLocalPlayer() == this.player.getPlayer()) {
+		if (GetLocalPlayer() === this.player.getPlayer()) {
 			// Initialize frames if not already initialized
 			if (!this.isInitialized) {
 				this.initializeFrames();
@@ -511,7 +511,7 @@ export class RatingStatsUI {
 	}
 
 	public showLeaderboard(): void {
-		if (GetLocalPlayer() == this.player.getPlayer()) {
+		if (GetLocalPlayer() === this.player.getPlayer()) {
 			if (!this.isInitialized) return;
 
 			// Check if leaderboard has data
@@ -552,7 +552,7 @@ export class RatingStatsUI {
 	}
 
 	private hideLeaderboard(): void {
-		if (GetLocalPlayer() == this.player.getPlayer()) {
+		if (GetLocalPlayer() === this.player.getPlayer()) {
 			// Hide leaderboard window only (rating stats window is already hidden)
 			if (this.leaderboardFrame) {
 				BlzFrameSetVisible(this.leaderboardFrame, false);
@@ -581,7 +581,7 @@ export class RatingStatsUI {
 				BlzTriggerRegisterFrameEvent(closeLeaderboardTrigger, this.leaderboardCloseButton, FRAMEEVENT_CONTROL_CLICK);
 				TriggerAddAction(closeLeaderboardTrigger, () => {
 					// Only execute for the player who owns this UI instance
-					if (GetTriggerPlayer() == this.player.getPlayer()) {
+					if (GetTriggerPlayer() === this.player.getPlayer()) {
 						this.hideLeaderboard();
 					}
 				});
@@ -603,7 +603,7 @@ export class RatingStatsUI {
 				BlzTriggerRegisterFrameEvent(prevTrigger, this.leaderboardPrevButton, FRAMEEVENT_CONTROL_CLICK);
 				TriggerAddAction(prevTrigger, () => {
 					// Only execute for the player who owns this UI instance
-					if (GetTriggerPlayer() == this.player.getPlayer()) {
+					if (GetTriggerPlayer() === this.player.getPlayer()) {
 						this.previousPage();
 
 						BlzFrameSetEnable(this.leaderboardPrevButton, false);
@@ -625,7 +625,7 @@ export class RatingStatsUI {
 				BlzTriggerRegisterFrameEvent(nextTrigger, this.leaderboardNextButton, FRAMEEVENT_CONTROL_CLICK);
 				TriggerAddAction(nextTrigger, () => {
 					// Only execute for the player who owns this UI instance
-					if (GetTriggerPlayer() == this.player.getPlayer()) {
+					if (GetTriggerPlayer() === this.player.getPlayer()) {
 						this.nextPage();
 
 						BlzFrameSetEnable(this.leaderboardNextButton, false);
@@ -647,7 +647,7 @@ export class RatingStatsUI {
 				BlzTriggerRegisterFrameEvent(myPlaceTrigger, this.leaderboardMyPlaceButton, FRAMEEVENT_CONTROL_CLICK);
 				TriggerAddAction(myPlaceTrigger, () => {
 					// Only execute for the player who owns this UI instance
-					if (GetTriggerPlayer() == this.player.getPlayer()) {
+					if (GetTriggerPlayer() === this.player.getPlayer()) {
 						this.jumpToMyPlace();
 					}
 				});

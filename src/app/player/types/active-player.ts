@@ -6,6 +6,7 @@ import { GamePlayer } from './game-player';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { PLAYER_STATUS } from '../status/status-enum';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
+import { RatingStatsUI } from 'src/app/ui/rating-stats-ui';
 
 //Use lowercase for simplicity here
 const adminList: string[] = [];
@@ -17,7 +18,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 	private _options: Options;
 	private _admin: boolean;
 	private _killedBy: player;
-	private _ratingStatsUI: any = null;
+	private _ratingStatsUI: RatingStatsUI | undefined = undefined;
 
 	constructor(player: player) {
 		this._player = player;
@@ -29,12 +30,14 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 			labels: true,
+			colorblind: false,
+			colorContrast: false,
 		};
-		this._killedBy = null;
+		this._killedBy = undefined;
 		this._admin = false;
 
 		adminList.forEach((name) => {
-			if (NameManager.getInstance().getBtag(this._player).toLowerCase() == name) {
+			if (NameManager.getInstance().getBtag(this._player).toLowerCase() === name) {
 				this._admin = true;
 			}
 		});
@@ -50,7 +53,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 	public reset(): void {
 		this.trackedData.reset();
 
-		this._killedBy = null;
+		this._killedBy = undefined;
 
 		this.status.set(PLAYER_STATUS.ALIVE);
 
@@ -60,11 +63,13 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 			labels: true,
+			colorblind: false,
+			colorContrast: false,
 		};
 	}
 
 	public giveGold(val?: number): void {
-		if (GlobalGameData.matchState != 'inProgress') return;
+		if (GlobalGameData.matchState !== 'inProgress') return;
 
 		if (!val) val = this.trackedData.income.income;
 
@@ -79,7 +84,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		}
 	}
 
-	public setEndData() {
+	public setEndData(revealName: boolean = true) {
 		const handle: player = this.getPlayer();
 
 		this.trackedData.income.end = this.trackedData.income.income;
@@ -95,12 +100,13 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 
 		this.trackedData.gold.end = GetPlayerState(handle, PLAYER_STATE_RESOURCE_GOLD);
 
-		if (handle == GetLocalPlayer()) {
-			EnableSelect(false, false);
-			EnableDragSelect(false, false);
+		if (handle === GetLocalPlayer()) {
+			BlzEnableSelections(false, false);
 		}
 
-		NameManager.getInstance().setName(handle, 'btag');
+		if (revealName) {
+			NameManager.getInstance().setName(handle, 'obs');
+		}
 	}
 
 	public get trackedData(): TrackedData {
@@ -127,11 +133,11 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		return this._admin;
 	}
 
-	public get ratingStatsUI(): any {
+	public get ratingStatsUI(): RatingStatsUI | undefined {
 		return this._ratingStatsUI;
 	}
 
-	public set ratingStatsUI(value: any) {
+	public set ratingStatsUI(value: RatingStatsUI | undefined) {
 		this._ratingStatsUI = value;
 	}
 }

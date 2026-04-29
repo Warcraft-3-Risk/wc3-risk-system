@@ -17,14 +17,16 @@ import { OvertimeManager } from 'src/app/managers/overtime-manager';
 import { Team } from 'src/app/teams/team';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { FogManager } from 'src/app/managers/fog-manager';
 import { AnnounceOnLocation } from '../../announcer/announce';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
-import { ClientManager } from '../../services/client-manager';
+import { SharedSlotManager } from '../../services/shared-slot-manager';
 import { IncomeManager } from 'src/app/managers/income-manager';
 import { RatingManager } from 'src/app/rating/rating-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
+import { applyEliminatedBuff } from '../utillity/on-player-status';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -67,10 +69,6 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				// Check if a turn has ended
 				this.onTick(GlobalGameData.tickCounter);
 
-				if (GlobalGameData.tickCounter <= 0) {
-					this.onEndTurn(GlobalGameData.turnCount);
-				}
-
 				// Stop game loop if match is over
 				if (this.isMatchOver()) {
 					PauseTimer(_matchLoopTimer);
@@ -90,7 +88,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				updateTickUI();
 			} catch (error) {
 				File.write('errors', error as string);
-				debugPrint('Error in Timer ' + error);
+				if (DEBUG_PRINTS.master) debugPrint('Error in Timer ' + error, DC.gameMode);
 			}
 		});
 	}
@@ -106,7 +104,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	isMatchOver(): boolean {
-		return GlobalGameData.matchState == 'postMatch';
+		return GlobalGameData.matchState === 'postMatch';
 	}
 
 	onExitState(): void {
@@ -124,7 +122,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		// First turn should always be half day
 		if (turn === 0) {
-			debugPrint('first turn, turning off fog');
+			if (DEBUG_PRINTS.master) debugPrint('first turn, turning off fog', DC.gameMode);
 			SetTimeOfDay(12.0);
 			FogManager.getInstance().turnFogOff();
 			return;
@@ -138,29 +136,29 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		// 3 = day
 
 		// dusk
-		if (phase == 0) {
-			debugPrint('Phase is dusk (0), turning on fog');
+		if (phase === 0) {
+			if (DEBUG_PRINTS.master) debugPrint('Phase is dusk (0), turning on fog', DC.gameMode);
 			SetTimeOfDay(18.0);
 			FogManager.getInstance().turnFogOn();
 			return;
 		}
 
-		if (phase == 1) {
-			debugPrint('Phase is night (1), turning on fog');
+		if (phase === 1) {
+			if (DEBUG_PRINTS.master) debugPrint('Phase is night (1), turning on fog', DC.gameMode);
 			SetTimeOfDay(0.0);
 			FogManager.getInstance().turnFogOn();
 			return;
 		}
 
-		if (phase == 2) {
-			debugPrint('Phase is dawn (2), turning off fog');
+		if (phase === 2) {
+			if (DEBUG_PRINTS.master) debugPrint('Phase is dawn (2), turning off fog', DC.gameMode);
 			SetTimeOfDay(6.0);
 			FogManager.getInstance().turnFogOff();
 			return;
 		}
 
-		if (phase == 3) {
-			debugPrint('Phase is day (3), turning off fog');
+		if (phase === 3) {
+			if (DEBUG_PRINTS.master) debugPrint('Phase is day (3), turning off fog', DC.gameMode);
 			SetTimeOfDay(12.0);
 			FogManager.getInstance().turnFogOff();
 			return;
@@ -169,18 +167,17 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onStartTurn(turn: number): void {
 		this.updateFogSettings(turn);
-		const allocated = ClientManager.getInstance().allocateClientSlot();
-		debugPrint(`GameLoopState: Client allocation on turn start: ${allocated ? 'successful' : 'not needed or failed'}`);
-		// If a client was allocated, we need to update the scoreboard visibility and do a full update
-		// This is to ensure that the scoreboard is correctly displayed for the newly allocated client
-		if (allocated) {
-			debugPrint('GameLoopState: Client allocated, updating scoreboard visibility and full update');
-			ScoreboardManager.getInstance().toggleVisibility(false); // Required to prevent shared control clients from overriding the scoreboard
-			ScoreboardManager.getInstance().toggleVisibility(true); // ^
+		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: turn start (turn ${turn})`, DC.redistribute);
+		const changed = SharedSlotManager.getInstance().evaluateAndRedistribute();
+		if (DEBUG_PRINTS.master)
+			debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`, DC.redistribute);
+
+		if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] === Turn ${turn} Slot Summary ===`, DC.sharedSlots);
+		SharedSlotManager.getInstance().debugPrintSlotCounts();
+
+		if (!changed) {
 			ScoreboardManager.getInstance().updateFull();
-			debugPrint('GameLoopState: Scoreboard updated after client allocation');
 		}
-		ScoreboardManager.getInstance().updateFull();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		GlobalGameData.matchPlayers
 			.filter((x) => x.status.isActive())
@@ -197,7 +194,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onEndTurn(turn: number): void {
-		if (VictoryManager.GAME_VICTORY_STATE == 'DECIDED') {
+		if (VictoryManager.GAME_VICTORY_STATE === 'DECIDED') {
 			GlobalGameData.matchState = 'postMatch';
 		}
 
@@ -214,9 +211,10 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		// Refresh rating stats UI for all players to show updated K/D values
 		// This runs REGARDLESS of ranked status so players can see their current game stats
-		debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`, DC.gameMode);
 		GlobalGameData.matchPlayers.forEach((player) => {
-			if (player.ratingStatsUI && player.ratingStatsUI.refresh) {
+			if (player.ratingStatsUI) {
 				player.ratingStatsUI.refresh();
 			}
 		});
@@ -224,6 +222,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onTick(tick: number): void {
 		VictoryManager.getInstance().updateAndGetGameState();
+
 		ScoreboardManager.getInstance().updatePartial();
 	}
 
@@ -240,7 +239,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			return true;
 		});
 
-		if (playersToAnnounce.length == 0) return;
+		if (playersToAnnounce.length === 0) return;
 
 		// Find the maximum city count among players above win threshold (for determining actual ties)
 		const winThreshold = VictoryManager.getCityCountWin();
@@ -255,13 +254,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		function playerCityCountDescription(candidate: ActivePlayer, state: VictoryProgressState, maxCities: number) {
 			const playerCities = candidate.trackedData.cities.cities.length;
 			// Only show "TIED to win" if player has the maximum city count (actually tied)
-			if (state == 'TIE' && playerCities >= VictoryManager.getCityCountWin() && playerCities == maxCities) {
+			if (state === 'TIE' && playerCities >= VictoryManager.getCityCountWin() && playerCities === maxCities) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
 				const remainingCities = VictoryManager.getCityCountWin() - playerCities;
 				if (remainingCities < 0) {
 					return `satisfies the city count to win!`;
-				} else if (remainingCities == 0) {
+				} else if (remainingCities === 0) {
 					return `must maintain their city count this round to win!`;
 				} else {
 					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - playerCities}|r more to win!`;
@@ -280,13 +279,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		function teamCityCountDescription(candidate: Team, state: VictoryProgressState, maxCities: number) {
 			const teamCities = candidate.getCities();
 			// Only show "TIED to win" if team has the maximum city count (actually tied)
-			if (state == 'TIE' && teamCities >= VictoryManager.getCityCountWin() && teamCities == maxCities) {
+			if (state === 'TIE' && teamCities >= VictoryManager.getCityCountWin() && teamCities === maxCities) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
 				const remainingCities = VictoryManager.getCityCountWin() - teamCities;
 				if (remainingCities < 0) {
 					return `satisfies the city count to win!`;
-				} else if (remainingCities == 0) {
+				} else if (remainingCities === 0) {
 					return `must maintain their city count this round to win!`;
 				} else {
 					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - teamCities}|r more to win!`;
@@ -301,7 +300,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		}
 
 		const tiedMessage =
-			VictoryManager.GAME_VICTORY_STATE == 'TIE'
+			VictoryManager.GAME_VICTORY_STATE === 'TIE'
 				? `${OvertimeManager.isOvertimeActive() ? `${HexColors.RED}TIED!\nGAME EXTENDED BY ONE ROUND!|r` : ''}`
 				: '';
 		const overtimeMessage = OvertimeManager.isOvertimeActive() ? `${HexColors.RED}OVERTIME!|r` : '';
@@ -328,13 +327,11 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	}
 
 	onUnitKilled(killingUnit: unit, dyingUnit: unit): void {
-		const killingUnitOwner = ClientManager.getInstance().getOwnerOfUnit(killingUnit);
+		const cm = SharedSlotManager.getInstance();
+		const killingUnitOwner = cm.getOwnerOfUnit(killingUnit);
 		const colorString = PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(killingUnitOwner));
 
-		if (
-			ClientManager.getInstance().getOwnerOfUnit(killingUnit) == GetOwningPlayer(dyingUnit) &&
-			!IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)
-		) {
+		if (killingUnitOwner === cm.getOwnerOfUnit(dyingUnit) && !IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE)) {
 			if (!IsFoggedToPlayer(GetUnitX(dyingUnit), GetUnitY(dyingUnit), GetLocalPlayer())) {
 				AnnounceOnLocation(`${colorString}Denied`, GetUnitX(dyingUnit), GetUnitY(dyingUnit) + 20, 2.0, 3.0);
 			}
@@ -359,6 +356,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onPlayerLeft(player: ActivePlayer): void {
 		super.onPlayerLeft(player);
 
+		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: player left (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
+
+		// In FFA, apply a damage-over-time debuff to the eliminated player's units.
+		// Units remain on the player's slot and slowly die off; slots are reclaimed organically.
+		// In team games, teammates retain control of the eliminated player's units without debuff.
+		if (SettingsContext.getInstance().isFFA()) applyEliminatedBuff(player.getPlayer());
+
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();
 			GlobalGameData.matchState = 'postMatch';
@@ -376,6 +380,13 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onPlayerDead(player: ActivePlayer, forfeit?: boolean): void {
 		super.onPlayerDead(player, forfeit);
+
+		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Triggered by: player dead (${GetPlayerName(player.getPlayer())})`, DC.redistribute);
+
+		// In FFA, apply a damage-over-time debuff to the eliminated player's units.
+		// Units remain on the player's slot and slowly die off; slots are reclaimed organically.
+		// In team games, teammates retain control of the eliminated player's units without debuff.
+		if (SettingsContext.getInstance().isFFA()) applyEliminatedBuff(player.getPlayer());
 
 		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((_) => {
 			VictoryManager.getInstance().updateAndGetGameState();

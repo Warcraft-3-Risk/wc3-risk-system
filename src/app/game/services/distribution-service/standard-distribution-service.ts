@@ -6,6 +6,9 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 import { GetRandomElementFromArray } from 'src/app/utils/utils';
 import { DoublyLinkedList } from 'src/app/utils/doubly-linked-list';
 import { CITIES_PER_PLAYER_UPPER_BOUND } from 'src/configs/game-settings';
+import { SharedSlotManager } from '../shared-slot-manager';
+import { debugPrint } from 'src/app/utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 
 /**
  * Handles the distribution of cities among active players.
@@ -61,7 +64,7 @@ export class StandardDistributionService {
 					neutralCities.push(city);
 				}
 
-				if (this.players.length() == 0) break;
+				if (this.players.length() === 0) break;
 			}
 
 			//TODO
@@ -95,9 +98,9 @@ export class StandardDistributionService {
 	/**
 	 * Finds a valid player for a given city.
 	 * @param city - The city for which a player is needed.
-	 * @returns An ActivePlayer object if found, otherwise null.
+	 * @returns An ActivePlayer object if found, otherwise undefined.
 	 */
-	private getValidPlayerForCity(city: City): ActivePlayer | null {
+	private getValidPlayerForCity(city: City): ActivePlayer | undefined {
 		const maxIterations: number = this.players.length();
 		const country: Country = CityToCountry.get(city);
 
@@ -111,7 +114,7 @@ export class StandardDistributionService {
 			}
 		}
 
-		return null;
+		return undefined;
 	}
 
 	/**
@@ -145,6 +148,9 @@ export class StandardDistributionService {
 	protected changeCityOwner(city: City, player: ActivePlayer) {
 		city.setOwner(player.getPlayer());
 		SetUnitOwner(city.guard.unit, player.getPlayer(), true);
+		if (DEBUG_PRINTS.master)
+			debugPrint(`[SharedSlots] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`, DC.sharedSlots);
+		SharedSlotManager.getInstance().incrementUnitCount(player.getPlayer());
 	}
 
 	protected setCities = (cities: City[]): void => {

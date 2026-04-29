@@ -19,10 +19,10 @@ export function CountryCreatorCountryEvent() {
         const message = GetEventPlayerChatString()
         const country = message.substring(9, message.length);
         let unassignedCities = countryTracker.getUnassignedCities()
-        if (unassignedCities.length == 0)
+        if (unassignedCities.length === 0)
             DisplayTextToPlayer(Player(0), 0, 0, "Select some cities to assign them first.")
         let unassignedSpawner = countryTracker.getUnassignedSpawner()
-        if (unassignedSpawner !== null) {
+        if (unassignedSpawner !== undefined) {
             countryTracker.createCountryFromUnassigned(country, unassignedSpawner)
             DisplayTextToPlayer(Player(0), 0, 0, `Created ${country}.`)
         }
@@ -71,11 +71,11 @@ export function CountryCreatorCoordinatesEvent() {
             }
 
 
-            if (IsUnitType(GetTriggerUnit(), UNIT_TYPE.CITY) && UnitToCity.get(GetTriggerUnit()) == null) {
+            if (IsUnitType(GetTriggerUnit(), UNIT_TYPE.CITY) && UnitToCity.get(GetTriggerUnit()) === undefined) {
 
                 let countryName = countryTracker.findCountryByCityCoordinates(coords)
 
-                if (countryName == null) {
+                if (countryName === undefined) {
                     DisplayTextToPlayer(Player(0), 0, 0, "Added city to unassigned cities. When you are ready, select a spawner and then type -country 'name' to create the country.")
                     if (GetUnitTypeId(GetTriggerUnit()) === UNIT_ID.PORT)
                         countryTracker.addUnassignedCity({ coords: coords, typeId: 'UNIT_ID.PORT', cityType: 'port' })

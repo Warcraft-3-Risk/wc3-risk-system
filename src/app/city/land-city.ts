@@ -9,8 +9,10 @@ import { UNIT_ID } from 'src/configs/unit-id';
 import { CityToCountry } from '../country/country-map';
 import { TeamManager } from '../teams/team-manager';
 import { debugPrint } from '../utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { LocalMessage } from '../utils/messages';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
+import { MinimapIconManager } from '../managers/minimap-icon-manager';
 
 /**
  * LandCity is a variant of City for land based terrain.
@@ -50,7 +52,7 @@ export class LandCity extends City {
 	public onUnitTrain(unit: unit): void {
 		//TODO remove the defaultguardtype dependancy here.
 		//Maybe just run player options instead
-		if (IsUnitMelee(this.guard.unit) && GetUnitTypeId(unit) == DefaultGuardType) {
+		if (IsUnitMelee(this.guard.unit) && GetUnitTypeId(unit) === DefaultGuardType) {
 			SetUnitPosition(unit, this.guard.defaultX, this.guard.defaultY);
 			UnitToCity.delete(this.guard.unit);
 			this.guard.replace(unit);
@@ -70,38 +72,38 @@ export class LandCity extends City {
 		// city.onCast(targetedUnit, triggerPlayer);
 		// Not a capital then swap
 		if (!this.isCapital()) {
-			debugPrint('Not a capital then swap');
+			if (DEBUG_PRINTS.master) debugPrint('Not a capital then swap', DC.city);
 			this.castHandler(targetedUnit);
 			return;
 		}
 
 		// If owner then swap
-		if (ClientManager.getInstance().getOwnerOfUnit(targetedUnit) === this.getOwner()) {
-			debugPrint('If same owner then swap');
+		if (SharedSlotManager.getInstance().getOwnerOfUnit(targetedUnit) === this.getOwner()) {
+			if (DEBUG_PRINTS.master) debugPrint('If same owner then swap', DC.city);
 			this.castHandler(targetedUnit);
 			return;
 		}
 
 		// If enemy team then don't swap
 		const shareTeam = TeamManager.getInstance()
-			.getTeamFromPlayer(ClientManager.getInstance().getOwnerOfUnit(targetedUnit))
+			.getTeamFromPlayer(SharedSlotManager.getInstance().getOwnerOfUnit(targetedUnit))
 			.playerIsInTeam(this.getOwner());
 		if (!shareTeam) {
-			debugPrint("If enemy team then don't swap");
+			if (DEBUG_PRINTS.master) debugPrint("If enemy team then don't swap", DC.city);
 			LocalMessage(triggerPlayer, `You can only switch guards with an ally unit!`, 'Sound\\Interface\\Error.flac');
 			return;
 		}
 
 		// If captured capital then swap
 		const unitTypeId = GetUnitTypeId(this.barrack.unit);
-		if (unitTypeId == UNIT_ID.CONQUERED_CAPITAL) {
+		if (unitTypeId === UNIT_ID.CONQUERED_CAPITAL) {
 			this.castHandler(targetedUnit);
 			return;
 		}
 
 		// Owner of capital is alive
-		if (unitTypeId == UNIT_ID.CAPITAL) {
-			debugPrint('You can not swap the guard of an allied capital!');
+		if (unitTypeId === UNIT_ID.CAPITAL) {
+			if (DEBUG_PRINTS.master) debugPrint('You can not swap the guard of an allied capital!', DC.city);
 			LocalMessage(triggerPlayer, `You can not swap the guard of an allied capital!`, 'Sound\\Interface\\Error.flac');
 			return;
 		}
@@ -130,6 +132,9 @@ export class LandCity extends City {
 		this.capital = true;
 		CityToCountry.get(this).getSpawn().setMultiplier(2);
 		IssueImmediateOrderById(this.barrack.unit, UNIT_ID.CAPITAL);
+
+		// Add capital border on minimap
+		MinimapIconManager.getInstance().addCapitalBorder(this);
 	}
 
 	/**

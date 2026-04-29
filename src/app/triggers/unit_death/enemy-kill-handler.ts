@@ -5,8 +5,8 @@ import { ReplaceGuard } from './replace-guard';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 //This is where it falls for the bug. city = Owned city. killingUnit = killingCity. dyingUnit = dyingGuard
 export function EnemyKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (!UnitLagManager.IsUnitEnemy(killingUnit, city.getOwner())) return null;
-	if (IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE) && IsUnitType(dyingUnit, UNIT_TYPE_SAPPER)) return null;
+	if (!UnitLagManager.IsUnitEnemy(killingUnit, city.getOwner())) return undefined;
+	if (IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE) && IsUnitType(dyingUnit, UNIT_TYPE_SAPPER)) return undefined;
 
 	const searchGroup: group = CreateGroup();
 
