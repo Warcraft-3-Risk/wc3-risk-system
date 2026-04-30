@@ -123,12 +123,12 @@ export class MinimapIconManager {
 						});
 					});
 					this.cityIcons.forEach((_, city) => {
-										AllyColorFilterManager.getInstance().applyColorFilter(city.barrack.unit);
-										AllyColorFilterManager.getInstance().applyColorFilter(city.cop);
-										if (city.guard && city.guard.unit) {
-											AllyColorFilterManager.getInstance().applyColorFilter(city.guard.unit);
-										}
-									});
+						AllyColorFilterManager.getInstance().applyColorFilter(city.barrack.unit);
+						AllyColorFilterManager.getInstance().applyColorFilter(city.cop);
+						if (city.guard && city.guard.unit) {
+							AllyColorFilterManager.getInstance().applyColorFilter(city.guard.unit);
+						}
+					});
 				};
 
 				if (currentColorMode === 2) {
@@ -507,9 +507,9 @@ export class MinimapIconManager {
 		// Check ally color filter mode
 		// 0 = Player colors, 1/2 = Ally/Enemy colors
 
-		// If the local player owns this city, show it in WHITE (Mode 0/1) or BLUE (Mode 2)
+		// If the local player owns this city, show it in WHITE
 		if (owner === localPlayer) {
-			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
+			const localTexture = this.COLOR_TEXTURES[99];
 			this.setTextureCached(city, iconFrame, localTexture, this.cityLastTexture);
 			return;
 		}
@@ -572,9 +572,9 @@ export class MinimapIconManager {
 			allyColorMode = 2;
 		}
 
-		// If the local player owns this unit (or owns the shared slot), show it in WHITE (Mode 0/1) or BLUE (Mode 2)
+		// If the local player owns this unit (or owns the shared slot), show it in WHITE
 		if (owner === localPlayer) {
-			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
+			const localTexture = this.COLOR_TEXTURES[99];
 			this.setTextureCached(unit, iconFrame, localTexture, this.unitLastTexture);
 			return;
 		}
@@ -778,6 +778,3 @@ export class MinimapIconManager {
 		}
 	}
 }
-
-
-
