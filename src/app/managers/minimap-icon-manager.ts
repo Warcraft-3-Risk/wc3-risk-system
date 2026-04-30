@@ -35,6 +35,9 @@ export class MinimapIconManager {
 	private unitLastTexture: Map<unit, string> = new Map(); // Track last-applied texture per unit frame
 	private unitsToRemove: unit[] = []; // Reused array to collect dead units for cleanup
 
+	private consoleUI: framehandle;
+	private hudScale: number = 1.0;
+
 	// Minimap constants (corner minimap dimensions)
 	private readonly MINIMAP_WIDTH = 0.14; // Minimap width in screen coordinates
 	private readonly MINIMAP_HEIGHT = 0.14; // Minimap height in screen coordinates
@@ -97,15 +100,25 @@ export class MinimapIconManager {
 
 		// Get minimap frame
 		this.minimapFrame = BlzGetFrameByName('Minimap', 0);
+		this.consoleUI = BlzGetFrameByName('ConsoleUIBackdrop', 0);
 
 		// Poll the native button state and correct mode 2 back to 0 if not in Lobby Teams mode
 		// Note: the main update loop also corrects mode 2 inside updateIconColor()
 		let lastColorMode = -1;
 		let lastColorBlind = false;
 		let lastColorContrast = false;
+		let lastHudScale = -1;
 
 		const allyModeTimer = CreateTimer();
 		TimerStart(allyModeTimer, 0.1, true, () => {
+			const currentScale = this.consoleUI ? BlzFrameGetWidth(this.consoleUI) / 0.8 : 1.0;
+
+			if (currentScale !== lastHudScale && currentScale > 0) {
+				lastHudScale = currentScale;
+				this.hudScale = currentScale;
+				this.repositionAllStaticIcons();
+			}
+
 			const currentColorMode = GetAllyColorFilterState();
 			const activeLocalPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());
 			const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
@@ -365,15 +378,21 @@ export class MinimapIconManager {
 	private updateIconPosition(iconFrame: framehandle, worldX: number, worldY: number): void {
 		const coords = this.worldToMinimapCoords(worldX, worldY);
 
+		// The default UI is 0.8 width and is always centered at X=0.4 on the screen.
+		// When the HUD scales down, the left edge of the console moves inwards towards 0.4.
+		const uiCenterX = 0.4;
+		const uiWidthScaled = 0.8 * this.hudScale;
+		const uiLeftEdgeX = uiCenterX - uiWidthScaled / 2.0;
+
 		// Minimap positioning (BOTTOM-left corner of screen in WC3)
-		// The minimap doesn't start exactly at 0,0 - need offset
+		// The minimap doesn't start exactly at 0,0 relative to the console - need offset
 		// Adjust these values to align with actual minimap
-		const minimapBaseX = 0.009; // Shift right (reduce to move icons left)
-		const minimapBaseY = 0.004; // Shift up from bottom (reduce to move icons down)
+		const minimapBaseX = 0.009 * this.hudScale; // Shift right relative to console left
+		const minimapBaseY = 0.004 * this.hudScale; // Shift up from bottom (no Y shift for scaling because console anchors to bottom)
 
 		// Calculate position within minimap bounds
-		const iconX = minimapBaseX + coords.x * this.MINIMAP_WIDTH;
-		const iconY = minimapBaseY + coords.y * this.MINIMAP_HEIGHT;
+		const iconX = uiLeftEdgeX + minimapBaseX + coords.x * (this.MINIMAP_WIDTH * this.hudScale);
+		const iconY = minimapBaseY + coords.y * (this.MINIMAP_HEIGHT * this.hudScale);
 
 		// Position absolutely on screen
 		BlzFrameSetAbsPoint(iconFrame, FRAMEPOINT_CENTER, iconX, iconY);
@@ -393,6 +412,21 @@ export class MinimapIconManager {
 	 */
 	public clearSeenCache(): void {
 		this.lastSeenOwners.clear();
+	}
+
+	/**
+	 * Repositions all static city icons and borders when HUD scale changes.
+	 */
+	private repositionAllStaticIcons(): void {
+		this.cityIcons.forEach((iconFrame, city) => {
+			this.updateIconPosition(iconFrame, city.barrack.defaultX, city.barrack.defaultY);
+		});
+		this.cityBorders.forEach((iconFrame, city) => {
+			this.updateIconPosition(iconFrame, city.barrack.defaultX, city.barrack.defaultY);
+		});
+		this.cityOuterBorders.forEach((iconFrame, city) => {
+			this.updateIconPosition(iconFrame, city.barrack.defaultX, city.barrack.defaultY);
+		});
 	}
 
 	/**
