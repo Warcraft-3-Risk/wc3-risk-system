@@ -39,7 +39,8 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			await removeUnits(50, 0.2);
 
 			print('Resetting countries...');
-			await resetCountries();
+			// Lower batch size to reduce micro-stutters from CreateUnit / SetUnitOwner
+			await resetCountries(3, 0.1);
 			await Wait.forSeconds(1);
 
 			print('Resetting kill tracker...');

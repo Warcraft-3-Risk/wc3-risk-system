@@ -7,7 +7,7 @@ import { Wait } from 'src/app/utils/wait';
  * CreateUnit, SetUnitOwner) per city, so yielding between batches
  * spreads the cost across frames.
  */
-export async function resetCountries(batchSize = 20, intervalSeconds = 0.2): Promise<void> {
+export async function resetCountries(batchSize = 3, intervalSeconds = 0.1): Promise<void> {
 	let cityCount = 0;
 
 	for (const country of StringToCountry.values()) {

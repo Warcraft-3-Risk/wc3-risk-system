@@ -42,6 +42,10 @@ import type { FakePlayerHandle } from './fake-player';
 	u.owner = p;
 };
 
+// ─── UI API ─────────────────────────────────────────────────────────
+(globalThis as any).BlzFrameSetText = (_frame: any, _text: string) => {};
+(globalThis as any).PlayLocalSound = (_sound: any, _player: any) => {};
+
 // ─── Player API ─────────────────────────────────────────────────────
 const playerSlots: FakePlayerHandle[] = [];
 (globalThis as any).Player = (id: number): FakePlayerHandle => {
@@ -79,3 +83,22 @@ const playerSlots: FakePlayerHandle[] = [];
 (globalThis as any).UNIT_TYPE_DEAD = 'dead';
 (globalThis as any).PLAYER_STATE_RESOURCE_GOLD = 'gold';
 (globalThis as any).PLAYER_STATE_RESOURCE_LUMBER = 'lumber';
+(globalThis as any).PLAYER_NEUTRAL_AGGRESSIVE = 12;
+(globalThis as any).os = { date: () => 'mock-date', time: () => 0 };
+(globalThis as any).GetLocalPlayer = () => {};
+(globalThis as any).BlzFrameSetText = () => {};
+(globalThis as any).GetTriggerUnit = () => {
+	return { owner: null };
+};
+(globalThis as any).GetTrainedUnit = () => {
+	return { owner: null };
+};
+(globalThis as any).RemoveUnit = () => {};
+(globalThis as any).IssueImmediateOrderById = () => {};
+(globalThis as any).Condition = (func: any) => func;
+(globalThis as any).CreateTrigger = () => {
+	return {};
+};
+(globalThis as any).TriggerAddCondition = (_trigger: any, condition: any) => {
+	condition();
+};
