@@ -7,6 +7,7 @@ import { debugPrint } from '../utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { AllyColorFilterManager } from '../managers/ally-color-filter-manager';
+import { GlobalGameData } from '../game/state/global-game-state';
 
 export const UnitTrainedTrigger: trigger = CreateTrigger();
 
@@ -15,6 +16,11 @@ export function UnitTrainedEvent() {
 		UnitTrainedTrigger,
 		Condition(() => {
 			const trainedUnit = GetTrainedUnit();
+
+			if (GlobalGameData.matchState === 'postMatch') {
+				RemoveUnit(trainedUnit);
+				return false;
+			}
 
 			UnitToCity.get(GetTriggerUnit()).onUnitTrain(trainedUnit);
 

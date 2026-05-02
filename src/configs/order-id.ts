@@ -2,5 +2,7 @@ export const ORDER_ID = {
 	// Ships
 	LOAD: 852046,
 	UNLOAD_ALL: 852048,
-	UNLOAD_UNIT: 852047
+	UNLOAD_UNIT: 852047,
+	// General
+	CANCEL: 851976,
 };

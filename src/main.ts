@@ -16,6 +16,7 @@ import { SpellEffectEvent } from './app/triggers/spell-effect-event';
 import { PlayerLeaveEvent } from './app/triggers/player-leave-event';
 import { UnitDeathEvent } from './app/triggers/unit_death/unit-death-event';
 import { UnitTrainedEvent } from './app/triggers/unit-trained-event';
+import { UnitTrainStartEvent } from './app/triggers/unit-train-start-event';
 import { KeyEvents } from './app/triggers/key-events';
 import { Quests } from './app/quests/quests';
 import CameraManager from './app/managers/camera-manager';
@@ -109,6 +110,7 @@ function tsMain() {
 		UnitDamagedEvent();
 		UnitDeathEvent();
 		UnitTrainedEvent();
+		UnitTrainStartEvent();
 		UnitUpgradeEvent();
 		OwnershipChangeEvent();
 		PlayerLeaveEvent();
