@@ -13,6 +13,15 @@ import { MatchFormat } from '../game/match-format-enum';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { AllyColorFilterManager } from './ally-color-filter-manager';
 
+export interface MinimapTickSample {
+	trackedUnits: number;
+	cityIcons: number;
+	visibleUnits: number;
+	deadUnits: number;
+	poolSize: number;
+	elapsedMs: number;
+}
+
 /**
  * Manages custom minimap icons using SimpleFrames for cities.
  * This allows for custom-sized icons between unit and building size.
@@ -24,7 +33,9 @@ export class MinimapIconManager {
 	private cityBorders: Map<City, framehandle> = new Map(); // Inner border frames for capital cities
 	private cityOuterBorders: Map<City, framehandle> = new Map(); // Outer border frames for capital cities
 	private capitalIcons: Map<City, boolean> = new Map(); // Track which cities are capitals
-	private trackedUnits: Map<unit, framehandle> = new Map(); // Moving units to track
+	private trackedUnitList: unit[] = [];
+	private trackedFrameList: framehandle[] = [];
+	private trackedUnitIndex: Map<unit, number> = new Map();
 	private framePool: framehandle[] = []; // Pool of unused frames for recycling
 	private lastSeenOwners: Map<City, player> = new Map(); // Remember last seen owner
 	private minimapFrame: framehandle;
@@ -33,7 +44,6 @@ export class MinimapIconManager {
 	private readonly COLOR_TEXTURES: string[] = []; // Pre-built texture path lookup table
 	private cityLastTexture: Map<City, string> = new Map(); // Track last-applied texture per city frame
 	private unitLastTexture: Map<unit, string> = new Map(); // Track last-applied texture per unit frame
-	private unitsToRemove: unit[] = []; // Reused array to collect dead units for cleanup
 
 	private consoleUI: framehandle;
 	private hudScale: number = 1.0;
@@ -227,7 +237,7 @@ export class MinimapIconManager {
 		}
 
 		// Check if already tracked to avoid duplicates
-		if (!this.trackedUnits.has(unit)) {
+		if (!this.trackedUnitIndex.has(unit)) {
 			this.registerTrackedUnit(unit);
 		}
 	}
@@ -239,19 +249,45 @@ export class MinimapIconManager {
 	public unregisterTrackedUnit(unit: unit): void {
 		if (!this.isActive) return;
 
-		const iconFrame = this.trackedUnits.get(unit);
-		if (iconFrame) {
-			BlzFrameSetVisible(iconFrame, false);
-			this.trackedUnits.delete(unit);
-			this.unitLastTexture.delete(unit);
-			this.framePool.push(iconFrame);
-			// Restore minimap display when untracking?
-			// Usually we untrack when unit dies or loads.
-			// If it loads, it's hidden anyway.
-			// If we stop tracking for other reasons, we might want to show it again.
-			// But for now, sticking to simple removal.
-			BlzSetUnitBooleanField(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+		const index = this.trackedUnitIndex.get(unit);
+		if (index !== undefined) {
+			const iconFrame = this.removeTrackedAt(index);
+			if (iconFrame) {
+				BlzFrameSetVisible(iconFrame, false);
+				this.framePool.push(iconFrame);
+
+				BlzSetUnitBooleanField(unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+			}
 		}
+	}
+
+	private removeTrackedAt(index: number): framehandle | undefined {
+		const lastIndex = this.trackedUnitList.length - 1;
+		if (lastIndex < 0) return undefined;
+
+		const unit = this.trackedUnitList[index];
+		const frame = this.trackedFrameList[index];
+
+		const lastUnit = this.trackedUnitList[lastIndex];
+		const lastFrame = this.trackedFrameList[lastIndex];
+
+		this.trackedUnitList[index] = lastUnit;
+		this.trackedFrameList[index] = lastFrame;
+		this.trackedUnitIndex.set(lastUnit, index);
+
+		this.trackedUnitList.pop();
+		this.trackedFrameList.pop();
+		this.trackedUnitIndex.delete(unit);
+		this.unitLastTexture.delete(unit);
+
+		return frame;
+	}
+
+	private addTrackedUnit(unit: unit, frame: framehandle): void {
+		const index = this.trackedUnitList.length;
+		this.trackedUnitList.push(unit);
+		this.trackedFrameList.push(frame);
+		this.trackedUnitIndex.set(unit, index);
 	}
 
 	/**
@@ -260,6 +296,10 @@ export class MinimapIconManager {
 	 */
 	public registerTrackedUnit(unit: unit): void {
 		if (!this.isActive) return;
+
+		if (this.trackedUnitIndex.has(unit)) {
+			return;
+		}
 
 		try {
 			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
@@ -290,7 +330,7 @@ export class MinimapIconManager {
 			BlzFrameSetLevel(iconFrame, 15);
 
 			// Store the frame
-			this.trackedUnits.set(unit, iconFrame);
+			this.addTrackedUnit(unit, iconFrame);
 
 			// Initial update
 			const localPlayer = GetLocalPlayer();
@@ -304,7 +344,7 @@ export class MinimapIconManager {
 			}
 			if (DEBUG_PRINTS.master)
 				debugPrint(
-					`MinimapIconManager: Count of tracked units: ${this.trackedUnits.size}, Pool size: ${this.framePool.length}`,
+					`MinimapIconManager: Count of tracked units: ${this.trackedUnitList.length}, Pool size: ${this.framePool.length}`,
 					DC.minimap
 				);
 		} catch (e) {
@@ -442,58 +482,250 @@ export class MinimapIconManager {
 		});
 	}
 
+	public debugRunUpdateAllIconsForBenchmark(): MinimapTickSample {
+		const start = os.clock();
+		const sample = this.updateAllIconsWithSample() as MinimapTickSample;
+		sample.elapsedMs = (os.clock() - start) * 1000;
+		return sample;
+	}
+
 	/**
 	 * Updates all city icons (positions and visibility).
 	 */
 	private updateAllIcons(): void {
+		this.updateAllIconsWithSample();
+	}
+
+	private updateAllIconsWithSample(): Omit<MinimapTickSample, 'elapsedMs'> {
 		const localPlayer = GetLocalPlayer();
 		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
 
+		const isReplayViewer = isReplay();
+		const playerManager = PlayerManager.getInstance();
+		const activeLocalPlayer = playerManager.players.get(effectiveLocal);
+		const localIsColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
+		const localIsColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
+		const allyColorMode = localIsColorContrast ? 2 : GetAllyColorFilterState();
+		const isFFA = SettingsContext.getInstance().isFFA();
+		const isDeadInFFA = isFFA && activeLocalPlayer ? activeLocalPlayer.status.isDead() : false;
+		const sharedSlotManager = SharedSlotManager.getInstance();
+
+		const hudScale = this.hudScale;
+		const uiLeftEdgeX = 0.4 - (0.8 * hudScale) / 2.0;
+		const baseXOffset = uiLeftEdgeX + 0.009 * hudScale;
+		const baseYOffset = 0.004 * hudScale;
+		const widthScale = this.MINIMAP_WIDTH * hudScale;
+		const heightScale = this.MINIMAP_HEIGHT * hudScale;
+		const worldMinX = this.worldMinX;
+		const worldMinY = this.worldMinY;
+		const invWorldWidth = 1 / this.worldWidth;
+		const invWorldHeight = 1 / this.worldHeight;
+
+		let cityIconsCount = 0;
 		this.cityIcons.forEach((iconFrame, city) => {
+			cityIconsCount++;
 			// Check if the city's barrack is visible through fog of war
 			const isVisible = IsUnitVisible(city.barrack.unit, effectiveLocal);
 
 			// City positions are static (defaultX/Y never change) — set once at creation, no update needed
 
 			// Update color based on owner and visibility
-			this.updateIconColor(iconFrame, city, isVisible, effectiveLocal);
+			this.updateCityIconColorFast(iconFrame, city, isVisible, effectiveLocal, localPlayer, allyColorMode, localIsColorBlind, isDeadInFFA);
 		});
 
 		// Update tracked units
-		this.unitsToRemove.length = 0;
-		this.trackedUnits.forEach((iconFrame, unit) => {
+		let visibleUnitsCount = 0;
+		let trackedUnitsCount = 0;
+		let deadUnitsCount = 0;
+
+		let i = 0;
+		while (i < this.trackedUnitList.length) {
+			trackedUnitsCount++;
+			const unit = this.trackedUnitList[i];
+			const iconFrame = this.trackedFrameList[i];
+
 			// Check if unit is still valid and alive
 			// Note: 0.405 is the death threshold in WC3
 			if (GetUnitTypeId(unit) === 0 || GetWidgetLife(unit) <= 0.405) {
-				this.unitsToRemove.push(unit);
+				deadUnitsCount++;
 				BlzFrameSetVisible(iconFrame, false);
-				return;
+				const frame = this.removeTrackedAt(i);
+				if (frame) this.framePool.push(frame);
+				continue;
 			}
 
 			// Check visibility
 			if (IsUnitVisible(unit, effectiveLocal)) {
-				// Update position
-				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
+				visibleUnitsCount++;
+
+				// Update position inline without object allocation
+				const normX = (GetUnitX(unit) - worldMinX) * invWorldWidth;
+				const normY = (GetUnitY(unit) - worldMinY) * invWorldHeight;
+				BlzFrameSetAbsPoint(iconFrame, FRAMEPOINT_CENTER, baseXOffset + normX * widthScale, baseYOffset + normY * heightScale);
+
 				// Update color
-				this.updateUnitIconColor(iconFrame, unit, effectiveLocal);
+				this.updateUnitIconColorFast(
+					iconFrame,
+					unit,
+					effectiveLocal,
+					allyColorMode,
+					isReplayViewer,
+					localIsColorBlind,
+					isDeadInFFA,
+					sharedSlotManager
+				);
+
 				// Show icon
 				BlzFrameSetVisible(iconFrame, true);
 			} else {
 				// Hide icon if in fog
 				BlzFrameSetVisible(iconFrame, false);
 			}
-		});
+			i++;
+		}
 
-		// Cleanup dead/removed units
-		this.unitsToRemove.forEach((unit) => {
-			const frame = this.trackedUnits.get(unit);
-			if (frame) {
-				BlzFrameSetVisible(frame, false);
-				this.trackedUnits.delete(unit);
-				this.unitLastTexture.delete(unit);
-				this.framePool.push(frame);
+		return {
+			trackedUnits: trackedUnitsCount,
+			cityIcons: cityIconsCount,
+			visibleUnits: visibleUnitsCount,
+			deadUnits: deadUnitsCount,
+			poolSize: this.framePool.length,
+		};
+	}
+
+	private updateCityIconColorFast(
+		iconFrame: framehandle,
+		city: City,
+		isVisible: boolean,
+		effectiveLocal: player,
+		localPlayer: player,
+		allyColorMode: number,
+		localIsColorBlind: boolean,
+		isDeadInFFA: boolean
+	): void {
+		let owner: player;
+
+		if (isVisible) {
+			if (GetLocalPlayer() === effectiveLocal) {
+				AllyColorFilterManager.getInstance().applyColorFilter(city.barrack.unit);
+				AllyColorFilterManager.getInstance().applyColorFilter(city.cop);
+				if (city.guard && city.guard.unit) {
+					AllyColorFilterManager.getInstance().applyColorFilter(city.guard.unit);
+				}
 			}
-		});
+
+			// City is visible - update and remember the owner
+			owner = city.getOwner();
+			this.lastSeenOwners.set(city, owner);
+		} else {
+			// City is in fog of war - check if we've seen it before
+			const lastSeenOwner = this.lastSeenOwners.get(city);
+			if (!lastSeenOwner) {
+				// Never seen this city - show as neutral gray
+				this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[90], this.cityLastTexture);
+				if (GetLocalPlayer() === effectiveLocal) {
+					SetUnitVertexColor(city.barrack.unit, 0, 0, 0, 255);
+					SetUnitVertexColor(city.cop, 0, 0, 0, 255);
+				}
+				return;
+			}
+			// Use the last seen owner
+			owner = lastSeenOwner;
+		}
+
+		// Check ally color filter mode
+		// 0 = Player colors, 1/2 = Ally/Enemy colors
+
+		// If the local player owns this city, show it in WHITE
+		if (owner === effectiveLocal) {
+			const localTexture = this.COLOR_TEXTURES[99];
+			this.setTextureCached(city, iconFrame, localTexture, this.cityLastTexture);
+			return;
+		}
+
+		if (allyColorMode > 0) {
+			// Check if owner is a neutral player (Player 24+)
+			const ownerId = GetPlayerId(owner);
+			if (ownerId >= 24) {
+				// Neutral player = Gray (standard WC3 neutral color)
+				this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[90], this.cityLastTexture);
+				return;
+			}
+
+			// Check if owner is ally or enemy
+			if (IsPlayerAlly(owner, effectiveLocal)) {
+				// In FFA, dead players may be assigned as shared slots to another player,
+				// so show allies as red to avoid confusion with the shared slot's units
+				const allyColor = localIsColorBlind ? this.COLOR_TEXTURES[4] : this.COLOR_TEXTURES[2]; // Yellow vs Teal
+				const allyTexture = isDeadInFFA ? this.COLOR_TEXTURES[0] : allyColor;
+				this.setTextureCached(city, iconFrame, allyTexture, this.cityLastTexture);
+			} else if (IsPlayerEnemy(owner, effectiveLocal)) {
+				// Enemy = Red (Player 0 color)
+				this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[0], this.cityLastTexture);
+			} else {
+				// Neutral = Gray (standard WC3 neutral color)
+				this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[90], this.cityLastTexture);
+			}
+			return;
+		}
+
+		// Standard player colors
+		this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[GetPlayerId(owner)], this.cityLastTexture);
+	}
+
+	/**
+	 * Updates a unit icon's color based on the unit's owner using fast cached context.
+	 */
+	private updateUnitIconColorFast(
+		iconFrame: framehandle,
+		unit: unit,
+		effectiveLocal: player,
+		allyColorMode: number,
+		isReplayViewer: boolean,
+		isColorBlind: boolean,
+		isDeadInFFA: boolean,
+		sharedSlotManager: SharedSlotManager
+	): void {
+		// Used the SharedSlotManager to resolve the real owner (maps SharedSlot -> Player)
+		const owner = sharedSlotManager.getOwnerOfUnit(unit);
+
+		// If the local player owns this unit (or owns the shared slot), show it in WHITE
+		if (owner === effectiveLocal) {
+			const localTexture = this.COLOR_TEXTURES[99];
+			this.setTextureCached(unit, iconFrame, localTexture, this.unitLastTexture);
+			return;
+		}
+
+		// If ally color mode is enabled (mode 1 or 2)
+		// 1 = Ally/Enemy
+		// 2 = Ally (Teal)/Enemy
+		// Skip ally color in replay — always show player colors
+		if (allyColorMode > 0 && !isReplayViewer) {
+			const ownerId = GetPlayerId(owner as player);
+			if (ownerId >= 24) {
+				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+				return;
+			}
+
+			// Check if owner is ally or enemy
+			if (IsPlayerAlly(owner as player, effectiveLocal)) {
+				// In FFA, dead players may be assigned as shared slots to another player,
+				// so show allies as red to avoid confusion with the shared slot's units
+				const allyColor = isColorBlind ? this.COLOR_TEXTURES[4] : this.COLOR_TEXTURES[2]; // Yellow vs Teal
+				const allyTexture = isDeadInFFA ? this.COLOR_TEXTURES[0] : allyColor;
+				this.setTextureCached(unit, iconFrame, allyTexture, this.unitLastTexture);
+			} else if (IsPlayerEnemy(owner as player, effectiveLocal)) {
+				// Enemy = Red (Player 0 color)
+				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[0], this.unitLastTexture);
+			} else {
+				// Neutral = Gray (standard WC3 neutral color)
+				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+			}
+			return;
+		}
+
+		// Standard player colors
+		this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[GetPlayerId(owner as player)], this.unitLastTexture);
 	}
 
 	/**
@@ -790,7 +1022,7 @@ export class MinimapIconManager {
 		this.cityOuterBorders.forEach((outerBorderFrame) => {
 			BlzDestroyFrame(outerBorderFrame);
 		});
-		this.trackedUnits.forEach((iconFrame) => {
+		this.trackedFrameList.forEach((iconFrame) => {
 			BlzDestroyFrame(iconFrame);
 		});
 		this.framePool.forEach((frame) => {
@@ -800,12 +1032,13 @@ export class MinimapIconManager {
 		this.cityBorders.clear();
 		this.cityOuterBorders.clear();
 		this.capitalIcons.clear();
-		this.trackedUnits.clear();
+		this.trackedUnitList.length = 0;
+		this.trackedFrameList.length = 0;
+		this.trackedUnitIndex.clear();
 		this.framePool = [];
 		this.lastSeenOwners.clear();
 		this.cityLastTexture.clear();
 		this.unitLastTexture.clear();
-		this.unitsToRemove.length = 0;
 
 		if (this.updateTimer) {
 			DestroyTimer(this.updateTimer);

@@ -267,20 +267,58 @@ Run the benchmark with:
 
 ### Baseline output to capture in docs
 
-Append a small results table after the first real run:
+**Run 1 (Baseline - Map.forEach)**:
 
 ```text
-Build:
-Map:
-Scenario:
-Tracked units:
-Cities:
-Tick interval:
-Samples:
-min/avg/p95/max:
-Pool size:
-Total frames created:
-Notes:
+Build: Local Dev
+Map: Europe
+Scenario: 2000 spawned units (hpea) at player 23
+Tracked units: ~2000
+Cities: ~200
+Tick interval: 0.2s
+Samples: 300 measured ticks per run
+min/avg/p95/max (ms):
+  - Run 1: 7.00 / 12.02 / 17.00 / 24.00
+  - Run 2: 8.00 / 10.99 / 17.00 / 21.00
+  - Run 3: 8.00 / 11.30 / 17.00 / 21.00
+  - Run 4: 9.00 / 13.50 / 17.01 / 22.00
+Notes: Original TSTL `.forEach()` Map structure. Significant overhead. 17-24ms max is noticeably heavy given the 0.2s interval. Target is < 2ms.
+```
+
+**Run 2 (Phase 1 & 2 - Array Tracking)**:
+
+```text
+Build: Local Dev
+Map: Europe
+Scenario: 2000 spawned units (hpea) at player 23
+Tracked units: ~2000
+Cities: ~200
+Tick interval: 0.2s
+Samples: 300 measured ticks per run
+min/avg/p95/max (ms):
+  - Run 1: 7.00 / 8.36 / 10.00 / 22.00
+  - Run 2: 7.00 / 8.49 / 10.00 / 13.00
+  - Run 3: 6.99 / 8.55 / 9.99 / 11.00
+  - Run 4: 6.99 / 8.57 / 9.99 / 15.99
+Notes: P95 dropped from ~17ms to ~10ms (roughly 41% speedup). Good progress, but further to go for the < 2ms target.
+```
+
+**Run 3 (Phase 3 - Hoisted Invariants & Removed Allocations)**:
+
+```text
+Build: Local Dev
+Map: Europe
+Scenario: 2000 spawned units (hpea) at player 23
+Tracked units: ~2000
+Cities: ~200
+Tick interval: 0.2s
+Samples: 300 measured ticks per run
+min/avg/p95/max (ms):
+  - Run 1: 5.00 / 7.01 / 9.00 / 12.00
+  - Run 2: 5.00 / 7.21 / 10.00 / 14.00
+  - Run 3: 6.00 / 7.66 / 11.00 / 13.00
+  - Run 4: 6.00 / 7.45 / 10.00 / 12.00
+Notes: P95 dropped slightly to 9-11ms, Avg dropped from ~8.5ms to ~7.3ms. Incremental win by removing coordinate object allocations and hoisting resolution logic per-tick.
 ```
 
 Do not choose the final optimization threshold until this baseline exists. Initial target: for 2,000 tracked units, p95 should land under roughly `2ms` and max should not drift upward over several minutes. If the baseline proves that is unrealistic on the target client, set the pass/fail threshold from real measurements.
@@ -490,12 +528,7 @@ Then per visible unit:
 ```typescript
 const normX = (GetUnitX(unit) - worldMinX) * invWorldWidth;
 const normY = (GetUnitY(unit) - worldMinY) * invWorldHeight;
-BlzFrameSetAbsPoint(
-	iconFrame,
-	FRAMEPOINT_CENTER,
-	baseXOffset + normX * widthScale,
-	baseYOffset + normY * heightScale
-);
+BlzFrameSetAbsPoint(iconFrame, FRAMEPOINT_CENTER, baseXOffset + normX * widthScale, baseYOffset + normY * heightScale);
 ```
 
 Keep `updateIconPosition()` for setup/static icon code, or add a scalar helper that does not allocate.

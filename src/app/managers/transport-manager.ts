@@ -156,14 +156,16 @@ export class TransportManager {
 	private processDelayedTrackQueue(): void {
 		if (TransportManager.delayedTrackQueue.length === 0) return;
 
-		TransportManager.delayedTrackQueue.forEach((unit) => {
+		for (let i = 0; i < TransportManager.delayedTrackQueue.length; i++) {
+			const unit = TransportManager.delayedTrackQueue[i];
 			if (DEBUG_PRINTS.master) debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`, DC.transport);
 			// Skip units that died, became guards, or were reloaded into a transport during the delay
-			if (!UnitAlive(unit) || IsUnitType(unit, UNIT_TYPE.GUARD) || IsUnitLoaded(unit)) return;
+			if (!UnitAlive(unit) || IsUnitType(unit, UNIT_TYPE.GUARD) || IsUnitLoaded(unit)) continue;
+
 			UnitLagManager.getInstance().trackUnit(unit);
 			MinimapIconManager.getInstance().registerIfValid(unit);
-		});
-		TransportManager.delayedTrackQueue = [];
+		}
+		TransportManager.delayedTrackQueue.length = 0;
 	}
 
 	/**
@@ -722,7 +724,7 @@ export class TransportManager {
 				if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
 				if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
 				if (SharedSlotManager.getInstance().getOwnerOfUnit(unit) !== transportRealOwner) return;
-				
+
 				// Global check for already ordered units
 				if (this.allOrderedUnits.has(unit)) return;
 
