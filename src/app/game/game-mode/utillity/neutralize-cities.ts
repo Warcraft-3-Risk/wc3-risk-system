@@ -14,26 +14,24 @@ import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 export async function neutralizeCities(batchSize = 25, intervalSeconds = 0.1): Promise<void> {
 	if (DEBUG_PRINTS.master) debugPrint(`[ResetState] Neutralizing cities in batches of ${batchSize}`, DC.gameMode);
 
-	const cities = Array.from(CityToCountry.keys());
+	let batchCount = 0;
 
-	for (let i = 0; i < cities.length; i += batchSize) {
-		const end = Math.min(i + batchSize, cities.length);
+	for (const [city] of CityToCountry) {
+		if (city.getOwner() === NEUTRAL_HOSTILE) continue;
 
-		for (let j = i; j < end; j++) {
-			const city = cities[j];
-			
-			// Change ownership to neutral to cancel active training queues
-			city.barrack.reset();
-			SetUnitOwner(city.cop, NEUTRAL_HOSTILE, true);
-			
-			// Remove the guard up-front
-			if (city.guard.unit) {
-				UnitToCity.delete(city.guard.unit);
-			}
-			city.guard.remove();
+		// Change ownership to neutral to cancel active training queues
+		city.barrack.reset();
+		SetUnitOwner(city.cop, NEUTRAL_HOSTILE, true);
+
+		// Remove the guard up-front
+		if (city.guard.unit) {
+			UnitToCity.delete(city.guard.unit);
 		}
+		city.guard.remove();
 
-		if (end < cities.length) {
+		batchCount++;
+		if (batchCount >= batchSize) {
+			batchCount = 0;
 			await Wait.forSeconds(intervalSeconds);
 		}
 	}

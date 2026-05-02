@@ -29,14 +29,10 @@ export class Country implements Resetable {
 	}
 
 	/**
-	 * Resets the country, which involves resetting all its cities and spawn.
+	 * Resets the country, which involves resetting its spawn and owner.
+	 * The cities are no longer reset here to allow for batching yields.
 	 */
 	public reset(): void {
-		this.cities.forEach((city) => {
-			city.reset();
-		});
-
-		this.spawn.reset();
 		this.owner = NEUTRAL_HOSTILE;
 	}
 

@@ -12,6 +12,7 @@ import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 import { MatchFormat } from '../game/match-format-enum';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { AllyColorFilterManager } from './ally-color-filter-manager';
+import { Wait } from '../utils/wait';
 
 export interface MinimapTickSample {
 	trackedUnits: number;
@@ -1119,13 +1120,40 @@ export class MinimapIconManager {
 	 * Destroys and fully re-creates all minimap icons, timer, and frame pool.
 	 * Call on game reset (-ng) to start fresh.
 	 */
-	public reinitialize(cities: City[]): void {
+	public async reinitialize(cities: City[]): Promise<void> {
 		if (!this.isActive) {
 			return;
 		}
 
-		this.destroy();
-		this.initialize(cities);
+		// Destroy only the capital borders (they are few and dynamic)
+		this.cityBorders.forEach((borderFrame) => {
+			BlzDestroyFrame(borderFrame);
+		});
+		this.cityOuterBorders.forEach((outerBorderFrame) => {
+			BlzDestroyFrame(outerBorderFrame);
+		});
+		this.cityBorders.clear();
+		this.cityOuterBorders.clear();
+		this.capitalIcons.clear();
+
+		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
+
+		// Reset all city icons back to default size and unhide them
+		for (let i = 0; i < this.cityRecords.length; i++) {
+			const record = this.cityRecords[i];
+			const iconFrame = record.iconFrame;
+
+			BlzFrameSetSize(iconFrame, this.BUILDING_ICON_SIZE, this.BUILDING_ICON_SIZE);
+			BlzFrameSetLevel(iconFrame, 11);
+
+			// Force a color update assuming fog is active
+			const isVisible = IsUnitVisible(record.city.barrack.unit, effectiveLocal);
+			this.updateIconColor(iconFrame, record.city, isVisible, effectiveLocal);
+
+			if (i % 50 === 0) {
+				await Wait.forSeconds(0.05); // Yield slightly to prevent frame spike
+			}
+		}
 	}
 
 	/**

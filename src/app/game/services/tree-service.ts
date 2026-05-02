@@ -81,17 +81,18 @@ export class TreeManager implements Resetable {
 	 * Processes trees in batches to avoid frame spikes.
 	 */
 	public async reset(batchSize = 300, intervalSeconds = 0.1): Promise<void> {
-		const batches = computeBatches(this.treeArray, batchSize);
+		for (let i = 0; i < this.treeArray.length; i += batchSize) {
+			const end = Math.min(i + batchSize, this.treeArray.length);
 
-		for (let b = 0; b < batches.length; b++) {
-			for (const tree of batches[b]) {
+			for (let j = i; j < end; j++) {
+				const tree = this.treeArray[j];
 				if (needsReset(GetDestructableLife(tree), GetDestructableMaxLife(tree))) {
 					DestructableRestoreLife(tree, GetDestructableMaxLife(tree), false);
 					SetDestructableInvulnerable(tree, true);
 				}
 			}
 
-			if (b < batches.length - 1) {
+			if (end < this.treeArray.length) {
 				await Wait.forSeconds(intervalSeconds);
 			}
 		}
@@ -109,15 +110,14 @@ export class TreeManager implements Resetable {
 	 * Removes invulnerability from all trees in batches.
 	 */
 	private async removeInvulnerabilityBatched(batchSize: number, intervalSeconds: number): Promise<void> {
-		const batches = computeBatches(this.treeArray, batchSize);
+		for (let i = 0; i < this.treeArray.length; i += batchSize) {
+			const end = Math.min(i + batchSize, this.treeArray.length);
 
-		for (let b = 0; b < batches.length; b++) {
-			for (const tree of batches[b]) {
-				SetDestructableInvulnerable(tree, false);
+			for (let j = i; j < end; j++) {
+				SetDestructableInvulnerable(this.treeArray[j], false);
 			}
 
-			if (b < batches.length - 1) {
-				await Wait.forSeconds(intervalSeconds);
+			if (end < this.treeArray.length) {
 			}
 		}
 	}
