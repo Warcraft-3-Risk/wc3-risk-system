@@ -339,6 +339,60 @@ min/avg/p95/max (ms):
 Notes: P95 dropped from ~10ms to ~6ms, Avg dropped from ~7.3ms to ~4.6ms. Significant reduction in constant factor by caching state for 200 static cities and skipping update work.
 ```
 
+**Run 5 (Phase 5 - Shared-Slot Ownership Revisioning)**:
+
+```text
+Build: Local Dev
+Map: Europe
+Scenario: 2000 spawned units (hpea) at player 23
+Tracked units: ~2000
+Cities: ~200
+Tick interval: 0.2s
+Samples: 300 measured ticks per run
+min/avg/p95/max (ms):
+  - Run 1: 7.00 / 8.79 / 10.00 / 12.00
+  - Run 2: 7.00 / 8.83 / 10.00 / 11.00
+  - Run 3: 8.00 / 8.84 / 10.00 / 11.00
+  - Run 4: 7.00 / 8.85 / 10.00 / 12.00
+Notes: Regression observed! P95 spiked back to ~10ms. Root cause identified: pushing `undefined` into the TS array for `trackedRawOwnerList` in TSTL creates `nil` holes in the Lua table, destroying linear array performance and causing hash-map fallback overhead. Fixing this by properly pushing `Player(25)` or the actual owner.
+```
+
+**Run 6 (Phase 5 - Hotfix - No Array Holes)**:
+
+```text
+Build: Local Dev
+Map: Europe
+Scenario: 2000 spawned units (hpea) at player 23
+Tracked units: ~2000
+Cities: ~200
+Tick interval: 0.2s
+Samples: 300 measured ticks per run
+min/avg/p95/max (ms):
+  - Run 1: 4.00 / 6.13 / 7.00 / 8.00
+  - Run 2: 4.00 / 6.24 / 7.00 / 8.00
+  - Run 3: 5.00 / 6.57 / 8.00 / 12.00
+  - Run 4: 5.00 / 6.40 / 7.00 / 8.00
+Notes: Fixed the `nil` array hole. Performance stabilized! Avg ~6.3ms, p95 7-8ms. The ~1.5ms overhead vs Phase 4 is the cost of explicitly calling `GetOwningPlayer(unit)` 2000 times per loop to check the dirty cache. Still vastly better than baseline's 17-24ms spikes.
+```
+
+**Run 7 (Phase 6 - Time Slicing Throttling)**:
+
+```text
+Build: Local Dev
+Map: Europe
+Scenario: 2000 spawned units (hpea) at player 23
+Tracked units: ~2000
+Cities: ~200
+Tick interval: 0.2s
+Samples: 300 measured ticks per run
+min/avg/p95/max (ms):
+  - Run 1: 0.00 / 1.17 / 2.00 / 2.01
+  - Run 2: 1.00 / 1.12 / 2.00 / 2.01
+  - Run 3: 1.00 / 1.18 / 2.00 / 2.01
+  - Run 4: 0.00 / 1.17 / 2.00 / 2.01
+Notes: Implemented a strict 200 unit strict check per iteration. Performance is now solidy at the `<2ms` target! At 2000 units, dynamic elements process ~200 units every 0.2s, taking exactly 2.0s to update every tracker gracefully without massive single-tick processing lag hits!
+```
+
 Do not choose the final optimization threshold until this baseline exists. Initial target: for 2,000 tracked units, p95 should land under roughly `2ms` and max should not drift upward over several minutes. If the baseline proves that is unrealistic on the target client, set the pass/fail threshold from real measurements.
 
 ## Phase 1: Make Minimap Tracking Idempotent

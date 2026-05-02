@@ -80,6 +80,10 @@ export class MinimapIconManager {
 	private readonly CAPITAL_BORDER_INNER = 0.0035; // Capital inner border size (black ring)
 	private readonly CAPITAL_BORDER_OUTER = 0.0045; // Capital outer border size (white ring)
 	private readonly INITIAL_POOL_SIZE = 2000; // Initial number of frames to create to avoid runtime spikes
+	private readonly UNITS_PER_TICK = 200; // Throttle dynamic units processed per tick
+
+	// State for adaptive unit tracking
+	private currentUnitUpdateIndex: number = 0;
 
 	// World bounds
 	private worldMinX: number;
@@ -314,7 +318,7 @@ export class MinimapIconManager {
 		const index = this.trackedUnitList.length;
 		this.trackedUnitList.push(unit);
 		this.trackedFrameList.push(frame);
-		this.trackedRawOwnerList.push(undefined as unknown as player); // Start dirty
+		this.trackedRawOwnerList.push(GetOwningPlayer(unit)); // NEVER push undefined in TSTL! It creates `nil` holes breaking fast array indexing.
 		this.trackedUnitIndex.set(unit, index);
 	}
 
@@ -634,9 +638,24 @@ export class MinimapIconManager {
 		let trackedUnitsCount = 0;
 		let deadUnitsCount = 0;
 
-		let i = 0;
-		while (i < this.trackedUnitList.length) {
+		const trackedLength = this.trackedUnitList.length;
+		if (this.currentUnitUpdateIndex >= trackedLength) {
+			this.currentUnitUpdateIndex = 0;
+		}
+
+		const maxToProcess = Math.min(this.UNITS_PER_TICK, trackedLength);
+		let loopsCompleted = 0;
+
+		while (loopsCompleted < maxToProcess && this.trackedUnitList.length > 0) {
+			if (this.currentUnitUpdateIndex >= this.trackedUnitList.length) {
+				this.currentUnitUpdateIndex = 0; // Wrap around safely if list shrunk during loops
+			}
+
+			const i = this.currentUnitUpdateIndex;
+
 			trackedUnitsCount++;
+			loopsCompleted++;
+
 			const unit = this.trackedUnitList[i];
 			const iconFrame = this.trackedFrameList[i];
 
@@ -647,6 +666,8 @@ export class MinimapIconManager {
 				BlzFrameSetVisible(iconFrame, false);
 				const frame = this.removeTrackedAt(i);
 				if (frame) this.framePool.push(frame);
+				// Do not increment currentUnitUpdateIndex because the swapped element is now at this index.
+				// By not incrementing, the new element at `i` gets processed either next loop or next tick.
 				continue;
 			}
 
@@ -682,7 +703,8 @@ export class MinimapIconManager {
 				// Hide icon if in fog
 				BlzFrameSetVisible(iconFrame, false);
 			}
-			i++;
+
+			this.currentUnitUpdateIndex++;
 		}
 
 		return {
