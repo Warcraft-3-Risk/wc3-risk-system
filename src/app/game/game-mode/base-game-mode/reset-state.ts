@@ -1,6 +1,7 @@
 import { Wait } from 'src/app/utils/wait';
 import { TreeManager } from '../../services/tree-service';
 import { removeUnits } from '../utillity/remove-units';
+import { neutralizeCities } from '../utillity/neutralize-cities';
 import { resetCountries } from '../utillity/reset-countries';
 import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
@@ -31,6 +32,9 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			// Initialize fog for all players
 			SetTimeOfDayScale(0);
 			SetTimeOfDay(12.0);
+
+			print('Neutralizing cities...');
+			await neutralizeCities(25, 0.1);
 
 			print('Removing units...');
 			await removeUnits(50, 0.2);

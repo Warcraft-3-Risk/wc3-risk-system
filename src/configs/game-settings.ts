@@ -6,7 +6,7 @@
 export const CITIES_TO_WIN_RATIO: number = 0.6;
 
 //This is the starting gold for each player. 4 gold by default.
-export const STARTING_INCOME: number = 4;
+export const STARTING_INCOME: number = 1000;
 
 //This is the starting gold for each player in Chaos promode. 25 gold by default.
 export const CHAOS_STARTING_INCOME: number = 25;
@@ -30,7 +30,7 @@ export const OVERTIME_MODIFIER: number = 1;
 export const CITIES_TO_WIN_WARNING_RATIO: number = 0.7;
 
 //This represents the upper bound of cities a player starts with. Default is 22.
-export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
+export const CITIES_PER_PLAYER_UPPER_BOUND: number = 100;
 
 //This represents the duration a player can be muted for in seconds. Default is 300 seconds.
 export const STFU_DURATION: number = 300;

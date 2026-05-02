@@ -39,12 +39,16 @@ export abstract class City implements Resetable, Ownable {
 
 	/** Resets the city, returning it to its default state */
 	public reset(): void {
-		UnitToCity.delete(this.guard.unit);
-		SetUnitOwner(this._cop, NEUTRAL_HOSTILE, true);
-		this.owner = NEUTRAL_HOSTILE;
-		this._barrack.reset();
-		this._guard.reset();
-		UnitToCity.set(this.guard.unit, this);
+                if (this.guard.unit) {
+                        UnitToCity.delete(this.guard.unit);
+                }
+                SetUnitOwner(this._cop, NEUTRAL_HOSTILE, true);
+                this.owner = NEUTRAL_HOSTILE;
+                this._barrack.reset();
+                this._guard.reset();
+                if (this.guard.unit) {
+                        UnitToCity.set(this.guard.unit, this);
+                }
 	}
 
 	public HideMinimap() {
@@ -140,21 +144,25 @@ export abstract class City implements Resetable, Ownable {
 		const y: number = GetUnitY(targUnit);
 		const oldGuard: unit = this.guard.unit;
 
-		UnitToCity.delete(this.guard.unit);
-		this.guard.replace(targUnit);
-		UnitToCity.set(this.guard.unit, this);
+                if (this.guard.unit) {
+                        UnitToCity.delete(this.guard.unit);
+                }
+                this.guard.replace(targUnit);
+                if (this.guard.unit) {
+                        UnitToCity.set(this.guard.unit, this);
+                }
 
-		//IsTerrainPathable Returns negated results for some reason. Gj Blizzard
-		if (!IsUnitType(oldGuard, UNIT_TYPE_GIANT) && IsTerrainPathable(x, y, PATHING_TYPE_WALKABILITY)) {
-			SetUnitPosition(oldGuard, this._barrack.defaultX, this._barrack.defaultY);
-		} else {
-			SetUnitPosition(oldGuard, x, y);
-		}
+                //IsTerrainPathable Returns negated results for some reason. Gj Blizzard
+                if (oldGuard) {
+                        if (!IsUnitType(oldGuard, UNIT_TYPE_GIANT) && IsTerrainPathable(x, y, PATHING_TYPE_WALKABILITY)) {
+                                SetUnitPosition(oldGuard, this._barrack.defaultX, this._barrack.defaultY);
+                        } else {
+                                SetUnitPosition(oldGuard, x, y);
+                        }                }
 
-		this.guard.reposition();
+                this.guard.reposition();
 
-		const newOwner: player = SharedSlotManager.getInstance().getOwnerOfUnit(this.guard.unit);
-
+                const newOwner: player = SharedSlotManager.getInstance().getOwnerOfUnit(this.guard.unit);
 		if (this.owner !== newOwner) {
 			const currOwner = this.owner;
 
