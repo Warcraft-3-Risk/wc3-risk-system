@@ -321,6 +321,24 @@ min/avg/p95/max (ms):
 Notes: P95 dropped slightly to 9-11ms, Avg dropped from ~8.5ms to ~7.3ms. Incremental win by removing coordinate object allocations and hoisting resolution logic per-tick.
 ```
 
+**Run 4 (Phase 4 - Separate Static City Work)**:
+
+```text
+Build: Local Dev
+Map: Europe
+Scenario: 2000 spawned units (hpea) at player 23
+Tracked units: ~2000
+Cities: ~200
+Tick interval: 0.2s
+Samples: 300 measured ticks per run
+min/avg/p95/max (ms):
+  - Run 1: 4.00 / 4.61 / 6.00 / 7.00
+  - Run 2: 4.00 / 4.74 / 6.00 / 8.00
+  - Run 3: 4.00 / 4.64 / 6.00 / 8.00
+  - Run 4: 4.00 / 4.57 / 6.00 / 7.00
+Notes: P95 dropped from ~10ms to ~6ms, Avg dropped from ~7.3ms to ~4.6ms. Significant reduction in constant factor by caching state for 200 static cities and skipping update work.
+```
+
 Do not choose the final optimization threshold until this baseline exists. Initial target: for 2,000 tracked units, p95 should land under roughly `2ms` and max should not drift upward over several minutes. If the baseline proves that is unrealistic on the target client, set the pass/fail threshold from real measurements.
 
 ## Phase 1: Make Minimap Tracking Idempotent
