@@ -47,6 +47,17 @@ export class ScoreboardManager {
 		this.activePlayers = players;
 		this.dataModel.refresh(this.activePlayers, true);
 
+		// Reuse existing renderer inside the same game mode if structurally compatible
+		if (
+			this.renderers.standard &&
+			this.renderers.standard instanceof PlayerRenderer &&
+			(this.renderers.standard as any).size === players.length + 3
+		) {
+			this.renderers.standard.renderFull(this.dataModel);
+			this.renderers.standard.setVisibility(true);
+			return;
+		}
+
 		const renderer = new PlayerRenderer(players.length);
 		renderer.renderFull(this.dataModel);
 		this.renderers.standard = renderer;
@@ -55,6 +66,16 @@ export class ScoreboardManager {
 	public teamSetup(players: ActivePlayer[]) {
 		this.activePlayers = players;
 		this.dataModel.refresh(this.activePlayers, false);
+
+		if (
+			this.renderers.standard &&
+			this.renderers.standard instanceof TeamRenderer &&
+			(this.renderers.standard as any).size === this.dataModel.teams.length + 3
+		) {
+			this.renderers.standard.renderFull(this.dataModel);
+			this.renderers.standard.setVisibility(true);
+			return;
+		}
 
 		const renderer = new TeamRenderer(this.dataModel.teams);
 		renderer.renderFull(this.dataModel);
@@ -68,9 +89,13 @@ export class ScoreboardManager {
 		if (observers.length >= 1) {
 			this.dataModel.refresh(this.activePlayers, this.isFFA());
 
-			const obsRenderer = new ObserverRenderer(players.length);
+			if (
+				!(this.renderers.obs && this.renderers.obs instanceof ObserverRenderer && (this.renderers.obs as any).size === players.length + 3)
+			) {
+				this.renderers.obs = new ObserverRenderer(players.length);
+			}
+			const obsRenderer = this.renderers.obs;
 			obsRenderer.renderFull(this.dataModel);
-			this.renderers.obs = obsRenderer;
 
 			obsRenderer.setVisibility(false);
 			if (this.renderers.standard) this.renderers.standard.setVisibility(true);
