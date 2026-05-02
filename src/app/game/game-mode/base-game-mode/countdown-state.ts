@@ -68,7 +68,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 					// Note: P2P rating sync already started in ModeSelection.run() during settings phase
 				} else {
 					// Only show ranked/unranked message on the first match (not on restarts)
-					if (GlobalGameData.matchCount === 1) {
+					if (GlobalGameData.matchCount === 1 && isFFA) {
 						const message = `${HexColors.TANGERINE}This is an unranked game!|r Ranked play requires at least ${HexColors.TANGERINE}16 eligible FFA players|r.`;
 
 						// Send message only to players who have rating display enabled
