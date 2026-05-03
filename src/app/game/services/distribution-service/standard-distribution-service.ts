@@ -98,10 +98,10 @@ export class StandardDistributionService {
 
 			// Now distribute them sequentially
 			print('Distributing cities...');
-			const playerList = Array.from(allocatedCites.keys());
-
-			// Round robin random
-			const tempPlayerList = [...playerList];
+			const tempPlayerList: ActivePlayer[] = [];
+			for (const [player, _cities] of allocatedCites) {
+				tempPlayerList.push(player);
+			}
 			// Shuffle players
 			for (let i = tempPlayerList.length - 1; i > 0; i--) {
 				const j = Math.floor(Math.random() * (i + 1));
@@ -123,12 +123,16 @@ export class StandardDistributionService {
 			}
 
 			// Assign 3 cities every 0.2 seconds
-			for (let i = 0; i < assignmentQueue.length; i += 3) {
-				const batch = assignmentQueue.slice(i, i + 3);
-				for (const { player, city } of batch) {
-					this.changeCityOwner(city, player);
+			let currentBatchCount = 0;
+			for (let i = 0; i < assignmentQueue.length; i++) {
+				const assignment = assignmentQueue[i];
+				this.changeCityOwner(assignment.city, assignment.player);
+
+				currentBatchCount++;
+				if (currentBatchCount >= 3) {
+					currentBatchCount = 0;
+					await Wait.forSeconds(0.2);
 				}
-				await Wait.forSeconds(0.2);
 			}
 
 			// Process any remaining neutral cities that were not distributed to players
