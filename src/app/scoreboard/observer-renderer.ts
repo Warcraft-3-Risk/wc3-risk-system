@@ -115,7 +115,7 @@ export class ObserverRenderer extends ScoreboardRenderer {
 		const grey = HexColors.LIGHT_GRAY;
 		const teamPrefix = this.getTeamPrefix(p.handle);
 
-		this.setItemValue(`${grey}${teamPrefix}${p.displayName}`, row, this.PLAYER_COL);
+		this.setItemValue(`${teamPrefix}${p.originalColorCode}${p.acctName}|r`, row, this.PLAYER_COL);
 		this.setItemValue(`${grey}-`, row, this.GOLD_COL);
 		this.setItemValue(`${grey}${p.cities}`, row, this.CITIES_COL);
 		this.setItemValue(`${grey}${p.kills}`, row, this.KILLS_COL);
@@ -135,11 +135,7 @@ export class ObserverRenderer extends ScoreboardRenderer {
 		this.setItemValue(`${teamPrefix}${p.displayName}`, row, this.PLAYER_COL);
 
 		// Income with delta
-		this.setItemValue(
-			`${textColor}${p.income - p.player.trackedData.income.delta}(${this.getIncomeDelta(p.player.trackedData.income.delta)})`,
-			row,
-			this.INCOME_COL
-		);
+		this.setItemValue(`${textColor}${p.income}(${this.getIncomeDelta(p.player.trackedData.income.delta)})`, row, this.INCOME_COL);
 
 		// Gold
 		const playerGoldTextColor = p.gold === 0 ? HexColors.RED : textColor;

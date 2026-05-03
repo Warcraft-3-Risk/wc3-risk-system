@@ -557,7 +557,6 @@ export class MinimapIconManager {
 		const currentOwnershipRevision = sharedSlotManager.getOwnershipRevision();
 
 		// Check if any global context parameter changed
-		let forceColorUpdateAllUnits = false;
 		if (
 			this.lastGlobalColorMode !== allyColorMode ||
 			this.lastGlobalColorBlind !== localIsColorBlind ||
@@ -566,7 +565,12 @@ export class MinimapIconManager {
 			this.lastGlobalPovPlayer !== effectiveLocal ||
 			this.lastGlobalOwnershipRevision !== currentOwnershipRevision
 		) {
-			forceColorUpdateAllUnits = true;
+			// Invalidate all raw owners to force a color update over the next few ticks
+			const invalidPlayer = Player(25);
+			for (let j = 0; j < this.trackedRawOwnerList.length; j++) {
+				this.trackedRawOwnerList[j] = invalidPlayer;
+			}
+
 			this.lastGlobalColorMode = allyColorMode;
 			this.lastGlobalColorBlind = localIsColorBlind;
 			this.lastGlobalReplayViewer = isReplayViewer;
@@ -683,7 +687,7 @@ export class MinimapIconManager {
 
 				// Only compute and update color if raw owner or global state changed
 				const rawOwner = GetOwningPlayer(unit);
-				if (forceColorUpdateAllUnits || this.trackedRawOwnerList[i] !== rawOwner) {
+				if (this.trackedRawOwnerList[i] !== rawOwner) {
 					this.trackedRawOwnerList[i] = rawOwner;
 					// Update color
 					this.updateUnitIconColorFast(
@@ -794,7 +798,16 @@ export class MinimapIconManager {
 		}
 
 		// Standard player colors
-		this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[GetPlayerId(owner)], this.cityLastTexture);
+		// Use original color to avoid slot reassignment changing the color
+		const playerColor = NameManager.getInstance().getOriginalColor(owner);
+		const colorIndex = GetHandleId(playerColor);
+
+		if (colorIndex < 0 || colorIndex > 23) {
+			this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[90], this.cityLastTexture);
+			return;
+		}
+
+		this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[colorIndex], this.cityLastTexture);
 	}
 
 	/**
@@ -849,7 +862,16 @@ export class MinimapIconManager {
 		}
 
 		// Standard player colors
-		this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[GetPlayerId(owner as player)], this.unitLastTexture);
+		// Use original color to avoid slot reassignment changing the color
+		const playerColor = NameManager.getInstance().getOriginalColor(owner as player);
+		const colorIndex = GetHandleId(playerColor);
+
+		if (colorIndex < 0 || colorIndex > 23) {
+			this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+			return;
+		}
+
+		this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[colorIndex], this.unitLastTexture);
 	}
 
 	/**

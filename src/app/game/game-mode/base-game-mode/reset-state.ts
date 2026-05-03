@@ -1,7 +1,6 @@
 import { Wait } from 'src/app/utils/wait';
 import { TreeManager } from '../../services/tree-service';
 import { removeUnits } from '../utillity/remove-units';
-import { neutralizeCities } from '../utillity/neutralize-cities';
 import { resetCountries } from '../utillity/reset-countries';
 import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
@@ -23,9 +22,6 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 	async runAsync(): Promise<void> {
 		try {
 			print('Resetting match...');
-
-			print('Neutralizing cities...');
-			await neutralizeCities(5, 0.2);
 
 			StatisticsController.getInstance().setViewVisibility(false);
 

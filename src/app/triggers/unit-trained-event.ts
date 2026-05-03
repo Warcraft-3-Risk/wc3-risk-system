@@ -17,6 +17,9 @@ export function UnitTrainedEvent() {
 		Condition(() => {
 			const trainedUnit = GetTrainedUnit();
 
+			// If the match has already ended by the time the training completes, immediately remove the unit to prevent post-match shenanigans.
+			// We can't cancel the training in the UnitTrainStartTrigger since it fires before the training actually begins, but we can catch it
+			// here in UnitTrainedTrigger which fires as soon as training finishes.
 			if (GlobalGameData.matchState === 'postMatch') {
 				RemoveUnit(trainedUnit);
 				return false;
