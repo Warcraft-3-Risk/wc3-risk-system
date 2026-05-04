@@ -2,12 +2,22 @@ import { Country } from '../country/country';
 import { HexColors } from '../utils/hex-colors';
 import { PlayerManager } from '../player/player-manager';
 
+interface CountryLabelData {
+	country: Country;
+	cx: number;
+	cy: number;
+	distSq: number;
+	textData: string;
+	nameLength: number;
+}
+
 export class CountryLabelManager {
 	private static instance: CountryLabelManager;
 	private labels: texttag[] = [];
 	private maxLabels: number = 75; // Safe limit out of 100 handles
 	private updateTimer: timer | undefined;
 	private allCountries: Country[] = [];
+	private labelDataCache: CountryLabelData[] = [];
 
 	private constructor() {
 		// Private constructor for singleton
@@ -26,6 +36,16 @@ export class CountryLabelManager {
 	 */
 	public initialize(countries: Country[]) {
 		this.allCountries = countries;
+
+		// Pre-allocate the data cache to avoid GC churn
+		this.labelDataCache = this.allCountries.map((country) => ({
+			country,
+			cx: 0,
+			cy: 0,
+			distSq: 0,
+			textData: '',
+			nameLength: country.getName().length,
+		}));
 
 		// Initialize the pool
 		for (let i = 0; i < this.maxLabels; i++) {
@@ -64,32 +84,29 @@ export class CountryLabelManager {
 		const targetX = GetCameraTargetPositionX();
 		const targetY = GetCameraTargetPositionY();
 
-		// Map countries to their distances locally
-		const distances = this.allCountries.map((country) => {
-			const spawnUnit = country.getSpawn().unit;
-			const cx = GetUnitX(spawnUnit) - 100;
-			const cy = GetUnitY(spawnUnit) - 300;
-			const dx = targetX - cx;
-			const dy = targetY - cy;
-			return {
-				country,
-				cx,
-				cy,
-				distSq: dx * dx + dy * dy,
-				textData: `${HexColors.TANGERINE} ${country.getName()} +${country.getCities().length} `,
-				nameLength: country.getName().length,
-			};
-		});
+		// Update distances matching the cache without generating new objects (zero GC churn)
+		for (let i = 0; i < this.labelDataCache.length; i++) {
+			const data = this.labelDataCache[i];
+			const spawnUnit = data.country.getSpawn().unit;
+
+			data.cx = GetUnitX(spawnUnit) - 100;
+			data.cy = GetUnitY(spawnUnit) - 300;
+			const dx = targetX - data.cx;
+			const dy = targetY - data.cy;
+
+			data.distSq = dx * dx + dy * dy;
+			data.textData = `${HexColors.TANGERINE} ${data.country.getName()} +${data.country.getCities().length} `;
+		}
 
 		// Sort by nearest distance
-		distances.sort((a, b) => a.distSq - b.distSq);
+		this.labelDataCache.sort((a, b) => a.distSq - b.distSq);
 
 		// Render the closest N labels
-		const activeCount = Math.min(this.maxLabels, distances.length);
+		const activeCount = Math.min(this.maxLabels, this.labelDataCache.length);
 
 		let labelIndex = 0;
 		while (labelIndex < activeCount) {
-			const data = distances[labelIndex];
+			const data = this.labelDataCache[labelIndex];
 			const tag = this.labels[labelIndex];
 
 			const lengthCheck: number = data.nameLength * 5.5 < 200 ? data.nameLength * 5.5 : 200;
