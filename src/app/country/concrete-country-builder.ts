@@ -12,6 +12,7 @@ import { PlayerManager } from '../player/player-manager';
 import { File } from 'w3ts';
 import { HexColors } from '../utils/hex-colors';
 import { MinimapIconManager } from '../managers/minimap-icon-manager';
+import { CountryLabelManager } from '../managers/country-label-manager';
 
 /**
  * ConcreteCountryBuilder is an implementation of the CountryBuilder interface.
@@ -108,18 +109,16 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 	}
 
 	public async createTexts(): Promise<void> {
-		// Create text tags for each player
+		// Initialize the distance-based text tag rendering pool
 		const countrySet: Set<Country> = new Set(CityToCountry.values());
+		CountryLabelManager.getInstance().initialize(Array.from(countrySet));
+
 		PlayerManager.getInstance().playersAndObservers.forEach((player) => {
 			if (GetLocalPlayer() === player.getPlayer()) {
-				// Create all country labels
-				countrySet.forEach((country) => country.createText());
-
 				// Load saved labels preference and apply it
 				const labelsPreference = File.read('risk/labels.pld');
 				if (labelsPreference === 'false') {
 					player.options.labels = false;
-					countrySet.forEach((country) => country.setLabelVisibility(false));
 
 					// Update button texture and tooltip to match the hidden state
 					const labelButtonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', GetPlayerId(player.getPlayer()) + 200);

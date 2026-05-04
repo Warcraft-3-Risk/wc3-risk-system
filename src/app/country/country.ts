@@ -14,7 +14,6 @@ export class Country implements Resetable {
 	private readonly cities: City[];
 	private readonly spawn: Spawner;
 	private owner: player;
-	private countryLabel: texttag | undefined;
 
 	/**
 	 * Country constructor.
@@ -67,28 +66,6 @@ export class Country implements Resetable {
 		this.owner = player;
 		this.spawn.setOwner(player);
 		this.onOwnerChange(previousOwner);
-	}
-
-	public createText(): void {
-		const offsetX: number = GetUnitX(this.spawn.unit) - 100;
-		const offsetY: number = GetUnitY(this.spawn.unit) - 300;
-		const lengthCheck: number = this.name.length * 5.5 < 200 ? this.name.length * 5.5 : 200;
-
-		this.countryLabel = CreateTextTag();
-		SetTextTagText(this.countryLabel, `${HexColors.TANGERINE} ${this.name} +${this.getCities().length} `, 0.028);
-		SetTextTagPos(this.countryLabel, offsetX - lengthCheck, offsetY, 16.0);
-		SetTextTagVisibility(this.countryLabel, true);
-		SetTextTagPermanent(this.countryLabel, true);
-	}
-
-	/**
-	 * Sets the visibility of the country label.
-	 * @param visible - Whether the label should be visible.
-	 */
-	public setLabelVisibility(visible: boolean): void {
-		if (this.countryLabel) {
-			SetTextTagVisibility(this.countryLabel, visible);
-		}
 	}
 
 	/**
