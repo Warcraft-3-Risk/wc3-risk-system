@@ -66,40 +66,45 @@ function main() {
 	const config: IProjectConfig = loadTerrainConfig(terrain);
 
 	// Update map-info.ts with the correct MAP_TYPE before compiling
-	updateTsFileWithConfig(config);
+	const restoreMapInfo = updateTsFileWithConfig(config);
 
-	// compileMap will sync object editor files from risk_europe to dist/ automatically
-	const result = compileMap(config);
+	try {
+		// compileMap will sync object editor files from risk_europe to dist/ automatically
+		const result = compileMap(config);
 
-	// Apply team game patch if "tg" mode requested
-	if (mode === 'tg') {
-		patchTeamGame(config);
-	}
+		// Apply team game patch if "tg" mode requested
+		if (mode === 'tg') {
+			patchTeamGame(config);
+		}
 
-	if (!result) {
-		logger.error(`Failed to compile map.`);
-		return;
-	}
+		if (!result) {
+			logger.error(`Failed to compile map.`);
+			return;
+		}
 
-	const cwd = process.cwd();
-	const filename = `${cwd}/dist/${config.mapFolder}`;
+		const cwd = process.cwd();
+		const filename = `${cwd}/dist/${config.mapFolder}`;
 
-	logger.info(`Launching map "${filename.replace(/\\/g, '/')}"...`);
+		logger.info(`Launching map "${filename.replace(/\\/g, '/')}"...`);
 
-	if (config.winePath) {
-		const wineFilename = `"Z:${filename}"`;
-		const prefix = config.winePrefix ? `WINEPREFIX=${config.winePrefix}` : '';
-		execSync(`${prefix} ${config.winePath} "${config.gameExecutable}" ${['-loadfile', wineFilename, ...config.launchArgs].join(' ')}`, {
-			stdio: 'ignore',
-		});
-	} else {
-		execFile(config.gameExecutable, ['-loadfile', filename, ...config.launchArgs], (err: NodeJS.ErrnoException | null) => {
-			if (err && err.code === 'ENOENT') {
-				logger.error(
-					`No such file or directory "${config.gameExecutable}". Make sure your GAME_EXECUTABLE environment variable is configured properly in your local .env.`
-				);
-			}
-		});
+		if (config.winePath) {
+			const wineFilename = `"Z:${filename}"`;
+			const prefix = config.winePrefix ? `WINEPREFIX=${config.winePrefix}` : '';
+			execSync(`${prefix} ${config.winePath} "${config.gameExecutable}" ${['-loadfile', wineFilename, ...config.launchArgs].join(' ')}`, {
+				stdio: 'ignore',
+			});
+		} else {
+			execFile(config.gameExecutable, ['-loadfile', filename, ...config.launchArgs], (err: NodeJS.ErrnoException | null) => {
+				if (err && err.code === 'ENOENT') {
+					logger.error(
+						`No such file or directory "${config.gameExecutable}". Make sure your GAME_EXECUTABLE environment variable is configured properly in your local .env.`
+					);
+				}
+			});
+		}
+	} finally {
+		// Restore the original map-info.ts regardless of compilation/execution success
+		restoreMapInfo();
 	}
 }
 

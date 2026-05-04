@@ -42,33 +42,37 @@ function buildTerrain(terrain: string, minifyOverride?: boolean) {
 		config.minifyScript = minify;
 	}
 
-	updateTsFileWithConfig(config);
+	const restoreMapInfo = updateTsFileWithConfig(config);
 
-	// compileMap will sync object editor files from risk_europe to dist/ automatically
-	const result = compileMap(config);
+	try {
+		// compileMap will sync object editor files from risk_europe to dist/ automatically
+		const result = compileMap(config);
 
-	if (!result) {
-		logger.error(`Failed to compile map.`);
-		return;
+		if (!result) {
+			logger.error(`Failed to compile map.`);
+			return;
+		}
+
+		logger.info(`Creating w3x archive...`);
+		const outputFolder = config.outputFolder || './dist';
+		fs.mkdirSync(outputFolder, { recursive: true });
+
+		const w3cModeEnabled = `${config.w3cModeEnabled}` === 'true';
+
+		const distDir = `./dist/${config.mapFolder}`;
+		const ddsDir = path.join(__dirname, '..', distDir, 'war3mapPreview.dds');
+		const mapName = `${config.mapName} ${config.mapVersion}${w3cModeEnabled ? ' w3c' : ''}.w3x`;
+		const formattedMapName = mapName.replaceAll(' ', '_');
+
+		if (fs.existsSync(ddsDir)) {
+			const copyDest = path.join(__dirname, '..', distDir, 'war3mapMap.dds');
+			fs.renameSync(ddsDir, copyDest);
+		}
+
+		createMapFromDir(`${outputFolder}/${formattedMapName}`, distDir, config);
+	} finally {
+		restoreMapInfo();
 	}
-
-	logger.info(`Creating w3x archive...`);
-	const outputFolder = config.outputFolder || './dist';
-	fs.mkdirSync(outputFolder, { recursive: true });
-
-	const w3cModeEnabled = `${config.w3cModeEnabled}` === 'true';
-
-	const distDir = `./dist/${config.mapFolder}`;
-	const ddsDir = path.join(__dirname, '..', distDir, 'war3mapPreview.dds');
-	const mapName = `${config.mapName} ${config.mapVersion}${w3cModeEnabled ? ' w3c' : ''}.w3x`;
-	const formattedMapName = mapName.replaceAll(' ', '_');
-
-	if (fs.existsSync(ddsDir)) {
-		const copyDest = path.join(__dirname, '..', distDir, 'war3mapMap.dds');
-		fs.renameSync(ddsDir, copyDest);
-	}
-
-	createMapFromDir(`${outputFolder}/${formattedMapName}`, distDir, config);
 }
 
 /**
