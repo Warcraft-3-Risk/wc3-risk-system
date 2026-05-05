@@ -44,8 +44,6 @@ import { ChatUIManager } from './app/managers/chat-ui-manager';
 import { detectGameStatus } from './app/utils/game-status';
 import { CityToCountry } from './app/country/country-map';
 
-//const BUILD_DATE = compiletime(() => new Date().toUTCString());
-
 function tsMain() {
 	try {
 		if (!BlzLoadTOCFile('Assets\\Frames\\frames.toc')) {
@@ -160,17 +158,6 @@ function tsMain() {
 			SetCommands();
 
 			new PlayerSetupService().run();
-
-			// All active players start white with their actual usernames; setup-state will assign game colors and anonymized color names
-			const players = PlayerManager.getInstance().players;
-			const nameManager = NameManager.getInstance();
-			for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-				const p = Player(i);
-				if (!players.has(p)) continue;
-
-				nameManager.setColor(p, PLAYER_COLOR_SNOW);
-				nameManager.setName(p, 'btag');
-			}
 
 			EnableSelect(false, false);
 			EnableDragSelect(false, false);
