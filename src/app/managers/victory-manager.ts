@@ -6,12 +6,12 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { PLAYER_STATUS } from '../player/status/status-enum';
 import { PlayerManager } from '../player/player-manager';
 import { TeamManager } from '../teams/team-manager';
-import { OvertimeManager } from './overtime-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { ParticipantEntity, ParticipantEntityManager } from '../utils/participant-entity';
 import { debugPrint } from '../utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { GlobalMessage } from '../utils/messages';
+import { isOvertimeEnabled, getTurnCountPostOvertime } from './overtime-logic';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -24,20 +24,14 @@ export class VictoryManager {
 	private constructor(
 		private playerManager: PlayerManager,
 		private teamManager: TeamManager,
-		private settingsContext: SettingsContext,
-		private overtimeManager: typeof OvertimeManager
+		private settingsContext: SettingsContext
 	) {
 		this.winTracker = new WinTracker();
 	}
 
 	public static getInstance(): VictoryManager {
 		if (this.instance === undefined) {
-			this.instance = new VictoryManager(
-				PlayerManager.getInstance(),
-				TeamManager.getInstance(),
-				SettingsContext.getInstance(),
-				OvertimeManager
-			);
+			this.instance = new VictoryManager(PlayerManager.getInstance(), TeamManager.getInstance(), SettingsContext.getInstance());
 		}
 
 		return this.instance;
@@ -46,13 +40,8 @@ export class VictoryManager {
 	/**
 	 * Initialize the VictoryManager with explicitly provided dependencies.
 	 */
-	public static init(
-		playerManager: PlayerManager,
-		teamManager: TeamManager,
-		settingsContext: SettingsContext,
-		overtimeManager: typeof OvertimeManager
-	): VictoryManager {
-		this.instance = new VictoryManager(playerManager, teamManager, settingsContext, overtimeManager);
+	public static init(playerManager: PlayerManager, teamManager: TeamManager, settingsContext: SettingsContext): VictoryManager {
+		this.instance = new VictoryManager(playerManager, teamManager, settingsContext);
 		return this.instance;
 	}
 
@@ -147,8 +136,11 @@ export class VictoryManager {
 	}
 
 	public getCityCountWin(): number {
-		if (this.overtimeManager.isOvertimeEnabled() && GlobalGameData.turnCount >= this.overtimeManager.getOvertimeSettingValue()) {
-			return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * this.overtimeManager.getTurnCountPostOvertime();
+		const setting = this.settingsContext.getOvertimeSetting();
+		if (isOvertimeEnabled(setting) && GlobalGameData.turnCount >= (setting as number)) {
+			return (
+				Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * getTurnCountPostOvertime(GlobalGameData.turnCount, setting)
+			);
 		}
 
 		return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO);

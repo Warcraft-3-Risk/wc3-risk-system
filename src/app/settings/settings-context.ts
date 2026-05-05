@@ -5,6 +5,7 @@ import { GameTypeStrategy } from './strategies/game-type-strategy';
 import { PromodeStrategy } from './strategies/promode-strategy';
 import { Settings } from './settings';
 import { OvertimeStrategy } from './strategies/overtime-strategy';
+import { OvertimeSetting } from '../managers/overtime-logic';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 import { MatchFormat } from '../game/match-format-enum';
 import { GlobalGameData } from '../game/state/global-game-state';
@@ -192,5 +193,20 @@ export class SettingsContext {
 
 	public isW3CMode(): boolean {
 		return W3C_MODE_ENABLED;
+	}
+
+	public getOvertimeSetting(): OvertimeSetting {
+		switch (this.settings.Overtime.option) {
+			case 0:
+				return 0;
+			case 1:
+				return 30;
+			case 2:
+				return 60;
+			case 3:
+				return undefined;
+			default:
+				return undefined;
+		}
 	}
 }

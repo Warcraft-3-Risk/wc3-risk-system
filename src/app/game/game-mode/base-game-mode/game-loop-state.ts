@@ -13,7 +13,7 @@ import { City } from 'src/app/city/city';
 import { StateData } from '../state/state-data';
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
 import { PlayerManager } from 'src/app/player/player-manager';
-import { OvertimeManager } from 'src/app/managers/overtime-manager';
+import { isOvertimeActive } from 'src/app/managers/overtime-logic';
 import { Team } from 'src/app/teams/team';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { debugPrint } from 'src/app/utils/debug-print';
@@ -299,11 +299,12 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			return line;
 		}
 
+		const overtimeSetting = SettingsContext.getInstance().getOvertimeSetting();
 		const tiedMessage =
 			VictoryManager.GAME_VICTORY_STATE === 'TIE'
-				? `${OvertimeManager.isOvertimeActive() ? `${HexColors.RED}TIED!\nGAME EXTENDED BY ONE ROUND!|r` : ''}`
+				? `${isOvertimeActive(GlobalGameData.turnCount, overtimeSetting) ? `${HexColors.RED}TIED!\nGAME EXTENDED BY ONE ROUND!|r` : ''}`
 				: '';
-		const overtimeMessage = OvertimeManager.isOvertimeActive() ? `${HexColors.RED}OVERTIME!|r` : '';
+		const overtimeMessage = isOvertimeActive(GlobalGameData.turnCount, overtimeSetting) ? `${HexColors.RED}OVERTIME!|r` : '';
 
 		if (playersToAnnounce[0] instanceof Team) {
 			const playerMessages = playersToAnnounce

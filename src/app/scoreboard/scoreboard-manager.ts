@@ -1,5 +1,5 @@
 import { GlobalGameData } from '../game/state/global-game-state';
-import { OvertimeManager } from '../managers/overtime-manager';
+import { isOvertimeActive, isOvertimeEnabled, getTurnsUntilOvertimeIsActivated } from '../managers/overtime-logic';
 import { VictoryManager } from '../managers/victory-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
@@ -240,9 +240,10 @@ export class ScoreboardManager {
 			const leaderCityCount = ParticipantEntityManager.getCityCount(GlobalGameData.leader);
 			const isLeaderCityCountHighlighted = leaderCityCount >= requiredCities;
 
-			const overtimeSuffix = OvertimeManager.isOvertimeActive()
+			const overtimeSetting = SettingsContext.getInstance().getOvertimeSetting();
+			const overtimeSuffix = isOvertimeActive(GlobalGameData.turnCount, overtimeSetting)
 				? ` ${HexColors.RED}(Overtime)|r`
-				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
+				: `${isOvertimeEnabled(overtimeSetting) ? ` (Overtime in: ${getTurnsUntilOvertimeIsActivated(GlobalGameData.turnCount, overtimeSetting)})` : ''}`;
 
 			if (isLeaderCityCountHighlighted) {
 				this.setTitle(`${leaderDisplayName} ${HexColors.RED}${leaderCityCount}|r/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`);
@@ -250,9 +251,10 @@ export class ScoreboardManager {
 				this.setTitle(`${leaderDisplayName} ${leaderCityCount}/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`);
 			}
 		} else {
-			const overtimeSuffix = OvertimeManager.isOvertimeActive()
+			const overtimeSetting = SettingsContext.getInstance().getOvertimeSetting();
+			const overtimeSuffix = isOvertimeActive(GlobalGameData.turnCount, overtimeSetting)
 				? ` ${HexColors.RED}(Overtime)|r`
-				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
+				: `${isOvertimeEnabled(overtimeSetting) ? ` (Overtime in: ${getTurnsUntilOvertimeIsActivated(GlobalGameData.turnCount, overtimeSetting)})` : ''}`;
 			this.setTitle(`Risk Europe${overtimeSuffix}`);
 		}
 	}

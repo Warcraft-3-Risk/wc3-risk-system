@@ -31,16 +31,16 @@ Before touching `VictoryManager`, we have verified the following black-box integ
 
 ## Increment 2: `OvertimeManager`
 
-Once `VictoryManager` provides our proof of concept for dependency injection:
-
 ### Interface Changes
 
-- **Current**: Relies internally on `SettingsContext.getInstance()`.
-- **Proposed**: Inject `Settings` and UI `Timers` into its constructor.
+- **Current**: Relies internally on `GlobalGameData.turnCount` statically via `OvertimeManager`.
+- **Proposed**: Completely deleted `OvertimeManager`. Moved logic to exported pure functions inside `overtime-logic.ts`. Handed `overtimeSetting` storage and mapping directly to `SettingsContext`.
 
 ### Required Regression Tests
 
-- [ ] Ensure `overtime-manager` has a unit test that verifies turn threshold logic and modifier incrementation. _(Needs auditing, likely need to build this test first)._
+- [x] Ensure `overtime-logic` has a unit test that verifies turn threshold logic and modifier incrementation. _(Wrote `tests/overtime-logic.test.ts` matching existing behavior)._
+- [x] Fixed all mocks across `capitals.test.ts`, `promode-auto-loss.test.ts`, etc. to reflect lack of need for class instantiation or mocks thanks to pure logic extraction.
+- [x] Confirmed regression tests all GREEN.
 
 ---
 

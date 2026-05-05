@@ -132,9 +132,11 @@ vi.mock('src/app/managers/names/name-manager', () => ({
 }));
 vi.mock('src/app/managers/overtime-manager', () => ({
 	OvertimeManager: {
-		isOvertimeEnabled: () => false,
-		getOvertimeSettingValue: () => 999,
-		getTurnCountPostOvertime: () => 0,
+		getInstance: () => ({
+			isOvertimeEnabled: () => false,
+			getOvertimeSettingValue: () => 999,
+			getTurnCountPostOvertime: () => 0,
+		}),
 	},
 }));
 vi.mock('src/app/utils/messages', () => ({
