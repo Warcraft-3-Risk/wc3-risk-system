@@ -156,7 +156,7 @@ export class ScoreboardDataModel {
 		const gameTimeInSeconds = GlobalGameData.turnCount * TURN_DURATION_IN_SECONDS + (TURN_DURATION_IN_SECONDS - GlobalGameData.tickCounter);
 		const isInCombat = gameTimeInSeconds > 15 && gameTimeInSeconds - data.lastCombat <= 15;
 
-		const requiredCities = VictoryManager.getCityCountWin();
+		const requiredCities = VictoryManager.getInstance().getCityCountWin();
 		const cities = data.cities.cities.length;
 
 		let ratingChange: PlayerRow['ratingChange'] = undefined;

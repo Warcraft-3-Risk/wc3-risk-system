@@ -235,7 +235,7 @@ export class ScoreboardManager {
 		}
 
 		if (GlobalGameData.leader) {
-			const requiredCities = VictoryManager.getCityCountWin();
+			const requiredCities = VictoryManager.getInstance().getCityCountWin();
 			const leaderDisplayName = ParticipantEntityManager.getDisplayName(GlobalGameData.leader);
 			const leaderCityCount = ParticipantEntityManager.getCityCount(GlobalGameData.leader);
 			const isLeaderCityCountHighlighted = leaderCityCount >= requiredCities;

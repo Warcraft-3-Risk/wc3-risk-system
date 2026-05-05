@@ -24,9 +24,9 @@ vi.mock('src/app/managers/names/name-manager', () => ({
 
 vi.mock('src/app/managers/victory-manager', () => ({
 	VictoryManager: {
-		getCityCountWin: () => 50,
 		getInstance: () => ({
 			getOwnershipByThresholdDescending: () => [],
+			getCityCountWin: () => 50,
 		}),
 	},
 }));
