@@ -13,6 +13,7 @@ import { MatchFormat } from '../game/match-format-enum';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { AllyColorFilterManager } from './ally-color-filter-manager';
 import { Wait } from '../utils/wait';
+import { MinimapTrackedList } from '../utils/minimap-tracked-list-logic';
 
 export interface MinimapTickSample {
 	trackedUnits: number;
@@ -48,10 +49,7 @@ export class MinimapIconManager {
 	private cityBorders: Map<City, framehandle> = new Map(); // Inner border frames for capital cities
 	private cityOuterBorders: Map<City, framehandle> = new Map(); // Outer border frames for capital cities
 	private capitalIcons: Map<City, boolean> = new Map(); // Track which cities are capitals
-	private trackedUnitList: unit[] = [];
-	private trackedFrameList: framehandle[] = [];
-	private trackedRawOwnerList: player[] = []; // Caches raw owner per unit for dirty checking
-	private trackedUnitIndex: Map<unit, number> = new Map();
+	private trackedList = new MinimapTrackedList<unit, framehandle, player>();
 	private framePool: framehandle[] = []; // Pool of unused frames for recycling
 	private lastSeenOwners: Map<City, player> = new Map(); // Remember last seen owner
 	private minimapFrame: framehandle;
@@ -266,7 +264,7 @@ export class MinimapIconManager {
 		}
 
 		// Check if already tracked to avoid duplicates
-		if (!this.trackedUnitIndex.has(unit)) {
+		if (!this.trackedList.trackedUnitIndex.has(unit)) {
 			this.registerTrackedUnit(unit);
 		}
 	}
@@ -278,9 +276,9 @@ export class MinimapIconManager {
 	public unregisterTrackedUnit(unit: unit): void {
 		if (!this.isActive) return;
 
-		const index = this.trackedUnitIndex.get(unit);
+		const index = this.trackedList.trackedUnitIndex.get(unit);
 		if (index !== undefined) {
-			const iconFrame = this.removeTrackedAt(index);
+			const iconFrame = this.trackedList.removeTrackedAt(index);
 			if (iconFrame) {
 				BlzFrameSetVisible(iconFrame, false);
 				this.framePool.push(iconFrame);
@@ -291,36 +289,28 @@ export class MinimapIconManager {
 	}
 
 	private removeTrackedAt(index: number): framehandle | undefined {
-		const lastIndex = this.trackedUnitList.length - 1;
+		const lastIndex = this.trackedList.trackedUnitList.length - 1;
 		if (lastIndex < 0) return undefined;
 
-		const unit = this.trackedUnitList[index];
-		const frame = this.trackedFrameList[index];
+		const unit = this.trackedList.trackedUnitList[index];
+		const frame = this.trackedList.trackedFrameList[index];
 
-		const lastUnit = this.trackedUnitList[lastIndex];
-		const lastFrame = this.trackedFrameList[lastIndex];
-		const lastRawOwner = this.trackedRawOwnerList[lastIndex];
+		const lastUnit = this.trackedList.trackedUnitList[lastIndex];
+		const lastFrame = this.trackedList.trackedFrameList[lastIndex];
+		const lastRawOwner = this.trackedList.trackedRawOwnerList[lastIndex];
 
-		this.trackedUnitList[index] = lastUnit;
-		this.trackedFrameList[index] = lastFrame;
-		this.trackedRawOwnerList[index] = lastRawOwner;
-		this.trackedUnitIndex.set(lastUnit, index);
+		this.trackedList.trackedUnitList[index] = lastUnit;
+		this.trackedList.trackedFrameList[index] = lastFrame;
+		this.trackedList.trackedRawOwnerList[index] = lastRawOwner;
+		this.trackedList.trackedUnitIndex.set(lastUnit, index);
 
-		this.trackedUnitList.pop();
-		this.trackedFrameList.pop();
-		this.trackedRawOwnerList.pop();
-		this.trackedUnitIndex.delete(unit);
+		this.trackedList.trackedUnitList.pop();
+		this.trackedList.trackedFrameList.pop();
+		this.trackedList.trackedRawOwnerList.pop();
+		this.trackedList.trackedUnitIndex.delete(unit);
 		this.unitLastTexture.delete(unit);
 
 		return frame;
-	}
-
-	private addTrackedUnit(unit: unit, frame: framehandle): void {
-		const index = this.trackedUnitList.length;
-		this.trackedUnitList.push(unit);
-		this.trackedFrameList.push(frame);
-		this.trackedRawOwnerList.push(GetOwningPlayer(unit)); // NEVER push undefined in TSTL! It creates `nil` holes breaking fast array indexing.
-		this.trackedUnitIndex.set(unit, index);
 	}
 
 	/**
@@ -330,7 +320,7 @@ export class MinimapIconManager {
 	public registerTrackedUnit(unit: unit): void {
 		if (!this.isActive) return;
 
-		if (this.trackedUnitIndex.has(unit)) {
+		if (this.trackedList.trackedUnitIndex.has(unit)) {
 			return;
 		}
 
@@ -363,7 +353,7 @@ export class MinimapIconManager {
 			BlzFrameSetLevel(iconFrame, 15);
 
 			// Store the frame
-			this.addTrackedUnit(unit, iconFrame);
+			this.trackedList.addTrackedUnit(unit, iconFrame, GetOwningPlayer(unit));
 
 			// Initial update
 			const localPlayer = GetLocalPlayer();
@@ -377,7 +367,7 @@ export class MinimapIconManager {
 			}
 			if (DEBUG_PRINTS.master)
 				debugPrint(
-					`MinimapIconManager: Count of tracked units: ${this.trackedUnitList.length}, Pool size: ${this.framePool.length}`,
+					`MinimapIconManager: Count of tracked units: ${this.trackedList.trackedUnitList.length}, Pool size: ${this.framePool.length}`,
 					DC.minimap
 				);
 		} catch (e) {
@@ -567,8 +557,8 @@ export class MinimapIconManager {
 		) {
 			// Invalidate all raw owners to force a color update over the next few ticks
 			const invalidPlayer = Player(25);
-			for (let j = 0; j < this.trackedRawOwnerList.length; j++) {
-				this.trackedRawOwnerList[j] = invalidPlayer;
+			for (let j = 0; j < this.trackedList.trackedRawOwnerList.length; j++) {
+				this.trackedList.trackedRawOwnerList[j] = invalidPlayer;
 			}
 
 			this.lastGlobalColorMode = allyColorMode;
@@ -643,7 +633,7 @@ export class MinimapIconManager {
 		let trackedUnitsCount = 0;
 		let deadUnitsCount = 0;
 
-		const trackedLength = this.trackedUnitList.length;
+		const trackedLength = this.trackedList.trackedUnitList.length;
 		if (this.currentUnitUpdateIndex >= trackedLength) {
 			this.currentUnitUpdateIndex = 0;
 		}
@@ -651,8 +641,8 @@ export class MinimapIconManager {
 		const maxToProcess = Math.min(this.UNITS_PER_TICK, trackedLength);
 		let loopsCompleted = 0;
 
-		while (loopsCompleted < maxToProcess && this.trackedUnitList.length > 0) {
-			if (this.currentUnitUpdateIndex >= this.trackedUnitList.length) {
+		while (loopsCompleted < maxToProcess && this.trackedList.trackedUnitList.length > 0) {
+			if (this.currentUnitUpdateIndex >= this.trackedList.trackedUnitList.length) {
 				this.currentUnitUpdateIndex = 0; // Wrap around safely if list shrunk during loops
 			}
 
@@ -661,15 +651,15 @@ export class MinimapIconManager {
 			trackedUnitsCount++;
 			loopsCompleted++;
 
-			const unit = this.trackedUnitList[i];
-			const iconFrame = this.trackedFrameList[i];
+			const unit = this.trackedList.trackedUnitList[i];
+			const iconFrame = this.trackedList.trackedFrameList[i];
 
 			// Check if unit is still valid and alive
 			// Note: 0.405 is the death threshold in WC3
 			if (GetUnitTypeId(unit) === 0 || GetWidgetLife(unit) <= 0.405) {
 				deadUnitsCount++;
 				BlzFrameSetVisible(iconFrame, false);
-				const frame = this.removeTrackedAt(i);
+				const frame = this.trackedList.removeTrackedAt(i);
 				if (frame) this.framePool.push(frame);
 				// Do not increment currentUnitUpdateIndex because the swapped element is now at this index.
 				// By not incrementing, the new element at `i` gets processed either next loop or next tick.
@@ -687,8 +677,8 @@ export class MinimapIconManager {
 
 				// Only compute and update color if raw owner or global state changed
 				const rawOwner = GetOwningPlayer(unit);
-				if (this.trackedRawOwnerList[i] !== rawOwner) {
-					this.trackedRawOwnerList[i] = rawOwner;
+				if (this.trackedList.trackedRawOwnerList[i] !== rawOwner) {
+					this.trackedList.trackedRawOwnerList[i] = rawOwner;
 					// Update color
 					this.updateUnitIconColorFast(
 						iconFrame,
@@ -1195,7 +1185,7 @@ export class MinimapIconManager {
 		this.cityOuterBorders.forEach((outerBorderFrame) => {
 			BlzDestroyFrame(outerBorderFrame);
 		});
-		this.trackedFrameList.forEach((iconFrame) => {
+		this.trackedList.trackedFrameList.forEach((iconFrame) => {
 			BlzDestroyFrame(iconFrame);
 		});
 		this.framePool.forEach((frame) => {
@@ -1206,9 +1196,9 @@ export class MinimapIconManager {
 		this.cityBorders.clear();
 		this.cityOuterBorders.clear();
 		this.capitalIcons.clear();
-		this.trackedUnitList.length = 0;
-		this.trackedFrameList.length = 0;
-		this.trackedUnitIndex.clear();
+		this.trackedList.trackedUnitList.length = 0;
+		this.trackedList.trackedFrameList.length = 0;
+		this.trackedList.trackedUnitIndex.clear();
 		this.framePool = [];
 		this.lastSeenOwners.clear();
 		this.cityLastTexture.clear();
