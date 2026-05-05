@@ -67,31 +67,33 @@ export class Spawner implements Resetable, Ownable {
 	 * Executes a step for the spawner, creating new units if conditions are met.
 	 */
 	public step() {
-		if (this.getOwner() === NEUTRAL_HOSTILE) return;
-		if (GetPlayerSlotState(this.getOwner()) !== PLAYER_SLOT_STATE_PLAYING) return;
+		const owner = this.getOwner();
+
+		if (owner === NEUTRAL_HOSTILE) return;
+		if (GetPlayerSlotState(owner) !== PLAYER_SLOT_STATE_PLAYING) return;
 		if (GlobalGameData.matchState !== 'inProgress') return;
 
 		// Eliminated players (e.g. forfeited via -ff) still have PLAYER_SLOT_STATE_PLAYING,
 		// so we must explicitly check their status to prevent spawning in FFA.
 		// In team games, eliminated players keep spawning so teammates can use those units.
-		const matchPlayer = PlayerManager.getInstance().players.get(this.getOwner());
+		const matchPlayer = PlayerManager.getInstance().players.get(owner);
 		if (SettingsContext.getInstance().isFFA() && matchPlayer && matchPlayer.status.isEliminated()) return;
 
-		const spawnCount: number = this.spawnMap.get(this.getOwner()).size;
+		const spawnCount: number = this.spawnMap.get(owner).size;
 
 		if (spawnCount >= this.maxSpawnsPerPlayerWithMultiplier) return;
 
 		const amount: number = computeSpawnAmount(spawnCount, this.maxSpawnsPerPlayerWithMultiplier, this.spawnsPerStepWithMultiplier);
 
-		const ownerMatchPlayer = GlobalGameData.matchPlayers.find((x) => x.getPlayer() === this.getOwner());
+		const ownerMatchPlayer = GlobalGameData.matchPlayers.find((x) => x.getPlayer() === owner);
 		const rallyLoc: location = GetUnitRallyPoint(this.unit);
 
 		for (let i = 0; i < amount; i++) {
-			const owningSlot = SharedSlotManager.getInstance().getSlotWithLowestUnitCount(this.getOwner());
+			const owningSlot = SharedSlotManager.getInstance().getSlotWithLowestUnitCount(owner);
 			let u: unit = CreateUnit(owningSlot, this.spawnType, GetUnitX(this.unit), GetUnitY(this.unit), 270);
 			if (DEBUG_PRINTS.master)
 				debugPrint(
-					`[SharedSlots] Spawned unit for player ${GetPlayerId(this.getOwner())} on slot ${GetPlayerId(owningSlot)}`,
+					`[SharedSlots] Spawned unit for player ${GetPlayerId(owner)} on slot ${GetPlayerId(owningSlot)}`,
 					DC.sharedSlots
 				);
 			SharedSlotManager.getInstance().incrementUnitCount(owningSlot);
@@ -107,7 +109,7 @@ export class Spawner implements Resetable, Ownable {
 
 			AllyColorFilterManager.getInstance().applyColorFilter(u);
 			BlzSetUnitName(u, `${GetUnitName(u)} (${this.country})`);
-			this.spawnMap.get(this.getOwner()).add(u);
+			this.spawnMap.get(owner).add(u);
 			SPAWNER_UNITS.set(u, this);
 
 			if (rallyLoc !== undefined) {
