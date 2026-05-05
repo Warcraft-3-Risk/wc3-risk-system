@@ -1,4 +1,5 @@
 import { UNIT_ID } from '../../configs/unit-id';
+import { computeSpawnAmount } from './spawner-logic';
 import { SharedSlotManager } from '../game/services/shared-slot-manager';
 import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
@@ -80,7 +81,7 @@ export class Spawner implements Resetable, Ownable {
 
 		if (spawnCount >= this.maxSpawnsPerPlayerWithMultiplier) return;
 
-		const amount: number = Math.min(this.spawnsPerStepWithMultiplier, this.maxSpawnsPerPlayerWithMultiplier - spawnCount);
+		const amount: number = computeSpawnAmount(spawnCount, this.maxSpawnsPerPlayerWithMultiplier, this.spawnsPerStepWithMultiplier);
 
 		const ownerMatchPlayer = GlobalGameData.matchPlayers.find((x) => x.getPlayer() === this.getOwner());
 		const rallyLoc: location = GetUnitRallyPoint(this.unit);

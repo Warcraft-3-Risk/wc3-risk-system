@@ -32,6 +32,7 @@ export class Country implements Resetable {
 	 * The cities are no longer reset here to allow for batching yields.
 	 */
 	public reset(): void {
+		this.spawn.reset();
 		this.owner = NEUTRAL_HOSTILE;
 	}
 
