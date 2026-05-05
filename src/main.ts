@@ -161,6 +161,17 @@ function tsMain() {
 
 			new PlayerSetupService().run();
 
+			// All active players start white with their actual usernames; setup-state will assign game colors and anonymized color names
+			const players = PlayerManager.getInstance().players;
+			const nameManager = NameManager.getInstance();
+			for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+				const p = Player(i);
+				if (!players.has(p)) continue;
+
+				nameManager.setColor(p, PLAYER_COLOR_SNOW);
+				nameManager.setName(p, 'btag');
+			}
+
 			EnableSelect(false, false);
 			EnableDragSelect(false, false);
 			// FogManager.getInstance().turnFogOff();
