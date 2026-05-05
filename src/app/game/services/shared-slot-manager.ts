@@ -364,7 +364,7 @@ export class SharedSlotManager implements Resetable {
 		// 5. FINALIZE: Update scoreboard
 		ScoreboardManager.getInstance().toggleVisibility(false);
 		ScoreboardManager.getInstance().toggleVisibility(true);
-		ScoreboardManager.getInstance().updateFull();
+		ScoreboardManager.getInstance().updateFull(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 
 		return true;
 	}

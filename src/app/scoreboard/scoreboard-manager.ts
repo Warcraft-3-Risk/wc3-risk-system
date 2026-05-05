@@ -44,8 +44,7 @@ export class ScoreboardManager {
 	}
 
 	public ffaSetup(players: ActivePlayer[]) {
-		this.activePlayers = players;
-		this.dataModel.refresh(this.activePlayers, true);
+		this.dataModel.refresh(players, true);
 
 		// Reuse existing renderer inside the same game mode if structurally compatible
 		if (
@@ -64,8 +63,7 @@ export class ScoreboardManager {
 	}
 
 	public teamSetup(players: ActivePlayer[]) {
-		this.activePlayers = players;
-		this.dataModel.refresh(this.activePlayers, false);
+		this.dataModel.refresh(players, false);
 
 		if (
 			this.renderers.standard &&
@@ -83,11 +81,10 @@ export class ScoreboardManager {
 	}
 
 	public obsSetup(players: ActivePlayer[], observers: player[]) {
-		this.activePlayers = players;
 		this.observers = observers;
 
 		if (observers.length >= 1) {
-			this.dataModel.refresh(this.activePlayers, this.isFFA());
+			this.dataModel.refresh(players, this.isFFA(players));
 
 			if (
 				!(this.renderers.obs && this.renderers.obs instanceof ObserverRenderer && (this.renderers.obs as any).size === players.length + 3)
@@ -130,15 +127,15 @@ export class ScoreboardManager {
 		}
 	}
 
-	public updateFull() {
+	public updateFull(activePlayers: ActivePlayer[], isFFA: boolean, observers?: player[]) {
 		this.checkReplayPovBoardSwap();
-		this.dataModel.refresh(this.activePlayers, this.isFFA());
+		this.dataModel.refresh(activePlayers, isFFA);
 		this.iterateRenderers((r) => r.renderFull(this.dataModel));
 	}
 
-	public updatePartial() {
+	public updatePartial(activePlayers: ActivePlayer[], isFFA: boolean, observers?: player[]) {
 		this.checkReplayPovBoardSwap();
-		this.dataModel.refreshValues(this.activePlayers, this.isFFA());
+		this.dataModel.refreshValues(activePlayers, isFFA);
 		this.iterateRenderers((r) => r.renderPartial(this.dataModel));
 	}
 
@@ -196,8 +193,8 @@ export class ScoreboardManager {
 		});
 	}
 
-	private isFFA(): boolean {
-		return SettingsContext.getInstance().isFFA() || this.activePlayers.length <= 2;
+	private isFFA(players: ActivePlayer[]): boolean {
+		return SettingsContext.getInstance().isFFA() || players.length <= 2;
 	}
 
 	private checkReplayPovBoardSwap(): void {

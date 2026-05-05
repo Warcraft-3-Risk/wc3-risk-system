@@ -148,7 +148,7 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 			}
 		});
 
-		sessionBoard.updateFull();
+		sessionBoard.updateFull(); /* TODO sessionBoard decoupling */
 		ScoreboardManager.getInstance().showSessionBoard();
 	}
 

@@ -2,12 +2,14 @@
  * Pure scoreboard sorting and combat-detection logic extracted for testing.
  *
  * Operates on plain data interfaces that mirror the relevant fields of
- * `PlayerRow` and `TeamRow` from `scoreboard-data-model.ts`.
+ * 'PlayerRow' and 'TeamRow' from 'scoreboard-data-model.ts'.
  */
 
 export interface SortablePlayer {
 	/** Unique player identifier for tie-breaking. */
 	playerId: number;
+	/** Random seed for initial tie-breaking in FFAs. */
+	randomSeed?: number;
 	/** Current income value (higher = better). */
 	income: number;
 	/** Whether the player has been eliminated. */
@@ -26,12 +28,12 @@ export interface SortableTeam {
 /**
  * Sort players for the scoreboard:
  *   1. Active players come before eliminated players.
- *   2. Among active players: higher income first, tie-break by player ID ascending.
+ *   2. Among active players: higher income first, tie-break by randomSeed ascending (for initial anonymization), then by player ID ascending.
  *   3. Among eliminated players: most recently died first, tie-break by player ID ascending.
  *
  * Returns a new sorted array (does not mutate the input).
  */
-export function sortPlayers(players: SortablePlayer[]): SortablePlayer[] {
+export function sortPlayers<T extends SortablePlayer>(players: T[]): T[] {
 	return [...players].sort((a, b) => {
 		if (!a.isEliminated && b.isEliminated) return -1;
 		if (a.isEliminated && !b.isEliminated) return 1;
@@ -44,6 +46,9 @@ export function sortPlayers(players: SortablePlayer[]): SortablePlayer[] {
 
 		if (a.income < b.income) return 1;
 		if (a.income > b.income) return -1;
+		if (a.randomSeed !== undefined && b.randomSeed !== undefined && a.randomSeed !== b.randomSeed) {
+			return a.randomSeed - b.randomSeed;
+		}
 		return a.playerId - b.playerId;
 	});
 }
@@ -55,7 +60,7 @@ export function sortPlayers(players: SortablePlayer[]): SortablePlayer[] {
  *
  * Returns a new sorted array (does not mutate the input).
  */
-export function sortTeams(teams: SortableTeam[]): SortableTeam[] {
+export function sortTeams<T extends SortableTeam>(teams: T[]): T[] {
 	return [...teams].sort((a, b) => {
 		if (a.totalIncome < b.totalIncome) return 1;
 		if (a.totalIncome > b.totalIncome) return -1;
@@ -71,11 +76,6 @@ export function sortTeams(teams: SortableTeam[]): SortableTeam[] {
  * @param combatWindow - Duration (in seconds) after last combat during which the player is still considered in combat. Default 15.
  * @param gracePeriod - Early-game grace period (in seconds) before combat detection activates. Default 15.
  */
-export function isInCombat(
-	gameTimeInSeconds: number,
-	lastCombat: number,
-	combatWindow: number = 15,
-	gracePeriod: number = 15
-): boolean {
+export function isInCombat(gameTimeInSeconds: number, lastCombat: number, combatWindow: number = 15, gracePeriod: number = 15): boolean {
 	return gameTimeInSeconds > gracePeriod && gameTimeInSeconds - lastCombat <= combatWindow;
 }

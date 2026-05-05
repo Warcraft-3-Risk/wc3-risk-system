@@ -176,7 +176,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		SharedSlotManager.getInstance().debugPrintSlotCounts();
 
 		if (!changed) {
-			ScoreboardManager.getInstance().updateFull();
+			ScoreboardManager.getInstance().updateFull(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 		}
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		GlobalGameData.matchPlayers
@@ -198,7 +198,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			GlobalGameData.matchState = 'postMatch';
 		}
 
-		ScoreboardManager.getInstance().updateFull();
+		ScoreboardManager.getInstance().updateFull(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 
 		// Save preliminary ratings for crash recovery (only for ranked games)
 		const ratingManager = RatingManager.getInstance();
@@ -223,7 +223,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onTick(tick: number): void {
 		VictoryManager.getInstance().updateAndGetGameState();
 
-		ScoreboardManager.getInstance().updatePartial();
+		ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 	}
 
 	private messageGameState() {
@@ -323,7 +323,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer): void {
 		super.onCityCapture(city, preOwner, owner);
-		ScoreboardManager.getInstance().updatePartial();
+		ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 	}
 
@@ -338,7 +338,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			}
 		}
 
-		ScoreboardManager.getInstance().updatePartial();
+		ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 	}
 
 	// GameLoopState uses GlobalGameData.matchState to determine if the match is over

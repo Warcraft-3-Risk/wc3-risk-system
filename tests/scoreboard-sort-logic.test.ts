@@ -3,8 +3,8 @@ import { sortPlayers, sortTeams, isInCombat, type SortablePlayer, type SortableT
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
-function player(id: number, income: number, isEliminated = false, turnDied = 0): SortablePlayer {
-	return { playerId: id, income, isEliminated, turnDied };
+function player(id: number, income: number, isEliminated = false, turnDied = 0, randomSeed = 0): SortablePlayer {
+	return { playerId: id, income, isEliminated, turnDied, randomSeed };
 }
 
 function team(number: number, totalIncome: number): SortableTeam {
@@ -37,9 +37,10 @@ describe('sortPlayers', () => {
 		expect(result.map((p) => p.playerId)).toEqual([1, 2, 3]);
 	});
 
-	it('eliminated players sorted by turn died descending (most recent first)', () => {
-		const result = sortPlayers([player(1, 0, true, 2), player(2, 0, true, 5), player(3, 0, true, 3)]);
-		expect(result.map((p) => p.playerId)).toEqual([2, 3, 1]);
+	it('active players tie-break by randomSeed ascending when incomes match', () => {
+		const input = [player(1, 10, false, 0, 50), player(2, 10, false, 0, 100), player(3, 10, false, 0, 10)];
+		const result = sortPlayers(input);
+		expect(result.map((p) => p.playerId)).toEqual([3, 1, 2]);
 	});
 
 	it('eliminated players tie-break by player ID when same turn died', () => {

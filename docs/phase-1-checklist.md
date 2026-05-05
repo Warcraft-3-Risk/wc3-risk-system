@@ -55,4 +55,4 @@ Before touching `VictoryManager`, we have verified the following black-box integ
 
 - [x] `tests/scoreboard-sort-logic.test.ts`: Pure sorting is covered.
 - [x] `tests/scoreboard-data-model.test.ts`: Data integration is covered.
-- [ ] Needs a verification test for the display sync behavior before we split it adapter and logic.
+- [x] Needs a verification test for the display sync behavior before we split it adapter and logic.

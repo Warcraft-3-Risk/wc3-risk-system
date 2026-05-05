@@ -245,7 +245,7 @@ describe('ScoreboardDataModel income freezing', () => {
 			model.refresh(teamPlayers, false);
 
 			expect(model.teams.length).toBeGreaterThan(0);
-			const team1Row = model.teams.find((t) => t.number === 1);
+			const team1Row = model.teams.find((t) => t.teamNumber === 1);
 			expect(team1Row?.totalIncome).toBe(50);
 
 			// Simulate mid-turn team income change
@@ -255,13 +255,13 @@ describe('ScoreboardDataModel income freezing', () => {
 			model.refreshValues(teamPlayers, false);
 
 			// Team income should be FROZEN
-			const team1RowAfter = model.teams.find((t) => t.number === 1);
+			const team1RowAfter = model.teams.find((t) => t.teamNumber === 1);
 			expect(team1RowAfter?.totalIncome).toBe(50); // still 50, NOT 80
 
 			// But other team values should update
 			(fakeTeam1 as any).getCities = () => 30;
 			model.refreshValues(teamPlayers, false);
-			expect(model.teams.find((t) => t.number === 1)?.totalCities).toBe(30); // updated
+			expect(model.teams.find((t) => t.teamNumber === 1)?.totalCities).toBe(30); // updated
 		});
 	});
 });

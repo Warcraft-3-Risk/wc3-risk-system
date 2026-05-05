@@ -67,7 +67,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 			const teamRow = data.teams[i];
 
 			if (this.showTeamTotals) {
-				this.setItemValue(`${HexColors.WHITE}Team #${teamRow.number}|r`, row, this.PLAYER_COL);
+				this.setItemValue(`${HexColors.WHITE}Team #${teamRow.teamNumber}|r`, row, this.PLAYER_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalIncome}`, row, this.INCOME_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalCities}`, row, this.CITIES_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalKills}`, row, this.KILLS_COL);
@@ -95,7 +95,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 			const teamRow = data.teams[i];
 
 			if (this.showTeamTotals) {
-				this.setItemValue(`${HexColors.WHITE}Team #${teamRow.number}|r`, row, this.PLAYER_COL);
+				this.setItemValue(`${HexColors.WHITE}Team #${teamRow.teamNumber}|r`, row, this.PLAYER_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalIncome}`, row, this.INCOME_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalCities}`, row, this.CITIES_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalKills}`, row, this.KILLS_COL);
@@ -172,3 +172,4 @@ export class TeamRenderer extends ScoreboardRenderer {
 		}
 	}
 }
+
