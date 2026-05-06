@@ -91,6 +91,9 @@ typings/
 # DynamoDB Local files
 .dynamodb/
 
-.idea
+
+# Graphify cache and temp files
+graphify-out/cache/
+.graphify_*
 
 /graphify-out
