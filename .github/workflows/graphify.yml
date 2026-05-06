@@ -29,7 +29,7 @@ jobs:
           # OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           GRAPHIFY_NO_API_KEY_ERROR: 'true' # Prevent failure if no API key is provided, so AST extraction still runs
         run: |
-          graphify extract . --no-cluster
+          graphify extract . --no-cluster --backend ast
 
       # Optional: Automatically commit the generated graph files back to the repository
       - name: Commit graphify outputs
