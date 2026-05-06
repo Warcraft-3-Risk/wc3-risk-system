@@ -1,0 +1,2 @@
+python -m graphify update .
+git add graphify-out/
