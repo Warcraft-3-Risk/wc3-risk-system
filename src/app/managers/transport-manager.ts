@@ -13,6 +13,9 @@ import { PatrolState, TransportPatrolContext, TransportPatrolLogic } from '../ut
 import { TransportAutoLoadContext, TransportAutoLoadLogic } from '../utils/transport-auto-load-logic';
 import { TransportUnloadContext, TransportUnloadLogic } from '../utils/transport-unload-logic';
 
+import { TransportTooltipLogic } from '../utils/transport-tooltip-logic';
+import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
+
 type Transport = {
 	unit: unit;
 	cargo: unit[];
@@ -22,8 +25,7 @@ type Transport = {
 	loadTarget: unit;
 	unloadTargetX: number;
 	unloadTargetY: number;
-	floatingTextCargo: texttag | undefined;
-	floatingTextCapacity: texttag | undefined;
+	tooltipFrame: { box: framehandle; text: framehandle } | undefined;
 	patrolEnabled: boolean;
 	patrolState: PatrolState;
 	patrolDestX: number;
@@ -59,9 +61,12 @@ export class TransportManager {
 	private static delayedTrackTimer: timer = CreateTimer();
 	private static instance: TransportManager;
 	private transports: Map<unit, Transport>;
+	private transportList: Transport[] = [];
 	private autoLoadingTransports: Transport[] = [];
 	private autoLoadTimer: timer = CreateTimer();
+	private renderTimer: timer = CreateTimer();
 	private allOrderedUnits: Set<unit> = new Set<unit>();
+	private tooltipCtxCounter: number = 2000; // Start high to avoid collision with standard context ids
 
 	/**
 	 * Gets the singleton instance of the TransportManager.
@@ -110,6 +115,44 @@ export class TransportManager {
 		// Patrol management
 		this.onPatrolStart();
 		this.onPatrolOrder();
+
+		TimerStart(this.renderTimer, 0.02, true, () => this.renderTooltips());
+	}
+
+	/**
+	 * Renders UI tooltips above transport ships for observers showing their cargo load.
+	 */
+	private renderTooltips(): void {
+		const isObserver = EDITOR_DEVELOPER_MODE || IsPlayerObserver(GetLocalPlayer());
+		const activeCount = this.transportList.length;
+
+		for (let i = 0; i < activeCount; i++) {
+			const transport = this.transportList[i];
+			if (!transport.tooltipFrame) continue;
+
+			if (!UnitAlive(transport.unit)) {
+				BlzFrameSetVisible(transport.tooltipFrame.box, false);
+				BlzFrameSetVisible(transport.tooltipFrame.text, false);
+				continue;
+			}
+
+			const ux = GetUnitX(transport.unit);
+			const uy = GetUnitY(transport.unit);
+			const [sx, sy, onScreen] = World2Screen(ux, uy, 0);
+
+			if (TransportTooltipLogic.isVisible(isObserver, onScreen, sy, transport.cargo.length)) {
+				const text = TransportTooltipLogic.getTooltipText(transport.cargo.length, 10);
+				BlzFrameSetText(transport.tooltipFrame.text, text);
+				BlzFrameSetSize(transport.tooltipFrame.text, 0.045, 0.012);
+				BlzFrameSetAbsPoint(transport.tooltipFrame.text, FRAMEPOINT_TOP, sx, sy - 0.025);
+
+				BlzFrameSetVisible(transport.tooltipFrame.box, true);
+				BlzFrameSetVisible(transport.tooltipFrame.text, true);
+			} else {
+				BlzFrameSetVisible(transport.tooltipFrame.box, false);
+				BlzFrameSetVisible(transport.tooltipFrame.text, false);
+			}
+		}
 	}
 
 	/**
@@ -126,8 +169,7 @@ export class TransportManager {
 			loadTarget: undefined,
 			unloadTargetX: undefined,
 			unloadTargetY: undefined,
-			floatingTextCargo: undefined,
-			floatingTextCapacity: undefined,
+			tooltipFrame: this.createTooltipFrame(),
 			patrolEnabled: false,
 			patrolState: PatrolState.LOADING,
 			patrolDestX: 0,
@@ -142,6 +184,24 @@ export class TransportManager {
 		};
 
 		this.transports.set(unit, transport);
+		this.transportList.push(transport);
+	}
+
+	private createTooltipFrame(): { box: framehandle; text: framehandle } {
+		this.tooltipCtxCounter++;
+		const ctx = this.tooltipCtxCounter;
+		const box = BlzCreateFrame('TasToolTipBox', BlzGetFrameByName('ConsoleUIBackdrop', 0), 0, ctx);
+		const text = BlzCreateFrame('TasTooltipText', box, 0, ctx);
+
+		BlzFrameSetPoint(box, FRAMEPOINT_BOTTOMLEFT, text, FRAMEPOINT_BOTTOMLEFT, -0.01, -0.01);
+		BlzFrameSetPoint(box, FRAMEPOINT_TOPRIGHT, text, FRAMEPOINT_TOPRIGHT, 0.01, 0.01);
+		BlzFrameSetAlpha(box, 150);
+		BlzFrameSetAlpha(text, 255);
+		BlzFrameSetEnable(text, false);
+		BlzFrameSetVisible(box, false);
+		BlzFrameSetVisible(text, false);
+
+		return { box, text };
 	}
 
 	/**
@@ -203,6 +263,12 @@ export class TransportManager {
 
 		transportData.cargo = undefined;
 
+		if (transportData.tooltipFrame) {
+			BlzDestroyFrame(transportData.tooltipFrame.text);
+			BlzDestroyFrame(transportData.tooltipFrame.box);
+			transportData.tooltipFrame = undefined;
+		}
+
 		this.removeAutoLoadEffect(transportData);
 
 		transportData.autoloadEnabled = false;
@@ -222,6 +288,11 @@ export class TransportManager {
 		}
 
 		this.transports.delete(unit);
+
+		const listIndex = this.transportList.indexOf(transportData);
+		if (listIndex > -1) {
+			this.transportList.splice(listIndex, 1);
+		}
 	}
 
 	/**
