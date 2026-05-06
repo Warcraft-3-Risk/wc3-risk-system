@@ -69,9 +69,15 @@ vi.mock('src/app/utils/game-status', () => ({
 
 // ─── WC3 global stubs ──────────────────────────────────────────────
 /* eslint-disable @typescript-eslint/no-explicit-any */
+export const playerResourceStore = new Map<number, number>();
 (globalThis as any).GetLocalPlayer = () => ({ id: 0 });
 (globalThis as any).GetPlayerId = (p: any) => p?.id ?? 0;
-(globalThis as any).GetPlayerState = () => 100;
+(globalThis as any).GetPlayerState = (p: any, resource: string) => {
+	if (resource === 'gold') {
+		return playerResourceStore.get(p?.id) ?? 100;
+	}
+	return 0;
+};
 (globalThis as any).PLAYER_STATE_RESOURCE_GOLD = 'gold';
 (globalThis as any).Player = (id: number) => ({ id });
 
@@ -262,6 +268,39 @@ describe('ScoreboardDataModel income freezing', () => {
 			(fakeTeam1 as any).getCities = () => 30;
 			model.refreshValues(teamPlayers, false);
 			expect(model.teams.find((t) => t.teamNumber === 1)?.totalCities).toBe(30); // updated
+		});
+	});
+
+	describe('team gold aggregation', () => {
+		it('accurately sums the gold of all members and updates on partial refresh', async () => {
+			playerResourceStore.set(0, 150);
+			playerResourceStore.set(1, 200);
+
+			const fakeTeam1 = createFakeTeam(1, 50, 25);
+			const teamMod = await import('src/app/teams/team-manager');
+			(teamMod.TeamManager as any).getInstance = () => ({
+				getTeamNumberFromPlayer: () => 1,
+				getTeams: () => [fakeTeam1],
+			});
+
+			const teamPlayers = [createFakeActivePlayer(0, 25, 5, 12), createFakeActivePlayer(1, 25, 5, 13)];
+			(fakeTeam1 as any).getMembers = () => teamPlayers.map((p) => ({ getPlayer: () => p.getPlayer() }));
+
+			// Full refresh
+			model.refresh(teamPlayers, false);
+
+			let team1Row = model.teams.find((t) => t.teamNumber === 1);
+			expect(team1Row?.totalGold).toBe(350); // 150 + 200
+
+			// Change gold live (simulating ticks later)
+			playerResourceStore.set(0, 300);
+			playerResourceStore.set(1, 250);
+
+			// Partial refresh should update team total gold immediately
+			model.refreshValues(teamPlayers, false);
+
+			team1Row = model.teams.find((t) => t.teamNumber === 1);
+			expect(team1Row?.totalGold).toBe(550); // 300 + 250
 		});
 	});
 });
