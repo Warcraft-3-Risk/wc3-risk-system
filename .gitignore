@@ -94,6 +94,7 @@ typings/
 
 # Graphify cache and temp files
 graphify-out/cache/
+graphify-out/manifest.json
+graphify-out/graph.json
+graphify-out/graph.html
 .graphify_*
-
-/graphify-out
