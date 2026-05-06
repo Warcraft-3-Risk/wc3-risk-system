@@ -5,13 +5,14 @@ import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_PLAYER_LEFT } from '../utils/events/event-constants';
 import { CreateObserverButton } from '../utils/observer-helper';
 import { NameManager } from './names/name-manager';
+import { GlobalGameData } from '../game/state/global-game-state';
 
 export type CamPositionData = {
 	x: number;
 	y: number;
 };
 
-const LERP_SPEED = 0.35;
+const LERP_SPEED = 0.04;
 
 export default class PlayerCameraPositionManager {
 	private static instance: PlayerCameraPositionManager;
@@ -54,7 +55,7 @@ export default class PlayerCameraPositionManager {
 
 		// Local lerp timer — smoothly interpolates world positions toward synced targets (observer-only)
 		const lerpTimer = CreateTimer();
-		TimerStart(lerpTimer, 0.1, true, () => this.lerpPositions());
+		TimerStart(lerpTimer, 0.02, true, () => this.lerpPositions());
 
 		// Render timer — repositions frames on screen every frame so they track the observer's camera
 		const renderTimer = CreateTimer();
@@ -158,11 +159,14 @@ export default class PlayerCameraPositionManager {
 				this.setFrameText(frame, name);
 
 				const [sx, sy, onScreen] = World2Screen(x, y, 0);
-				if (onScreen) {
+				if (onScreen && sy >= 0.12) {
 					BlzFrameSetAbsPoint(frame.text, FRAMEPOINT_BOTTOM, sx, sy + 0.025);
+					BlzFrameSetVisible(frame.box, true);
+					BlzFrameSetVisible(frame.text, true);
+				} else {
+					BlzFrameSetVisible(frame.box, false);
+					BlzFrameSetVisible(frame.text, false);
 				}
-				BlzFrameSetVisible(frame.box, true);
-				BlzFrameSetVisible(frame.text, true);
 			}
 		} else {
 			const pos = this.camPositionData.get(p);
@@ -203,13 +207,20 @@ export default class PlayerCameraPositionManager {
 	private renderFrames() {
 		if (!EDITOR_DEVELOPER_MODE && !IsPlayerObserver(GetLocalPlayer())) return;
 		if (!this.overlayVisible) return;
+		if (GlobalGameData.matchState !== 'inProgress') {
+			this.frames.forEach((frame) => {
+				BlzFrameSetVisible(frame.box, false);
+				BlzFrameSetVisible(frame.text, false);
+			});
+			return;
+		}
 
 		this.displayPositionData.forEach((display, p) => {
 			const frame = this.frames.get(p);
 			if (!frame) return;
 
 			const [sx, sy, onScreen] = World2Screen(display.x, display.y, 0);
-			if (onScreen) {
+			if (onScreen && sy >= 0.14) {
 				BlzFrameSetAbsPoint(frame.text, FRAMEPOINT_BOTTOM, sx, sy + 0.025);
 				BlzFrameSetVisible(frame.box, true);
 				BlzFrameSetVisible(frame.text, true);
