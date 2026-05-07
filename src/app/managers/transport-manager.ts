@@ -15,6 +15,7 @@ import { TransportUnloadContext, TransportUnloadLogic } from '../utils/transport
 
 import { TransportTooltipLogic } from '../utils/transport-tooltip-logic';
 import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
+import { AllyColorFilterManager } from './ally-color-filter-manager';
 
 type Transport = {
 	unit: unit;
@@ -220,6 +221,7 @@ export class TransportManager {
 
 			UnitLagManager.getInstance().trackUnit(unit);
 			MinimapIconManager.getInstance().registerIfValid(unit);
+			AllyColorFilterManager.getInstance().applyColorFilter(unit);
 		}
 		TransportManager.delayedTrackQueue.length = 0;
 	}
@@ -258,6 +260,7 @@ export class TransportManager {
 			transportData.cargo.forEach((unit) => {
 				UnitLagManager.getInstance().trackUnit(unit);
 				MinimapIconManager.getInstance().registerIfValid(unit);
+				AllyColorFilterManager.getInstance().applyColorFilter(unit);
 			});
 		}
 
