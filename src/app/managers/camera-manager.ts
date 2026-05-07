@@ -40,7 +40,7 @@ export default class CameraManager {
 	 * @returns The singleton instance.
 	 */
 	public static getInstance() {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new CameraManager();
 		}
 		return this.instance;
@@ -57,10 +57,10 @@ export default class CameraManager {
 			let sRot: number;
 			let sAngle: number;
 
-			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_EMPTY && GetPlayerController(player) == MAP_CONTROL_USER) {
+			if (GetPlayerSlotState(player) !== PLAYER_SLOT_STATE_EMPTY && GetPlayerController(player) === MAP_CONTROL_USER) {
 				let contents: string;
 
-				if (player == GetLocalPlayer()) {
+				if (player === GetLocalPlayer()) {
 					contents = File.read(this.getFilePath());
 				}
 
@@ -69,7 +69,7 @@ export default class CameraManager {
 					sRot = S2R(contents.split(' ')[1]);
 					sAngle = S2R(contents.split(' ')[2]);
 				} else {
-					if (player == GetLocalPlayer()) {
+					if (player === GetLocalPlayer()) {
 						File.write(this.getFilePath(), `${CamSettings.DEFAULT_DISTANCE} ${CamSettings.DEFAULT_ROTATION} ${CamSettings.DEFAULT_ANGLE}`);
 					}
 				}
@@ -103,7 +103,7 @@ export default class CameraManager {
 		if (data) {
 			this.checkCamData(data, [distance, rotation, angle]);
 
-			if (player == GetLocalPlayer()) {
+			if (player === GetLocalPlayer()) {
 				File.write(this.getFilePath(), `${data.distance} ${data.rotation} ${data.angle}`);
 			}
 		}
@@ -113,10 +113,10 @@ export default class CameraManager {
 	 * Resets camera settings at a regular interval.
 	 */
 	private setCameraReset(p: player) {
-		if (p == GetLocalPlayer()) {
+		if (p === GetLocalPlayer()) {
 			const camTimer: timer = CreateTimer();
 
-			TimerStart(camTimer, 0.5, true, () => {
+			TimerStart(camTimer, 0.1, true, () => {
 				if (this.camData.has(p)) {
 					this.setCameraFields(p, this.camData.get(p));
 				}

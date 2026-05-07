@@ -38,7 +38,7 @@ export class EventCoordinator {
 	}
 
 	public static getInstance() {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new EventCoordinator();
 		}
 
@@ -90,14 +90,14 @@ export class EventCoordinator {
 	}
 
 	public applyGameMode(gameType: GameType) {
-		if (gameType == 'Capitals') {
+		if (gameType === 'Capitals') {
 			this._currentMode = new CapitalsMode();
 		} else {
 			if (W3C_MODE_ENABLED) {
 				this._currentMode = new W3CMode();
 			} else if (SettingsContext.getInstance().isEqualizedPromode()) {
 				this._currentMode = new EqualizedPromodeMode();
-			} else if (SettingsContext.getInstance().isPromode()) {
+			} else if (SettingsContext.getInstance().isPromode() || SettingsContext.getInstance().isChaosPromode()) {
 				this._currentMode = new PromodeMode();
 			} else {
 				this._currentMode = new StandardMode();

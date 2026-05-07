@@ -79,13 +79,21 @@ Running the build command will automatically generate the path and required dire
 Check out the base [wc3-ts-template](https://cipherxof.github.io/w3ts/docs/getting-started) for more detials on installation and usage
 
 ## Usage
-### Testing the project locally
+### Running unit tests
 
 ```
-npm run test <terrain>
+npm test
+```
 
-npm run test europe
-npm run test asia
+This runs the Vitest test suite covering the rating calculator, data structures, and other pure logic modules. Tests run in CI on every push and pull request.
+
+### Launching the project locally in Warcraft III
+
+```
+npm run launch <terrain>
+
+npm run launch europe
+npm run launch asia
 ```
 
 ### Building the project for release
@@ -132,7 +140,58 @@ The version with w3c suffix includes specific build instructions that ensures th
 The reason for a X.YZ version format is that the custom map list is sorted alphabetically. This creates issues when using semver, as the version would not be ordered alphabetically as such, making it difficult for the end user when browsing map versions.
 
 ## Documentation
-TODO
+
+### Architecture Overview
+
+The project compiles TypeScript to Lua using [TypeScript-to-Lua (TSTL)](https://typescripttolua.github.io/) and runs inside the Warcraft III engine. The codebase is organized as follows:
+
+```
+src/
+├── main.ts                  # Entry point
+├── app/
+│   ├── city/                # City/territory logic
+│   ├── configs/             # Game settings and constants
+│   ├── game/
+│   │   ├── game-mode/       # State machine (BaseMode → BaseState)
+│   │   ├── services/        # Distribution, shared slots, game loop
+│   │   └── state/           # Global game state
+│   ├── managers/            # Victory, income, name managers
+│   ├── player/              # Player types and player manager
+│   ├── rating/              # ELO rating system
+│   ├── scoreboard/          # Multiboard UI renderers
+│   ├── settings/            # Settings context (strategy pattern)
+│   ├── statistics/          # Per-player stat tracking
+│   └── utils/               # Events, debug printing, helpers
+├── lua/                     # Raw Lua files injected into the bundle
+scripts/                     # Build, dev, and test tooling
+tests/                       # Vitest unit tests
+maps/                        # Map source files and terrain configs
+```
+
+**Key patterns:**
+- **Singleton managers** with `getInstance()` / `resetInstance()` for test isolation
+- **State machine**: `BaseMode` cycles through `BaseState` subclasses per game turn
+- **Typed event system**: `EventEmitter` with `GameEventMap` for compile-time event payload safety
+- **Pure logic extraction**: Rating, victory, income, and distribution logic are isolated from WC3 APIs for testability
+
+### Testing
+
+Tests use [Vitest](https://vitest.dev/) and cover pure logic modules that don't depend on WC3 engine globals:
+
+```
+npm test              # Run all tests once
+npm run test:watch    # Watch mode
+```
+
+Since WC3 globals (`Player()`, `CreateTimer()`, etc.) don't exist outside the engine, tests target extracted pure-logic functions. The `tests/` directory mirrors the source structure.
+
+### CI
+
+Every push/PR to `main` runs:
+- Prettier format check
+- ESLint
+- Strict null checks on pure logic files
+- Full Vitest suite
 
 ## Contributing
 
@@ -140,9 +199,13 @@ Contributions to this project are welcome! However, please note that contributin
 
 To contribute:
 1. Fork the repository
-2. Create your feature branch
-3. Ensure your changes build and run successfully in a licensed WarCraft III client
-4. Submit a pull request with a clear description of your changes
+2. Create your feature branch (`git checkout -b feature/my-feature`)
+3. Run `npm test` and ensure all tests pass
+4. If adding new logic, add corresponding tests in `tests/`
+5. Ensure your changes build and run successfully in a licensed WarCraft III client
+6. Submit a pull request with a clear description of your changes
+
+Pre-commit hooks (via Husky + lint-staged) will automatically format and lint staged files.
 
 ## License
 This project is licensed under the MIT License - see the LICENSE file for details.

@@ -1,6 +1,7 @@
 import { PlayerManager } from '../player/player-manager';
 import { PLAYER_STATUS } from '../player/status/status-enum';
 import { ActivePlayer } from '../player/types/active-player';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 
 export function PlayerLeaveEvent() {
 	const t: trigger = CreateTrigger();

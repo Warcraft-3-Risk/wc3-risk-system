@@ -28,7 +28,7 @@ export class Region implements Resetable {
 
 	public isOwnedByPlayer(player: player) {
 		for (const country of this._countries) {
-			if (country.getOwner() != player) return false;
+			if (country.getOwner() !== player) return false;
 		}
 
 		return true;

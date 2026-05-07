@@ -5,7 +5,8 @@ import { Wait } from 'src/app/utils/wait';
 import { GlobalGameData } from '../../state/global-game-state';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { SettingsContext } from 'src/app/settings/settings-context';
-import { ClientManager } from '../../services/client-manager';
+import { SharedSlotManager } from '../../services/shared-slot-manager';
+import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 
 export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogState<T> {
 	onEnterState() {
@@ -14,6 +15,7 @@ export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogStat
 
 	async runAsync(): Promise<void> {
 		SettingsContext.getInstance().applyStrategy('Fog');
+		MinimapIconManager.getInstance().clearSeenCache();
 		const players = GlobalGameData.matchPlayers;
 
 		const visionMap = new Map<unit, player[]>();
@@ -37,7 +39,7 @@ export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogStat
 				country.getCities().forEach((countryCity) => {
 					const unit: unit = countryCity.cop;
 
-					if (ClientManager.getInstance().getOwnerOfUnit(unit) !== NEUTRAL_HOSTILE) {
+					if (SharedSlotManager.getInstance().getOwnerOfUnit(unit) !== NEUTRAL_HOSTILE) {
 						UnitShareVision(unit, playerHandle, true);
 
 						const playersWithVision = visionMap.get(unit) || [];

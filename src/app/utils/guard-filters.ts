@@ -1,5 +1,5 @@
 import { City } from '../city/city';
-import { ClientManager } from '../game/services/client-manager';
+import { SharedSlotManager } from '../game/services/shared-slot-manager';
 
 /**
  * Retrieves units in a specified range based on allegiance.
@@ -46,7 +46,7 @@ export function GetUnitsInRangeOfUnitByAllegiance(
 		y,
 		radius,
 		Filter(
-			() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), ClientManager.getInstance().getOwnerOfUnit(killingUnit))
+			() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit))
 		)
 	);
 }

@@ -5,7 +5,7 @@ on:
     types: [published] # Triggers when a new release is published
 
 env:
-  OUTPUT_FOLDER: './artifact'
+  OUTPUT_FOLDER: "./artifact"
 
 jobs:
   build:
@@ -21,35 +21,25 @@ jobs:
       W3C_MODE_ENABLED: ${{ matrix.w3c_mode }}
 
     steps:
+      - name: Validate tag format
+        shell: pwsh
+        run: |
+          $TAG = $env:GITHUB_REF -replace 'refs/tags/', ''
+          if ($TAG -notmatch '^\d+\.\d+(-[\w]+)?$') {
+            Write-Error "Tag '$TAG' does not match expected format X.YZ or X.YZ-suffix (e.g. 1.23, 4.09-unstable)"
+            exit 1
+          }
+          Write-Output "Tag format valid: $TAG"
+
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version: "22"
 
-      - name: Generate version suffix (Linux)
-        if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          TAG_NAME=${GITHUB_REF#refs/tags/}
-          TERRAIN="${{ matrix.terrain }}"
-          TERRAIN_CAPITALIZED="$(tr '[:lower:]' '[:upper:]' <<< ${TERRAIN:0:1})${TERRAIN:1}"
-
-          if [[ "$W3C_MODE_ENABLED" == "true" ]]; then
-            TAG_NAME="${TAG_NAME}_1v1"
-            SUFFIX="_w3c"
-          else
-            SUFFIX=""
-          fi
-
-          echo "TAG_NAME=${TAG_NAME}" >> $GITHUB_ENV
-          echo "W3C_SUFFIX=${SUFFIX}" >> $GITHUB_ENV
-          echo "RELEASE_FILENAME=Risk_${TERRAIN_CAPITALIZED}_${TAG_NAME}${SUFFIX}.w3x" >> $GITHUB_ENV
-
-      - name: Generate version suffix (Windows)
-        if: runner.os == 'Windows'
+      - name: Generate version suffix
         shell: pwsh
         run: |
           $TAG_NAME = $env:GITHUB_REF -replace 'refs/tags/', ''

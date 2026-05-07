@@ -209,7 +209,8 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 				MenuItem "FFA",     -2,
 				MenuItem "Lobby Teams",     -2,
 				MenuItem "Lobby Teams (Shared)",     -2,
-				//MenuItem "Random Teams of: ",     -2,
+				MenuItem "Random Teams",     -2,
+				MenuItem "Random Teams (Shared)",     -2,
 			}
 		}
 
@@ -231,6 +232,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 				MenuItem "Off",     -2,
 				MenuItem "On",     -2,
 				MenuItem "Equalized",     -2,
+				MenuItem "Chaos",     -2,
 			}
 		}
 	}
@@ -364,6 +366,30 @@ Frame "BACKDROP" "BackdropTemplate" {
     BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
     BackdropCornerSize  0.0125,
     BackdropEdgeFile  "UI\Widgets\EscMenu\Human\human-options-menu-border.blp",
+}
+
+Frame "SIMPLESTATUSBAR" "HoverTooltipBar" {
+    Width 0.08,
+    Height 0.020,
+    BarTexture "Replaceabletextures\Teamcolor\Teamcolor00.blp",
+
+    Layer "BACKGROUND" {
+        Texture "HoverTooltipBarBg" {
+            File "Replaceabletextures\Teamcolor\Teamcolor27.blp",
+        }
+    }
+
+    Frame "SIMPLEFRAME" "HoverTooltipBarFrame" {
+        DecorateFileNames,
+        SetPoint TOPLEFT, "HoverTooltipBar", TOPLEFT, 0.0, 0.0,
+        SetPoint BOTTOMRIGHT, "HoverTooltipBar", BOTTOMRIGHT, 0.0, 0.0,
+
+        Layer "ARTWORK" {
+            Texture "HoverTooltipBarBorder" {
+                File "ReplayTimelineBorder",
+            }
+        }
+    }
 }
 
 Frame "TEXT" "TextTemplate" {
@@ -899,5 +925,37 @@ Frame "BACKDROP" "LeaderboardFrame" INHERITS "QuestButtonBaseTemplate" {
         Width 0.1,
         Height 0.02,
         Text "Page 1 / 1",
+    }
+}
+
+Frame "TEXT" "TasTooltipText" {
+    DecorateFileNames,
+    FrameFont "MasterFont", 0.009,"",
+    LayerStyle "IGNORETRACKEVENTS",
+    FontJustificationH JUSTIFYCENTER,
+    FontJustificationV JUSTIFYMIDDLE,
+}
+
+ Frame "BACKDROP" "TasToolTipBox" {
+     BackdropTileBackground,
+     BackdropBackground  "UI\Widgets\ToolTips\Human\human-tooltip-background",
+     BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+     BackdropCornerSize  0.01,
+     BackdropBackgroundSize  0.255,
+     BackdropBackgroundInsets 0.0021 0.0021 0.0021 0.0021,
+     BackdropEdgeFile  "UI\Widgets\ToolTips\Human\human-tooltip-border",
+     //BackdropBlendAll,
+ }
+
+Frame "SIMPLEFRAME" "SimpleTasToolTipBox" {
+    Backdrop {
+     BackdropTileBackground,
+     BackdropBackground  "UI\Widgets\ToolTips\Human\human-tooltip-background.blp",
+     BackdropCornerFlags "UL|UR|BL|BR|T|L|B|R",
+     BackdropCornerSize  0.01,
+     BackdropBackgroundSize  0.255,
+     BackdropBackgroundInsets 0.0021 0.0021 0.0021 0.0021,
+     BackdropEdgeFile  "UI\Widgets\ToolTips\Human\human-tooltip-border.blp",
+     //BackdropBlendAll,
     }
 }

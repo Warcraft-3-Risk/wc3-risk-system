@@ -4,10 +4,17 @@ import { GlobalGameData } from '../../state/global-game-state';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { TeamManager } from 'src/app/teams/team-manager';
+import { RandomTeamManager } from 'src/app/teams/random-team-manager';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
+import { SettingsContext } from 'src/app/settings/settings-context';
 
 export class UpdatePlayerStatusState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
+		// Restore previous random teams observer before player cleanup
+		if (SettingsContext.getInstance().isRandomTeams() && RandomTeamManager.hasInstance()) {
+			RandomTeamManager.getInstance().restorePreviousObserver();
+		}
+
 		// Capture initial human player count before any cleanup
 		PlayerManager.getInstance().captureInitialHumanPlayerCount();
 
@@ -49,6 +56,9 @@ export class UpdatePlayerStatusState<T extends StateData> extends BaseState<T> {
 			player.trackedData.bonus.showForPlayer(player.getPlayer());
 			player.trackedData.bonus.repositon();
 		});
+
+		// Disable the creep minimap filter button, keep ally filter as player preference
+		EnableMinimapFilterButtons(true, false);
 
 		this.nextState(this.stateData);
 	}

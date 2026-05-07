@@ -7,7 +7,7 @@ import { ErrorMsg } from '../utils/messages';
 
 export function MuteCommand(chatManager: ChatManager, nameManager: NameManager, playerManager: PlayerManager) {
 	chatManager.addCmd(['-stfu', '-mute'], () => {
-		if (GlobalGameData.matchState != 'inProgress') return;
+		if (GlobalGameData.matchState !== 'inProgress') return;
 
 		const players: player[] = nameManager.getPlayersByAnyName(GetEventPlayerChatString().split(' ')[1]);
 		const player: player = GetTriggerPlayer();

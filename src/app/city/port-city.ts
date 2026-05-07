@@ -47,7 +47,7 @@ export class PortCity extends City {
 
 		if (
 			(IsUnitType(this.guard.unit, UNIT_TYPE.SHIP) && !IsUnitType(unit, UNIT_TYPE.SHIP)) ||
-			(IsUnitMelee(this.guard.unit) && GetUnitTypeId(unit) == UNIT_ID.MARINE)
+			(IsUnitMelee(this.guard.unit) && GetUnitTypeId(unit) === UNIT_ID.MARINE)
 		) {
 			SetUnitPosition(unit, this.guard.defaultX, this.guard.defaultY);
 			UnitToCity.delete(this.guard.unit);

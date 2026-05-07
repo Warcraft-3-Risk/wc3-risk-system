@@ -2,6 +2,13 @@ import { UNIT_ID } from 'src/configs/unit-id';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Resetable } from 'src/app/interfaces/resetable';
+import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
+import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
+import { debugPrint } from 'src/app/utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
+import { ABILITY_ID } from 'src/configs/ability-id';
+import { removeEliminatedBuff } from 'src/app/game/game-mode/utillity/on-player-status';
+import { AllyColorFilterManager } from 'src/app/managers/ally-color-filter-manager';
 
 /**
  * Represents a Guard entity in the game, implementing the `Resetable` interface.
@@ -45,32 +52,50 @@ export class Guard implements Resetable {
 	 * @param guard - The unit object that will become the new guard.
 	 */
 	public set(guard: unit): void {
-		if (GetUnitTypeId(this._unit) == UNIT_ID.DUMMY_GUARD) {
+		if (GetUnitTypeId(this._unit) === UNIT_ID.DUMMY_GUARD) {
 			this.remove();
 		}
 
 		this._unit = guard;
-		UnitAddAbility(guard, FourCC("A006"));
+		removeEliminatedBuff(guard);
+		UnitAddAbility(guard, ABILITY_ID.GUARD_INDICATOR);
 		UnitAddType(this._unit, UNIT_TYPE.GUARD);
+
+		// Untrack from MinimapIconManager FIRST (this re-enables native minimap display internally),
+		// then hide the native minimap icon. Order matters — reversing these causes the native dot to leak through.
+		UnitLagManager.getInstance().untrackUnit(guard);
+		BlzSetUnitBooleanFieldBJ(guard, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+
+		AllyColorFilterManager.getInstance().applyColorFilter(guard);
 	}
 
 	/**
-	 * Releases the guard, removing the guard type and setting the unit to null.
+	 * Releases the guard, removing the guard type and setting the unit to undefined.
 	 */
 	public release(): void {
-		if (this._unit == null) return;
+		if (this._unit === undefined) return;
 
 		UnitRemoveType(this._unit, UNIT_TYPE.GUARD);
-		UnitRemoveAbility(this._unit, FourCC("A006"));
-		this._unit = null;
+		UnitRemoveAbility(this._unit, ABILITY_ID.GUARD_INDICATOR);
+
+		// Show the unit's minimap icon again
+		BlzSetUnitBooleanFieldBJ(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+		UnitLagManager.getInstance().trackUnit(this._unit);
+
+		this._unit = undefined;
 	}
 
 	/**
 	 * Removes the guard unit from the game entirely.
 	 */
 	public remove(): void {
+		if (this._unit) {
+			const owner = GetOwningPlayer(this._unit);
+			if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Unit removed on slot ${GetPlayerId(owner)}`, DC.sharedSlots);
+			SharedSlotManager.getInstance().decrementUnitCount(owner);
+		}
 		RemoveUnit(this._unit);
-		this._unit = null;
+		this._unit = undefined;
 	}
 
 	/**
@@ -93,7 +118,14 @@ export class Guard implements Resetable {
 	 * @param guard - The new guard unit.
 	 */
 	public replace(guard: unit): void {
-		if (GetUnitTypeId(this._unit) == UNIT_ID.DUMMY_GUARD) {
+		// If the same unit is being re-assigned as guard, just reposition — no need to
+		// release/set which causes unnecessary untrack→track→untrack minimap churn.
+		if (guard === this._unit) {
+			this.reposition();
+			return;
+		}
+
+		if (GetUnitTypeId(this._unit) === UNIT_ID.DUMMY_GUARD) {
 			this.remove();
 		} else {
 			this.release();

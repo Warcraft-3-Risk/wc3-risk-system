@@ -39,7 +39,7 @@ export class ReplayManager {
   public finalized: boolean[];
 
   public static getInstance(): ReplayManager {
-    if (this.instance == null) {
+    if (this.instance === undefined) {
       this.instance = new ReplayManager();
     }
 
@@ -138,7 +138,7 @@ export class ReplayManager {
       const player = rank.getPlayer();
       const playerId = GetPlayerId(player);
 
-      if (GetPlayerController(player) != MAP_CONTROL_USER) {
+      if (GetPlayerController(player) !== MAP_CONTROL_USER) {
         continue;
       }
 
@@ -149,7 +149,7 @@ export class ReplayManager {
       const player = activePlayer.getPlayer();
       const playerId = GetPlayerId(player);
 
-      if (GetPlayerController(player) != MAP_CONTROL_USER) {
+      if (GetPlayerController(player) !== MAP_CONTROL_USER) {
         return;
       }
 
@@ -177,7 +177,7 @@ export class ReplayManager {
       const player = activePlayer.getPlayer();
       const playerId = GetPlayerId(player);
       
-      if (GetPlayerController(player) != MAP_CONTROL_USER) {
+      if (GetPlayerController(player) !== MAP_CONTROL_USER) {
         return;
       }
 

@@ -1,23 +1,23 @@
 class DoublyLinkedListNode<T> {
 	public value: T;
-	public next: DoublyLinkedListNode<T> | null;
-	public prev: DoublyLinkedListNode<T> | null;
+	public next: DoublyLinkedListNode<T> | undefined;
+	public prev: DoublyLinkedListNode<T> | undefined;
 
 	constructor(value?: T) {
 		this.value = value!;
-		this.next = null;
-		this.prev = null;
+		this.next = undefined;
+		this.prev = undefined;
 	}
 }
 
 export class DoublyLinkedList<T> {
-	private head: DoublyLinkedListNode<T> | null;
-	private tail: DoublyLinkedListNode<T> | null;
+	private head: DoublyLinkedListNode<T> | undefined;
+	private tail: DoublyLinkedListNode<T> | undefined;
 	private size: number;
 
 	constructor() {
-		this.head = null;
-		this.tail = null;
+		this.head = undefined;
+		this.tail = undefined;
 		this.size = 0;
 	}
 
@@ -45,7 +45,7 @@ export class DoublyLinkedList<T> {
 			throw new RangeError('Index out of range.');
 		}
 
-		let tmp: DoublyLinkedListNode<T> | null = this.head;
+		let tmp: DoublyLinkedListNode<T> | undefined = this.head;
 
 		for (let i = 0; i < index; i++) {
 			if (tmp) tmp = tmp.next;
@@ -54,12 +54,12 @@ export class DoublyLinkedList<T> {
 		return tmp!.value;
 	}
 
-	public getFirst(): T | null {
-		return this.head ? this.head.value : null;
+	public getFirst(): T | undefined {
+		return this.head ? this.head.value : undefined;
 	}
 
-	public getLast(): T | null {
-		return this.tail ? this.tail.value : null;
+	public getLast(): T | undefined {
+		return this.tail ? this.tail.value : undefined;
 	}
 
 	public addLast(value: T): void {
@@ -113,36 +113,36 @@ export class DoublyLinkedList<T> {
 		}
 	}
 
-	public removeFirst(): T | null {
+	public removeFirst(): T | undefined {
 		if (this.isEmpty()) {
-			return null;
+			return undefined;
 		}
 		const removedValue = this.head!.value;
 		if (this.size === 1) {
-			this.head = null;
-			this.tail = null;
+			this.head = undefined;
+			this.tail = undefined;
 		} else {
 			if (this.head) {
 				this.head = this.head.next;
-				this.head!.prev = null;
+				this.head!.prev = undefined;
 			}
 		}
 		this.size--;
 		return removedValue;
 	}
 
-	public removeLast(): T | null {
+	public removeLast(): T | undefined {
 		if (this.isEmpty()) {
-			return null;
+			return undefined;
 		}
 		const removedValue = this.tail!.value;
 		if (this.size === 1) {
-			this.head = null;
-			this.tail = null;
+			this.head = undefined;
+			this.tail = undefined;
 		} else {
 			if (this.tail) {
 				this.tail = this.tail.prev;
-				this.tail!.next = null;
+				this.tail!.next = undefined;
 			}
 		}
 		this.size--;

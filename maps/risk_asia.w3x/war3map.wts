@@ -684,11 +684,6 @@ STRING 7252
 Produces every round spawns.
 }
 
-STRING 7259
-{
-Artillery
-}
-
 STRING 7263
 // Abilities: a003 (), Unhotkey (Hotkey - Turn Off)
 {
@@ -1006,5 +1001,20 @@ Force 1
 STRING 7531
 {
 Risk Asia
+}
+
+STRING 7532
+{
+ 
+}
+
+STRING 7533
+{
+ 
+}
+
+STRING 7534
+{
+This option cycles through two different unit color modes.|N|N|Cfffed312Mode 1:|R All units use Player Colors. |N|Cfffed312Mode 2:|R Minimap colors display |CFFFFFF00Allies|R and |CFFFF0000Enemies|R. |N
 }
 

@@ -17,7 +17,7 @@ export const UNIT_ID = {
 	TANK: FourCC('u007'),
 	//Port Units
 	MARINE: FourCC('u008'),
-	CAPTAIN: FourCC('u009'),
+	MAJOR: FourCC('u009'),
 	ADMIRAL: FourCC('u010'),
 	TRANSPORT_SHIP: FourCC('s000'),
 	ARMORED_TRANSPORT_SHIP: FourCC('s001'),
@@ -26,7 +26,6 @@ export const UNIT_ID = {
 	BATTLESHIP_SS: FourCC('s004'),
 	//Dummy Unit
 	DUMMY_GUARD: FourCC('u050'),
-	DUMMY_MINIMAP_INDICATOR: FourCC('u00A'),
 	//Special Units
 	CAMERA_LOCK_UNIT: FourCC('u051'),
 	DUMMY_CASTER: FourCC('u052'),

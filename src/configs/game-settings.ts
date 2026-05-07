@@ -8,6 +8,9 @@ export const CITIES_TO_WIN_RATIO: number = 0.6;
 //This is the starting gold for each player. 4 gold by default.
 export const STARTING_INCOME: number = 4;
 
+//This is the starting gold for each player in Chaos promode. 25 gold by default.
+export const CHAOS_STARTING_INCOME: number = 25;
+
 //This is the starting countdown for the game. 10 by default
 export const STARTING_COUNTDOWN: number = 10;
 
@@ -32,9 +35,6 @@ export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 //This represents the duration a player can be muted for in seconds. Default is 300 seconds.
 export const STFU_DURATION: number = 300;
 
-//This represents whether debug messages should be printed. Default is false.
-export const SHOW_DEBUG_PRINTS = false;
-
 // This represents whether debug logs should be saved to a file. Default is true.
 export const SAVE_DEBUG_LOGS_TO_FILE = false;
 
@@ -53,14 +53,14 @@ export const CAPITALS_SELECTION_PHASE: number = 30;
 // This represents whether the game should terminate if there is only one human player left
 export const W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER: boolean = true;
 
-// This represents the duration of the W3C draw vote in seconds. Default is 30 seconds.
+// This represents the duration of the W3C draw vote in seconds. Default is 120 seconds.
 export const W3C_DRAW_DURATION: number = 120;
 
 // Enable/disable emitting player statistics to W3MMD (MMD) during the match and on game end.
 export const MMD_ENABLED: boolean = true;
 
-// Enable/disable player client allocation. Default is false.
-export const CLIENT_ALLOCATION_ENABLED = false;
+// Enable/disable shared slot allocation. Default is false.
+export const SHARED_SLOT_ALLOCATION_ENABLED = true;
 
 // This represents whether the ban list is active. Is set to true by default.
 export const BAN_LIST_ACTIVE: boolean = true;
@@ -112,3 +112,45 @@ export const RATING_SYNC_TIMEOUT: number = 10.0;
 // All current game players are always synced regardless of this limit.
 // Note: Lower values reduce lag during sync (100 = ~10KB per player vs 250 = ~25KB)
 export const RATING_SYNC_TOP_PLAYERS: number = 100;
+
+// Force the use of custom minimap icons even if the map is not world map.
+export const FORCE_CUSTOM_MINIMAP_ICONS: boolean = true;
+
+// Show player camera position frames for observers (and all players in dev mode).
+// When enabled: Observers see floating name tags at each player's camera position.
+// In dev mode: All players see the tags, not just observers.
+export const SHOW_PLAYER_CAMERA_POSITIONS: boolean = true;
+
+// ============================================
+// Debug Print Categories
+// ============================================
+// Per-category toggles for debug output. Set individual categories to false to silence them.
+// master = global kill switch (overrides all others).
+export const DEBUG_PRINTS = {
+	master: false,
+	ratingSync: false,
+	ratingManager: false,
+	sharedSlots: false,
+	redistribute: false,
+	killTracker: false,
+	victory: false,
+	drawManager: false,
+	gameMode: false,
+	transport: false,
+	spawner: false,
+	events: false,
+	city: false,
+	player: false,
+	unitLag: false,
+	minimap: false,
+	winTracker: false,
+	distribution: false,
+};
+
+export type DebugCategory = keyof typeof DEBUG_PRINTS;
+
+// Compile-time verified constants — use DC.ratingSync instead of 'ratingSync' string literals.
+export const DC: { readonly [K in DebugCategory]: K } = Object.keys(DEBUG_PRINTS).reduce((acc, key) => {
+	acc[key as DebugCategory] = key;
+	return acc;
+}, {} as any);

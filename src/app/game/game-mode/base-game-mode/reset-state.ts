@@ -6,11 +6,13 @@ import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { FogManager } from 'src/app/managers/fog-manager';
-import { ClientManager } from '../../services/client-manager';
+import { SharedSlotManager } from '../../services/shared-slot-manager';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { GlobalGameData } from '../../state/global-game-state';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
+import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
+import { CityToCountry } from 'src/app/country/country-map';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -18,50 +20,55 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 	}
 
 	async runAsync(): Promise<void> {
-		print('Resetting match...');
-		await Wait.forSeconds(2);
+		try {
+			print('Resetting match...');
 
-		StatisticsController.getInstance().setViewVisibility(false);
+			StatisticsController.getInstance().setViewVisibility(false);
 
-		FogManager.getInstance().turnFogOff();
+			FogManager.getInstance().turnFogOff();
 
-		// Initialize fog for all players
-		SetTimeOfDayScale(0);
-		SetTimeOfDay(12.0);
+			// Initialize fog for all players
+			SetTimeOfDayScale(0);
+			SetTimeOfDay(12.0);
 
-		print('Resetting countries...');
-		resetCountries();
-		await Wait.forSeconds(1);
-		print('Removing units...');
-		removeUnits();
-		await Wait.forSeconds(1);
-		print('Resetting kill tracker...');
-		UnitKillTracker.getInstance().reset();
-		print('Resetting trees...');
-		TreeManager.getInstance().reset();
-		await Wait.forSeconds(1);
+			print('Removing units...');
+			await removeUnits(50, 0.2);
 
-		ClientManager.getInstance().reset();
+			print('Resetting countries...');
+			// Lower batch size to reduce micro-stutters from CreateUnit / SetUnitOwner
+			await resetCountries(3, 0.1);
+			await Wait.forSeconds(1);
 
-		GlobalGameData.matchPlayers.forEach((val) => {
-			val.trackedData.reset();
-			val.trackedData.setKDMaps();
-		});
+			print('Resetting kill tracker...');
+			UnitKillTracker.getInstance().reset();
+			print('Resetting minimap icons...');
+			await MinimapIconManager.getInstance().reinitialize(Array.from(CityToCountry.keys()));
 
-		const participants = ParticipantEntityManager.getParticipantEntities();
-		ParticipantEntityManager.executeByParticipantEntities(
-			participants,
-			(_) => {},
-			(team) => {
+			print('Resetting trees...');
+			await TreeManager.getInstance().reset();
+			await Wait.forSeconds(1);
+
+			SharedSlotManager.getInstance().reset();
+
+			for (const val of GlobalGameData.matchPlayers) {
+				val.trackedData.reset();
+				val.trackedData.setKDMaps();
+			}
+
+			const participants = ParticipantEntityManager.getParticipantEntities();
+			ParticipantEntityManager.executeByParticipantEntities(
+				participants,
+				(_) => {},
+				(team) => {
+					team.reset();
+				}
+			);
+			for (const team of TeamManager.getInstance().getTeams()) {
 				team.reset();
 			}
-		);
-		TeamManager.getInstance()
-			.getTeams()
-			.forEach((team) => {
-				team.reset();
-			});
-
-		this.nextState(this.stateData);
+			this.nextState(this.stateData);
+		} catch (e) {
+			print(`[ResetState] Error during reset: ${e}`);
+		}
 	}
 }

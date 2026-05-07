@@ -23,12 +23,12 @@ export function LeaveRegionEvent() {
 			GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitOwnedByPlayer);
 
 			//No valid owned guards found, check for allies (not applicable for capitals)
-			if (BlzGroupGetSize(g) == 0 && (!city.isCapital() || city.isCapturedCapital)) {
+			if (BlzGroupGetSize(g) === 0 && (!city.isCapital() || city.isCapturedCapital)) {
 				GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => UnitLagManager.IsUnitAlly(unit, player));
 			}
 
 			//No valid owned or allied guards found, create a dummy for city owner.
-			if (BlzGroupGetSize(g) == 0 && !city.isValidGuard(guardChoice)) {
+			if (BlzGroupGetSize(g) === 0 && !city.isValidGuard(guardChoice)) {
 				guardChoice = CreateUnit(city.getOwner(), UNIT_ID.DUMMY_GUARD, city.guard.defaultX, city.guard.defaultY, 270);
 			} else {
 				ForGroup(g, () => {
@@ -40,8 +40,8 @@ export function LeaveRegionEvent() {
 			city.guard.replace(guardChoice);
 			UnitToCity.set(guardChoice, city);
 			DestroyGroup(g);
-			g = null;
-			guardChoice = null;
+			g = undefined;
+			guardChoice = undefined;
 
 			return false;
 		})
