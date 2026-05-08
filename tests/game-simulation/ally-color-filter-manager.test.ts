@@ -42,9 +42,10 @@ describe('AllyColorFilterManager', () => {
 		neutralHostilePlayer = NEUTRAL_HOSTILE;
 
 		(globalThis as any).GetLocalPlayer = () => localPlayer;
-		(globalThis as any).IsPlayerAlly = (p1: any, p2: any) => p1 === p2 || (p1 === localPlayer && p2 === allyPlayer);
+		(globalThis as any).IsPlayerAlly = (p1: any, p2: any) => p1.id === p2.id || (p1.id === localPlayer.id && p2.id === allyPlayer.id);
 
 		mockAllyColorFilterState = 2; // Default to High Contrast (Mode 2)
+		(AllyColorFilterManager as any).instance = undefined;
 		(globalThis as any).GetAllyColorFilterState = () => mockAllyColorFilterState;
 
 		mockVertexColors = new Map();
@@ -97,6 +98,7 @@ describe('AllyColorFilterManager', () => {
 
 		it('applies yellow (255,255,0) to ally units when colorblind in Mode 2', () => {
 			activeLocalPlayer.options.colorblind = true;
+			AllyColorFilterManager.getInstance().recalculate();
 			const unit = { owner: allyPlayer } as unknown as FakeUnitHandle;
 			AllyColorFilterManager.getInstance().applyColorFilter(unit as any);
 			expect(mockVertexColors.get(unit)).toEqual({ r: 255, g: 255, b: 0, a: 255 });
@@ -116,6 +118,7 @@ describe('AllyColorFilterManager', () => {
 
 		it('resets color to white in Mode 0', () => {
 			activeLocalPlayer.options.colorContrast = false;
+			AllyColorFilterManager.getInstance().recalculate();
 			const unit = { owner: enemyPlayer } as unknown as FakeUnitHandle;
 			AllyColorFilterManager.getInstance().applyColorFilter(unit as any);
 			expect(mockVertexColors.get(unit)).toEqual({ r: 255, g: 255, b: 255, a: 255 });
@@ -143,6 +146,7 @@ describe('AllyColorFilterManager', () => {
 
 		it('returns yellow for ally units when colorblind in Mode 2', () => {
 			activeLocalPlayer.options.colorblind = true;
+			AllyColorFilterManager.getInstance().recalculate();
 			const unit = { owner: allyPlayer } as unknown as FakeUnitHandle;
 			const hex = AllyColorFilterManager.getInstance().getTooltipColorHex(unit as any);
 			expect(hex).toBe('|cFFFFFF00');
@@ -156,9 +160,30 @@ describe('AllyColorFilterManager', () => {
 
 		it('returns undefined if not in Mode 2', () => {
 			activeLocalPlayer.options.colorContrast = false;
+			AllyColorFilterManager.getInstance().recalculate();
 			const unit = { owner: enemyPlayer } as unknown as FakeUnitHandle;
 			const hex = AllyColorFilterManager.getInstance().getTooltipColorHex(unit as any);
 			expect(hex).toBeUndefined();
+		});
+	});
+
+	describe('Player Slot Iteration', () => {
+		it('processes up to bj_MAX_PLAYER_SLOTS without throwing exceptions', () => {
+			let getPlayerCalls = 0;
+			const originalPlayerFunc = (globalThis as any).Player;
+			(globalThis as any).Player = (i: number) => {
+				getPlayerCalls++;
+				return originalPlayerFunc(i);
+			};
+
+			expect(() => {
+				AllyColorFilterManager.getInstance().recalculate();
+			}).not.toThrow();
+
+			expect(getPlayerCalls).toBeGreaterThanOrEqual((globalThis as any).bj_MAX_PLAYER_SLOTS);
+
+			// restore
+			(globalThis as any).Player = originalPlayerFunc;
 		});
 	});
 });

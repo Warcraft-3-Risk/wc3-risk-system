@@ -12,6 +12,7 @@ import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 import { MatchFormat } from '../game/match-format-enum';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { AllyColorFilterManager } from './ally-color-filter-manager';
+import { AllyColorState } from './alliances/ally-color-state';
 import { Wait } from '../utils/wait';
 import { MinimapTrackedList } from '../utils/minimap-tracked-list-logic';
 
@@ -140,9 +141,6 @@ export class MinimapIconManager {
 
 		// Poll the native button state and correct mode 2 back to 0 if not in Lobby Teams mode
 		// Note: the main update loop also corrects mode 2 inside updateIconColor()
-		let lastColorMode = -1;
-		let lastColorBlind = false;
-		let lastColorContrast = false;
 		let lastHudScale = -1;
 
 		const allyModeTimer = CreateTimer();
@@ -153,38 +151,6 @@ export class MinimapIconManager {
 				lastHudScale = currentScale;
 				this.hudScale = currentScale;
 				this.repositionAllStaticIcons();
-			}
-
-			const currentColorMode = GetAllyColorFilterState();
-			const activeLocalPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());
-			const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
-			const isColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
-
-			if (currentColorMode !== lastColorMode || isColorBlind !== lastColorBlind || isColorContrast !== lastColorContrast) {
-				lastColorMode = currentColorMode;
-				lastColorBlind = isColorBlind;
-				lastColorContrast = isColorContrast;
-
-				const applyFilter = () => {
-					PlayerManager.getInstance().players.forEach((activePlayer) => {
-						activePlayer.trackedData.units.forEach((u) => {
-							AllyColorFilterManager.getInstance().applyColorFilter(u);
-						});
-					});
-					for (let i = 0; i < this.cityRecords.length; i++) {
-						const city = this.cityRecords[i].city;
-						AllyColorFilterManager.getInstance().applyColorFilter(city.barrack.unit);
-						AllyColorFilterManager.getInstance().applyColorFilter(city.cop);
-						if (city.guard && city.guard.unit) {
-							AllyColorFilterManager.getInstance().applyColorFilter(city.guard.unit);
-						}
-					}
-				};
-
-				if (currentColorMode === 2) {
-					SetAllyColorFilterState(0);
-				}
-				applyFilter();
 			}
 		});
 
@@ -540,7 +506,7 @@ export class MinimapIconManager {
 		const activeLocalPlayer = playerManager.players.get(effectiveLocal);
 		const localIsColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
 		const localIsColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
-		const allyColorMode = localIsColorContrast ? 2 : GetAllyColorFilterState();
+		const allyColorMode = localIsColorContrast ? 2 : AllyColorState.getInstance().getMode();
 		const isFFA = SettingsContext.getInstance().isFFA();
 		const isDeadInFFA = isFFA && activeLocalPlayer ? activeLocalPlayer.status.isDead() : false;
 		const sharedSlotManager = SharedSlotManager.getInstance();
@@ -754,9 +720,9 @@ export class MinimapIconManager {
 		// Check ally color filter mode
 		// 0 = Player colors, 1/2 = Ally/Enemy colors
 
-		// If the local player owns this city, show it in WHITE
+		// If the local player owns this city, show it in WHITE (or BLUE in Ally Mode 2)
 		if (owner === effectiveLocal) {
-			const localTexture = this.COLOR_TEXTURES[99];
+			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
 			this.setTextureCached(city, iconFrame, localTexture, this.cityLastTexture);
 			return;
 		}
@@ -771,15 +737,18 @@ export class MinimapIconManager {
 			}
 
 			// Check if owner is ally or enemy
-			if (IsPlayerAlly(owner, effectiveLocal)) {
+			const minimapColor = AllyColorState.getInstance().getMinimapColor(owner, effectiveLocal, localIsColorBlind);
+			if (minimapColor === ConvertPlayerColor(2) || minimapColor === ConvertPlayerColor(4)) {
 				// In FFA, dead players may be assigned as shared slots to another player,
 				// so show allies as red to avoid confusion with the shared slot's units
 				const allyColor = localIsColorBlind ? this.COLOR_TEXTURES[4] : this.COLOR_TEXTURES[2]; // Yellow vs Teal
 				const allyTexture = isDeadInFFA ? this.COLOR_TEXTURES[0] : allyColor;
 				this.setTextureCached(city, iconFrame, allyTexture, this.cityLastTexture);
-			} else if (IsPlayerEnemy(owner, effectiveLocal)) {
+			} else if (minimapColor === ConvertPlayerColor(0)) {
 				// Enemy = Red (Player 0 color)
 				this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[0], this.cityLastTexture);
+			} else if (minimapColor === ConvertPlayerColor(1)) {
+				this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[1], this.cityLastTexture);
 			} else {
 				// Neutral = Gray (standard WC3 neutral color)
 				this.setTextureCached(city, iconFrame, this.COLOR_TEXTURES[90], this.cityLastTexture);
@@ -816,9 +785,9 @@ export class MinimapIconManager {
 		// Used the SharedSlotManager to resolve the real owner (maps SharedSlot -> Player)
 		const owner = sharedSlotManager.getOwnerOfUnit(unit);
 
-		// If the local player owns this unit (or owns the shared slot), show it in WHITE
+		// If the local player owns this unit (or owns the shared slot), show it in WHITE (or BLUE in Ally Mode 2)
 		if (owner === effectiveLocal) {
-			const localTexture = this.COLOR_TEXTURES[99];
+			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
 			this.setTextureCached(unit, iconFrame, localTexture, this.unitLastTexture);
 			return;
 		}
@@ -835,15 +804,18 @@ export class MinimapIconManager {
 			}
 
 			// Check if owner is ally or enemy
-			if (IsPlayerAlly(owner as player, effectiveLocal)) {
+			const minimapColor = AllyColorState.getInstance().getMinimapColor(owner as player, effectiveLocal, isColorBlind);
+			if (minimapColor === ConvertPlayerColor(2) || minimapColor === ConvertPlayerColor(4)) {
 				// In FFA, dead players may be assigned as shared slots to another player,
 				// so show allies as red to avoid confusion with the shared slot's units
 				const allyColor = isColorBlind ? this.COLOR_TEXTURES[4] : this.COLOR_TEXTURES[2]; // Yellow vs Teal
 				const allyTexture = isDeadInFFA ? this.COLOR_TEXTURES[0] : allyColor;
 				this.setTextureCached(unit, iconFrame, allyTexture, this.unitLastTexture);
-			} else if (IsPlayerEnemy(owner as player, effectiveLocal)) {
+			} else if (minimapColor === ConvertPlayerColor(0)) {
 				// Enemy = Red (Player 0 color)
 				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[0], this.unitLastTexture);
+			} else if (minimapColor === ConvertPlayerColor(1)) {
+				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[1], this.unitLastTexture);
 			} else {
 				// Neutral = Gray (standard WC3 neutral color)
 				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
@@ -872,7 +844,7 @@ export class MinimapIconManager {
 	 */
 	private updateIconColor(iconFrame: framehandle, city: City, isVisible: boolean, localPlayer: player): void {
 		let owner: player;
-		let allyColorMode = GetAllyColorFilterState();
+		let allyColorMode = AllyColorState.getInstance().getMode();
 		const activeLocalPlayerForColor = PlayerManager.getInstance().players.get(localPlayer);
 		if (activeLocalPlayerForColor && activeLocalPlayerForColor.options.colorContrast) {
 			allyColorMode = 2;
@@ -909,9 +881,9 @@ export class MinimapIconManager {
 		// Check ally color filter mode
 		// 0 = Player colors, 1/2 = Ally/Enemy colors
 
-		// If the local player owns this city, show it in WHITE
+		// If the local player owns this city, show it in WHITE (or BLUE in Ally Mode 2)
 		if (owner === localPlayer) {
-			const localTexture = this.COLOR_TEXTURES[99];
+			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
 			this.setTextureCached(city, iconFrame, localTexture, this.cityLastTexture);
 			return;
 		}
@@ -974,9 +946,9 @@ export class MinimapIconManager {
 			allyColorMode = 2;
 		}
 
-		// If the local player owns this unit (or owns the shared slot), show it in WHITE
+		// If the local player owns this unit (or owns the shared slot), show it in WHITE (or BLUE in Ally Mode 2)
 		if (owner === localPlayer) {
-			const localTexture = this.COLOR_TEXTURES[99];
+			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
 			this.setTextureCached(unit, iconFrame, localTexture, this.unitLastTexture);
 			return;
 		}
