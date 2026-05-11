@@ -20,6 +20,15 @@ export function EnemyKillHandler(city: City, dyingUnit: unit, killingUnit: unit)
 		return true;
 	}
 
+	//Search for city owned units within large radius of dying guard
+	GetUnitsInRangeByAllegiance(searchGroup, city, LargeSearchRadius, (unit, player) => UnitLagManager.IsUnitAlly(unit, player), dyingUnit);
+
+	if (BlzGroupGetSize(searchGroup) >= 1) {
+		ReplaceGuard(city, searchGroup);
+		DestroyGroup(searchGroup);
+		return true;
+	}
+
 	//No city owned units found, Search for allied units of killer in large radius of dying guard
 	GetUnitsInRangeOfUnitByAllegiance(
 		searchGroup,
