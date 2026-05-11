@@ -17,7 +17,7 @@ export class AllyColorFilterManager {
 
 	/**
 	 * Applies the current ally color filter to a specific unit.
-	 * Should be called whenever a unit is created, trained, or changes ownership.
+	 * Should be called whenever a unit is created, trained, unloaded, or changes ownership.
 	 * @param u The unit to apply the color filter to.
 	 */
 	public applyColorFilter(u: unit): void {
