@@ -9,6 +9,7 @@ import { NameManager } from './app/managers/names/name-manager';
 import { ChatManager } from './app/managers/chat-manager';
 import { TransportManager } from './app/managers/transport-manager';
 import { SetConsoleUI } from './app/ui/console';
+import { AllyColorFilterManager } from './app/managers/ally-color-filter-manager';
 import { OwnershipChangeEvent } from './app/triggers/ownership-change-event';
 import { EnterRegionEvent } from './app/triggers/enter-region-event';
 import { LeaveRegionEvent } from './app/triggers/leave-region-event';
@@ -63,6 +64,7 @@ function tsMain() {
 		SetTimeOfDay(12.0);
 		SetTimeOfDayScale(0.0);
 		SetAllyColorFilterState(0);
+		AllyColorFilterManager.getInstance().startPolling();
 		SetCreepCampFilterState(false);
 
 		//Handle names to prevent namebug
