@@ -76,6 +76,7 @@ describe('AllyColorState', () => {
 		const P_LOCAL = 1;
 		const P_ALLY = 2;
 		const P_ENEMY = 3;
+		const P_NEUTRAL = 24;
 
 		it('returns colors correctly in Mode 0', () => {
 			expect(allyColorState.getMinimapColor(P_LOCAL, P_LOCAL)).toBe(defaultColor);
@@ -119,6 +120,19 @@ describe('AllyColorState', () => {
 			allyColorState.toggle(); // Mode 2
 			expect(allyColorState.getMinimapColor(P_ALLY, P_LOCAL, true)).toBe(yellow);
 			expect(allyColorState.getUnitModelColor(P_ALLY, P_LOCAL, true)).toBe(yellow);
+		});
+
+		it('keeps neutral player colors in ally color modes', () => {
+			const stateWithNeutralCheck = allyColorState as AllyColorState & { isNeutral: (player: number) => boolean };
+			stateWithNeutralCheck.isNeutral = vi.fn((player) => player === P_NEUTRAL);
+
+			allyColorState.toggle(); // Mode 1
+			expect(allyColorState.getMinimapColor(P_NEUTRAL, P_LOCAL)).toBe(defaultColor);
+			expect(allyColorState.getUnitModelColor(P_NEUTRAL, P_LOCAL)).toBe(defaultColor);
+
+			allyColorState.toggle(); // Mode 2
+			expect(allyColorState.getMinimapColor(P_NEUTRAL, P_LOCAL)).toBe(defaultColor);
+			expect(allyColorState.getUnitModelColor(P_NEUTRAL, P_LOCAL)).toBe(defaultColor);
 		});
 	});
 });

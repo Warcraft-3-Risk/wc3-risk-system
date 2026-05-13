@@ -940,7 +940,7 @@ export class MinimapIconManager {
 	private updateUnitIconColor(iconFrame: framehandle, unit: unit, localPlayer: player): void {
 		// Used the SharedSlotManager to resolve the real owner (maps SharedSlot -> Player)
 		const owner = SharedSlotManager.getInstance().getOwnerOfUnit(unit);
-		let allyColorMode = GetAllyColorFilterState();
+		let allyColorMode = AllyColorState.getInstance().getMode();
 		const activeLocalPlayerForColor = PlayerManager.getInstance().players.get(localPlayer);
 		if (activeLocalPlayerForColor && activeLocalPlayerForColor.options.colorContrast) {
 			allyColorMode = 2;
