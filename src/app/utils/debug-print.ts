@@ -26,7 +26,7 @@ class DebugLogger {
 	private static instance: DebugLogger;
 	private logs: string[] = [];
 	private maxLogs: number = 1000; // Prevent memory issues
-	private autoSaveTimer: timer | null = null;
+	private autoSaveTimer: timer | undefined = undefined;
 	private autoSaveInterval: number = 1.0; // Save every 1 second
 	private filename: string = ''; // Will be set on first use with player hash
 	private headerAdded: boolean = false;
@@ -186,7 +186,7 @@ class DebugLogger {
 		if (this.autoSaveTimer) {
 			PauseTimer(this.autoSaveTimer);
 			DestroyTimer(this.autoSaveTimer);
-			this.autoSaveTimer = null;
+			this.autoSaveTimer = undefined;
 		}
 	}
 }

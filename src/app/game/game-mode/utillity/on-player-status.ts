@@ -8,6 +8,7 @@ import { RatingManager } from 'src/app/rating/rating-manager';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
+import { PlayLocalSound } from 'src/app/utils/utils';
 import { CHAOS_STARTING_INCOME, NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
 import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
@@ -21,10 +22,10 @@ export function onPlayerAliveHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.ALIVE;
 	player.trackedData.income.income = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
 
-	if (player.trackedData.income.max == 0) {
+	if (player.trackedData.income.max === 0) {
 		player.trackedData.income.max = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
 	}
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): void {
@@ -79,18 +80,23 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 	}
 
 	if (forfeit) {
-		GlobalMessage(`${playerDisplayName} has forfeited!`, 'Sound\\Interface\\SecretFound.flac');
+		GlobalMessage(`${playerDisplayName} has forfeited!`);
 	} else if (player.killedBy) {
-		GlobalMessage(
-			`${playerDisplayName} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`,
-			'Sound\\Interface\\SecretFound.flac'
-		);
+		GlobalMessage(`${playerDisplayName} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`);
 	} else {
-		GlobalMessage(`${playerDisplayName} has been defeated!`, 'Sound\\Interface\\SecretFound.flac');
+		GlobalMessage(`${playerDisplayName} has been defeated!`);
 	}
 
+	// QuestFailed for the defeated player, SecretFound for everyone else
+	PlayLocalSound('Sound\\Interface\\QuestFailed.flac', player.getPlayer());
+	let announceSound = CreateSound('Sound\\Interface\\SecretFound.flac', false, false, true, 10, 10, '');
+	if (GetLocalPlayer() === player.getPlayer()) SetSoundVolume(announceSound, 0);
+	StartSound(announceSound);
+	KillSoundWhenDone(announceSound);
+	announceSound = undefined;
+
 	Quests.getInstance().updatePlayersQuest();
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 export function onPlayerNomadHandle(player: ActivePlayer): void {
@@ -108,12 +114,12 @@ export function onPlayerNomadHandle(player: ActivePlayer): void {
 
 	TimerStart(nomadTimer, tick, true, () => {
 		if (!player.status.isAlive() && player.trackedData.cities.cities.length >= 1) {
-			if (GetPlayerSlotState(player.getPlayer()) == PLAYER_SLOT_STATE_LEFT) {
+			if (GetPlayerSlotState(player.getPlayer()) === PLAYER_SLOT_STATE_LEFT) {
 				player.status.set(PLAYER_STATUS.LEFT);
 			} else {
 				player.status.set(PLAYER_STATUS.ALIVE);
 				player.trackedData.countries.forEach((val, country) => {
-					if (country.getOwner() == player.getPlayer()) {
+					if (country.getOwner() === player.getPlayer()) {
 						player.trackedData.income.income += country.getCities().length;
 					}
 				});
@@ -122,7 +128,7 @@ export function onPlayerNomadHandle(player: ActivePlayer): void {
 			PauseTimer(nomadTimer);
 			DestroyTimer(nomadTimer);
 		} else if (player.trackedData.cities.cities.length <= 0 && player.trackedData.units.size <= 0) {
-			if (GetPlayerSlotState(player.getPlayer()) == PLAYER_SLOT_STATE_LEFT) {
+			if (GetPlayerSlotState(player.getPlayer()) === PLAYER_SLOT_STATE_LEFT) {
 				player.status.set(PLAYER_STATUS.LEFT);
 			} else {
 				player.status.set(PLAYER_STATUS.DEAD);
@@ -141,7 +147,7 @@ export function onPlayerNomadHandle(player: ActivePlayer): void {
 		}
 	});
 
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 export function onPlayerLeftHandle(player: ActivePlayer): void {
@@ -181,7 +187,7 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 	GlobalMessage(`${playerDisplayName} has left the game!`, 'Sound\\Interface\\SecretFound.flac');
 
 	PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), PLAYER_STATUS.LEFT);
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 
 	if (player.status.isDead() || player.status.isSTFU()) {
 		player.status.status = PLAYER_STATUS.LEFT;
@@ -202,7 +208,7 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 		player.status.statusDuration--;
 
 		// Then check exit conditions
-		if (GetPlayerSlotState(player.getPlayer()) == PLAYER_SLOT_STATE_LEFT) {
+		if (GetPlayerSlotState(player.getPlayer()) === PLAYER_SLOT_STATE_LEFT) {
 			player.status.set(PLAYER_STATUS.LEFT);
 			timedEventManager.removeTimedEvent(event);
 		} else if (player.status.statusDuration <= 0) {
@@ -216,10 +222,10 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 			timedEventManager.removeTimedEvent(event);
 		}
 
-		ScoreboardManager.getInstance().updatePartial();
+		ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 	});
 
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 /** Maps unit type IDs to their corresponding eliminated player buff ability. */
@@ -256,7 +262,7 @@ export function removeEliminatedBuff(u: unit): void {
  */
 export function hasEliminatedBuff(u: unit): boolean {
 	const buffAbility = ELIMINATED_BUFF_MAP.get(GetUnitTypeId(u));
-	return buffAbility != null && GetUnitAbilityLevel(u, buffAbility) > 0;
+	return buffAbility !== undefined && GetUnitAbilityLevel(u, buffAbility) > 0;
 }
 
 /**
@@ -267,14 +273,25 @@ export function hasEliminatedBuff(u: unit): boolean {
 export function applyEliminatedBuff(playerHandle: player): void {
 	const delayTimer = CreateTimer();
 	const delay = 60;
-	TimerStart(delayTimer, delay, false, () => {
-		const cm = SharedSlotManager.getInstance();
-		const sharedSlots = cm.getSharedSlotsByPlayer(playerHandle);
-		const slots = [playerHandle, ...sharedSlots];
 
-		for (const slot of slots) {
+	// Snapshot the slots NOW, before redistribution can reassign them.
+	// After 60s, slots may have been reassigned to active players — querying
+	// getSharedSlotsByPlayer at that point would miss already-freed slots,
+	// and enumerating playerHandle could hit an active player's redistributed units.
+	const cm = SharedSlotManager.getInstance();
+	const sharedSlots = cm.getSharedSlotsByPlayer(playerHandle);
+	const snapshotSlots = [playerHandle, ...sharedSlots];
+
+	TimerStart(delayTimer, delay, false, () => {
+		for (const slot of snapshotSlots) {
+			// After the 60s delay, this slot may have been reassigned to an active player
+			// via evaluateAndRedistribute(). Only debuff slots whose resolved owner is
+			// still the eliminated player — skip slots that now belong to an active player.
+			const resolvedOwner = SharedSlotManager.getInstance().getOwner(slot);
+			if (resolvedOwner !== playerHandle) continue;
+
 			const g = CreateGroup();
-			GroupEnumUnitsOfPlayer(g, slot, null);
+			GroupEnumUnitsOfPlayer(g, slot, undefined);
 			ForGroup(g, () => {
 				const u = GetEnumUnit();
 				if (IsUnitType(u, UNIT_TYPE_DEAD) || IsUnitType(u, UNIT_TYPE_STRUCTURE) || IsUnitType(u, UNIT_TYPE.GUARD)) return;

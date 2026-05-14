@@ -1,5 +1,7 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { Destructable } from 'w3ts';
+import { Wait } from 'src/app/utils/wait';
+import { needsReset, computeBatches } from 'src/app/utils/tree-reset-logic';
 
 // Tree type constants
 const BARRENS_TREE = FourCC('T000');
@@ -76,32 +78,55 @@ export class TreeManager implements Resetable {
 
 	/**
 	 * Resets the trees to their maximum life if they are damaged.
+	 * Processes trees in batches to avoid frame spikes.
 	 */
-	public reset(): void {
-		this.treeArray.forEach((tree) => {
-			if (GetDestructableLife(tree) < GetDestructableMaxLife(tree)) {
-				DestructableRestoreLife(tree, GetDestructableMaxLife(tree), false);
-				SetDestructableInvulnerable(tree, true);
+	public async reset(batchSize = 300, intervalSeconds = 0.1): Promise<void> {
+		for (let i = 0; i < this.treeArray.length; i += batchSize) {
+			const end = Math.min(i + batchSize, this.treeArray.length);
+
+			for (let j = i; j < end; j++) {
+				const tree = this.treeArray[j];
+				if (needsReset(GetDestructableLife(tree), GetDestructableMaxLife(tree))) {
+					DestructableRestoreLife(tree, GetDestructableMaxLife(tree), false);
+					SetDestructableInvulnerable(tree, true);
+				}
 			}
-		});
+
+			if (end < this.treeArray.length) {
+				await Wait.forSeconds(intervalSeconds);
+			}
+		}
 
 		const treeTimer: timer = CreateTimer();
 
 		TimerStart(treeTimer, 3.0, false, () => {
-			this.treeArray.forEach((tree) => {
-				SetDestructableInvulnerable(tree, false);
-			});
-
 			PauseTimer(treeTimer);
 			DestroyTimer(treeTimer);
+			this.removeInvulnerabilityBatched(batchSize, intervalSeconds);
 		});
+	}
+
+	/**
+	 * Removes invulnerability from all trees in batches.
+	 */
+	private async removeInvulnerabilityBatched(batchSize: number, intervalSeconds: number): Promise<void> {
+		for (let i = 0; i < this.treeArray.length; i += batchSize) {
+			const end = Math.min(i + batchSize, this.treeArray.length);
+
+			for (let j = i; j < end; j++) {
+				SetDestructableInvulnerable(this.treeArray[j], false);
+			}
+
+			if (end < this.treeArray.length) {
+			}
+		}
 	}
 
 	/**
 	 * Set up trees on the map by changing their model based on the terrain tile type they are on.
 	 */
 	private treeSetup() {
-		EnumDestructablesInRect(GetEntireMapRect(), null, () => {
+		EnumDestructablesInRect(GetEntireMapRect(), undefined, () => {
 			let enumObject = Destructable.fromHandle(GetEnumDestructable());
 			let treeTypeID: number = enumObject.typeId;
 			let objectX: number = enumObject.x;
@@ -137,8 +162,8 @@ export class TreeManager implements Resetable {
 			SetDestructableMaxLife(newTree, GetDestructableLife(newTree) / 2);
 			this.treeArray.push(newTree);
 
-			newTree = null;
-			enumObject = null;
+			newTree = undefined;
+			enumObject = undefined;
 		});
 	}
 

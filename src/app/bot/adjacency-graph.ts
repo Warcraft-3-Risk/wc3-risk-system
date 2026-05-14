@@ -3,9 +3,9 @@ import { debugPrint } from 'src/app/utils/debug-print';
 import { DC } from 'src/configs/game-settings';
 
 export class AdjacencyGraph {
-	private map: AdjacencyMap | null;
+	private map: AdjacencyMap | undefined;
 
-	constructor(adjacencyMap: AdjacencyMap | null) {
+	constructor(adjacencyMap: AdjacencyMap | undefined) {
 		this.map = adjacencyMap;
 
 		if (!adjacencyMap) {
@@ -15,14 +15,14 @@ export class AdjacencyGraph {
 
 		const countryCount = Object.keys(adjacencyMap).length;
 
-		// Validate symmetry: if A→B exists, B→A must also exist
+		// Validate symmetry: if A -> B exists, B -> A must also exist
 		for (const [country, data] of Object.entries(adjacencyMap)) {
 			for (const neighbor of data.land) {
 				const neighborData = adjacencyMap[neighbor];
 				if (!neighborData) {
 					debugPrint(`[AdjacencyGraph] WARNING: neighbor '${neighbor}' of '${country}' not found in map`, DC.bot);
 				} else if (!neighborData.land.includes(country)) {
-					debugPrint(`[AdjacencyGraph] WARNING: asymmetric adjacency: ${country} → ${neighbor}`, DC.bot);
+					debugPrint(`[AdjacencyGraph] WARNING: asymmetric adjacency: ${country} -> ${neighbor}`, DC.bot);
 				}
 			}
 		}
@@ -31,7 +31,7 @@ export class AdjacencyGraph {
 	}
 
 	public hasData(): boolean {
-		return this.map !== null;
+		return this.map !== undefined;
 	}
 
 	public getNeighbors(country: string): string[] {

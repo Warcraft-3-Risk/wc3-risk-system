@@ -20,7 +20,7 @@ export function detectGameStatus(): void {
 	detected = true;
 
 	// Find a playing human player
-	let firstPlayer: player = null;
+	let firstPlayer: player = undefined;
 	for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 		const p = Player(i);
 		if (GetPlayerController(p) === MAP_CONTROL_USER && GetPlayerSlotState(p) === PLAYER_SLOT_STATE_PLAYING) {
@@ -72,7 +72,7 @@ export function isOnline(): boolean {
 // IsLeaderboardDisplayed resolves against the currently observed replay POV player,
 // not the recording player. See docs/shared-slots/replay-pov-detection.md for details.
 
-let replayLeaderboard: leaderboard | null = null;
+let replayLeaderboard: leaderboard | undefined = undefined;
 
 /**
  * Returns the player whose POV is currently selected in replay mode.

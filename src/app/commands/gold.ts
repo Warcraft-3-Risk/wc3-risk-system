@@ -21,21 +21,21 @@ function clearRequest(requester: player): void {
 	if (request) {
 		PauseTimer(request.timer);
 		DestroyTimer(request.timer);
-		activeRequests.set(requester, null);
+		activeRequests.set(requester, undefined);
 		activeRequests.delete(requester);
 	}
 }
 
-function getTeammateRequest(responder: player): GoldRequest | null {
+function getTeammateRequest(responder: player): GoldRequest | undefined {
 	const responderTeam = TeamManager.getInstance().getTeamFromPlayer(responder);
-	if (!responderTeam) return null;
+	if (!responderTeam) return undefined;
 
 	for (const [, request] of activeRequests) {
 		if (request && request.requester !== responder && responderTeam.playerIsInTeam(request.requester)) {
 			return request;
 		}
 	}
-	return null;
+	return undefined;
 }
 
 function isTeamMode(): boolean {
@@ -48,7 +48,7 @@ function isSingleplayer(): boolean {
 
 export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) {
 	chatManager.addCmd(['-g', '-gold'], () => {
-		if (GlobalGameData.matchState != 'inProgress') return;
+		if (GlobalGameData.matchState !== 'inProgress') return;
 
 		const player: player = GetTriggerPlayer();
 
@@ -93,7 +93,7 @@ export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) 
 
 		if (players.length >= 2) return ErrorMsg(player, 'Multiple players found, be more specific!');
 		if (players.length <= 0) return ErrorMsg(player, 'Player not found!');
-		if (players[0] == player) return ErrorMsg(player, "You can't send gold to yourself!");
+		if (players[0] === player) return ErrorMsg(player, "You can't send gold to yourself!");
 
 		SetPlayerState(player, PLAYER_STATE_RESOURCE_GOLD, sendersGold - goldQty);
 		SetPlayerState(players[0], PLAYER_STATE_RESOURCE_GOLD, GetPlayerState(players[0], PLAYER_STATE_RESOURCE_GOLD) + goldQty);
@@ -108,7 +108,7 @@ export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) 
 
 	// -y: accept a teammate's gold request
 	chatManager.addCmd(['-y'], () => {
-		if (GlobalGameData.matchState != 'inProgress') return;
+		if (GlobalGameData.matchState !== 'inProgress') return;
 		if (!isTeamMode() || isSingleplayer()) return;
 
 		const responder: player = GetTriggerPlayer();
@@ -146,7 +146,7 @@ export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) 
 
 	// -n: dismiss a teammate's gold request
 	chatManager.addCmd(['-n'], () => {
-		if (GlobalGameData.matchState != 'inProgress') return;
+		if (GlobalGameData.matchState !== 'inProgress') return;
 		if (!isTeamMode() || isSingleplayer()) return;
 
 		const responder: player = GetTriggerPlayer();

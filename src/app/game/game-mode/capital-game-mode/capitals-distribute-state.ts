@@ -12,23 +12,8 @@ export class CapitalsDistributeState extends BaseState<CapitalsData> {
 	onEnterState() {
 		// // Ensure that all players without capitals get assigned a random capital city.
 		if (DEBUG_PRINTS.master) debugPrint('5. Distributing Capitals', DC.gameMode);
-		const capitalDistroService = new CapitalDistributionService(this.stateData.playerCapitalSelections);
-		capitalDistroService.runDistro(() => {
-			RegionToCity.forEach((city) => {
-				city.guard.reposition();
-				//Prevent guards from moving and update unit counts
-				IssueImmediateOrder(city.guard.unit, 'stop');
-
-				if (SharedSlotManager.getInstance().getOwnerOfUnit(city.guard.unit) != NEUTRAL_HOSTILE) {
-					GlobalGameData.matchPlayers
-						.find((x) => x.getPlayer() == SharedSlotManager.getInstance().getOwnerOfUnit(city.guard.unit))
-						.trackedData.units.add(city.guard.unit);
-				}
-
-				SetUnitInvulnerable(city.guard.unit, false);
-			});
+		new CapitalDistributionService(this.stateData.playerCapitalSelections).runDistro(() => {
+			this.nextState(this.stateData);
 		});
-
-		this.nextState(this.stateData);
 	}
 }

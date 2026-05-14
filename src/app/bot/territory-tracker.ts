@@ -84,7 +84,7 @@ export class BotTerritoryTracker {
 			const neighbors = adjacencyGraph.getNeighbors(countryName);
 
 			if (!adjacencyGraph.hasData() || neighbors.length === 0) {
-				// No adjacency data or isolated (island) country → treat as border
+				// No adjacency data or isolated (island) country -> treat as border
 				this.borderCountries.add(countryName);
 			} else {
 				const isBorder = neighbors.some((n) => !this.ownedCountryNames.has(n));

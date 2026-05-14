@@ -7,19 +7,19 @@ export class RandomTeamManager {
 	private static instance: RandomTeamManager;
 	private teamHistory: number[][] = [];
 	private observerCounts: Map<player, number> = new Map();
-	private currentObserver: player | null = null;
+	private currentObserver: player | undefined = undefined;
 
 	private constructor() {}
 
 	public static getInstance(): RandomTeamManager {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new RandomTeamManager();
 		}
 		return this.instance;
 	}
 
 	public static hasInstance(): boolean {
-		return this.instance != null;
+		return this.instance !== undefined;
 	}
 
 	/**
@@ -65,7 +65,7 @@ export class RandomTeamManager {
 	 * Should be called before prepareMatchData in UpdatePlayerStatusState.
 	 */
 	public restorePreviousObserver(): void {
-		if (this.currentObserver != null) {
+		if (this.currentObserver !== undefined) {
 			if (GetPlayerSlotState(this.currentObserver) === PLAYER_SLOT_STATE_PLAYING) {
 				PlayerManager.getInstance().obsToActive(this.currentObserver);
 
@@ -76,7 +76,7 @@ export class RandomTeamManager {
 					player.trackedData.setKDMaps();
 				}
 			}
-			this.currentObserver = null;
+			this.currentObserver = undefined;
 		}
 	}
 
@@ -84,12 +84,12 @@ export class RandomTeamManager {
 	 * Static helper to restore previous observer if RandomTeamManager exists.
 	 */
 	public static restorePreviousObserverIfNeeded(): void {
-		if (this.instance != null) {
+		if (this.instance !== undefined) {
 			this.instance.restorePreviousObserver();
 		}
 	}
 
-	public getCurrentObserver(): player | null {
+	public getCurrentObserver(): player | undefined {
 		return this.currentObserver;
 	}
 
@@ -118,7 +118,7 @@ export class RandomTeamManager {
 
 	private generateBestSplit(players: ActivePlayer[]): { team1: ActivePlayer[]; team2: ActivePlayer[] } {
 		const halfSize = Math.floor(players.length / 2);
-		let bestSplit: { team1: ActivePlayer[]; team2: ActivePlayer[] } | null = null;
+		let bestSplit: { team1: ActivePlayer[]; team2: ActivePlayer[] } | undefined = undefined;
 		let bestScore = Infinity;
 
 		const CANDIDATES = 50;

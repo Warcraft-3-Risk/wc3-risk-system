@@ -7,16 +7,28 @@ import { AlliedKillHandler } from './allied-kill-handler';
 import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 
 export function SelfKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (city.getOwner() != SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit)) return null;
+	if (city.getOwner() !== SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit)) return undefined;
 
 	const searchGroup: group = CreateGroup();
 
 	//Search for owned units in large radius of dying guard
-	GetUnitsInRangeByAllegiance(searchGroup, city, LargeSearchRadius, IsUnitOwnedByPlayer, dyingUnit);
+	GetUnitsInRangeByAllegiance(
+		searchGroup,
+		city,
+		LargeSearchRadius,
+		(u, p) => SharedSlotManager.getInstance().getOwnerOfUnit(u) === p,
+		dyingUnit
+	);
 
 	//Could not find valid units within large radius of guard, so we search in small radius by killer
 	if (BlzGroupGetSize(searchGroup) <= 0) {
-		GetUnitsInRangeByAllegiance(searchGroup, city, SmallSearchRadius, IsUnitOwnedByPlayer, killingUnit);
+		GetUnitsInRangeByAllegiance(
+			searchGroup,
+			city,
+			SmallSearchRadius,
+			(u, p) => SharedSlotManager.getInstance().getOwnerOfUnit(u) === p,
+			killingUnit
+		);
 	}
 
 	//Found valid guard units, set unit as guard

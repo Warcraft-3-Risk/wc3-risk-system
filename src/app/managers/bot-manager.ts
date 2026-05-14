@@ -11,12 +11,12 @@ import { GlobalStats } from 'src/app/bot/bot-types';
 
 const BOT_THINK_INTERVAL = 2; // seconds between thinks
 
-function getAdjacencyForMap(): AdjacencyMap | null {
+function getAdjacencyForMap(): AdjacencyMap | undefined {
 	switch (MAP_TYPE) {
 		case 'europe':
 			return EUROPE_ADJACENCY;
 		default:
-			return null;
+			return undefined;
 	}
 }
 
@@ -28,7 +28,7 @@ export class BotManager {
 	private started: boolean = false;
 	public adjacencyGraph: AdjacencyGraph;
 	public globalStats: GlobalStats = {
-		largestPlayer: null,
+		largestPlayer: undefined,
 		largestCityCount: 0,
 		totalActivePlayers: 0,
 		totalCities: 0,
@@ -65,7 +65,7 @@ export class BotManager {
 		const pm = PlayerManager.getInstance();
 		const stats = this.globalStats;
 		stats.playerStats.clear();
-		stats.largestPlayer = null;
+		stats.largestPlayer = undefined;
 		stats.largestCityCount = 0;
 		stats.totalCities = 0;
 		stats.totalActivePlayers = 0;
@@ -95,7 +95,7 @@ export class BotManager {
 			}
 		}
 
-		const largestId = stats.largestPlayer !== null ? GetPlayerId(stats.largestPlayer) : -1;
+		const largestId = stats.largestPlayer !== undefined ? GetPlayerId(stats.largestPlayer) : -1;
 		const pct = stats.totalCities > 0 ? math.floor((stats.largestCityCount / stats.totalCities) * 100) : 0;
 		debugPrint(
 			`[Stats] Largest: slot ${largestId} with ${stats.largestCityCount} cities (${pct}%), active=${stats.totalActivePlayers}`,
@@ -107,7 +107,7 @@ export class BotManager {
 		if (this.started || this.bots.length === 0) return;
 		this.started = true;
 
-		debugPrint(`[BotManager] Adjacency data loaded: ${this.adjacencyGraph.hasData() ? 'yes' : 'NO — bots will play suboptimally'}`, DC.bot);
+		debugPrint(`[BotManager] Adjacency data loaded: ${this.adjacencyGraph.hasData() ? 'yes' : 'NO - bots will play suboptimally'}`, DC.bot);
 
 		// Stagger: bot 0 starts at 0, bot 1 starts at 1, etc.
 		this.bots.forEach((bot, index) => {
@@ -119,7 +119,7 @@ export class BotManager {
 			const p = bot.getPlayer();
 			const cities = bot.trackedData.cities.cities.length;
 			const gold = GetPlayerState(p, PLAYER_STATE_RESOURCE_GOLD);
-			debugPrint(`[Bot] Slot ${GetPlayerId(p)} starting state — cities: ${cities}, gold: ${gold}`, DC.bot);
+			debugPrint(`[Bot] Slot ${GetPlayerId(p)} starting state - cities: ${cities}, gold: ${gold}`, DC.bot);
 		}
 
 		const botTimer = CreateTimer();

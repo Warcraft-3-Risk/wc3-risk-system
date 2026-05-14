@@ -8,7 +8,7 @@ export interface PlayerStats {
 }
 
 export interface GlobalStats {
-	largestPlayer: player | null;
+	largestPlayer: player | undefined;
 	largestCityCount: number;
 	totalActivePlayers: number;
 	totalCities: number;

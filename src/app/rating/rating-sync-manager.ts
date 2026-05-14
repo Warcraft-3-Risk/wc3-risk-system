@@ -238,7 +238,7 @@ export class RatingSyncManager {
 
 		// Validate checksum if file exists
 		const isValidFile = ratingFile && validateChecksum(ratingFile);
-		if (DEBUG_PRINTS.master) debugPrint(`[RATING SYNC]   -> Personal file exists: ${ratingFile !== null}, valid: ${isValidFile}`, DC.ratingSync);
+		if (DEBUG_PRINTS.master) debugPrint(`[RATING SYNC]   -> Personal file exists: ${ratingFile !== undefined}, valid: ${isValidFile}`, DC.ratingSync);
 		if (ratingFile && !isValidFile) {
 			print(`${HexColors.RED}WARNING:|r Your rating file was corrupted. Starting fresh with default rating.`);
 		}

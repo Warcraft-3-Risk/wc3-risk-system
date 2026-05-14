@@ -43,7 +43,7 @@ export class W3CDrawManager {
 		const remainingPlayers = PlayerManager.getInstance().getCurrentActiveHumanPlayers();
 		let remainingPlayerVoteCount = remainingPlayers.length - this.playersVoted.size;
 
-		if (this.playersVoted.size == 1) {
+		if (this.playersVoted.size === 1) {
 			print(
 				`|cff00ff00[W3C]:|r|cffFF4500 ${NameManager.getInstance().getDisplayName(triggeringPlayer)}|r is proposing to cancel this game. \nType|cffffff00 -draw|r to cancel the game. ${remainingPlayerVoteCount} player(s) remaining.`
 			);

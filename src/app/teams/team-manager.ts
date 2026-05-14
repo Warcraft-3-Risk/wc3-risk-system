@@ -8,7 +8,7 @@ export class TeamManager {
 	private playersTeam: Map<player, Team>;
 	private static instance: TeamManager;
 
-	private static presetTeams: ActivePlayer[][] | null = null;
+	private static presetTeams: ActivePlayer[][] | undefined = undefined;
 
 	private constructor() {
 		this.playersTeam = new Map<player, Team>();
@@ -74,7 +74,7 @@ export class TeamManager {
 	}
 
 	public static getInstance(): TeamManager {
-		if (TeamManager.instance == null) {
+		if (TeamManager.instance === undefined) {
 			this.instance = new TeamManager();
 		}
 
@@ -82,7 +82,7 @@ export class TeamManager {
 	}
 
 	public static resetInstance(): void {
-		TeamManager.instance = null;
+		TeamManager.instance = undefined;
 	}
 
 	/**
@@ -91,9 +91,9 @@ export class TeamManager {
 	 */
 	public static createWithPresetTeams(teamArrays: ActivePlayer[][]): void {
 		TeamManager.presetTeams = teamArrays;
-		TeamManager.instance = null;
+		TeamManager.instance = undefined;
 		TeamManager.getInstance();
-		TeamManager.presetTeams = null;
+		TeamManager.presetTeams = undefined;
 	}
 
 	public getTeams(): Team[] {

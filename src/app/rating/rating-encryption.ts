@@ -36,9 +36,9 @@ export function base64Encode(data: string): string {
 /**
  * Decode Base64 string
  * @param encoded Base64 encoded string
- * @returns Decoded string or null if invalid
+ * @returns Decoded string or undefined if invalid
  */
-export function base64Decode(encoded: string): string | null {
+export function base64Decode(encoded: string): string | undefined {
 	try {
 		let result = '';
 		let i = 0;
@@ -59,7 +59,7 @@ export function base64Decode(encoded: string): string | null {
 			const c = BASE64_CHARS.indexOf(encoded.charAt(i++));
 			const d = BASE64_CHARS.indexOf(encoded.charAt(i++));
 
-			if (a === -1 || b === -1) return null;
+			if (a === -1 || b === -1) return undefined;
 
 			const bitmap = (a << 18) | (b << 12) | ((c === -1 ? 0 : c) << 6) | (d === -1 ? 0 : d);
 
@@ -70,7 +70,7 @@ export function base64Decode(encoded: string): string | null {
 
 		return result;
 	} catch (error) {
-		return null;
+		return undefined;
 	}
 }
 
@@ -131,11 +131,11 @@ export function encryptData(data: string): string {
 /**
  * Decrypt data from Base64 and XOR cipher
  * @param encrypted Encrypted and encoded string
- * @returns Decrypted plain text or null if invalid
+ * @returns Decrypted plain text or undefined if invalid
  */
-export function decryptData(encrypted: string): string | null {
+export function decryptData(encrypted: string): string | undefined {
 	const decoded = base64Decode(encrypted);
-	if (!decoded) return null;
+	if (!decoded) return undefined;
 
 	const key = getEncryptionKey();
 	return xorCipher(decoded, key);

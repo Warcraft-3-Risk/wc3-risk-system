@@ -28,7 +28,7 @@ export function selectTarget(ctx: BotSkillContext, adjacencyGraph: AdjacencyGrap
 				if (c.getOwner() === p) ownedInTarget++;
 			}
 
-			// Campaign complete — we own all cities in the target country
+			// Campaign complete - we own all cities in the target country
 			if (ownedInTarget === targetCities.length) {
 				debugPrint(`[Bot] Slot ${id}: campaign COMPLETE! ${campaign.currentTarget} fully captured`, DC.bot);
 				resetCampaign(campaign);
@@ -65,7 +65,7 @@ export function selectTarget(ctx: BotSkillContext, adjacencyGraph: AdjacencyGrap
 					if (!campaign.consolidating && campaign.campaignTicks >= math.floor(CAMPAIGN_STALL_THRESHOLD / 2)) {
 						campaign.consolidating = true;
 						debugPrint(
-							`[Bot] Slot ${id}: campaign vs ${campaign.currentTarget} — consolidating (no progress for ${campaign.campaignTicks} ticks)`,
+							`[Bot] Slot ${id}: campaign vs ${campaign.currentTarget} - consolidating (no progress for ${campaign.campaignTicks} ticks)`,
 							DC.bot
 						);
 					}
@@ -78,7 +78,7 @@ export function selectTarget(ctx: BotSkillContext, adjacencyGraph: AdjacencyGrap
 						resetCampaign(campaign);
 					} else {
 						debugPrint(
-							`[Bot] Slot ${id}: campaign vs ${campaign.currentTarget} — tick ${campaign.campaignTicks}/${CAMPAIGN_STALL_THRESHOLD}`,
+							`[Bot] Slot ${id}: campaign vs ${campaign.currentTarget} - tick ${campaign.campaignTicks}/${CAMPAIGN_STALL_THRESHOLD}`,
 							DC.bot
 						);
 						return;
@@ -91,7 +91,7 @@ export function selectTarget(ctx: BotSkillContext, adjacencyGraph: AdjacencyGrap
 	}
 
 	// --- Pick a new target ---
-	let bestTarget: string | null = null;
+	let bestTarget: string | undefined = undefined;
 	let bestScore = -1;
 	let bestOwnerId = -1;
 
@@ -166,7 +166,7 @@ function selectTargetFallback(ctx: BotSkillContext): void {
 				const neighborCountry = CityToCountry.get(neighborCity);
 				if (neighborCountry) {
 					campaign.currentTarget = neighborCountry.getName();
-					campaign.stagingCountry = null;
+					campaign.stagingCountry = undefined;
 					debugPrint(`[Bot] Slot ${id} target (fallback): ${campaign.currentTarget}`, DC.bot);
 					return;
 				}
@@ -174,14 +174,14 @@ function selectTargetFallback(ctx: BotSkillContext): void {
 		}
 	}
 
-	campaign.currentTarget = null;
-	campaign.stagingCountry = null;
+	campaign.currentTarget = undefined;
+	campaign.stagingCountry = undefined;
 	debugPrint(`[Bot] Slot ${id} target: none (fallback, no neighbors)`, DC.bot);
 }
 
 function resetCampaign(campaign: CampaignState): void {
-	campaign.currentTarget = null;
-	campaign.stagingCountry = null;
+	campaign.currentTarget = undefined;
+	campaign.stagingCountry = undefined;
 	campaign.campaignTicks = 0;
 	campaign.lastOwnedInTarget = 0;
 	campaign.consolidating = false;
@@ -189,7 +189,7 @@ function resetCampaign(campaign: CampaignState): void {
 
 function startCampaign(
 	campaign: CampaignState,
-	target: string | null,
+	target: string | undefined,
 	p: player,
 	borderCountries: Set<string>,
 	adjacencyGraph: AdjacencyGraph
@@ -209,14 +209,14 @@ function startCampaign(
 			campaign.lastOwnedInTarget = owned;
 		}
 	} else {
-		campaign.stagingCountry = null;
+		campaign.stagingCountry = undefined;
 		campaign.lastOwnedInTarget = 0;
 	}
 }
 
-function pickStagingCountry(target: string, borderCountries: Set<string>, adjacencyGraph: AdjacencyGraph, p: player): string | null {
+function pickStagingCountry(target: string, borderCountries: Set<string>, adjacencyGraph: AdjacencyGraph, p: player): string | undefined {
 	const targetNeighbors = adjacencyGraph.getNeighbors(target);
-	let bestStaging: string | null = null;
+	let bestStaging: string | undefined = undefined;
 	let bestOwnedCount = -1;
 
 	for (const borderName of borderCountries) {

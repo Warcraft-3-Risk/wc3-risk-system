@@ -28,9 +28,9 @@ export function economyStep(ctx: BotSkillContext): void {
 	}
 
 	if (trainCities.length === 0) {
-		// No staging — concentrate in a single border country (the one with most owned cities)
+		// No staging - concentrate in a single border country (the one with most owned cities)
 		const borderCountries = ctx.territory.getBorderCountries();
-		let bestCountryName: string | null = null;
+		let bestCountryName: string | undefined = undefined;
 		let bestOwnedCount = -1;
 
 		for (const borderName of borderCountries) {
@@ -57,7 +57,7 @@ export function economyStep(ctx: BotSkillContext): void {
 	}
 
 	if (trainCities.length === 0) {
-		// No border cities — train anywhere
+		// No border cities - train anywhere
 		for (const city of ctx.cities) {
 			trainCities.push(city);
 		}

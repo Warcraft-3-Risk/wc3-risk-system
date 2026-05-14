@@ -116,6 +116,11 @@ export const RATING_SYNC_TOP_PLAYERS: number = 100;
 // Force the use of custom minimap icons even if the map is not world map.
 export const FORCE_CUSTOM_MINIMAP_ICONS: boolean = true;
 
+// Show player camera position frames for observers (and all players in dev mode).
+// When enabled: Observers see floating name tags at each player's camera position.
+// In dev mode: All players see the tags, not just observers.
+export const SHOW_PLAYER_CAMERA_POSITIONS: boolean = true;
+
 // ============================================
 // Debug Print Categories
 // ============================================

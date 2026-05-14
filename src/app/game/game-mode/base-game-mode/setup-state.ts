@@ -17,10 +17,10 @@ import { HexColors } from '../../../utils/hex-colors';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
-		this.run();
+		this.runAsync();
 	}
 
-	run(): void {
+	async runAsync(): Promise<void> {
 		CountdownMessage('Initializing the game');
 
 		// Only show help message on the first match (not on restarts)
@@ -64,7 +64,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			teams.forEach((team) => team.reset(teamStartingIncome));
 			// get random team from list
 			GlobalGameData.leader = teams[Math.floor(Math.random() * teams.length)];
-			ScoreboardManager.getInstance().teamSetup();
+			ScoreboardManager.getInstance().teamSetup(GlobalGameData.matchPlayers);
 		}
 
 		const observerKeys = [...PlayerManager.getInstance().observers.keys()];
@@ -72,7 +72,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 
 		// Pause AI for all computer players so they don't issue commands
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			if (GetPlayerController(Player(i)) == MAP_CONTROL_COMPUTER) {
+			if (GetPlayerController(Player(i)) === MAP_CONTROL_COMPUTER) {
 				PauseCompAI(Player(i), true);
 			}
 		}
@@ -87,7 +87,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 
 		// To reset and reduce tree hp on first turn
 		if (GlobalGameData.turnCount === 0) {
-			TreeManager.getInstance().reset();
+			await TreeManager.getInstance().reset();
 		}
 
 		this.nextState(this.stateData);

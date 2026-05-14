@@ -101,7 +101,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				const result = ratingResults ? ratingResults.get(btag) : undefined;
 
 				// Use new rating if available (just finished game), otherwise use current rating
-				const rating = result && result.newRating != undefined ? result.newRating : ratingManager.getPlayerRating(btag);
+				const rating = result && result.newRating !== undefined ? result.newRating : ratingManager.getPlayerRating(btag);
 
 				return getRankIcon(rating);
 			},
@@ -118,7 +118,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				const ratingResults = ratingManager.getRatingResults();
 				const result = ratingResults ? ratingResults.get(btag) : undefined;
 
-				if (result && result.newRating != undefined && result.oldRating != undefined) {
+				if (result && result.newRating !== undefined && result.oldRating !== undefined) {
 					// Use effective change (newRating - oldRating) to account for rating floor
 					const effectiveChange = result.newRating - result.oldRating;
 					// If effective change is 0 but total change was negative, player was protected by floor
@@ -171,7 +171,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const turnDied = player.trackedData.turnDied;
-				return highlightIfOwnPlayer(player, turnDied != undefined ? turnDied : -1);
+				return highlightIfOwnPlayer(player, turnDied !== undefined ? turnDied : -1);
 			},
 		},
 		{
@@ -187,8 +187,8 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const cities = player.trackedData.cities;
-				const max = cities.max != undefined ? cities.max : 0;
-				const end = cities.end != undefined ? cities.end : 0;
+				const max = cities.max !== undefined ? cities.max : 0;
+				const end = cities.end !== undefined ? cities.end : 0;
 				return highlightIfOwnPlayer(player, max + '/' + end);
 			},
 		},
@@ -205,8 +205,8 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const income = player.trackedData.income;
-				const max = income.max != undefined ? income.max : 0;
-				const end = income.end != undefined ? income.end : 0;
+				const max = income.max !== undefined ? income.max : 0;
+				const end = income.end !== undefined ? income.end : 0;
 				return highlightIfOwnPlayer(player, max + '/' + end);
 			},
 		},
@@ -223,9 +223,9 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const gold = player.trackedData.gold;
-				const earned = gold.earned != undefined ? gold.earned : 0;
-				const max = gold.max != undefined ? gold.max : 0;
-				const end = gold.end != undefined ? gold.end : 0;
+				const earned = gold.earned !== undefined ? gold.earned : 0;
+				const max = gold.max !== undefined ? gold.max : 0;
+				const end = gold.end !== undefined ? gold.end : 0;
 				return highlightIfOwnPlayer(player, earned + '/' + max + '/' + end);
 			},
 		},
@@ -242,7 +242,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const killsDeaths = player.trackedData.killsDeaths.get(player.getPlayer());
-				if (!killsDeaths || killsDeaths.killValue == undefined) {
+				if (!killsDeaths || killsDeaths.killValue === undefined) {
 					return highlightIfOwnPlayer(player, '0');
 				}
 
@@ -262,7 +262,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const killsDeaths = player.trackedData.killsDeaths.get(player.getPlayer());
-				if (!killsDeaths || killsDeaths.deathValue == undefined) {
+				if (!killsDeaths || killsDeaths.deathValue === undefined) {
 					return highlightIfOwnPlayer(player, '0');
 				}
 
@@ -286,8 +286,8 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return highlightIfOwnPlayer(player, '0.00');
 				}
 
-				const killValue = killsDeaths.killValue != undefined ? killsDeaths.killValue : 0;
-				const deathValue = killsDeaths.deathValue != undefined ? killsDeaths.deathValue : 0;
+				const killValue = killsDeaths.killValue !== undefined ? killsDeaths.killValue : 0;
+				const deathValue = killsDeaths.deathValue !== undefined ? killsDeaths.deathValue : 0;
 				return highlightIfOwnPlayer(player, ComputeRatio(killValue, deathValue));
 			},
 		},
@@ -310,8 +310,8 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 
 				const bounty = player.trackedData.bounty;
 				const bonus = player.trackedData.bonus;
-				const bountyEarned = bounty && bounty.earned != undefined ? bounty.earned : 0;
-				const bonusEarned = bonus && bonus.earned != undefined ? bonus.earned : 0;
+				const bountyEarned = bounty && bounty.earned !== undefined ? bounty.earned : 0;
+				const bonusEarned = bonus && bonus.earned !== undefined ? bonus.earned : 0;
 				return highlightIfOwnPlayer(player, bountyEarned + '/' + bonusEarned);
 			},
 		},
@@ -328,7 +328,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const killsDeaths = player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`);
-				if (!killsDeaths || killsDeaths.kills == undefined) {
+				if (!killsDeaths || killsDeaths.kills === undefined) {
 					return highlightIfOwnPlayer(player, '0');
 				}
 
@@ -348,7 +348,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const killsDeaths = player.trackedData.killsDeaths.get(`${UNIT_ID.BATTLESHIP_SS}`);
-				if (!killsDeaths || killsDeaths.deaths == undefined) {
+				if (!killsDeaths || killsDeaths.deaths === undefined) {
 					return highlightIfOwnPlayer(player, '0');
 				}
 
@@ -372,8 +372,8 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return highlightIfOwnPlayer(player, '0.00');
 				}
 
-				const kills = killsDeaths.kills != undefined ? killsDeaths.kills : 0;
-				const deaths = killsDeaths.deaths != undefined ? killsDeaths.deaths : 0;
+				const kills = killsDeaths.kills !== undefined ? killsDeaths.kills : 0;
+				const deaths = killsDeaths.deaths !== undefined ? killsDeaths.deaths : 0;
 				return highlightIfOwnPlayer(player, ComputeRatio(kills, deaths));
 			},
 		},
@@ -390,7 +390,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const killsDeaths = player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`);
-				if (!killsDeaths || killsDeaths.kills == undefined) {
+				if (!killsDeaths || killsDeaths.kills === undefined) {
 					return highlightIfOwnPlayer(player, '0');
 				}
 
@@ -410,7 +410,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const killsDeaths = player.trackedData.killsDeaths.get(`${UNIT_ID.TANK}`);
-				if (!killsDeaths || killsDeaths.deaths == undefined) {
+				if (!killsDeaths || killsDeaths.deaths === undefined) {
 					return highlightIfOwnPlayer(player, '0');
 				}
 
@@ -434,8 +434,8 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 					return highlightIfOwnPlayer(player, '0.00');
 				}
 
-				const kills = killsDeaths.kills != undefined ? killsDeaths.kills : 0;
-				const deaths = killsDeaths.deaths != undefined ? killsDeaths.deaths : 0;
+				const kills = killsDeaths.kills !== undefined ? killsDeaths.kills : 0;
+				const deaths = killsDeaths.deaths !== undefined ? killsDeaths.deaths : 0;
 				return highlightIfOwnPlayer(player, ComputeRatio(kills, deaths));
 			},
 		},
@@ -452,7 +452,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const denies = player.trackedData.denies;
-				return highlightIfOwnPlayer(player, denies != undefined ? denies : 0);
+				return highlightIfOwnPlayer(player, denies !== undefined ? denies : 0);
 			},
 		},
 		{
@@ -468,7 +468,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const roarCasts = player.trackedData.roarCasts;
-				return highlightIfOwnPlayer(player, roarCasts != undefined ? roarCasts : 0);
+				return highlightIfOwnPlayer(player, roarCasts !== undefined ? roarCasts : 0);
 			},
 		},
 		{
@@ -484,7 +484,7 @@ export function GetStatisticsColumns(model: StatisticsModel, includeRatingColumn
 				}
 
 				const dispelCasts = player.trackedData.dispelCasts;
-				return highlightIfOwnPlayer(player, dispelCasts != undefined ? dispelCasts : 0);
+				return highlightIfOwnPlayer(player, dispelCasts !== undefined ? dispelCasts : 0);
 			},
 		}
 	);

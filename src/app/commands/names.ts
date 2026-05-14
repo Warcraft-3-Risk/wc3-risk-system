@@ -8,7 +8,7 @@ import { HexColors } from '../utils/hex-colors';
 
 export function NamesCommand(chatManager: ChatManager, playerManager: PlayerManager, nameManager: NameManager) {
 	chatManager.addCmd(['-names', '-players'], () => {
-		if (GlobalGameData.matchState != 'inProgress' && GlobalGameData.matchState != 'preMatch') return;
+		if (GlobalGameData.matchState !== 'inProgress' && GlobalGameData.matchState !== 'preMatch') return;
 
 		const player: player = GetTriggerPlayer();
 		const nameList: player[] = [];

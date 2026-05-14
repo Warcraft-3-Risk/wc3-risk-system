@@ -32,7 +32,7 @@ export class NameManager {
 	 * @returns The singleton instance of NameManager.
 	 */
 	public static getInstance() {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new NameManager();
 		}
 
@@ -58,7 +58,9 @@ export class NameManager {
 	 */
 	private findPlayersByName(search: string, filter?: (p: player) => boolean): player[] {
 		// Lazy import to avoid circular dependency (SharedSlotManager imports NameManager)
-		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as { SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager };
+		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as {
+			SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager;
+		};
 
 		const resolved = this.resolveColorAlias(search);
 		const resolvedLower = resolved.toLowerCase().trim();
@@ -69,8 +71,8 @@ export class NameManager {
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p = Player(i);
 
-			if (GetPlayerSlotState(p) != PLAYER_SLOT_STATE_PLAYING) continue;
-			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(p) != null) continue;
+			if (GetPlayerSlotState(p) !== PLAYER_SLOT_STATE_PLAYING) continue;
+			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(p) !== undefined) continue;
 			if (filter && !filter(p)) continue;
 
 			const color = this.getColor(p);
@@ -109,19 +111,21 @@ export class NameManager {
 	/**
 	 * Gets a player by BattleTag substring.
 	 * @param string - The BattleTag substring to search for.
-	 * @returns The player object if found, null otherwise.
+	 * @returns The player object if found, undefined otherwise.
 	 */
-	public getPlayerFromBtag(string: string): player | null {
+	public getPlayerFromBtag(string: string): player | undefined {
 		// Lazy import to avoid circular dependency (SharedSlotManager imports NameManager)
-		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as { SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager };
+		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as {
+			SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager;
+		};
 
-		let result: player = null;
+		let result: player = undefined;
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
 
-			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_PLAYING) continue;
-			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(player) != null) continue;
+			if (GetPlayerSlotState(player) !== PLAYER_SLOT_STATE_PLAYING) continue;
+			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(player) !== undefined) continue;
 
 			if (isNonEmptySubstring(string, this.getBtag(player))) {
 				result = player;
@@ -151,7 +155,8 @@ export class NameManager {
 				this.names.get(p).displayName = `${PLAYER_COLOR_CODES_MAP.get(this.getOriginalColor(p))}${this.names.get(p).country}|r`;
 				break;
 			case 'obs':
-				this.names.get(p).displayName = `${PLAYER_COLOR_CODES_MAP.get(this.getOriginalColor(p))}${this.names.get(p).color} (${this.names.get(p).acct})|r`;
+				this.names.get(p).displayName =
+					`${PLAYER_COLOR_CODES_MAP.get(this.getOriginalColor(p))}${this.names.get(p).color} (${this.names.get(p).acct})|r`;
 				break;
 			default:
 				break;
@@ -244,6 +249,19 @@ export class NameManager {
 
 		this.names.get(p).color = colorName;
 	}
+
+	/**
+	 * Copies the display name and color code from a source player to a target slot.
+	 * Used to sync shared slot names with their real owner.
+	 */
+	public copyDisplayNameToSlot(slot: player, sourcePlayer: player): void {
+		const source = this.names.get(sourcePlayer);
+		const target = this.names.get(slot);
+		target.displayName = source.displayName;
+		target.displayColorCode = source.displayColorCode;
+		SetPlayerName(slot, source.displayName);
+	}
+
 	/**
 	 * @returns The display color code of the player.
 	 */

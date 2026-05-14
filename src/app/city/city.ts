@@ -8,6 +8,7 @@ import { UNIT_TYPE } from '../utils/unit-types';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { ABILITY_ID } from 'src/configs/ability-id';
 import { SharedSlotManager } from '../game/services/shared-slot-manager';
+import { AllyColorFilterManager } from '../managers/ally-color-filter-manager';
 
 /**
  * Abstract class for a City.
@@ -39,12 +40,26 @@ export abstract class City implements Resetable, Ownable {
 
 	/** Resets the city, returning it to its default state */
 	public reset(): void {
-		UnitToCity.delete(this.guard.unit);
+		if (this.guard.unit) {
+			UnitToCity.delete(this.guard.unit);
+		}
 		SetUnitOwner(this._cop, NEUTRAL_HOSTILE, true);
 		this.owner = NEUTRAL_HOSTILE;
 		this._barrack.reset();
 		this._guard.reset();
-		UnitToCity.set(this.guard.unit, this);
+		if (this.guard.unit) {
+			UnitToCity.set(this.guard.unit, this);
+		}
+	}
+
+	public HideMinimap() {
+		BlzSetUnitBooleanField(this._barrack.unit, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, false);
+		BlzSetUnitBooleanField(this._cop, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, false);
+		this.changeOwner(NEUTRAL_HOSTILE);
+		SetUnitVertexColor(this._barrack.unit, 0, 0, 0, 255);
+		SetUnitVertexColor(this._cop, 0, 0, 0, 255);
+		BlzSetUnitBooleanField(this._barrack.unit, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, true);
+		BlzSetUnitBooleanField(this._cop, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, true);
 	}
 
 	/**
@@ -54,6 +69,13 @@ export abstract class City implements Resetable, Ownable {
 		this.owner = player;
 		this._barrack.setOwner(player);
 		SetUnitOwner(this._cop, player, true);
+		this.applyColorFilter();
+	}
+
+	private applyColorFilter(): void {
+		const colorFilter = AllyColorFilterManager.getInstance();
+		colorFilter.applyColorFilter(this._barrack.unit);
+		colorFilter.applyColorFilter(this._cop);
 	}
 
 	/**
@@ -112,9 +134,9 @@ export abstract class City implements Resetable, Ownable {
 		if (IsUnitLoaded(unit)) return false;
 		if (IsUnitType(unit, UNIT_TYPE_STRUCTURE)) return false;
 		if (IsUnitType(unit, UNIT_TYPE.TRANSPORT)) return false;
-		if (GetUnitTypeId(unit) == UNIT_ID.DUMMY_GUARD) return false;
-		if (unit == null || unit == undefined) return false;
-		if (IsUnitType(unit, UNIT_TYPE.GUARD) && unit != this.guard.unit) return false;
+		if (GetUnitTypeId(unit) === UNIT_ID.DUMMY_GUARD) return false;
+		if (unit === undefined) return false;
+		if (IsUnitType(unit, UNIT_TYPE.GUARD) && unit !== this.guard.unit) return false;
 
 		return true;
 	}
@@ -130,22 +152,27 @@ export abstract class City implements Resetable, Ownable {
 		const y: number = GetUnitY(targUnit);
 		const oldGuard: unit = this.guard.unit;
 
-		UnitToCity.delete(this.guard.unit);
+		if (this.guard.unit) {
+			UnitToCity.delete(this.guard.unit);
+		}
 		this.guard.replace(targUnit);
-		UnitToCity.set(this.guard.unit, this);
+		if (this.guard.unit) {
+			UnitToCity.set(this.guard.unit, this);
+		}
 
 		//IsTerrainPathable Returns negated results for some reason. Gj Blizzard
-		if (!IsUnitType(oldGuard, UNIT_TYPE_GIANT) && IsTerrainPathable(x, y, PATHING_TYPE_WALKABILITY)) {
-			SetUnitPosition(oldGuard, this._barrack.defaultX, this._barrack.defaultY);
-		} else {
-			SetUnitPosition(oldGuard, x, y);
+		if (oldGuard) {
+			if (!IsUnitType(oldGuard, UNIT_TYPE_GIANT) && IsTerrainPathable(x, y, PATHING_TYPE_WALKABILITY)) {
+				SetUnitPosition(oldGuard, this._barrack.defaultX, this._barrack.defaultY);
+			} else {
+				SetUnitPosition(oldGuard, x, y);
+			}
 		}
 
 		this.guard.reposition();
 
 		const newOwner: player = SharedSlotManager.getInstance().getOwnerOfUnit(this.guard.unit);
-
-		if (this.owner != newOwner) {
+		if (this.owner !== newOwner) {
 			const currOwner = this.owner;
 
 			this.setOwner(newOwner);
@@ -157,6 +184,6 @@ export abstract class City implements Resetable, Ownable {
 	}
 
 	public isCapturedCapital(): boolean {
-		return GetUnitTypeId(this.barrack.unit) == UNIT_ID.CONQUERED_CAPITAL;
+		return GetUnitTypeId(this.barrack.unit) === UNIT_ID.CONQUERED_CAPITAL;
 	}
 }

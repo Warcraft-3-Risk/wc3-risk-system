@@ -13,8 +13,8 @@ import { reinforceStep } from './bot-functions/bot-reinforce';
 export class ComputerPlayer extends ActivePlayer {
 	public readonly territory: BotTerritoryTracker = new BotTerritoryTracker();
 	private campaign: CampaignState = {
-		currentTarget: null,
-		stagingCountry: null,
+		currentTarget: undefined,
+		stagingCountry: undefined,
 		campaignTicks: 0,
 		lastOwnedInTarget: 0,
 		consolidating: false,
@@ -34,7 +34,7 @@ export class ComputerPlayer extends ActivePlayer {
 
 		this.territory.update(this.trackedData.cities.cities, adjacencyGraph, GetPlayerId(p));
 
-		debugPrint(`[Bot] Slot ${GetPlayerId(p)} THINK — cities=${cities}, units=${units}, gold=${gold}`, DC.bot);
+		debugPrint(`[Bot] Slot ${GetPlayerId(p)} THINK - cities=${cities}, units=${units}, gold=${gold}`, DC.bot);
 
 		const ctx = {
 			player: p,
@@ -53,7 +53,7 @@ export class ComputerPlayer extends ActivePlayer {
 		reinforceStep(ctx, adjacencyGraph);
 	}
 
-	public getCurrentTarget(): string | null {
+	public getCurrentTarget(): string | undefined {
 		return this.campaign.currentTarget;
 	}
 
@@ -62,7 +62,7 @@ export class ComputerPlayer extends ActivePlayer {
 
 		const killer: player = this.getPlayer();
 
-		if (victim == killer) {
+		if (victim === killer) {
 			this.trackedData.denies++;
 			return;
 		}
@@ -88,7 +88,7 @@ export class ComputerPlayer extends ActivePlayer {
 		const victim: player = this.getPlayer();
 		const val: number = GetUnitPointValue(unit);
 
-		if (victim == killer) return;
+		if (victim === killer) return;
 		if (IsPlayerAlly(victim, killer)) return;
 
 		const kdData = this.trackedData.killsDeaths;

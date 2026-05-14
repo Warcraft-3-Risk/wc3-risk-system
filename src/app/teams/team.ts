@@ -32,7 +32,7 @@ export class Team {
 	}
 
 	public playerIsInTeam(player: player) {
-		return this.teamMembers.find((x) => x.getPlayer() == player) != undefined;
+		return this.teamMembers.find((x) => x.getPlayer() === player) !== undefined;
 	}
 
 	public updateIncome(delta: number) {
@@ -108,7 +108,7 @@ export class Team {
 			for (let j = 0; j < this.teamMembers.length; j++) {
 				const playerB = this.teamMembers[j].getPlayer();
 
-				if (playerA == playerB) continue;
+				if (playerA === playerB) continue;
 
 				SetPlayerAlliance(playerA, playerB, ALLIANCE_PASSIVE, true);
 				SetPlayerAlliance(playerA, playerB, ALLIANCE_HELP_REQUEST, true);
@@ -127,7 +127,7 @@ export class Team {
 			for (let j = 0; j < this.teamMembers.length; j++) {
 				const playerB = this.teamMembers[j].getPlayer();
 
-				if (playerA == playerB) continue;
+				if (playerA === playerB) continue;
 
 				SetPlayerAlliance(playerA, playerB, ALLIANCE_PASSIVE, true);
 				SetPlayerAlliance(playerA, playerB, ALLIANCE_HELP_REQUEST, true);

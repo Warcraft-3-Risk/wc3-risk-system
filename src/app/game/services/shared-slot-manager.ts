@@ -4,11 +4,11 @@ import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { SHARED_SLOT_ALLOCATION_ENABLED, DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { GlobalGameData } from '../state/global-game-state';
 import { PLAYER_COLORS } from '../../utils/player-colors';
 import { NameManager } from '../../managers/names/name-manager';
+import { MatchFormat } from '../match-format-enum';
 
 interface SharedSlot extends player {}
 
@@ -22,6 +22,13 @@ export class SharedSlotManager implements Resetable {
 			SharedSlotManager.instance = new SharedSlotManager();
 		}
 		return SharedSlotManager.instance;
+	}
+
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 */
+	public static resetInstance(): void {
+		SharedSlotManager.instance = undefined as unknown as SharedSlotManager;
 	}
 
 	private availableSlots: SharedSlot[];
@@ -38,11 +45,23 @@ export class SharedSlotManager implements Resetable {
 	// Slots of eliminated players that still have units alive
 	private pendingFreeSlots: Set<player> = new Set<player>();
 
+	// Monotonically increasing revision counter for mapping state.
+	// Used by subsystems (like MinimapIconManager) to cache resolved owners.
+	private ownershipRevision = 0;
+
 	private constructor() {
 		// Initialize shared slot manager
 		this.availableSlots = [];
 		this.playerToSlots = new Map<player, SharedSlot[]>();
 		this.slotToPlayer = new Map<SharedSlot, player>();
+	}
+
+	public getOwnershipRevision(): number {
+		return this.ownershipRevision;
+	}
+
+	private bumpOwnershipRevision(): void {
+		this.ownershipRevision++;
 	}
 
 	public incrementUnitCount(slot: player): void {
@@ -124,13 +143,6 @@ export class SharedSlotManager implements Resetable {
 
 		for (const matchPlayer of GlobalGameData.matchPlayers) {
 			const p = matchPlayer.getPlayer();
-
-			// Skip active computer players — they manage their own slots, not part of redistribution.
-			// Eliminated bots are allowed through so their slots can be reclaimed.
-			if (PlayerManager.getInstance().isComputerPlayer(p) && matchPlayer.status.isActive()) {
-				if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Skipping active computer player ${GetPlayerId(p)}`, DC.redistribute);
-				continue;
-			}
 			if (matchPlayer.status.isActive()) {
 				activePlayers.push(p);
 			} else if (matchPlayer.status.isEliminated()) {
@@ -186,9 +198,14 @@ export class SharedSlotManager implements Resetable {
 				}
 			}
 
-			// Also check if the eliminated player's own handle has 0 units and is reclaimable
+			// Only reclaim if they have no units AND no cities, otherwise we could end up in a situation
+			// where a player is eliminated but still has a city on the map and we accidentally free their slot
+			// to someone else, causing ownership issues with that city.
+			const activePlayerData = PlayerManager.getInstance().players.get(elimPlayer);
+			const hasCities = activePlayerData && activePlayerData.trackedData.cities.cities.length > 0;
+
 			// (Only if it's not already assigned as a shared slot to someone else)
-			if (this.getUnitCount(elimPlayer) === 0 && !this.slotToPlayer.has(elimPlayer)) {
+			if (this.getUnitCount(elimPlayer) === 0 && !hasCities && !this.slotToPlayer.has(elimPlayer)) {
 				// Check if this player slot is a valid shared slot candidate (not an active player)
 				if (!activePlayers.includes(elimPlayer)) {
 					// Check if it's not already in the pool
@@ -344,15 +361,10 @@ export class SharedSlotManager implements Resetable {
 
 		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Complete. Leftover unassigned: ${availablePool.length}`, DC.redistribute);
 
-		// 5. REBALANCE: Spread existing units across newly assigned slots
-		for (const receiver of receivers) {
-			this.redistributeExistingUnits(receiver.player);
-		}
-
-		// 6. FINALIZE: Update scoreboard
+		// 5. FINALIZE: Update scoreboard
 		ScoreboardManager.getInstance().toggleVisibility(false);
 		ScoreboardManager.getInstance().toggleVisibility(true);
-		ScoreboardManager.getInstance().updateFull();
+		ScoreboardManager.getInstance().updateFull(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 
 		return true;
 	}
@@ -362,6 +374,8 @@ export class SharedSlotManager implements Resetable {
 			debugPrint(`[Redistribute] Tearing down slot ${GetPlayerId(slot)} (prev owner: ${GetPlayerId(previousOwner)})`, DC.redistribute);
 		this.enableAdvancedControl(previousOwner, slot, false);
 		this.enableAdvancedControl(slot, previousOwner, false);
+
+		this.bumpOwnershipRevision();
 
 		// Un-ally from all OTHER existing shared slots of the same player
 		const siblingSlots = this.playerToSlots.get(previousOwner) || [];
@@ -417,6 +431,8 @@ export class SharedSlotManager implements Resetable {
 		if (DEBUG_PRINTS.master)
 			debugPrint(`[Redistribute] Wiped all alliances for slot ${GetPlayerId(slot)} before reassignment`, DC.redistribute);
 
+		this.bumpOwnershipRevision();
+
 		if (!this.playerToSlots.has(newOwner)) {
 			this.playerToSlots.set(newOwner, []);
 		}
@@ -430,84 +446,6 @@ export class SharedSlotManager implements Resetable {
 				`[SharedSlotManager] Player ${GetPlayerId(newOwner)} now has ${slots.length} shared slots: [${slots.map((s) => GetPlayerId(s)).join(', ')}]`,
 				DC.sharedSlots
 			);
-	}
-
-	/**
-	 * Immediately redistributes all existing movable units of a player evenly
-	 * across their own slot and all shared slots. Skips transports, guards,
-	 * buildings, and minimap indicators.
-	 */
-	public redistributeExistingUnits(realPlayer: player): void {
-		const sharedSlots = this.getSharedSlotsByPlayer(realPlayer);
-		if (sharedSlots.length === 0) return;
-
-		const allSlots = [realPlayer, ...sharedSlots];
-
-		// Collect all movable units across every slot
-		const movableUnits: unit[] = [];
-		for (const slot of allSlots) {
-			const g = CreateGroup();
-			GroupEnumUnitsOfPlayer(g, slot, null);
-			ForGroup(g, () => {
-				const u = GetEnumUnit();
-				if (
-					!IsUnitType(u, UNIT_TYPE.TRANSPORT) &&
-					!IsUnitType(u, UNIT_TYPE.GUARD) &&
-					!IsUnitType(u, UNIT_TYPE.BUILDING) &&
-					GetUnitCurrentOrder(u) === 0 // Unit is currently not moving (changing ownership would cancel their current action)
-				) {
-					movableUnits.push(u);
-				}
-			});
-			GroupClear(g);
-			DestroyGroup(g);
-		}
-
-		if (movableUnits.length === 0) return;
-
-		const numSlots = allSlots.length;
-		const unitsPerSlot = Math.floor(movableUnits.length / numSlots);
-		const remainder = movableUnits.length % numSlots;
-
-		if (DEBUG_PRINTS.master)
-			debugPrint(
-				`[Redistribute] Spreading ${movableUnits.length} units for player ${GetPlayerId(realPlayer)} across ${numSlots} slots (${unitsPerSlot} each, +1 for first ${remainder})`,
-				DC.redistribute
-			);
-
-		// Lazy import to avoid circular dependency (UnitLagManager imports SharedSlotManager)
-		const { UnitLagManager } = require('./unit-lag-manager') as { UnitLagManager: typeof import('./unit-lag-manager').UnitLagManager };
-		const lagManager = UnitLagManager.getInstance();
-
-		// Walk through units and assign each to the correct target slot
-		let unitIndex = 0;
-		for (let slotIdx = 0; slotIdx < numSlots; slotIdx++) {
-			const targetSlot = allSlots[slotIdx];
-			const targetCount = unitsPerSlot + (slotIdx < remainder ? 1 : 0);
-
-			for (let j = 0; j < targetCount && unitIndex < movableUnits.length; j++) {
-				const u = movableUnits[unitIndex];
-				const currentOwner = GetOwningPlayer(u);
-
-				if (currentOwner !== targetSlot) {
-					// Untrack minimap icon before ownership change
-					lagManager.untrackUnit(u);
-
-					SetUnitOwner(u, targetSlot, true);
-
-					this.decrementUnitCount(currentOwner);
-					this.incrementUnitCount(targetSlot);
-
-					// Re-track: will register with MinimapIconManager if now on a shared slot
-					lagManager.trackUnit(u);
-				}
-
-				unitIndex++;
-			}
-		}
-
-		if (DEBUG_PRINTS.master) debugPrint(`[Redistribute] Finished spreading units for player ${GetPlayerId(realPlayer)}`, DC.redistribute);
-		this.debugPrintSlotCounts();
 	}
 
 	public getSharedSlotByPlayer(player: player): player | undefined {
@@ -529,25 +467,12 @@ export class SharedSlotManager implements Resetable {
 			debugPrint(`SharedSlotManager: Found ${leftPlayers.length} players that have left with no units or cities`, DC.sharedSlots);
 
 		if (emptySlots && emptySlots.length > 0) {
-			sharedSlots.push(...emptySlots.filter((p) => p !== null && p !== undefined));
+			sharedSlots.push(...emptySlots.filter((p) => p !== undefined));
 		}
 
 		if (leftPlayers && leftPlayers.length > 0) {
-			sharedSlots.push(...leftPlayers.filter((p) => p !== null && p !== undefined));
+			sharedSlots.push(...leftPlayers.filter((p) => p !== undefined));
 		}
-
-		// Exclude active computer player slots — they need their slots for bot AI.
-		// Eliminated bots' slots can be reclaimed for human unit-lag reduction.
-		sharedSlots = sharedSlots.filter((c) => {
-			if (PlayerManager.getInstance().isComputerPlayer(c)) {
-				const matchPlayer = PlayerManager.getInstance().players.get(c);
-				if (matchPlayer && matchPlayer.status.isActive()) {
-					debugPrint(`[Bot] Excluding active computer slot ${GetPlayerId(c)} from client redistribution`, DC.bot);
-					return false;
-				}
-			}
-			return true;
-		});
 
 		return sharedSlots;
 	}
@@ -562,6 +487,7 @@ export class SharedSlotManager implements Resetable {
 			debugPrint(`SharedSlotManager: Giving player ${GetPlayerName(player)} full control of slot ${GetPlayerId(slot)}`, DC.sharedSlots);
 
 		NameManager.getInstance().setColor(slot, NameManager.getInstance().getOriginalColor(player));
+		NameManager.getInstance().copyDisplayNameToSlot(slot, player);
 
 		this.enableAdvancedControl(player, slot, true);
 		this.enableAdvancedControl(slot, player, true);
@@ -665,10 +591,9 @@ export class SharedSlotManager implements Resetable {
 		return slots && slots.length > 0 ? slots[0] : player;
 	}
 
-	reset(): void {
+	public reset(): void {
 		// Reset all player colors and names to default
 		if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Resetting all player colors and names to default', DC.sharedSlots);
-		NameManager.getInstance().resetOriginalColors();
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p = Player(i);
 
@@ -685,6 +610,8 @@ export class SharedSlotManager implements Resetable {
 				}
 			}
 		}
+
+		this.bumpOwnershipRevision();
 
 		this.playerToSlots.clear();
 		this.slotToPlayer.clear();

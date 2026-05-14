@@ -9,6 +9,7 @@ import { NameManager } from './app/managers/names/name-manager';
 import { ChatManager } from './app/managers/chat-manager';
 import { TransportManager } from './app/managers/transport-manager';
 import { SetConsoleUI } from './app/ui/console';
+import { AllyColorFilterManager } from './app/managers/ally-color-filter-manager';
 import { OwnershipChangeEvent } from './app/triggers/ownership-change-event';
 import { EnterRegionEvent } from './app/triggers/enter-region-event';
 import { LeaveRegionEvent } from './app/triggers/leave-region-event';
@@ -16,9 +17,11 @@ import { SpellEffectEvent } from './app/triggers/spell-effect-event';
 import { PlayerLeaveEvent } from './app/triggers/player-leave-event';
 import { UnitDeathEvent } from './app/triggers/unit_death/unit-death-event';
 import { UnitTrainedEvent } from './app/triggers/unit-trained-event';
+import { UnitTrainStartEvent } from './app/triggers/unit-train-start-event';
 import { KeyEvents } from './app/triggers/key-events';
 import { Quests } from './app/quests/quests';
 import CameraManager from './app/managers/camera-manager';
+import PlayerCameraPositionManager from './app/managers/player-camera-position-manager';
 import { TimedEventManager } from './app/libs/timer/timed-event-manager';
 import { AntiSpam } from './app/triggers/anti-spam';
 import { SetCommands } from './app/commands/commands';
@@ -32,7 +35,6 @@ import { CitySelectedEvent } from './app/triggers/city-selected-event';
 import { UnitUpgradeEvent } from './app/triggers/unit-upgrade-event';
 import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST, EDITOR_DEVELOPER_MODE } from './configs/game-settings';
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
-import { FogManager } from './app/managers/fog-manager';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
 import { SharedSlotManager } from './app/game/services/shared-slot-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
@@ -41,8 +43,7 @@ import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCrea
 import { TooltipManager } from './app/managers/tooltip-manager';
 import { ChatUIManager } from './app/managers/chat-ui-manager';
 import { detectGameStatus } from './app/utils/game-status';
-
-//const BUILD_DATE = compiletime(() => new Date().toUTCString());
+import { CityToCountry } from './app/country/country-map';
 
 function tsMain() {
 	try {
@@ -63,6 +64,7 @@ function tsMain() {
 		SetTimeOfDay(12.0);
 		SetTimeOfDayScale(0.0);
 		SetAllyColorFilterState(0);
+		AllyColorFilterManager.getInstance().startPolling();
 		SetCreepCampFilterState(false);
 
 		//Handle names to prevent namebug
@@ -108,6 +110,7 @@ function tsMain() {
 		UnitDamagedEvent();
 		UnitDeathEvent();
 		UnitTrainedEvent();
+		UnitTrainStartEvent();
 		UnitUpgradeEvent();
 		OwnershipChangeEvent();
 		PlayerLeaveEvent();
@@ -135,10 +138,21 @@ function tsMain() {
 			clearTickUI();
 			PauseTimer(onLoadTimer);
 			DestroyTimer(onLoadTimer);
+
+			// Start with Fog enabled so that the initial HideMinimap toggle respects the engine's fog state
+			FogEnable(true);
+			FogMaskEnable(true);
+
+			CityToCountry.forEach((country, city) => {
+				city.HideMinimap();
+			});
+
 			FogEnable(false);
 			FogMaskEnable(false);
+
 			SetConsoleUI();
 			// UnitKillDisplay.getInstance(); // Removed - using button tooltip instead
+			PlayerCameraPositionManager.getInstance();
 			CameraManager.getInstance();
 			ChatManager.getInstance();
 			TransportManager.getInstance();
@@ -149,7 +163,7 @@ function tsMain() {
 
 			EnableSelect(false, false);
 			EnableDragSelect(false, false);
-			FogManager.getInstance().turnFogOff();
+			// FogManager.getInstance().turnFogOff();
 
 			EventEmitter.getInstance();
 			EventCoordinator.getInstance();

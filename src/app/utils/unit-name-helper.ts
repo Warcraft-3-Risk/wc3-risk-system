@@ -61,7 +61,7 @@ function removeKillValueSuffix(name: string): string {
 
 export function updateUnitNameWithKillValue(unit: unit, killValue: number): void {
 	if (!unit) {
-		if (DEBUG_PRINTS.master) debugPrint(`[NAME HELPER] Unit is null, returning`, DC.killTracker);
+		if (DEBUG_PRINTS.master) debugPrint(`[NAME HELPER] Unit is undefined, returning`, DC.killTracker);
 		return;
 	}
 

@@ -31,7 +31,7 @@ export class FightBonus implements Bonus {
 	public showForPlayer(player: player) {
 		if (!this.enabled) return;
 
-		if (player == GetLocalPlayer()) {
+		if (player === GetLocalPlayer()) {
 			BlzFrameSetVisible(this.ui, true);
 		}
 	}

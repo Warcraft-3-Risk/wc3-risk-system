@@ -1,8 +1,8 @@
 export class ChatUIManager {
 	private static instance: ChatUIManager;
 
-	private chatInput: framehandle = null;
-	private chatInputBox: framehandle = null;
+	private chatInput: framehandle = undefined;
+	private chatInputBox: framehandle = undefined;
 
 	private constructor() {
 		const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0);
@@ -16,7 +16,7 @@ export class ChatUIManager {
 	}
 
 	static getInstance(): ChatUIManager {
-		if (this.instance == null) {
+		if (this.instance === undefined) {
 			this.instance = new ChatUIManager();
 		}
 		return this.instance;
@@ -42,6 +42,6 @@ export class ChatUIManager {
 
 			return frame;
 		}
-		return null;
+		return undefined;
 	}
 }

@@ -2,8 +2,8 @@ import { BotTerritoryTracker } from '../../../bot/territory-tracker';
 import { City } from '../../../city/city';
 
 export interface CampaignState {
-	currentTarget: string | null;
-	stagingCountry: string | null;
+	currentTarget: string | undefined;
+	stagingCountry: string | undefined;
 	campaignTicks: number;
 	lastOwnedInTarget: number;
 	consolidating: boolean;

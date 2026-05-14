@@ -15,7 +15,7 @@ export function reinforceStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGra
 	const interiorCountries = territory.getInteriorCountries();
 	if (interiorCountries.size === 0 && !campaign.currentTarget) return;
 
-	// Step 1 — Move interior units toward the nearest border
+	// Step 1 - Move interior units toward the nearest border
 	for (const interiorName of interiorCountries) {
 		if (ordersIssued >= BOT_MAX_REINFORCE_ORDERS_PER_THINK) break;
 
@@ -65,7 +65,7 @@ export function reinforceStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGra
 		}
 	}
 
-	// Step 2 — Concentrate non-staging border units toward the staging country
+	// Step 2 - Concentrate non-staging border units toward the staging country
 	if (campaign.stagingCountry && ordersIssued < BOT_MAX_REINFORCE_ORDERS_PER_THINK) {
 		const stagingCtry = StringToCountry.get(campaign.stagingCountry);
 		let stagingDestX = 0;
@@ -125,8 +125,8 @@ export function reinforceStep(ctx: BotSkillContext, adjacencyGraph: AdjacencyGra
 	}
 }
 
-function findReinforceDestination(ctx: BotSkillContext, fromCountry: string, adjacencyGraph: AdjacencyGraph): string | null {
-	if (!adjacencyGraph.hasData()) return null;
+function findReinforceDestination(ctx: BotSkillContext, fromCountry: string, adjacencyGraph: AdjacencyGraph): string | undefined {
+	if (!adjacencyGraph.hasData()) return undefined;
 
 	const borderCountries = ctx.territory.getBorderCountries();
 	const ownedNames = ctx.territory.getOwnedCountryNames();
@@ -136,7 +136,7 @@ function findReinforceDestination(ctx: BotSkillContext, fromCountry: string, adj
 	const queue: string[] = [fromCountry];
 	visited.add(fromCountry);
 
-	let nearestBorder: string | null = null;
+	let nearestBorder: string | undefined = undefined;
 
 	while (queue.length > 0) {
 		const current = queue.shift()!;
