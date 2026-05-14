@@ -67,7 +67,9 @@ export function UnitTrainedEvent() {
 
 			const player: ActivePlayer = PlayerManager.getInstance().players.get(realOwner);
 
-			if (!IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
+			if (IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
+				player.trackedData.transports.add(trainedUnit);
+			} else {
 				player.trackedData.units.add(trainedUnit);
 			}
 

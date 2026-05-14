@@ -8,6 +8,7 @@ import { UNIT_TYPE } from '../utils/unit-types';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { ABILITY_ID } from 'src/configs/ability-id';
 import { SharedSlotManager } from '../game/services/shared-slot-manager';
+import { AllyColorFilterManager } from '../managers/ally-color-filter-manager';
 
 /**
  * Abstract class for a City.
@@ -68,6 +69,13 @@ export abstract class City implements Resetable, Ownable {
 		this.owner = player;
 		this._barrack.setOwner(player);
 		SetUnitOwner(this._cop, player, true);
+		this.applyColorFilter();
+	}
+
+	private applyColorFilter(): void {
+		const colorFilter = AllyColorFilterManager.getInstance();
+		colorFilter.applyColorFilter(this._barrack.unit);
+		colorFilter.applyColorFilter(this._cop);
 	}
 
 	/**

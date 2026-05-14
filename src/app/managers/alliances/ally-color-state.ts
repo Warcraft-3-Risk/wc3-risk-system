@@ -40,6 +40,10 @@ export class AllyColorState {
 		return IsPlayerAlly(player, localPlayer);
 	}
 
+	isNeutral(player: any): boolean {
+		return GetPlayerId(player) >= bj_MAX_PLAYERS;
+	}
+
 	getDefaultColor(player: any): any {
 		return GetPlayerColor(player);
 	}
@@ -61,6 +65,9 @@ export class AllyColorState {
 	}
 
 	private resolveTeamColor(player: any, localPlayer: any, isColorBlind?: boolean): any {
+		if (this.isNeutral(player)) {
+			return this.getDefaultColor(player);
+		}
 		if (player === localPlayer) {
 			return this.getBlue();
 		}

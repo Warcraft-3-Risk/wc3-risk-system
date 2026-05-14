@@ -18,6 +18,7 @@ import { UnitLagManager } from '../../src/app/game/services/unit-lag-manager';
 
 describe('TransportManager - Unload Color Application', () => {
 	let mockApplyColorFilter: MockInstance;
+	let mockRegisterIfValid: MockInstance;
 
 	beforeEach(() => {
 		// Reset singletons for testing
@@ -25,7 +26,8 @@ describe('TransportManager - Unload Color Application', () => {
 		(TransportManager as any).delayedTrackQueue = [];
 
 		// Mock MinimapIconManager
-		const minIconObj = { registerIfValid: vi.fn(), unregisterTrackedUnit: vi.fn() };
+		mockRegisterIfValid = vi.fn();
+		const minIconObj = { registerIfValid: mockRegisterIfValid, unregisterTrackedUnit: vi.fn() };
 		vi.spyOn(MinimapIconManager, 'getInstance').mockReturnValue(minIconObj as any);
 
 		// Mock UnitLagManager
@@ -86,6 +88,8 @@ describe('TransportManager - Unload Color Application', () => {
 		// Then applyColorFilter should be called
 		expect(mockApplyColorFilter).toHaveBeenCalledWith(fakeUnit);
 		expect(mockApplyColorFilter).toHaveBeenCalledTimes(1);
+		expect(mockRegisterIfValid).toHaveBeenCalledWith(fakeUnit, true);
+		expect(mockRegisterIfValid).toHaveBeenCalledTimes(1);
 	});
 
 	it('should call applyColorFilter for units when a transport dies', () => {
@@ -106,5 +110,8 @@ describe('TransportManager - Unload Color Application', () => {
 		expect(mockApplyColorFilter).toHaveBeenCalledWith(fakeCargoUnit1);
 		expect(mockApplyColorFilter).toHaveBeenCalledWith(fakeCargoUnit2);
 		expect(mockApplyColorFilter).toHaveBeenCalledTimes(2);
+		expect(mockRegisterIfValid).toHaveBeenCalledWith(fakeCargoUnit1, true);
+		expect(mockRegisterIfValid).toHaveBeenCalledWith(fakeCargoUnit2, true);
+		expect(mockRegisterIfValid).toHaveBeenCalledTimes(2);
 	});
 });

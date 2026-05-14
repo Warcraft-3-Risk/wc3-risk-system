@@ -69,6 +69,9 @@ export class AllyColorFilterManager {
 					for (const u of activePlayer.trackedData.units) {
 						this.applyColorFilter(u);
 					}
+					for (const u of activePlayer.trackedData.transports) {
+						this.applyColorFilter(u);
+					}
 				}
 
 				for (const [city] of CityToCountry) {
@@ -197,12 +200,16 @@ export class AllyColorFilterManager {
 		const cacheData = this.cache[playerId];
 
 		if (cacheData) {
+			// Player colors are assigned after this manager is constructed, so normal
+			// color modes must read the live engine color instead of the startup cache.
+			const unitColor = AllyColorState.getInstance().getMode() === 2 ? cacheData.color : GetPlayerColor(owner);
+
 			if (isSpawn) {
 				SetUnitVertexColor(u, cacheData.spawnRed, cacheData.spawnGreen, cacheData.spawnBlue, alpha);
 			} else {
 				SetUnitVertexColor(u, cacheData.red, cacheData.green, cacheData.blue, alpha);
 			}
-			SetUnitColor(u, cacheData.color);
+			SetUnitColor(u, unitColor);
 		}
 	}
 
