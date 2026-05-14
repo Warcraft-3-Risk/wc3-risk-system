@@ -211,16 +211,11 @@ export class MinimapIconManager {
 	 *Safe to call with any unit.
 	 * @param unit - The unit to check and potentially track
 	 */
-	public registerIfValid(unit: unit): void {
+	public registerIfValid(unit: unit, forceIconRefresh: boolean = false): void {
 		if (!this.isActive) return;
 
 		// Don't track if unit is already dead
 		if (!UnitAlive(unit)) {
-			return;
-		}
-
-		// Only track units marked as SPAWN
-		if (!IsUnitType(unit, UNIT_TYPE.SPAWN)) {
 			return;
 		}
 
@@ -232,6 +227,10 @@ export class MinimapIconManager {
 		// Check if already tracked to avoid duplicates
 		if (!this.trackedList.trackedUnitIndex.has(unit)) {
 			this.registerTrackedUnit(unit);
+		}
+
+		if (forceIconRefresh) {
+			this.refreshTrackedUnitIcon(unit);
 		}
 	}
 
@@ -339,6 +338,37 @@ export class MinimapIconManager {
 		} catch (e) {
 			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Error registering unit - ' + e, DC.minimap);
 		}
+	}
+
+	/**
+	 * Forces a tracked unit's custom minimap icon to recompute its current texture.
+	 * Use this after lifecycle events like transport unloading where a recycled
+	 * frame may still display an old texture even though the unit's cache looks current.
+	 */
+	private refreshTrackedUnitIcon(unit: unit): void {
+		if (!this.isActive) return;
+
+		const index = this.trackedList.trackedUnitIndex.get(unit);
+		if (index === undefined) {
+			return;
+		}
+
+		const iconFrame = this.trackedList.trackedFrameList[index];
+		const localPlayer = GetLocalPlayer();
+		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
+
+		this.unitLastTexture.delete(unit);
+
+		if (!IsUnitVisible(unit, effectiveLocal)) {
+			this.trackedList.trackedRawOwnerList[index] = Player(25);
+			BlzFrameSetVisible(iconFrame, false);
+			return;
+		}
+
+		this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
+		this.updateUnitIconColor(iconFrame, unit, effectiveLocal);
+		this.trackedList.trackedRawOwnerList[index] = GetOwningPlayer(unit);
+		BlzFrameSetVisible(iconFrame, true);
 	}
 
 	/**

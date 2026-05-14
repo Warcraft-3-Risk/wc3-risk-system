@@ -220,7 +220,7 @@ export class TransportManager {
 			if (!UnitAlive(unit) || IsUnitType(unit, UNIT_TYPE.GUARD) || IsUnitLoaded(unit)) continue;
 
 			UnitLagManager.getInstance().trackUnit(unit);
-			MinimapIconManager.getInstance().registerIfValid(unit);
+			MinimapIconManager.getInstance().registerIfValid(unit, true);
 			AllyColorFilterManager.getInstance().applyColorFilter(unit);
 		}
 		TransportManager.delayedTrackQueue.length = 0;
@@ -259,7 +259,7 @@ export class TransportManager {
 			// Track all cargo units (shared slots) again since the transport is dead
 			transportData.cargo.forEach((unit) => {
 				UnitLagManager.getInstance().trackUnit(unit);
-				MinimapIconManager.getInstance().registerIfValid(unit);
+				MinimapIconManager.getInstance().registerIfValid(unit, true);
 				AllyColorFilterManager.getInstance().applyColorFilter(unit);
 			});
 		}
