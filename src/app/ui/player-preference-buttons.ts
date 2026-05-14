@@ -161,7 +161,7 @@ export function buildSignalScopeButton(player: ActivePlayer): framehandle {
 		xOffset: 0.138,
 		initialTooltipText: `Range Indicators ${HexColors.TANGERINE}(F2)|r\nToggles the permanent visibility of city range indicators (signal scopes).\nCurrent preference: ${HexColors.RED}Hidden`,
 		action: (context: number, textures: { primary: string; secondary: string }) => {
-			const { CityVisibilityManager } = require('../triggers/visuals/base-visibility');
+			const { CityVisibilityManager } = require('../triggers/visuals/base-visibility') as typeof import('../triggers/visuals/base-visibility');
 			const isVisible = CityVisibilityManager.getInstance().togglePermanentVisibility(player.getPlayer());
 
 			const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
