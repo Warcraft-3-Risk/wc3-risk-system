@@ -29,6 +29,8 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 	BlzFrameSetAllPoints(buttonIconFrame, button);
 	BlzFrameSetPoint(button, FRAMEPOINT_TOPLEFT, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_TOPLEFT, config.xOffset, -0.025);
 	BlzFrameSetSize(button, 0.02, 0.02);
+	BlzFrameSetLevel(button, 10);
+	BlzFrameSetLevel(buttonIconFrame, 11);
 	BlzFrameSetTexture(buttonIconFrame, config.textures.primary, 0, true);
 
 	const tooltipFrame = BlzCreateFrame(
@@ -62,21 +64,21 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 		);
 	}
 
+	const executeAction = () => {
+		config.action(config.createContext, config.textures, button);
+		BlzFrameSetEnable(button, false);
+		BlzFrameSetEnable(button, true);
+	};
+
 	const hotkeyTrigger = CreateTrigger();
 
 	BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
-	TriggerAddCondition(
-		hotkeyTrigger,
-		Condition(() => config.action(config.createContext, config.textures, button))
-	);
+	TriggerAddCondition(hotkeyTrigger, Condition(executeAction));
 
 	const buttonTrig = CreateTrigger();
 
-	BlzTriggerRegisterFrameEvent(hotkeyTrigger, button, FRAMEEVENT_CONTROL_CLICK);
-	TriggerAddCondition(
-		buttonTrig,
-		Condition(() => config.action(config.createContext, config.textures, button))
-	);
+	BlzTriggerRegisterFrameEvent(buttonTrig, button, FRAMEEVENT_CONTROL_CLICK);
+	TriggerAddCondition(buttonTrig, Condition(executeAction));
 
 	BlzFrameSetVisible(button, false);
 
