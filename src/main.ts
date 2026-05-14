@@ -44,6 +44,7 @@ import { TooltipManager } from './app/managers/tooltip-manager';
 import { ChatUIManager } from './app/managers/chat-ui-manager';
 import { detectGameStatus } from './app/utils/game-status';
 import { CityToCountry } from './app/country/country-map';
+import { CityVisibilityManager } from './app/triggers/visuals/base-visibility';
 
 function tsMain() {
 	try {
@@ -119,6 +120,7 @@ function tsMain() {
 		AntiSpam();
 		KeyEvents();
 		CitySelectedEvent();
+		CityVisibilityManager.getInstance();
 
 		//if singleplayer
 		if (EDITOR_DEVELOPER_MODE && ReloadGameCachesFromDisk()) {

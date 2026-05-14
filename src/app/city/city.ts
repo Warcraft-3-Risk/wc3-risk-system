@@ -19,6 +19,7 @@ export abstract class City implements Resetable, Ownable {
 	private _barrack: Barracks;
 	private _guard: Guard;
 	private _cop: unit;
+	private _effect: effect;
 
 	/**
 	 * @param rax The barracks for the city
@@ -30,6 +31,11 @@ export abstract class City implements Resetable, Ownable {
 		this._barrack = rax;
 		this._guard = guard;
 		this._cop = cop;
+
+		this._effect = AddSpecialEffect('war3mapImported\\TargetIndicatorThinner_TC_100.mdx', rax.defaultX, rax.defaultY);
+		BlzSetSpecialEffectColorByPlayer(this._effect, Player(19));
+		BlzSetSpecialEffectScale(this._effect, 7.5);
+		BlzSetSpecialEffectAlpha(this._effect, 0);
 	}
 
 	public abstract isValidGuard(unit: unit): boolean;
@@ -108,6 +114,11 @@ export abstract class City implements Resetable, Ownable {
 	/** @returns The Circle of Power of the city */
 	public get cop(): unit {
 		return this._cop;
+	}
+
+	/** @returns The effect of the city */
+	public get effect(): effect {
+		return this._effect;
 	}
 
 	/** @returns The Guard object of the city */
