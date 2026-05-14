@@ -10,6 +10,10 @@ import { AllyColorState, PlayerSettings } from '../src/app/managers/alliances/al
 globalThis.GetLocalPlayer = vi.fn(() => null);
 // @ts-expect-error Mocking global function
 globalThis.IsPlayerObserver = vi.fn(() => false);
+// @ts-expect-error Mocking global function
+globalThis.GetPlayerId = vi.fn((player: unknown) => (typeof player === 'number' ? player : ((player as { id?: number })?.id ?? 0)));
+// @ts-expect-error Mocking global value
+globalThis.bj_MAX_PLAYERS = 24;
 
 describe('AllyColorState', () => {
 	let settings: PlayerSettings;

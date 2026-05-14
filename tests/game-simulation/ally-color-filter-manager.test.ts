@@ -72,6 +72,7 @@ describe('AllyColorFilterManager', () => {
 		// Mock PlayerManager
 		activeLocalPlayer = {
 			options: { colorblind: false, colorContrast: true },
+			trackedData: { units: new Set(), transports: new Set() },
 		};
 		const pmMock = {
 			players: new Map([[localPlayer, activeLocalPlayer]]),
@@ -217,6 +218,25 @@ describe('AllyColorFilterManager', () => {
 
 			// restore
 			(globalThis as any).Player = originalPlayerFunc;
+		});
+	});
+
+	describe('startPolling', () => {
+		it('reapplies color filters to tracked transports when color mode state changes', () => {
+			let pollCallback: () => void = () => {};
+			(globalThis as any).CreateTimer = () => ({});
+			(globalThis as any).TimerStart = (_timer: any, _timeout: number, _periodic: boolean, callback: () => void) => {
+				pollCallback = callback;
+			};
+			mockAllyColorFilterState = 0;
+
+			const transport = { owner: enemyPlayer, typeIds: [UNIT_TYPE.TRANSPORT] } as unknown as FakeUnitHandle;
+			activeLocalPlayer.trackedData.transports.add(transport as any);
+
+			AllyColorFilterManager.getInstance().startPolling();
+			pollCallback();
+
+			expect(mockVertexColors.get(transport)).toEqual({ r: 255, g: 50, b: 50, a: 255 });
 		});
 	});
 });

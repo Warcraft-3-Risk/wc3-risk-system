@@ -67,6 +67,7 @@ export function createFakeActivePlayer(playerId: number): any {
 		roarCasts: 0,
 		dispelCasts: 0,
 		units: new Set(),
+		transports: new Set(),
 		trainedUnits: new Map(),
 		turnDied: -1,
 		lastUnitKilledBy: undefined,
@@ -80,6 +81,7 @@ export function createFakeActivePlayer(playerId: number): any {
 			this.countries.clear();
 			this.killsDeaths.clear();
 			this.units.clear();
+			this.transports.clear();
 		},
 		setKDMaps() {},
 	};

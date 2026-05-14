@@ -69,6 +69,9 @@ export class AllyColorFilterManager {
 					for (const u of activePlayer.trackedData.units) {
 						this.applyColorFilter(u);
 					}
+					for (const u of activePlayer.trackedData.transports) {
+						this.applyColorFilter(u);
+					}
 				}
 
 				for (const [city] of CityToCountry) {
