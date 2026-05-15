@@ -13,6 +13,7 @@ import { File } from 'w3ts';
 import { HexColors } from '../utils/hex-colors';
 import { MinimapIconManager } from '../managers/minimap-icon-manager';
 import { CountryLabelManager } from '../managers/country-label-manager';
+import { DefaultLabelMode, getLabelModeText, normalizeLabelMode } from '../player/options';
 
 /**
  * ConcreteCountryBuilder is an implementation of the CountryBuilder interface.
@@ -52,6 +53,7 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 		builder.setCityType(city.cityType);
 
 		const result: City = builder.build();
+		result.setLabelData(city.name, city.slot, city.quality);
 		this.cities.push(result);
 
 		return this;
@@ -117,20 +119,26 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 			if (GetLocalPlayer() === player.getPlayer()) {
 				// Load saved labels preference and apply it
 				const labelsPreference = File.read('risk/labels.pld');
-				if (labelsPreference === 'false') {
-					player.options.labels = false;
+				const labelMode = normalizeLabelMode(labelsPreference);
+				player.options.labelMode = labelMode;
 
+				if (labelMode !== DefaultLabelMode) {
 					// Update button texture and tooltip to match the hidden state
 					const labelButtonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', GetPlayerId(player.getPlayer()) + 200);
 					if (labelButtonBackdrop) {
-						BlzFrameSetTexture(labelButtonBackdrop, 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp', 0, false);
+						const texture =
+							labelMode === 'none'
+								? 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp'
+								: 'ReplaceableTextures\\CommandButtons\\BTNRecipe.blp';
+						BlzFrameSetTexture(labelButtonBackdrop, texture, 0, false);
 					}
 
 					const labelButtonTooltip = BlzGetFrameByName('GuardButtonToolTip', GetPlayerId(player.getPlayer()) + 200);
 					if (labelButtonTooltip) {
 						BlzFrameSetText(
 							labelButtonTooltip,
-							`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ${HexColors.RED}Hidden`
+							`Map Labels ${HexColors.TANGERINE}(F8)|r\nCycles city and country label visibility on the map.\nCurrent preference: ` +
+								`${labelMode === 'none' ? HexColors.RED : HexColors.GREEN}${getLabelModeText(labelMode)}`
 						);
 					}
 				}

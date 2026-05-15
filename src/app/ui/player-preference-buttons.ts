@@ -6,6 +6,7 @@ import { Country } from '../country/country';
 import { File } from 'w3ts';
 import { RatingManager } from '../rating/rating-manager';
 import { NameManager } from '../managers/names/name-manager';
+import { getLabelModeText, getNextLabelMode, type LabelMode } from '../player/options';
 
 export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
@@ -65,6 +66,19 @@ export function buildGuardValueButton(player: ActivePlayer): framehandle {
 }
 
 export function buildLabelToggleButton(player: ActivePlayer): framehandle {
+	const getLabelTexture = (labelMode: LabelMode, textures: { primary: string; secondary: string }): string => {
+		return labelMode === 'none' ? textures.secondary : textures.primary;
+	};
+
+	const getLabelTooltip = (labelMode: LabelMode): string => {
+		const color = labelMode === 'none' ? HexColors.RED : HexColors.GREEN;
+
+		return (
+			`Map Labels ${HexColors.TANGERINE}(F8)|r\nCycles city and country label visibility on the map.\nCurrent preference: ` +
+			`${color}${getLabelModeText(labelMode)}`
+		);
+	};
+
 	return createGuardButton({
 		player: player,
 		createContext: GetPlayerId(player.getPlayer()) + 200,
@@ -74,26 +88,22 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp',
 		},
 		xOffset: 0.046,
-		initialTooltipText: `Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ${HexColors.GREEN}Visible`,
+		initialTooltipText: getLabelTooltip(player.options.labelMode || 'cityName'),
 		action: (context: number, textures: { primary: string; secondary: string }) => {
-			player.options.labels = !player.options.labels;
+			player.options.labelMode = getNextLabelMode(player.options.labelMode || 'cityName');
 
 			// Only update visuals for the local player
 			if (player.getPlayer() === GetLocalPlayer()) {
 				// Save labels preference to file
-				File.write('risk/labels.pld', `${player.options.labels}`);
+				File.write('risk/labels.pld', player.options.labelMode);
 
 				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
-				const texture = player.options.labels ? textures.primary : textures.secondary;
+				const texture = getLabelTexture(player.options.labelMode, textures);
 
 				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
 
 				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
-				BlzFrameSetText(
-					buttonTooltip,
-					`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ` +
-						`${player.options.labels ? `${HexColors.GREEN}Visible` : `${HexColors.RED}Hidden`}`
-				);
+				BlzFrameSetText(buttonTooltip, getLabelTooltip(player.options.labelMode));
 			}
 		},
 	});

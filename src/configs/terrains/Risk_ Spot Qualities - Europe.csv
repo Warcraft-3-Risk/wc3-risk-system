@@ -1,0 +1,234 @@
+Country,City,Slot,Type,X,Y,Quality
+Albania,Korce,SE,Land,4736,-8768,A
+Albania,Durres,W,Port,3600,-8017,D
+Algeria,Constantine,E,Land,-3648,-14144,B
+Algeria,Bechar,SW,Land,-5760,-15040,A
+Algeria,Oran,W,Land,-7360,-14336,B
+Arkhangelsk,Mezen,SE,Land,12160,7872,C
+Arkhangelsk,Kotlas,SW,Land,9408,8448,B
+Arkhangelsk,Arkhangelsk,NW,Land,9920,10880,D
+Armenia,Yerevan,Capital,Land,18432,-5888,D
+Austria,Vienna,NE,Land,1408,-3008,C
+Austria,Innsbruck,SW,Land,448,-3648,A
+Azerbaijan,Ganja,NE,Land,18332,-3484,C
+Azerbaijan,Baku,W,Land,17472,-4352,A
+Belarus,Vitebsk,NE1,Land,6912,1472,F
+Belarus,Mogilev,NE2,Land,6912,2560,D
+Belarus,Gomel,SE,Land,7680,512,C
+Belarus,Brest,SW,Land,5376,384,B
+Belgium,Liege,SE,Land,-3072,-2368,A
+Belgium,Antwerp,NW,Port,-4384,-608,A
+Bosnia,Tuzla,NE,Land,3456,-5632,C
+Bosnia,Mostar,SW,Land,2752,-6656,S
+Bulgaria,Varna,NE,Land,7808,-5952,A
+Bulgaria,Sofia,NW,Land,6784,-6016,A
+Catalonia,Girona,NE,Land,-6450,-7835,D
+Catalonia,Barcelona,SE,Port,-6634,-9181,A
+Central Russia,Yaroslavl,NE,Land,12864,5632,D
+Central Russia,Voronezh,SE,Land,13056,2496,C
+Central Russia,Tula,SW,Land,10496,1536,C
+Central Russia,Bryansk,W,Land,8640,3264,C
+Central Russia,Moscow,NW,Land,11264,3968,D
+Corsica,Bastia,E,Port,-1250,-8326,A
+Corsica,Ajaccio,NW,Land,-2117,-7724,C
+Crete,Sitia,E,Port,8864,-11680,D
+Crete,Chania,SW,Port,7008,-12192,A
+Crimea,Simferopol,NE,Land,11456,-3264,F
+Crimea,Sevastopol,SW,Port,10464,-4128,A
+Croatia,Osijek,E,Land,2880,-4864,B
+Croatia,Split,S,Land,1920,-5760,S
+Cyprus,Famagusta,NE,Port,13408,-10272,F
+Cyprus,Limassol,S,Port,12576,-11808,A
+Czechia,Brno,E,Land,2112,-1664,D
+Czechia,Plzen,W,Land,768,-2048,A
+Denmark,Aalborg,N,Land,-1088,2560,D
+Denmark,Copenhagen,SE,Land,-960,1408,A
+Denmark,Esbjerg,NW,Port,-2272,2464,C
+Disko Bay,Ilulissat,NE,Land,-10432,15104,D
+Disko Bay,Paamiut,S,Port,-11040,12960,A
+Disko Bay,Aasiaat,W,Land,-11584,14400,D
+East Greenland,Ittoqqortoormiit,NE,Land,-6016,15424,B
+East Greenland,Tasiilaq,SE,Port,-5600,14048,A
+Egypt,Port Said,NE,Land,12480,-14080,B
+Egypt,Suez,E1,Land,12928,-15104,D
+Egypt,Sharm El Sheikh,E2,Land,14400,-14784,C
+Egypt,Alexandria,W,Land,9408,-15104,C
+England,Newcastle,N1,Land,-6784,1600,D
+England,Manchester,N2,Land,-7040,3200,F
+England,London,SE,Land,-6528,256,F
+England,Plymouth,SW,Port,-8352,-672,B
+Estonia,Tartu,NE,Land,5056,5312,F
+Estonia,Tallinn,SW,Port,4128,4640,A
+Finland,Vaasa,N1,Port,3424,9184,D
+Finland,Rovaniemi,N2,Land,3968,11584,D
+Finland,Joensuu,NE1,Land,4480,8448,B
+Finland,Oulu,NE2,Land,4800,10368,C
+Finland,Helsinki,SE,Land,4096,6848,B
+France,Lille,N,Land,-4800,-3136,F
+France,Strasbourg,E,Land,-3520,-3776,F
+France,Lyon,SE,Land,-3584,-5568,D
+France,Toulouse,S1,Land,-5504,-6272,D
+France,Marseille,S2,Port,-4384,-7008,B
+France,Bordeaux,SW,Land,-5440,-5120,C
+France,Nantes,W,Port,-6944,-4704,D
+France,Rouen,NW,Land,-6336,-3456,F
+Georgia,Tbilisi,E,Land,16064,-4096,A
+Georgia,Kutaisi,NW,Land,14976,-3648,B
+Germany,Hamburg,N,Land,-832,64,F
+Germany,Berlin,NE,Land,320,320,F
+Germany,Leipzig,E,Land,320,-1024,D
+Germany,Stuttgart,S1,Land,-1408,-2432,B
+Germany,Munich,S2,Land,-384,-2944,B
+Germany,Cologne,W,Land,-1472,-1024,D
+Greece,Thessaloniki,NE,Land,7168,-7616,C
+Greece,Athens,SE,Land,6464,-9472,D
+Greece,Patras,S1,Land,5504,-9536,C
+Greece,Kalamata,S2,Port,6112,-11232,B
+Hungary,Debrecen,NE,Land,4416,-3200,D
+Hungary,Budapest,W,Land,3136,-3776,A
+Iceland,Akureyri,NE,Port,-5920,10464,F
+Iceland,Hofn,SE,Land,-6592,9344,D
+Iceland,Reykjavik,S,Port,-7200,7968,B
+Iceland,Isafjordur,W,Land,-7936,9792,D
+Iraq,Mosul,NE,Land,18257,-11937,D
+Iraq,Basra,S,Land,17800,-13249,A
+Ireland,Belfast,NE1,Land,-11136,2368,D
+Ireland,Dublin,NE2,Port,-10208,4000,C
+Ireland,Cork,S,Port,-11488,800,B
+Isle of Man,Douglas,Capital,Land,-9000,3265,B
+Israel,Beersheba,SE,Land,14976,-13440,S
+Israel,Haifa,NW,Port,13900,-12320,C
+Jordan,Maan,E,Land,18066,-14658,C
+Jordan,Aqaba,SW,Land,16097,-14921,B
+Jordan,Amman,NW,Land,16424,-13604,D
+Kaliningrad,Kaliningrad,E,Land,4096,1344,A
+Kaliningrad,Baltiysk,NW,Port,2976,1952,B
+Karelia,Belomorsk,N1,Port,6880,10464,B
+Karelia,Kostomuksha,N2,Land,6144,12416,F
+Karelia,Petrozavodsk,E,Land,7680,8960,C
+Karelia,Sortavala,NW,Land,5824,9728,B
+Latvia,Daugavpils,E,Land,5440,3520,B
+Latvia,Riga,W,Port,3104,3616,A
+Lebanon,Tripoli,N,Land,14784,-9600,F
+Lebanon,Tyre,S,Land,14976,-11136,A
+Leningrad,Veliky Novgorod,NE,Land,8896,6080,C
+Leningrad,Pskov,SW,Land,6848,4672,B
+Leningrad,Saint Petersburg,W,Port,6048,6112,B
+Lithuania,Vilnius,SE,Land,5312,2048,D
+Lithuania,Kaunas,W,Land,4160,2496,D
+Lybia,Benghazi,NE,Land,7680,-14528,C
+Lybia,Sabha,W,Land,6208,-15040,B
+Lybia,Tripoli,NW,Port,5088,-14112,A
+Macedonia,Stip,NE,Land,5952,-6848,C
+Macedonia,Bitola,SE,Land,5440,-7872,S
+Malta,Valletta,E,Port,2410,-12836,C
+Malta,Mdina,W,Land,896,-13120,A
+Moldova,Tiraspol,E,Land,8384,-3136,A
+Moldova,Chisinau,NW,Land,7296,-2496,A
+Montenegro,Podgorica,E,Land,4736,-6720,B
+Montenegro,Niksic,NW,Land,3776,-6656,A
+Morocco,Marrakech,SE,Land,-8832,-15104,B
+Morocco,Casablanca,W,Port,-12320,-14368,A
+Morocco,Rabat,NW,Land,-10688,-14080,B
+Moscow,Vladimir,E,Land,15296,8960,B
+Moscow,Moscow,SW,Land,13952,8384,A
+National Park,Qaanaaq,N,Land,-8768,15232,C
+National Park,Station Nord,E,Land,-7936,14336,C
+National Park,Daneborg,SW,Land,-9262,13906,A
+Netherlands,Groningen,N,Port,-3168,480,D
+Netherlands,Amsterdam,NE,Land,-2368,-128,D
+Netherlands,Eindhoven,S,Land,-3200,-1024,A
+Normandy,Cherbourg,N,Port,-5440,-1730,D
+Normandy,Caen,SW,Land,-6050,-2800,A
+North Russia,Vorkuta,NE,Land,14976,14016,D
+North Russia,Salekhard,E,Land,17920,13888,D
+North Russia,Nadym,SE,Land,17408,10496,C
+North Russia,Pechora,SW,Land,13440,11520,C
+North Russia,Naryan-Mar,W,Land,12544,13376,D
+Northern Italy,Venice,E,Port,-109,-5507,C
+Northern Italy,Bologna,SE,Land,-272,-6752,A
+Northern Italy,Milan,W,Land,-1856,-5440,D
+Norway,Tromso,N,Port,-1760,7904,C
+Norway,Trondheim,NE1,Land,-640,7232,F
+Norway,Bodo,NE2,Land,576,10112,F
+Norway,Alta,NE3,Land,1728,12224,F
+Norway,Oslo,SE,Land,-768,5312,F
+Norway,Bergen,S,Land,-1856,5056,F
+Norway,Stavanger,SW,Port,-2464,3680,D
+Novaya,Belushya Guba,E,Port,11936,15584,A
+Novaya,Rogachevo,NW,Land,10496,16064,B
+Palestine,Bethlehem,Capital,Land,15808,-12224,B
+Poland,Lublin,E,Land,3584,128,C
+Poland,Krakow,SE,Land,4032,-1152,B
+Poland,Poznan,W,Land,1664,-384,D
+Poland,Gdansk,NW,Land,2048,832,F
+Portugal,Coimbra,NE,Land,-10624,-7296,D
+Portugal,Faro,S,Land,-11328,-9600,B
+Portugal,Lisbon,W,Port,-12000,-7968,D
+Romania,Iasi,NE,Land,6528,-3456,F
+Romania,Constanta,E,Land,7616,-4672,D
+Romania,Bucharest,S,Land,6144,-4864,C
+Romania,Cluj-Napoca,W,Land,5184,-3968,F
+Sami,Kiruna,SE,Land,4160,13056,A
+Sami,Karesuando,W,Land,3264,13504,B
+Sardinia,Olbia,S,Port,-1758,-10512,A
+Sardinia,Sassari,NW,Land,-2305,-9428,F
+Scotland,Inverness,N,Land,-7552,5952,F
+Scotland,Edinburgh,E,Port,-6432,4960,B
+Scotland,Glasgow,SW,Land,-7950,4672,A
+Serbia,Belgrade,N,Land,4416,-4992,B
+Serbia,Nis,E,Land,5248,-5568,A
+Siberia,Norilsk,E,Land,18176,15616,B
+Siberia,Salekhard,NW,Land,16576,15744,A
+Sicily,Catania,S,Port,1238,-11566,S
+Sicily,Palermo,NW,Land,450,-10368,D
+Slovakia,Kosice,E,Land,3968,-2304,D
+Slovakia,Bratislava,W,Land,2752,-2624,A
+Slovenia,Maribor,NE,Land,1856,-4032,D
+Slovenia,Ljubljana,SW,Land,896,-4736,A
+Southern Italy,Bari,S,Land,1923,-9244,A
+Southern Italy,Naples,NW,Land,1329,-7928,D
+Southern Russia,Volgograd,NE,Land,16704,1088,F
+Southern Russia,Astrakhan,SE,Land,17088,-1152,D
+Southern Russia,Rostov-on-Don,SW1,Land,14400,-1856,D
+Southern Russia,Novorossiysk,SW2,Port,13024,-3808,B
+Southern Russia,Saratov,NW,Land,14848,1216,F
+Spain,Zaragoza,NE,Land,-7616,-6976,D
+Spain,Valencia,SE,Land,-8035,-9572,C
+Spain,Malaga,SW,Land,-9728,-10240,B
+Spain,Madrid,W,Land,-9408,-8192,C
+Spain,Bilbao,NW,Land,-10112,-5972,D
+Svalbard,Barentsburg,E,Land,-576,14912,F
+Svalbard,Longyearbyen,SW,Port,-1760,14496,A
+Sweden,Umea,NE1,Land,1216,8704,F
+Sweden,Sundsvall,NE2,Land,1856,10240,F
+Sweden,Uppsala,S1,Land,576,6400,D
+Sweden,Gothenburg,S2,Land,512,3392,D
+Sweden,Stockholm,S3,Port,1760,3040,C
+Switzerland,Zurich,E,Land,-1280,-4352,C
+Switzerland,Geneva,W,Land,-2432,-4160,C
+Syria,Aleppo,NE,Land,17472,-9664,B
+Syria,Damascus,S,Land,16512,-10800,A
+Syria,Latakia,NW,Land,16064,-9408,C
+Tunisia,Tunis,NE,Land,-1408,-13824,B
+Tunisia,Sfax,E,Port,-160,-14496,A
+Türkiye,Gaziantep,E1,Land,15424,-7360,F
+Türkiye,Erzurum,E2,Land,16704,-6080,F
+Türkiye,Antalya,SW1,Land,12288,-8192,F
+Türkiye,Izmir,SW2,Port,11360,-10336,D
+Türkiye,Bodrum,SW3,Land,10048,-9280,D
+Türkiye,Ankara,W1,Land,11072,-7168,D
+Türkiye,Istanbul,W2,Port,8800,-7392,C
+Ukraine,Kharkiv,NE,Land,10240,-384,F
+Ukraine,Donetsk,E,Land,11328,-1664,F
+Ukraine,Odesa,SE,Land,9344,-1984,F
+Ukraine,Kyiv,W1,Land,7232,-832,F
+Ukraine,Chernivtsi,W2,Land,6080,-2048,F
+Ukraine,Lviv,W3,Land,5696,-1024,D
+Volga,Ufa,NE,Land,18048,6720,C
+Volga,Samara,SE,Land,17984,3840,B
+Volga,Nizhny Novgorod,W,Land,15424,5376,B
+Wales,Wrexham,NE,Land,-8000,2304,C
+Wales,Cardiff,SW,Land,-8512,1216,A
+West Greenland,Qaanaaq,N,Land,-12736,14976,B
+West Greenland,Nuuk,SE,Land,-12352,13320,A

@@ -159,7 +159,7 @@ export function AllyMenuFFASetup() {
 	tempText += '|n|cffffffff F4 - Toggle ranked stats window';
 	tempText += '|n|cffffffff F6 - Toggle guard health preference';
 	tempText += '|n|cffffffff F7 - Toggle guard value preference';
-	tempText += '|n|cffffffff F8 - Toggle country labels';
+	tempText += '|n|cffffffff F8 - Cycle map labels';
 
 	BlzFrameSetText(AllyMenuTitle, tempText);
 
