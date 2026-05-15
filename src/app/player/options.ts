@@ -1,57 +1,15 @@
-export type LabelMode = 'cityName' | 'cityQuality' | 'all' | 'country' | 'none';
+export const DefaultCountryLabels = true;
 
-export const DefaultLabelMode: LabelMode = 'cityName';
-
-export function normalizeLabelMode(value?: string): LabelMode {
-	if (value === 'cityName' || value === 'cityQuality' || value === 'all' || value === 'country' || value === 'none') {
-		return value;
+export function normalizeCountryLabels(value?: string): boolean {
+	if (value === 'false' || value === 'none') {
+		return false;
 	}
 
-	if (value === 'false') {
-		return 'none';
-	}
-
-	return DefaultLabelMode;
+	return DefaultCountryLabels;
 }
 
-export function getNextLabelMode(value: LabelMode): LabelMode {
-	if (value === 'cityName') {
-		return 'cityQuality';
-	}
-
-	if (value === 'cityQuality') {
-		return 'all';
-	}
-
-	if (value === 'all') {
-		return 'country';
-	}
-
-	if (value === 'country') {
-		return 'none';
-	}
-
-	return DefaultLabelMode;
-}
-
-export function getLabelModeText(value: LabelMode): string {
-	if (value === 'cityName') {
-		return 'Country and City Names';
-	}
-
-	if (value === 'cityQuality') {
-		return 'Country and City Quality';
-	}
-
-	if (value === 'all') {
-		return 'Country and City Position/Quality';
-	}
-
-	if (value === 'country') {
-		return 'Country Only';
-	}
-
-	return 'Hidden';
+export function getCountryLabelsText(value: boolean): string {
+	return value ? 'On' : 'Off';
 }
 
 export type Options = {
@@ -59,7 +17,7 @@ export type Options = {
 	value: boolean;
 	ping: boolean;
 	board: number;
-	labelMode: LabelMode;
+	countryLabels: boolean;
 	colorblind: boolean;
 	colorContrast: boolean;
 	// Note: showRating preference is now stored in the rating file itself

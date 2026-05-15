@@ -121,7 +121,7 @@ export function createFakeActivePlayer(playerId: number): any {
 		getPlayer: () => handle as unknown as player,
 		trackedData,
 		status: statusObj,
-		options: { health: false, value: false, ping: false, board: 0, labelMode: 'cityName' },
+		options: { health: false, value: false, ping: false, board: 0, countryLabels: true },
 		killedBy: undefined,
 		ratingStatsUI: undefined,
 		isAdmin: () => false,

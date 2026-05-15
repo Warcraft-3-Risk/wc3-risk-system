@@ -1,9 +1,9 @@
 import { Country } from '../country/country';
 import { PlayerManager } from '../player/player-manager';
 import { City } from '../city/city';
-import { type LabelMode } from '../player/options';
 import { CityLabelText, createCityLabelText } from './city-label-text';
 import { createCountryLabelText } from './country-label-text';
+import { shouldShowCityLabels, shouldShowCountryLabels } from './label-visibility';
 
 interface CountryLabelData {
 	country: Country;
@@ -19,9 +19,7 @@ interface CityLabelData {
 	cx: number;
 	cy: number;
 	distSq: number;
-	nameText: CityLabelText;
-	fullText: CityLabelText;
-	noPositionText: CityLabelText;
+	text: CityLabelText;
 }
 
 export class CountryLabelManager {
@@ -77,9 +75,7 @@ export class CountryLabelManager {
 				cx: 0,
 				cy: 0,
 				distSq: 0,
-				nameText: createCityLabelText(city, 'cityName'),
-				fullText: createCityLabelText(city, 'all'),
-				noPositionText: createCityLabelText(city, 'cityQuality'),
+				text: createCityLabelText(city),
 			};
 		});
 
@@ -110,11 +106,19 @@ export class CountryLabelManager {
 	private update() {
 		const localPlayerHandle = GetLocalPlayer();
 		const localPlayer = PlayerManager.getInstance().playersAndObservers.get(localPlayerHandle);
+		const localPlayerId = GetPlayerId(localPlayerHandle);
+		const isLocalObserver = IsPlayerObserver(localPlayerHandle);
+		const showCountryLabels = shouldShowCountryLabels({
+			playerId: localPlayerId,
+			isObserver: isLocalObserver,
+			countryLabels: localPlayer?.options.countryLabels,
+		});
+		const showCityLabels = shouldShowCityLabels({
+			playerId: localPlayerId,
+			isObserver: isLocalObserver,
+		});
 
-		const labelMode = localPlayer ? localPlayer.options.labelMode || 'cityName' : 'cityName';
-
-		// If disabled, hide everything and return
-		if (labelMode === 'none') {
+		if (!showCountryLabels && !showCityLabels) {
 			this.hideLabels(this.labels);
 			this.hideLabels(this.cityLabels);
 			return;
@@ -134,13 +138,9 @@ export class CountryLabelManager {
 			const dx = targetX - data.cx;
 			const dy = targetY - data.cy;
 
-			const labelText = createCountryLabelText(
-				{
-					name: data.country.getName(),
-					cityCount: data.country.getCities().length,
-				},
-				labelMode
-			);
+			const labelText = createCountryLabelText({
+				name: data.country.getName(),
+			});
 
 			data.distSq = dx * dx + dy * dy;
 			data.textData = labelText.text;
@@ -150,9 +150,14 @@ export class CountryLabelManager {
 		// Sort by nearest distance
 		this.labelDataCache.sort((a, b) => a.distSq - b.distSq);
 
-		this.renderCountryLabels();
-		if (labelMode === 'cityName' || labelMode === 'cityQuality' || labelMode === 'all') {
-			this.renderCityLabels(targetX, targetY, labelMode);
+		if (showCountryLabels) {
+			this.renderCountryLabels();
+		} else {
+			this.hideLabels(this.labels);
+		}
+
+		if (showCityLabels) {
+			this.renderCityLabels(targetX, targetY);
 		} else {
 			this.hideLabels(this.cityLabels);
 		}
@@ -183,7 +188,7 @@ export class CountryLabelManager {
 		}
 	}
 
-	private renderCityLabels(targetX: number, targetY: number, labelMode: LabelMode): void {
+	private renderCityLabels(targetX: number, targetY: number): void {
 		for (let i = 0; i < this.cityLabelDataCache.length; i++) {
 			const data = this.cityLabelDataCache[i];
 			const city = data.city;
@@ -205,7 +210,7 @@ export class CountryLabelManager {
 		while (labelIndex < activeCount) {
 			const data = this.cityLabelDataCache[labelIndex];
 			const tag = this.cityLabels[labelIndex];
-			const labelText = this.getCityLabelText(data, labelMode);
+			const labelText = data.text;
 
 			const lengthCheck: number = labelText.visibleLength * 2.6 < 125 ? labelText.visibleLength * 2.6 : 125;
 
@@ -220,18 +225,6 @@ export class CountryLabelManager {
 			SetTextTagVisibility(this.cityLabels[labelIndex], false);
 			labelIndex++;
 		}
-	}
-
-	private getCityLabelText(data: CityLabelData, labelMode: LabelMode): CityLabelText {
-		if (labelMode === 'cityName') {
-			return data.nameText;
-		}
-
-		if (labelMode === 'cityQuality') {
-			return data.noPositionText;
-		}
-
-		return data.fullText;
 	}
 
 	private hideLabels(labels: texttag[]): void {

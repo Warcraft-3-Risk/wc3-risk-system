@@ -6,7 +6,7 @@ import { Country } from '../country/country';
 import { File } from 'w3ts';
 import { RatingManager } from '../rating/rating-manager';
 import { NameManager } from '../managers/names/name-manager';
-import { getLabelModeText, getNextLabelMode, type LabelMode } from '../player/options';
+import { getCountryLabelsText } from '../player/options';
 
 export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
@@ -66,16 +66,16 @@ export function buildGuardValueButton(player: ActivePlayer): framehandle {
 }
 
 export function buildLabelToggleButton(player: ActivePlayer): framehandle {
-	const getLabelTexture = (labelMode: LabelMode, textures: { primary: string; secondary: string }): string => {
-		return labelMode === 'none' ? textures.secondary : textures.primary;
+	const getLabelTexture = (countryLabels: boolean, textures: { primary: string; secondary: string }): string => {
+		return countryLabels ? textures.primary : textures.secondary;
 	};
 
-	const getLabelTooltip = (labelMode: LabelMode): string => {
-		const color = labelMode === 'none' ? HexColors.RED : HexColors.GREEN;
+	const getLabelTooltip = (countryLabels: boolean): string => {
+		const color = countryLabels ? HexColors.GREEN : HexColors.RED;
 
 		return (
-			`Map Labels ${HexColors.TANGERINE}(F8)|r\nCycles city and country label visibility on the map.\nCurrent preference: ` +
-			`${color}${getLabelModeText(labelMode)}`
+			`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles country labels on the map.\nCurrent preference: ` +
+			`${color}${getCountryLabelsText(countryLabels)}`
 		);
 	};
 
@@ -88,22 +88,22 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp',
 		},
 		xOffset: 0.046,
-		initialTooltipText: getLabelTooltip(player.options.labelMode || 'cityName'),
+		initialTooltipText: getLabelTooltip(player.options.countryLabels),
 		action: (context: number, textures: { primary: string; secondary: string }) => {
-			player.options.labelMode = getNextLabelMode(player.options.labelMode || 'cityName');
+			player.options.countryLabels = !player.options.countryLabels;
 
 			// Only update visuals for the local player
 			if (player.getPlayer() === GetLocalPlayer()) {
 				// Save labels preference to file
-				File.write('risk/labels.pld', player.options.labelMode);
+				File.write('risk/labels.pld', `${player.options.countryLabels}`);
 
 				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
-				const texture = getLabelTexture(player.options.labelMode, textures);
+				const texture = getLabelTexture(player.options.countryLabels, textures);
 
 				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
 
 				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
-				BlzFrameSetText(buttonTooltip, getLabelTooltip(player.options.labelMode));
+				BlzFrameSetText(buttonTooltip, getLabelTooltip(player.options.countryLabels));
 			}
 		},
 	});
