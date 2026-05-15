@@ -58,7 +58,7 @@ export class MinimapIconManager {
 	private isActive: boolean; // Whether custom icons are active (only for world terrain)
 	private readonly COLOR_TEXTURES: string[] = []; // Pre-built texture path lookup table
 	private cityLastTexture: Map<City, string> = new Map(); // Track last-applied texture per city frame
-	private unitLastTexture: Map<unit, string> = new Map(); // Track last-applied texture per unit frame
+	private frameLastTexture: Map<framehandle, string> = new Map(); // Track last-applied texture per framehandle
 
 	// Globals for minimizing color updates across all units
 	private lastGlobalColorMode: number | undefined;
@@ -273,7 +273,7 @@ export class MinimapIconManager {
 		this.trackedList.trackedFrameList.pop();
 		this.trackedList.trackedRawOwnerList.pop();
 		this.trackedList.trackedUnitIndex.delete(unit);
-		this.unitLastTexture.delete(unit);
+		this.frameLastTexture.delete(frame);
 
 		return frame;
 	}
@@ -317,8 +317,8 @@ export class MinimapIconManager {
 			// Set level to render above minimap (Top level for units)
 			BlzFrameSetLevel(iconFrame, 15);
 
-			// Store the frame
-			this.trackedList.addTrackedUnit(unit, iconFrame, GetOwningPlayer(unit));
+			// Store the frame, initially poisoning the owner cache so the update loop computes it upon first sight
+			this.trackedList.addTrackedUnit(unit, iconFrame, Player(25));
 
 			// Initial update
 			const localPlayer = GetLocalPlayer();
@@ -326,6 +326,11 @@ export class MinimapIconManager {
 			if (IsUnitVisible(unit, effectiveLocal)) {
 				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
 				this.updateUnitIconColor(iconFrame, unit, effectiveLocal);
+				// Now that we've explicitly drawn it for this player, update the raw owner list
+				const idx = this.trackedList.trackedUnitIndex.get(unit);
+				if (idx !== undefined) {
+					this.trackedList.trackedRawOwnerList[idx] = GetOwningPlayer(unit);
+				}
 				BlzFrameSetVisible(iconFrame, true);
 			} else {
 				BlzFrameSetVisible(iconFrame, false);
@@ -357,7 +362,7 @@ export class MinimapIconManager {
 		const localPlayer = GetLocalPlayer();
 		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
 
-		this.unitLastTexture.delete(unit);
+		this.frameLastTexture.delete(iconFrame);
 
 		if (!IsUnitVisible(unit, effectiveLocal)) {
 			this.trackedList.trackedRawOwnerList[index] = Player(25);
@@ -818,7 +823,7 @@ export class MinimapIconManager {
 		// If the local player owns this unit (or owns the shared slot), show it in WHITE (or BLUE in Ally Mode 2)
 		if (owner === effectiveLocal) {
 			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
-			this.setTextureCached(unit, iconFrame, localTexture, this.unitLastTexture);
+			this.setTextureCached(iconFrame, iconFrame, localTexture, this.frameLastTexture);
 			return;
 		}
 
@@ -829,7 +834,7 @@ export class MinimapIconManager {
 		if (allyColorMode > 0 && !isReplayViewer) {
 			const ownerId = GetPlayerId(owner as player);
 			if (ownerId >= 24) {
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 				return;
 			}
 
@@ -840,15 +845,15 @@ export class MinimapIconManager {
 				// so show allies as red to avoid confusion with the shared slot's units
 				const allyColor = isColorBlind ? this.COLOR_TEXTURES[4] : this.COLOR_TEXTURES[2]; // Yellow vs Teal
 				const allyTexture = isDeadInFFA ? this.COLOR_TEXTURES[0] : allyColor;
-				this.setTextureCached(unit, iconFrame, allyTexture, this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, allyTexture, this.frameLastTexture);
 			} else if (minimapColor === ConvertPlayerColor(0)) {
 				// Enemy = Red (Player 0 color)
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[0], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[0], this.frameLastTexture);
 			} else if (minimapColor === ConvertPlayerColor(1)) {
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[1], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[1], this.frameLastTexture);
 			} else {
 				// Neutral = Gray (standard WC3 neutral color)
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 			}
 			return;
 		}
@@ -859,11 +864,11 @@ export class MinimapIconManager {
 		const colorIndex = GetHandleId(playerColor);
 
 		if (colorIndex < 0 || colorIndex > 23) {
-			this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+			this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 			return;
 		}
 
-		this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[colorIndex], this.unitLastTexture);
+		this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[colorIndex], this.frameLastTexture);
 	}
 
 	/**
@@ -979,7 +984,7 @@ export class MinimapIconManager {
 		// If the local player owns this unit (or owns the shared slot), show it in WHITE (or BLUE in Ally Mode 2)
 		if (owner === localPlayer) {
 			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
-			this.setTextureCached(unit, iconFrame, localTexture, this.unitLastTexture);
+			this.setTextureCached(iconFrame, iconFrame, localTexture, this.frameLastTexture);
 			return;
 		}
 
@@ -991,7 +996,7 @@ export class MinimapIconManager {
 		if (allyColorMode > 0 && !isReplayViewer) {
 			const ownerId = GetPlayerId(owner as player);
 			if (ownerId >= 24) {
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 				return;
 			}
 
@@ -1003,13 +1008,13 @@ export class MinimapIconManager {
 				const isColorBlind = localActivePlayer && localActivePlayer.options.colorblind;
 				const allyColor = isColorBlind ? this.COLOR_TEXTURES[4] : this.COLOR_TEXTURES[2]; // Yellow vs Teal
 				const allyTexture = isDeadInFFA ? this.COLOR_TEXTURES[0] : allyColor;
-				this.setTextureCached(unit, iconFrame, allyTexture, this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, allyTexture, this.frameLastTexture);
 			} else if (IsPlayerEnemy(owner as player, localPlayer)) {
 				// Enemy = Red
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[0], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[0], this.frameLastTexture);
 			} else {
 				// Neutral = Gray
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 			}
 			return;
 		}
@@ -1020,11 +1025,11 @@ export class MinimapIconManager {
 		const colorIndex = GetHandleId(playerColor);
 
 		if (colorIndex < 0 || colorIndex > 23) {
-			this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+			this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 			return;
 		}
 
-		this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[colorIndex], this.unitLastTexture);
+		this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[colorIndex], this.frameLastTexture);
 	}
 
 	/**
@@ -1204,7 +1209,7 @@ export class MinimapIconManager {
 		this.framePool = [];
 		this.lastSeenOwners.clear();
 		this.cityLastTexture.clear();
-		this.unitLastTexture.clear();
+		this.frameLastTexture.clear();
 
 		if (this.updateTimer) {
 			DestroyTimer(this.updateTimer);
