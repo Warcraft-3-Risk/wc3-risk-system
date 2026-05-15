@@ -1,6 +1,9 @@
 import { Country } from '../country/country';
-import { HexColors } from '../utils/hex-colors';
 import { PlayerManager } from '../player/player-manager';
+import { City } from '../city/city';
+import { CityLabelText, createCityLabelText } from './city-label-text';
+import { createCountryLabelText } from './country-label-text';
+import { shouldShowCityLabels, shouldShowCountryLabels } from './label-visibility';
 
 interface CountryLabelData {
 	country: Country;
@@ -8,16 +11,28 @@ interface CountryLabelData {
 	cy: number;
 	distSq: number;
 	textData: string;
-	nameLength: number;
+	textLength: number;
+}
+
+interface CityLabelData {
+	city: City;
+	cx: number;
+	cy: number;
+	distSq: number;
+	text: CityLabelText;
 }
 
 export class CountryLabelManager {
 	private static instance: CountryLabelManager;
 	private labels: texttag[] = [];
-	private maxLabels: number = 75; // Safe limit out of 100 handles
+	private cityLabels: texttag[] = [];
+	private maxCountryLabels: number = 25;
+	private maxCityLabels: number = 50;
 	private updateTimer: timer | undefined;
 	private allCountries: Country[] = [];
+	private allCities: City[] = [];
 	private labelDataCache: CountryLabelData[] = [];
+	private cityLabelDataCache: CityLabelData[] = [];
 
 	private constructor() {
 		// Private constructor for singleton
@@ -36,6 +51,13 @@ export class CountryLabelManager {
 	 */
 	public initialize(countries: Country[]) {
 		this.allCountries = countries;
+		this.allCities = [];
+
+		for (const country of this.allCountries) {
+			for (const city of country.getCities()) {
+				this.allCities.push(city);
+			}
+		}
 
 		// Pre-allocate the data cache to avoid GC churn
 		this.labelDataCache = this.allCountries.map((country) => ({
@@ -44,18 +66,34 @@ export class CountryLabelManager {
 			cy: 0,
 			distSq: 0,
 			textData: '',
-			nameLength: country.getName().length,
+			textLength: country.getName().length,
 		}));
 
-		// Initialize the pool
-		for (let i = 0; i < this.maxLabels; i++) {
+		this.cityLabelDataCache = this.allCities.map((city) => {
+			return {
+				city,
+				cx: 0,
+				cy: 0,
+				distSq: 0,
+				text: createCityLabelText(city),
+			};
+		});
+
+		// Initialize the pools. Country + city labels intentionally stay at 75 total handles.
+		for (let i = this.labels.length; i < this.maxCountryLabels; i++) {
 			this.labels.push(CreateTextTag());
 		}
 
-		this.updateTimer = CreateTimer();
-		TimerStart(this.updateTimer, 0.4, true, () => {
-			this.update();
-		});
+		for (let i = this.cityLabels.length; i < this.maxCityLabels; i++) {
+			this.cityLabels.push(CreateTextTag());
+		}
+
+		if (!this.updateTimer) {
+			this.updateTimer = CreateTimer();
+			TimerStart(this.updateTimer, 0.4, true, () => {
+				this.update();
+			});
+		}
 	}
 
 	/**
@@ -68,15 +106,21 @@ export class CountryLabelManager {
 	private update() {
 		const localPlayerHandle = GetLocalPlayer();
 		const localPlayer = PlayerManager.getInstance().playersAndObservers.get(localPlayerHandle);
+		const localPlayerId = GetPlayerId(localPlayerHandle);
+		const isLocalObserver = IsPlayerObserver(localPlayerHandle);
+		const showCountryLabels = shouldShowCountryLabels({
+			playerId: localPlayerId,
+			isObserver: isLocalObserver,
+			countryLabels: localPlayer?.options.countryLabels,
+		});
+		const showCityLabels = shouldShowCityLabels({
+			playerId: localPlayerId,
+			isObserver: isLocalObserver,
+		});
 
-		// Check if local player has labels disabled
-		const isLabelsEnabled = localPlayer ? localPlayer.options.labels : true;
-
-		// If disabled, hide everything and return
-		if (!isLabelsEnabled) {
-			for (let i = 0; i < this.maxLabels; i++) {
-				SetTextTagVisibility(this.labels[i], false);
-			}
+		if (!showCountryLabels && !showCityLabels) {
+			this.hideLabels(this.labels);
+			this.hideLabels(this.cityLabels);
 			return;
 		}
 
@@ -94,22 +138,40 @@ export class CountryLabelManager {
 			const dx = targetX - data.cx;
 			const dy = targetY - data.cy;
 
+			const labelText = createCountryLabelText({
+				name: data.country.getName(),
+			});
+
 			data.distSq = dx * dx + dy * dy;
-			data.textData = `${HexColors.TANGERINE} ${data.country.getName()} +${data.country.getCities().length} `;
+			data.textData = labelText.text;
+			data.textLength = labelText.visibleLength;
 		}
 
 		// Sort by nearest distance
 		this.labelDataCache.sort((a, b) => a.distSq - b.distSq);
 
-		// Render the closest N labels
-		const activeCount = Math.min(this.maxLabels, this.labelDataCache.length);
+		if (showCountryLabels) {
+			this.renderCountryLabels();
+		} else {
+			this.hideLabels(this.labels);
+		}
 
+		if (showCityLabels) {
+			this.renderCityLabels(targetX, targetY);
+		} else {
+			this.hideLabels(this.cityLabels);
+		}
+	}
+
+	private renderCountryLabels(): void {
+		const activeCount = Math.min(this.maxCountryLabels, this.labelDataCache.length);
 		let labelIndex = 0;
+
 		while (labelIndex < activeCount) {
 			const data = this.labelDataCache[labelIndex];
 			const tag = this.labels[labelIndex];
 
-			const lengthCheck: number = data.nameLength * 5.5 < 200 ? data.nameLength * 5.5 : 200;
+			const lengthCheck: number = data.textLength * 5.5 < 200 ? data.textLength * 5.5 : 200;
 
 			// All properties of TextTag can be modified locally with no desync
 			SetTextTagText(tag, data.textData, 0.028);
@@ -120,9 +182,54 @@ export class CountryLabelManager {
 		}
 
 		// Hide the rest of the pool
-		while (labelIndex < this.maxLabels) {
+		while (labelIndex < this.maxCountryLabels) {
 			SetTextTagVisibility(this.labels[labelIndex], false);
 			labelIndex++;
+		}
+	}
+
+	private renderCityLabels(targetX: number, targetY: number): void {
+		for (let i = 0; i < this.cityLabelDataCache.length; i++) {
+			const data = this.cityLabelDataCache[i];
+			const city = data.city;
+
+			data.cx = city.barrack.defaultX;
+			data.cy = city.barrack.defaultY + 170;
+
+			const dx = targetX - data.cx;
+			const dy = targetY - data.cy;
+
+			data.distSq = dx * dx + dy * dy;
+		}
+
+		this.cityLabelDataCache.sort((a, b) => a.distSq - b.distSq);
+
+		const activeCount = Math.min(this.maxCityLabels, this.cityLabelDataCache.length);
+		let labelIndex = 0;
+
+		while (labelIndex < activeCount) {
+			const data = this.cityLabelDataCache[labelIndex];
+			const tag = this.cityLabels[labelIndex];
+			const labelText = data.text;
+
+			const lengthCheck: number = labelText.visibleLength * 2.6 < 125 ? labelText.visibleLength * 2.6 : 125;
+
+			SetTextTagText(tag, labelText.text, 0.014);
+			SetTextTagPos(tag, data.cx - lengthCheck, data.cy, 16.0);
+			SetTextTagVisibility(tag, true);
+
+			labelIndex++;
+		}
+
+		while (labelIndex < this.maxCityLabels) {
+			SetTextTagVisibility(this.cityLabels[labelIndex], false);
+			labelIndex++;
+		}
+	}
+
+	private hideLabels(labels: texttag[]): void {
+		for (let i = 0; i < labels.length; i++) {
+			SetTextTagVisibility(labels[i], false);
 		}
 	}
 }

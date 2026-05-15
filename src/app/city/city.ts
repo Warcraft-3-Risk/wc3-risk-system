@@ -20,6 +20,9 @@ export abstract class City implements Resetable, Ownable {
 	private _guard: Guard;
 	private _cop: unit;
 	private _effect: effect;
+	private _name?: string;
+	private _slot?: string;
+	private _quality?: string;
 
 	/**
 	 * @param rax The barracks for the city
@@ -43,6 +46,12 @@ export abstract class City implements Resetable, Ownable {
 	public abstract onCast(targetedUnit: unit, triggerPlayer: player): void;
 	public abstract isPort(): boolean;
 	public abstract isCapital(): boolean;
+
+	public setLabelData(name?: string, slot?: string, quality?: string): void {
+		this._name = name;
+		this._slot = slot;
+		this._quality = quality;
+	}
 
 	/** Resets the city, returning it to its default state */
 	public reset(): void {
@@ -109,6 +118,25 @@ export abstract class City implements Resetable, Ownable {
 	/** @returns The Barracks object of the city */
 	public get barrack(): Barracks {
 		return this._barrack;
+	}
+
+	/** @returns The display name of the city. */
+	public get name(): string {
+		if (this._name) {
+			return this._name;
+		}
+
+		return GetUnitName(this._barrack.unit);
+	}
+
+	/** @returns The map balancing slot label for the city. */
+	public get slot(): string | undefined {
+		return this._slot;
+	}
+
+	/** @returns The map balancing quality grade for the city. */
+	public get quality(): string | undefined {
+		return this._quality;
 	}
 
 	/** @returns The Circle of Power of the city */

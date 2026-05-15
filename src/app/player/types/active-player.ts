@@ -1,6 +1,6 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { TrackedData } from '../data/tracked-data';
-import { Options } from '../options';
+import { DefaultCountryLabels, Options } from '../options';
 import { Status } from '../status/status';
 import { GamePlayer } from './game-player';
 import { NameManager } from 'src/app/managers/names/name-manager';
@@ -29,7 +29,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			value: false,
 			ping: false,
 			board: 0,
-			labels: true,
+			countryLabels: DefaultCountryLabels,
 			colorblind: false,
 			colorContrast: false,
 		};
@@ -62,7 +62,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			value: false,
 			ping: false,
 			board: 0,
-			labels: true,
+			countryLabels: DefaultCountryLabels,
 			colorblind: false,
 			colorContrast: false,
 		};
