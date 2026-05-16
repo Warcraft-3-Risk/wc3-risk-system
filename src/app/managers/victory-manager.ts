@@ -56,19 +56,25 @@ export class VictoryManager {
 		this.playerManager.setPlayerStatus(player.getPlayer(), status);
 	}
 
-	public setLeader(participant: ParticipantEntity) {
-		// Don't set eliminated players as leader
-		if (participant instanceof ActivePlayer && participant.status.isEliminated()) {
-			return;
+	public updateLeader() {
+		const allParticipants = this.getOwnershipByThresholdDescending(0);
+		const validParticipants: ParticipantEntity[] = [];
+		for (let i = 0; i < allParticipants.length; i++) {
+			const participant = allParticipants[i];
+			if (participant instanceof ActivePlayer && participant.status.isEliminated()) {
+				continue;
+			}
+			validParticipants.push(participant);
 		}
 
-		// If current leader is eliminated, always replace them
-		const currentLeaderEliminated = GlobalGameData.leader instanceof ActivePlayer && GlobalGameData.leader.status.isEliminated();
+		if (validParticipants.length === 0) return;
 
-		if (GlobalGameData.leader === undefined || currentLeaderEliminated) {
-			GlobalGameData.leader = participant;
-		} else if (ParticipantEntityManager.getCityCount(participant) > ParticipantEntityManager.getCityCount(GlobalGameData.leader)) {
-			GlobalGameData.leader = participant;
+		const currentLeader = GlobalGameData.leader;
+		const currentLeaderEliminated = currentLeader instanceof ActivePlayer && currentLeader.status.isEliminated();
+		const highestCount = ParticipantEntityManager.getCityCount(validParticipants[0]);
+
+		if (currentLeader === undefined || currentLeaderEliminated || ParticipantEntityManager.getCityCount(currentLeader) < highestCount) {
+			GlobalGameData.leader = validParticipants[0];
 		}
 	}
 

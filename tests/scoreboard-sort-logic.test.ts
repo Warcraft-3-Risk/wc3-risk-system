@@ -3,12 +3,12 @@ import { sortPlayers, sortTeams, isInCombat, type SortablePlayer, type SortableT
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
-function player(id: number, income: number, isEliminated = false, turnDied = 0, randomSeed = 0): SortablePlayer {
-	return { playerId: id, income, isEliminated, turnDied, randomSeed };
+function player(id: number, income: number, isEliminated = false, turnDied = 0, randomSeed = 0, cities = 0): SortablePlayer {
+	return { playerId: id, income, cities, isEliminated, turnDied, randomSeed };
 }
 
-function team(number: number, totalIncome: number): SortableTeam {
-	return { teamNumber: number, totalIncome };
+function team(number: number, totalIncome: number, totalCities = 0): SortableTeam {
+	return { teamNumber: number, totalIncome, totalCities };
 }
 
 // ─── sortPlayers ────────────────────────────────────────────────────
@@ -30,6 +30,12 @@ describe('sortPlayers', () => {
 	it('active players sorted by income descending', () => {
 		const result = sortPlayers([player(1, 50), player(2, 200), player(3, 100)]);
 		expect(result.map((p) => p.playerId)).toEqual([2, 3, 1]);
+	});
+
+	it('active players tie-break by cities descending when incomes match', () => {
+		const input = [player(1, 100, false, 0, 0, 5), player(2, 100, false, 0, 0, 10), player(3, 100, false, 0, 0, 2)];
+		const result = sortPlayers(input);
+		expect(result.map((p) => p.playerId)).toEqual([2, 1, 3]);
 	});
 
 	it('active players tie-break by player ID ascending', () => {
@@ -112,6 +118,11 @@ describe('sortTeams', () => {
 	it('sorts by income descending', () => {
 		const result = sortTeams([team(1, 100), team(2, 300), team(3, 200)]);
 		expect(result.map((t) => t.teamNumber)).toEqual([2, 3, 1]);
+	});
+
+	it('tie-breaks by cities descending when incomes match', () => {
+		const result = sortTeams([team(1, 100, 5), team(2, 100, 10), team(3, 100, 2)]);
+		expect(result.map((t) => t.teamNumber)).toEqual([2, 1, 3]);
 	});
 
 	it('tie-breaks by team number ascending', () => {
