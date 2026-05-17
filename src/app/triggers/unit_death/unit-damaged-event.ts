@@ -16,11 +16,7 @@ export function UnitDamagedEvent() {
 			const damagedUnit: unit = GetTriggerUnit();
 			const damagingUnit: unit = GetEventDamageSource();
 
-			if (!IsUnitType(damagingUnit, UNIT_TYPE.CITY)) {
-				return;
-			}
-
-			if (IsUnitAlly(damagedUnit, GetOwningPlayer(damagingUnit)) || GetOwningPlayer(damagedUnit) === GetOwningPlayer(damagingUnit)) {
+			if (IsUnitType(damagingUnit, UNIT_TYPE.CITY) && IsUnitType(damagedUnit, UNIT_TYPE.GUARD)) {
 				BlzSetEventDamage(0);
 			}
 
