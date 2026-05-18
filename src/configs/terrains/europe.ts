@@ -22,9 +22,9 @@ export function SetCountriesEurope() {
 			unitData: { x: 2752.0, y: -64.0 },
 		},
 		cities: [
-			{ name: 'Lublin', slot: 'E', quality: 'C', barrack: { x: 3584.0, y: 128.0 } },
+			{ name: 'Warsaw', slot: 'E', quality: 'C', barrack: { x: 3584.0, y: 128.0 } },
 			{ name: 'Poznan', slot: 'W', quality: 'D', barrack: { x: 1664.0, y: -384.0 } },
-			{ name: 'Gdansk', slot: 'NW', quality: 'F', barrack: { x: 2048.0, y: 832.0 } },
+			{ name: 'Wroclaw', slot: 'NW', quality: 'F', barrack: { x: 2048.0, y: 832.0 } },
 			{ name: 'Krakow', slot: 'SE', quality: 'B', barrack: { x: 4032.0, y: -1152.0 } },
 		],
 	});
@@ -34,7 +34,7 @@ export function SetCountriesEurope() {
 			unitData: { x: 1216.0, y: -1984.0 },
 		},
 		cities: [
-			{ name: 'Plzen', slot: 'W', quality: 'A', barrack: { x: 768.0, y: -2048.0 } },
+			{ name: 'Prague', slot: 'W', quality: 'A', barrack: { x: 768.0, y: -2048.0 } },
 			{ name: 'Brno', slot: 'E', quality: 'D', barrack: { x: 2112.0, y: -1664.0 } },
 		],
 	});
@@ -64,7 +64,7 @@ export function SetCountriesEurope() {
 			unitData: { x: 2112.0, y: -5056.0 },
 		},
 		cities: [
-			{ name: 'Osijek', slot: 'E', quality: 'B', barrack: { x: 2880.0, y: -4864.0 } },
+			{ name: 'Zagreb', slot: 'E', quality: 'B', barrack: { x: 2880.0, y: -4864.0 } },
 			{ name: 'Split', slot: 'S', quality: 'S', barrack: { x: 1920.0, y: -5760.0 } },
 		],
 	});
@@ -75,7 +75,7 @@ export function SetCountriesEurope() {
 		},
 		cities: [
 			{ name: 'Tuzla', slot: 'NE', quality: 'C', barrack: { x: 3456.0, y: -5632.0 } },
-			{ name: 'Mostar', slot: 'SW', quality: 'S', barrack: { x: 2752.0, y: -6656.0 } },
+			{ name: 'Sarajevo', slot: 'SW', quality: 'S', barrack: { x: 2752.0, y: -6656.0 } },
 		],
 	});
 	CountrySettings.push({
@@ -95,7 +95,7 @@ export function SetCountriesEurope() {
 		},
 		cities: [
 			{ name: 'Belgrade', slot: 'N', quality: 'B', barrack: { x: 4416.0, y: -4992.0 } },
-			{ name: 'Nis', slot: 'E', quality: 'A', barrack: { x: 5248.0, y: -5568.0 } },
+			{ name: 'Pristina', slot: 'E', quality: 'A', barrack: { x: 5248.0, y: -5568.0 } },
 		],
 	});
 	CountrySettings.push({
@@ -104,7 +104,7 @@ export function SetCountriesEurope() {
 			unitData: { x: 5056.0, y: -7488.0 },
 		},
 		cities: [
-			{ name: 'Stip', slot: 'NE', quality: 'C', barrack: { x: 5952.0, y: -6848.0 } },
+			{ name: 'Skopje', slot: 'NE', quality: 'C', barrack: { x: 5952.0, y: -6848.0 } },
 			{ name: 'Bitola', slot: 'SE', quality: 'S', barrack: { x: 5440.0, y: -7872.0 } },
 		],
 	});
@@ -146,7 +146,7 @@ export function SetCountriesEurope() {
 			unitData: { x: 6080.0, y: -4288.0 },
 		},
 		cities: [
-			{ name: 'Cluj-Napoca', slot: 'W', quality: 'F', barrack: { x: 5184.0, y: -3968.0 } },
+			{ name: 'Timisoara', slot: 'W', quality: 'F', barrack: { x: 5184.0, y: -3968.0 } },
 			{ name: 'Bucharest', slot: 'S', quality: 'C', barrack: { x: 6144.0, y: -4864.0 } },
 			{ name: 'Constanta', slot: 'E', quality: 'D', barrack: { x: 7616.0, y: -4672.0 } },
 			{ name: 'Iasi', slot: 'NE', quality: 'F', barrack: { x: 6528.0, y: -3456.0 } },
@@ -182,7 +182,7 @@ export function SetCountriesEurope() {
 			unitData: { x: 12864.0, y: -7232.0 },
 		},
 		cities: [
-			{ name: 'Bodrum', slot: 'SW3', quality: 'D', barrack: { x: 10048.0, y: -9280.0 } },
+			{ name: 'Konya', slot: 'SW3', quality: 'D', barrack: { x: 10048.0, y: -9280.0 } },
 			{ name: 'Ankara', slot: 'W1', quality: 'D', barrack: { x: 11072.0, y: -7168.0 } },
 			{ name: 'Antalya', slot: 'SW1', quality: 'F', barrack: { x: 12288.0, y: -8192.0 } },
 			{ name: 'Erzurum', slot: 'E2', quality: 'F', barrack: { x: 16704.0, y: -6080.0 } },
@@ -218,7 +218,7 @@ export function SetCountriesEurope() {
 			unitData: { x: 14784.0, y: -10304.0 },
 		},
 		cities: [
-			{ name: 'Tripoli', slot: 'N', quality: 'F', barrack: { x: 14784.0, y: -9600.0 } },
+			{ name: 'Beirut', slot: 'N', quality: 'F', barrack: { x: 14784.0, y: -9600.0 } },
 			{ name: 'Tyre', slot: 'S', quality: 'A', barrack: { x: 14976.0, y: -11136.0 } },
 		],
 	});
@@ -227,7 +227,7 @@ export function SetCountriesEurope() {
 		spawnerData: {
 			unitData: { x: 16192.0, y: -12480.0 },
 		},
-		cities: [{ name: 'Bethlehem', slot: 'Capital', quality: 'B', barrack: { x: 15808.0, y: -12224.0 } }],
+		cities: [{ name: 'Ramallah', slot: 'Capital', quality: 'B', barrack: { x: 15808.0, y: -12224.0 } }],
 	});
 	CountrySettings.push({
 		name: 'Iraq',
@@ -245,7 +245,7 @@ export function SetCountriesEurope() {
 			unitData: { x: 14656.0, y: -12736.0 },
 		},
 		cities: [
-			{ name: 'Beersheba', slot: 'SE', quality: 'S', barrack: { x: 14976.0, y: -13440.0 } },
+			{ name: 'Jerusalem', slot: 'SE', quality: 'S', barrack: { x: 14976.0, y: -13440.0 } },
 			{ name: 'Haifa', slot: 'NW', quality: 'C', barrack: { typeId: UNIT_ID.PORT, x: 13900.0, y: -12320.0 }, cityType: 'port' },
 		],
 	});
@@ -268,7 +268,7 @@ export function SetCountriesEurope() {
 		cities: [
 			{ name: 'Sharm El Sheikh', slot: 'E2', quality: 'C', barrack: { x: 14400.0, y: -14784.0 } },
 			{ name: 'Port Said', slot: 'NE', quality: 'B', barrack: { x: 12480.0, y: -14080.0 } },
-			{ name: 'Suez', slot: 'E1', quality: 'D', barrack: { x: 12928.0, y: -15104.0 } },
+			{ name: 'Cairo', slot: 'E1', quality: 'D', barrack: { x: 12928.0, y: -15104.0 } },
 			{ name: 'Alexandria', slot: 'W', quality: 'C', barrack: { x: 9408.0, y: -15104.0 } },
 		],
 	});
@@ -310,8 +310,8 @@ export function SetCountriesEurope() {
 			unitData: { x: -10176.0, y: -14400.0 },
 		},
 		cities: [
-			{ name: 'Marrakech', slot: 'SE', quality: 'B', barrack: { x: -8832.0, y: -15104.0 } },
-			{ name: 'Rabat', slot: 'NW', quality: 'B', barrack: { x: -10688.0, y: -14080.0 } },
+			{ name: 'Fez', slot: 'SE', quality: 'B', barrack: { x: -8832.0, y: -15104.0 } },
+			{ name: 'Tangier', slot: 'NW', quality: 'B', barrack: { x: -10688.0, y: -14080.0 } },
 			{ name: 'Casablanca', slot: 'W', quality: 'A', barrack: { typeId: UNIT_ID.PORT, x: -12320.0, y: -14368.0 }, cityType: 'port' },
 		],
 	});
@@ -322,7 +322,7 @@ export function SetCountriesEurope() {
 		},
 		cities: [
 			{ name: 'Faro', slot: 'S', quality: 'B', barrack: { x: -11328.0, y: -9600.0 } },
-			{ name: 'Coimbra', slot: 'NE', quality: 'D', barrack: { x: -10624.0, y: -7296.0 } },
+			{ name: 'Porto', slot: 'NE', quality: 'D', barrack: { x: -10624.0, y: -7296.0 } },
 			{ name: 'Lisbon', slot: 'W', quality: 'D', barrack: { typeId: UNIT_ID.PORT, x: -12000.0, y: -7968.0 }, cityType: 'port' },
 		],
 	});
@@ -332,10 +332,10 @@ export function SetCountriesEurope() {
 			unitData: { x: -8896.0, y: -8384.0 },
 		},
 		cities: [
-			{ name: 'Malaga', slot: 'SW', quality: 'B', barrack: { x: -9728.0, y: -10240.0 } },
+			{ name: 'Seville', slot: 'SW', quality: 'B', barrack: { x: -9728.0, y: -10240.0 } },
 			{ name: 'Madrid', slot: 'W', quality: 'C', barrack: { x: -9408.0, y: -8192.0 } },
 			{ name: 'Zaragoza', slot: 'NE', quality: 'D', barrack: { x: -7616.0, y: -6976.0 } },
-			{ name: 'Bilbao', slot: 'NW', quality: 'D', barrack: { x: -10112.0, y: -5972.0 } },
+			{ name: 'Vigo', slot: 'NW', quality: 'D', barrack: { x: -10112.0, y: -5972.0 } },
 			{ name: 'Valencia', slot: 'SE', quality: 'C', barrack: { x: -8035.0, y: -9572.0 } },
 		],
 	});
@@ -360,7 +360,7 @@ export function SetCountriesEurope() {
 			{ name: 'Lyon', slot: 'SE', quality: 'D', barrack: { x: -3584.0, y: -5568.0 } },
 			{ name: 'Strasbourg', slot: 'E', quality: 'F', barrack: { x: -3520.0, y: -3776.0 } },
 			{ name: 'Lille', slot: 'N', quality: 'F', barrack: { x: -4800.0, y: -3136.0 } },
-			// { name: 'Rouen', slot: 'NW', quality: 'F', barrack: { x: -6336.0, y: -3456.0 } },
+			// { name: 'Paris', slot: 'NW', quality: 'F', barrack: { x: -6336.0, y: -3456.0 } },
 			{ name: 'Nantes', slot: 'W', quality: 'D', barrack: { typeId: UNIT_ID.PORT, x: -6944.0, y: -4704.0 }, cityType: 'port' },
 			{ name: 'Marseille', slot: 'S2', quality: 'B', barrack: { typeId: UNIT_ID.PORT, x: -4384.0, y: -7008.0 }, cityType: 'port' },
 		],
@@ -382,7 +382,7 @@ export function SetCountriesEurope() {
 		},
 		cities: [
 			{ name: 'Milan', slot: 'W', quality: 'D', barrack: { x: -1856.0, y: -5440.0 } },
-			{ name: 'Bologna', slot: 'SE', quality: 'A', barrack: { x: -272.0, y: -6752.0 } },
+			{ name: 'Florence', slot: 'SE', quality: 'A', barrack: { x: -272.0, y: -6752.0 } },
 			{ name: 'Venice', slot: 'E', quality: 'C', barrack: { typeId: UNIT_ID.PORT, x: -109.0, y: -5507.0 }, cityType: 'port' },
 		],
 	});
@@ -392,8 +392,8 @@ export function SetCountriesEurope() {
 			unitData: { x: 1728.0, y: -8507.0 },
 		},
 		cities: [
-			{ name: 'Naples', slot: 'NW', quality: 'D', barrack: { x: 1329.0, y: -7928.0 } },
-			{ name: 'Bari', slot: 'S', quality: 'A', barrack: { x: 1923.0, y: -9244.0 } },
+			{ name: 'Rome', slot: 'NW', quality: 'D', barrack: { x: 1329.0, y: -7928.0 } },
+			{ name: 'Naples', slot: 'S', quality: 'A', barrack: { x: 1923.0, y: -9244.0 } },
 		],
 	});
 	CountrySettings.push({
@@ -402,7 +402,7 @@ export function SetCountriesEurope() {
 			unitData: { x: -3777.0, y: -1982.0 },
 		},
 		cities: [
-			{ name: 'Liege', slot: 'SE', quality: 'A', barrack: { x: -3072.0, y: -2368.0 } },
+			{ name: 'Brussels', slot: 'SE', quality: 'A', barrack: { x: -3072.0, y: -2368.0 } },
 			{ name: 'Antwerp', slot: 'NW', quality: 'A', barrack: { typeId: UNIT_ID.PORT, x: -4384.0, y: -608.0 }, cityType: 'port' },
 		],
 	});
@@ -412,8 +412,8 @@ export function SetCountriesEurope() {
 			unitData: { x: -3008.0, y: -448.0 },
 		},
 		cities: [
-			{ name: 'Eindhoven', slot: 'S', quality: 'A', barrack: { x: -3200.0, y: -1024.0 } },
-			{ name: 'Amsterdam', slot: 'NE', quality: 'D', barrack: { x: -2368.0, y: -128.0 } },
+			{ name: 'Rotterdam', slot: 'S', quality: 'A', barrack: { x: -3200.0, y: -1024.0 } },
+			{ name: 'Utrecht', slot: 'NE', quality: 'D', barrack: { x: -2368.0, y: -128.0 } },
 			{ name: 'Groningen', slot: 'N', quality: 'D', barrack: { typeId: UNIT_ID.PORT, x: -3168.0, y: 480.0 }, cityType: 'port' },
 		],
 	});
@@ -424,7 +424,7 @@ export function SetCountriesEurope() {
 		},
 		cities: [
 			{ name: 'Copenhagen', slot: 'SE', quality: 'A', barrack: { x: -960.0, y: 1408.0 } },
-			{ name: 'Aalborg', slot: 'N', quality: 'D', barrack: { x: -1088.0, y: 2560.0 } },
+			{ name: 'Aarhus', slot: 'N', quality: 'D', barrack: { x: -1088.0, y: 2560.0 } },
 			{ name: 'Esbjerg', slot: 'NW', quality: 'C', barrack: { typeId: UNIT_ID.PORT, x: -2272.0, y: 2464.0 }, cityType: 'port' },
 		],
 	});
@@ -510,7 +510,7 @@ export function SetCountriesEurope() {
 			unitData: { x: -1088.0, y: 14784.0 },
 		},
 		cities: [
-			{ name: 'Barentsburg', slot: 'E', quality: 'F', barrack: { x: -576.0, y: 14912.0 } },
+			{ name: 'Pyramiden', slot: 'E', quality: 'F', barrack: { x: -576.0, y: 14912.0 } },
 			{ name: 'Longyearbyen', slot: 'SW', quality: 'A', barrack: { typeId: UNIT_ID.PORT, x: -1760.0, y: 14496.0 }, cityType: 'port' },
 		],
 	});
@@ -560,7 +560,7 @@ export function SetCountriesEurope() {
 			unitData: { x: 6336.0, y: 1216.0 },
 		},
 		cities: [
-			{ name: 'Mogilev', slot: 'NE2', quality: 'D', barrack: { x: 6912.0, y: 2560.0 } },
+			{ name: 'Minsk', slot: 'NE2', quality: 'D', barrack: { x: 6912.0, y: 2560.0 } },
 			{ name: 'Vitebsk', slot: 'NE1', quality: 'F', barrack: { x: 6912.0, y: 1472.0 } },
 			{ name: 'Gomel', slot: 'SE', quality: 'C', barrack: { x: 7680.0, y: 512.0 } },
 			{ name: 'Brest', slot: 'SW', quality: 'B', barrack: { x: 5376.0, y: 384.0 } },
@@ -572,7 +572,7 @@ export function SetCountriesEurope() {
 			unitData: { x: 1216.0, y: -12992.0 },
 		},
 		cities: [
-			{ name: 'Mdina', slot: 'W', quality: 'A', barrack: { x: 896.0, y: -13120.0 } },
+			{ name: 'Citta Victoria', slot: 'W', quality: 'A', barrack: { x: 896.0, y: -13120.0 } },
 			{ name: 'Valletta', slot: 'E', quality: 'C', barrack: { typeId: UNIT_ID.PORT, x: 2410.0, y: -12836.0 }, cityType: 'port' },
 		],
 	});
@@ -682,8 +682,8 @@ export function SetCountriesEurope() {
 			unitData: { x: 3776.0, y: 13376.0 },
 		},
 		cities: [
-			{ name: 'Karesuando', slot: 'W', quality: 'B', barrack: { x: 3264.0, y: 13504.0 } },
-			{ name: 'Kiruna', slot: 'SE', quality: 'A', barrack: { x: 4160.0, y: 13056.0 } },
+			{ name: 'Alta', slot: 'W', quality: 'B', barrack: { x: 3264.0, y: 13504.0 } },
+			{ name: 'Hammerfest', slot: 'SE', quality: 'A', barrack: { x: 4160.0, y: 13056.0 } },
 		],
 	});
 	CountrySettings.push({
@@ -743,7 +743,7 @@ export function SetCountriesEurope() {
 			{ name: 'Rostov-on-Don', slot: 'SW1', quality: 'D', barrack: { x: 14400.0, y: -1856.0 } },
 			{ name: 'Saratov', slot: 'NW', quality: 'F', barrack: { x: 14848.0, y: 1216.0 } },
 			{ name: 'Volgograd', slot: 'NE', quality: 'F', barrack: { x: 16704.0, y: 1088.0 } },
-			{ name: 'Astrakhan', slot: 'SE', quality: 'D', barrack: { x: 17088.0, y: -1152.0 } },
+			{ name: 'Makhachkala', slot: 'SE', quality: 'D', barrack: { x: 17088.0, y: -1152.0 } },
 			{ name: 'Novorossiysk', slot: 'SW2', quality: 'B', barrack: { typeId: UNIT_ID.PORT, x: 13024.0, y: -3808.0 }, cityType: 'port' },
 		],
 	});
@@ -754,7 +754,7 @@ export function SetCountriesEurope() {
 		},
 		cities: [
 			{ name: 'Nizhny Novgorod', slot: 'W', quality: 'B', barrack: { x: 15424.0, y: 5376.0 } },
-			{ name: 'Ufa', slot: 'NE', quality: 'C', barrack: { x: 18048.0, y: 6720.0 } },
+			{ name: 'Kazan', slot: 'NE', quality: 'C', barrack: { x: 18048.0, y: 6720.0 } },
 			{ name: 'Samara', slot: 'SE', quality: 'B', barrack: { x: 17984.0, y: 3840.0 } },
 		],
 	});
@@ -767,7 +767,7 @@ export function SetCountriesEurope() {
 			{ name: 'Bryansk', slot: 'W', quality: 'C', barrack: { x: 8640.0, y: 3264.0 } },
 			{ name: 'Tula', slot: 'SW', quality: 'C', barrack: { x: 10496.0, y: 1536.0 } },
 			{ name: 'Voronezh', slot: 'SE', quality: 'C', barrack: { x: 13056.0, y: 2496.0 } },
-			{ name: 'Moscow', slot: 'NW', quality: 'D', barrack: { x: 11264.0, y: 3968.0 } },
+			{ name: 'Tver', slot: 'NW', quality: 'D', barrack: { x: 11264.0, y: 3968.0 } },
 			{ name: 'Yaroslavl', slot: 'NE', quality: 'D', barrack: { x: 12864.0, y: 5632.0 } },
 		],
 	});
