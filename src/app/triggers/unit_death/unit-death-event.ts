@@ -15,6 +15,7 @@ import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { updateUnitNameWithKillValue } from '../../utils/unit-name-helper';
+import { CaptureUnitDeathContext } from './unit-death-context';
 
 export function UnitDeathEvent() {
 	const t: trigger = CreateTrigger();
@@ -28,11 +29,12 @@ export function UnitDeathEvent() {
 		Condition(() => {
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
+			const deathContext = CaptureUnitDeathContext(dyingUnit, killingUnit);
 			if (DEBUG_PRINTS.master)
 				debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`, DC.events);
 
 			// Decrement slot unit count using raw WC3 owner (not resolved real player)
-			const rawDyingUnitOwner = GetOwningPlayer(dyingUnit);
+			const rawDyingUnitOwner = deathContext.dyingOwner.rawOwner;
 			if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.sharedSlots);
 			SharedSlotManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
 
@@ -48,8 +50,8 @@ export function UnitDeathEvent() {
 				SharedSlotManager.getInstance().evaluateAndRedistribute();
 			}
 
-			const dyingUnitOwnerHandle: player = SharedSlotManager.getInstance().getOwnerOfUnit(dyingUnit);
-			const killingUnitOwnerHandle: player = SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit);
+			const dyingUnitOwnerHandle: player = deathContext.dyingOwner.effectiveOwner;
+			const killingUnitOwnerHandle: player = deathContext.killingOwner?.effectiveOwner;
 			const dyingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(dyingUnitOwnerHandle);
 			const killingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(killingUnitOwnerHandle);
 
@@ -103,7 +105,7 @@ export function UnitDeathEvent() {
 				if (dyingUnitOwner) teamManager.getTeamFromPlayer(dyingUnitOwnerHandle).updateDeathCount(GetUnitPointValue(dyingUnit));
 			}
 
-			if (IsUnitType(dyingUnit, UNIT_TYPE.GUARD)) HandleGuardDeath(dyingUnit, killingUnit);
+			if (IsUnitType(dyingUnit, UNIT_TYPE.GUARD)) HandleGuardDeath(deathContext);
 
 			TransportManager.getInstance().onDeath(killingUnit, dyingUnit);
 
