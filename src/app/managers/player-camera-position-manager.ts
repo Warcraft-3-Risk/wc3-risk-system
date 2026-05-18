@@ -12,7 +12,7 @@ export type CamPositionData = {
 	y: number;
 };
 
-const LERP_SPEED = 0.04;
+const LERP_SPEED = 0.08;
 
 export default class PlayerCameraPositionManager {
 	private static instance: PlayerCameraPositionManager;
@@ -49,9 +49,9 @@ export default class PlayerCameraPositionManager {
 
 		this.createToggleButton();
 
-		// Network sync timer — keeps the 1s interval to avoid desync
+		// Network sync timer — syncs position every 0.5s
 		const syncTimer = CreateTimer();
-		TimerStart(syncTimer, 1.0, true, () => this.syncLocalPlayerPosition());
+		TimerStart(syncTimer, 0.5, true, () => this.syncLocalPlayerPosition());
 
 		// Local lerp timer — smoothly interpolates world positions toward synced targets (observer-only)
 		const lerpTimer = CreateTimer();
