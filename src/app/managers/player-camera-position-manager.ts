@@ -6,6 +6,7 @@ import { EVENT_ON_PLAYER_LEFT } from '../utils/events/event-constants';
 import { CreateObserverButton } from '../utils/observer-helper';
 import { NameManager } from './names/name-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
+import { MinimapIconManager } from './minimap-icon-manager';
 
 export type CamPositionData = {
 	x: number;
@@ -18,7 +19,7 @@ export default class PlayerCameraPositionManager {
 	private static instance: PlayerCameraPositionManager;
 	private camPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
 	private displayPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
-	private frames: Map<player, { box: framehandle; text: framehandle }> = new Map();
+	private frames: Map<player, { box: framehandle; text: framehandle; minimapIcon: framehandle }> = new Map();
 	private syncTrigger: trigger;
 	private overlayVisible: boolean = false;
 	private toggleButton: framehandle;
@@ -91,6 +92,7 @@ export default class PlayerCameraPositionManager {
 				this.frames.forEach((frame) => {
 					BlzFrameSetVisible(frame.box, false);
 					BlzFrameSetVisible(frame.text, false);
+					BlzFrameSetVisible(frame.minimapIcon, false);
 				});
 			}
 
@@ -99,10 +101,25 @@ export default class PlayerCameraPositionManager {
 		});
 	}
 
-	private createPlayerFrame(p: player): { box: framehandle; text: framehandle } {
+	private createPlayerFrame(p: player): { box: framehandle; text: framehandle; minimapIcon: framehandle } {
 		const ctx = GetPlayerId(p) + 1; // offset to avoid context 0 used by TooltipManager
 		const box = BlzCreateFrame('TasToolTipBox', BlzGetFrameByName('ConsoleUIBackdrop', 0), 0, ctx);
 		const text = BlzCreateFrame('TasTooltipText', box, 0, ctx);
+
+		// Create the semi-transparent minimap icon frame
+		const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
+		const minimapIcon = BlzCreateFrameByType('BACKDROP', 'MinimapPlayerCameraIcon', gameUI, '', ctx);
+		BlzFrameSetSize(minimapIcon, 0.006, 0.004); // Slightly larger, 3x2 aspect ratio to mimic a screen
+		BlzFrameSetLevel(minimapIcon, 20); // Render above everything else on minimap
+		const colorIndex = GetHandleId(GetPlayerColor(p));
+		BlzFrameSetTexture(
+			minimapIcon,
+			'ReplaceableTextures\\TeamColor\\TeamColor' + (colorIndex < 10 ? '0' + colorIndex : colorIndex) + '.blp',
+			0,
+			true
+		);
+		BlzFrameSetAlpha(minimapIcon, 100); // More transparent
+		BlzFrameSetVisible(minimapIcon, false);
 
 		BlzFrameSetPoint(box, FRAMEPOINT_BOTTOMLEFT, text, FRAMEPOINT_BOTTOMLEFT, -0.01, -0.01);
 		BlzFrameSetPoint(box, FRAMEPOINT_TOPRIGHT, text, FRAMEPOINT_TOPRIGHT, 0.01, 0.01);
@@ -112,7 +129,7 @@ export default class PlayerCameraPositionManager {
 		BlzFrameSetVisible(box, false);
 		BlzFrameSetVisible(text, false);
 
-		return { box, text };
+		return { box, text, minimapIcon };
 	}
 
 	private syncLocalPlayerPosition() {
@@ -211,6 +228,7 @@ export default class PlayerCameraPositionManager {
 			this.frames.forEach((frame) => {
 				BlzFrameSetVisible(frame.box, false);
 				BlzFrameSetVisible(frame.text, false);
+				BlzFrameSetVisible(frame.minimapIcon, false);
 			});
 			return;
 		}
@@ -228,6 +246,10 @@ export default class PlayerCameraPositionManager {
 				BlzFrameSetVisible(frame.box, false);
 				BlzFrameSetVisible(frame.text, false);
 			}
+
+			// Update minimap position
+			MinimapIconManager.getInstance().updateIconPosition(frame.minimapIcon, display.x, display.y);
+			BlzFrameSetVisible(frame.minimapIcon, true);
 		});
 	}
 
@@ -265,6 +287,7 @@ export default class PlayerCameraPositionManager {
 		if (frame) {
 			BlzFrameSetVisible(frame.box, false);
 			BlzFrameSetVisible(frame.text, false);
+			BlzFrameSetVisible(frame.minimapIcon, false);
 			this.frames.delete(p);
 		}
 

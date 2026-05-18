@@ -451,7 +451,7 @@ export class MinimapIconManager {
 	/**
 	 * Updates an icon's position based on world coordinates.
 	 */
-	private updateIconPosition(iconFrame: framehandle, worldX: number, worldY: number): void {
+	public updateIconPosition(iconFrame: framehandle, worldX: number, worldY: number): void {
 		const coords = this.worldToMinimapCoords(worldX, worldY);
 
 		// The default UI is 0.8 width and is always centered at X=0.4 on the screen.
