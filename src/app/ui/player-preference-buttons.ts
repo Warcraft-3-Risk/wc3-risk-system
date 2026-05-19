@@ -1,8 +1,6 @@
 import { createGuardButton } from '../factory/guard-button-factory';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { CityToCountry } from '../country/country-map';
-import { Country } from '../country/country';
 import { File } from 'w3ts';
 import { RatingManager } from '../rating/rating-manager';
 import { NameManager } from '../managers/names/name-manager';
@@ -299,6 +297,65 @@ export function buildColorContrastModeButton(player: ActivePlayer): framehandle 
 		const context = GetPlayerId(player.getPlayer()) + 500;
 		const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
 		BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNLocustSwarm.blp', 0, false);
+	}
+
+	return button;
+}
+
+export function buildCameraPanModeButton(player: ActivePlayer): framehandle {
+	// Initialize from saved preference for local player
+	if (player.getPlayer() === GetLocalPlayer()) {
+		const savedPreference = File.read('risk/camPan.pld');
+		if (savedPreference === 'true') {
+			player.options.cameraPan = true;
+		} else if (savedPreference === 'false') {
+			player.options.cameraPan = false;
+		} else {
+			const { SettingsContext } = require('src/app/settings/settings-context') as typeof import('../settings/settings-context');
+			const settings = SettingsContext.getInstance();
+			if ((settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode()) && settings.isLobbyTeams()) {
+				player.options.cameraPan = true;
+			} else {
+				player.options.cameraPan = false;
+			}
+		}
+	}
+
+	const button = createGuardButton({
+		player: player,
+		createContext: GetPlayerId(player.getPlayer()) + 600,
+		textures: {
+			primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp',
+			secondary: 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp',
+		},
+		xOffset: 0.138,
+		initialTooltipText: `Ally Cameras\nToggles visibility of allied camera positions on the map.\nCurrent preference: ${player.options.cameraPan ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`,
+		action: (context: number, textures: { primary: string; secondary: string }) => {
+			player.options.cameraPan = !player.options.cameraPan;
+
+			if (player.getPlayer() === GetLocalPlayer()) {
+				File.write('risk/camPan.pld', `${player.options.cameraPan}`);
+
+				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+				const texture = player.options.cameraPan ? textures.secondary : textures.primary;
+
+				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+				BlzFrameSetText(
+					buttonTooltip,
+					`Ally Cameras\nToggles visibility of allied camera positions on the map.\nCurrent preference: ` +
+						`${player.options.cameraPan ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`
+				);
+			}
+		},
+	});
+
+	// Set initial texture state for the button since createGuardButton defaults to primary
+	if (player.getPlayer() === GetLocalPlayer() && player.options.cameraPan) {
+		const context = GetPlayerId(player.getPlayer()) + 600;
+		const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+		BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp', 0, false);
 	}
 
 	return button;

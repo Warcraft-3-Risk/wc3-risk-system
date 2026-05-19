@@ -32,6 +32,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			countryLabels: DefaultCountryLabels,
 			colorblind: false,
 			colorContrast: false,
+			cameraPan: false,
 		};
 		this._killedBy = undefined;
 		this._admin = false;
@@ -65,6 +66,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			countryLabels: DefaultCountryLabels,
 			colorblind: false,
 			colorContrast: false,
+			cameraPan: false,
 		};
 	}
 

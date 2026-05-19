@@ -4,7 +4,7 @@ import { HexColors } from '../utils/hex-colors';
 export type ButtonConfig = {
 	player: ActivePlayer;
 	createContext: number;
-	key: oskeytype;
+	key?: oskeytype;
 	textures: {
 		primary: string;
 		secondary: string;
@@ -62,17 +62,18 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 		);
 	}
 
-	const hotkeyTrigger = CreateTrigger();
-
-	BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
-	TriggerAddCondition(
-		hotkeyTrigger,
-		Condition(() => config.action(config.createContext, config.textures, button))
-	);
+	if (config.key !== undefined) {
+		const hotkeyTrigger = CreateTrigger();
+		BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
+		TriggerAddCondition(
+			hotkeyTrigger,
+			Condition(() => config.action(config.createContext, config.textures, button))
+		);
+	}
 
 	const buttonTrig = CreateTrigger();
 
-	BlzTriggerRegisterFrameEvent(hotkeyTrigger, button, FRAMEEVENT_CONTROL_CLICK);
+	BlzTriggerRegisterFrameEvent(buttonTrig, button, FRAMEEVENT_CONTROL_CLICK);
 	TriggerAddCondition(
 		buttonTrig,
 		Condition(() => config.action(config.createContext, config.textures, button))

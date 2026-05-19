@@ -2,11 +2,12 @@ import { EDITOR_DEVELOPER_MODE, SHOW_PLAYER_CAMERA_POSITIONS } from 'src/configs
 import { PlayerManager } from '../player/player-manager';
 import { debugPrint } from '../utils/debug-print';
 import { EventEmitter } from '../utils/events/event-emitter';
-import { EVENT_ON_PLAYER_LEFT } from '../utils/events/event-constants';
+import { EVENT_ON_PLAYER_LEFT, EVENT_ON_PRE_MATCH } from '../utils/events/event-constants';
 import { CreateObserverButton } from '../utils/observer-helper';
 import { NameManager } from './names/name-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { MinimapIconManager } from './minimap-icon-manager';
+import { SettingsContext } from '../settings/settings-context';
 
 export type CamPositionData = {
 	x: number;
@@ -33,7 +34,6 @@ export default class PlayerCameraPositionManager {
 
 	private constructor() {
 		if (!SHOW_PLAYER_CAMERA_POSITIONS) return;
-		if (PlayerManager.getInstance().observers.size === 0) return;
 
 		this.syncTrigger = CreateTrigger();
 
@@ -46,6 +46,10 @@ export default class PlayerCameraPositionManager {
 
 		EventEmitter.getInstance().on(EVENT_ON_PLAYER_LEFT, (player) => {
 			this.removePlayerFrame(player.getPlayer());
+		});
+
+		EventEmitter.getInstance().on(EVENT_ON_PRE_MATCH, () => {
+			this.updateEligibility();
 		});
 
 		this.createToggleButton();
@@ -63,6 +67,50 @@ export default class PlayerCameraPositionManager {
 		TimerStart(renderTimer, 0.02, true, () => this.renderFrames());
 	}
 
+	private isEligiblePlayer(p: player): boolean {
+		if (EDITOR_DEVELOPER_MODE || IsPlayerObserver(p)) return true;
+
+		const settings = SettingsContext.getInstance();
+		if ((settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode()) && settings.isLobbyTeams()) {
+			if (PlayerManager.getInstance().players.size > 2) {
+				return PlayerManager.getInstance().players.has(p);
+			}
+		}
+
+		return false;
+	}
+
+	private canSeePlayerCam(viewer: player, target: player): boolean {
+		if (viewer === target) return false;
+		if (EDITOR_DEVELOPER_MODE || IsPlayerObserver(viewer)) return true;
+		if (IsPlayerAlly(viewer, target)) return true;
+		return false;
+	}
+
+	private isOverlayVisibleForPlayer(p: player): boolean {
+		if (IsPlayerObserver(p) || EDITOR_DEVELOPER_MODE) {
+			return this.overlayVisible;
+		}
+
+		const localActivePlayer = PlayerManager.getInstance().players.get(p);
+		if (localActivePlayer) {
+			return localActivePlayer.options.cameraPan;
+		}
+
+		return false;
+	}
+
+	private updateEligibility() {
+		const localPlayer = GetLocalPlayer();
+
+		BlzFrameSetVisible(this.toggleButton, false);
+		if (IsPlayerObserver(localPlayer) || EDITOR_DEVELOPER_MODE) {
+			BlzFrameSetVisible(this.toggleButton, true);
+		} else {
+			BlzFrameSetEnable(this.toggleButton, false);
+		}
+	}
+
 	private createToggleButton(): void {
 		const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0);
 		const ctx = 500; // unique context to avoid collision with player frames
@@ -72,33 +120,37 @@ export default class PlayerCameraPositionManager {
 		BlzFrameSetPoint(this.toggleButton, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.092, -0.025);
 		BlzFrameSetSize(this.toggleButton, 0.1, 0.03);
 		BlzFrameSetText(this.toggleButton, 'Cameras: Off');
-		BlzFrameSetVisible(this.toggleButton, true);
 
-		// Only visible for observers (or dev mode)
+		const localPlayer = GetLocalPlayer();
+
+		// Only visible for observers or developers
 		BlzFrameSetVisible(this.toggleButton, false);
-		if (EDITOR_DEVELOPER_MODE || IsPlayerObserver(GetLocalPlayer())) {
+		if (IsPlayerObserver(localPlayer) || EDITOR_DEVELOPER_MODE) {
 			BlzFrameSetVisible(this.toggleButton, true);
 		} else {
-			// Disable for non-observers so it cannot capture keyboard focus
 			BlzFrameSetEnable(this.toggleButton, false);
 		}
 
 		// Observer hover-click — same pattern as leaderboard button in ranked-statistics-view
-		CreateObserverButton(this.toggleButton, IsPlayerObserver(GetLocalPlayer()), () => {
-			this.overlayVisible = !this.overlayVisible;
-			BlzFrameSetText(this.toggleButton, this.overlayVisible ? 'Cameras: On' : 'Cameras: Off');
-
-			if (!this.overlayVisible) {
-				this.frames.forEach((frame) => {
-					BlzFrameSetVisible(frame.box, false);
-					BlzFrameSetVisible(frame.text, false);
-					BlzFrameSetVisible(frame.minimapIcon, false);
-				});
-			}
-
-			BlzFrameSetEnable(this.toggleButton, false);
-			BlzFrameSetEnable(this.toggleButton, true);
+		CreateObserverButton(this.toggleButton, IsPlayerObserver(localPlayer), () => {
+			this.toggleOverlay();
 		});
+	}
+
+	private toggleOverlay(): void {
+		this.overlayVisible = !this.overlayVisible;
+		BlzFrameSetText(this.toggleButton, this.overlayVisible ? 'Cameras: On' : 'Cameras: Off');
+
+		if (!this.overlayVisible) {
+			this.frames.forEach((frame) => {
+				BlzFrameSetVisible(frame.box, false);
+				BlzFrameSetVisible(frame.text, false);
+				BlzFrameSetVisible(frame.minimapIcon, false);
+			});
+		}
+
+		BlzFrameSetEnable(this.toggleButton, false);
+		BlzFrameSetEnable(this.toggleButton, true);
 	}
 
 	private createPlayerFrame(p: player): { box: framehandle; text: framehandle; minimapIcon: framehandle } {
@@ -118,7 +170,7 @@ export default class PlayerCameraPositionManager {
 			0,
 			true
 		);
-		BlzFrameSetAlpha(minimapIcon, 100); // More transparent
+		BlzFrameSetAlpha(minimapIcon, 175); // More transparent
 		BlzFrameSetVisible(minimapIcon, false);
 
 		BlzFrameSetPoint(box, FRAMEPOINT_BOTTOMLEFT, text, FRAMEPOINT_BOTTOMLEFT, -0.01, -0.01);
@@ -171,7 +223,8 @@ export default class PlayerCameraPositionManager {
 			const frame = this.createPlayerFrame(p);
 			this.frames.set(p, frame);
 
-			if (this.overlayVisible && (EDITOR_DEVELOPER_MODE || IsPlayerObserver(GetLocalPlayer()))) {
+			const localPlayer = GetLocalPlayer();
+			if (this.isOverlayVisibleForPlayer(localPlayer) && this.isEligiblePlayer(localPlayer) && this.canSeePlayerCam(localPlayer, p)) {
 				const name = NameManager.getInstance().getDisplayName(p);
 				this.setFrameText(frame, name);
 
@@ -222,9 +275,9 @@ export default class PlayerCameraPositionManager {
 	 * Runs every 0.02s so frames track the observer's camera smoothly.
 	 */
 	private renderFrames() {
-		if (!EDITOR_DEVELOPER_MODE && !IsPlayerObserver(GetLocalPlayer())) return;
-		if (!this.overlayVisible) return;
-		if (GlobalGameData.matchState !== 'inProgress') {
+		const localPlayer = GetLocalPlayer();
+
+		if (!this.isEligiblePlayer(localPlayer) || !this.isOverlayVisibleForPlayer(localPlayer) || GlobalGameData.matchState !== 'inProgress') {
 			this.frames.forEach((frame) => {
 				BlzFrameSetVisible(frame.box, false);
 				BlzFrameSetVisible(frame.text, false);
@@ -236,6 +289,13 @@ export default class PlayerCameraPositionManager {
 		this.displayPositionData.forEach((display, p) => {
 			const frame = this.frames.get(p);
 			if (!frame) return;
+
+			if (!this.canSeePlayerCam(localPlayer, p)) {
+				BlzFrameSetVisible(frame.box, false);
+				BlzFrameSetVisible(frame.text, false);
+				BlzFrameSetVisible(frame.minimapIcon, false);
+				return;
+			}
 
 			const [sx, sy, onScreen] = World2Screen(display.x, display.y, 0);
 			if (onScreen && sy >= 0.14) {
