@@ -303,20 +303,26 @@ export function buildColorContrastModeButton(player: ActivePlayer): framehandle 
 }
 
 export function buildCameraPanModeButton(player: ActivePlayer): framehandle {
+	const { SettingsContext } = require('src/app/settings/settings-context') as typeof import('../settings/settings-context');
+	const settings = SettingsContext.getInstance();
+	const isFFA = settings.isFFA();
+
 	// Initialize from saved preference for local player
 	if (player.getPlayer() === GetLocalPlayer()) {
-		const savedPreference = File.read('risk/camPan.pld');
-		if (savedPreference === 'true') {
-			player.options.cameraPan = true;
-		} else if (savedPreference === 'false') {
+		if (isFFA) {
 			player.options.cameraPan = false;
 		} else {
-			const { SettingsContext } = require('src/app/settings/settings-context') as typeof import('../settings/settings-context');
-			const settings = SettingsContext.getInstance();
-			if ((settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode()) && settings.isLobbyTeams()) {
+			const savedPreference = File.read('risk/camPan.pld');
+			if (savedPreference === 'true') {
 				player.options.cameraPan = true;
-			} else {
+			} else if (savedPreference === 'false') {
 				player.options.cameraPan = false;
+			} else {
+				if ((settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode()) && settings.isLobbyTeams()) {
+					player.options.cameraPan = true;
+				} else {
+					player.options.cameraPan = false;
+				}
 			}
 		}
 	}
@@ -352,10 +358,15 @@ export function buildCameraPanModeButton(player: ActivePlayer): framehandle {
 	});
 
 	// Set initial texture state for the button since createGuardButton defaults to primary
-	if (player.getPlayer() === GetLocalPlayer() && player.options.cameraPan) {
-		const context = GetPlayerId(player.getPlayer()) + 600;
-		const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
-		BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp', 0, false);
+	if (player.getPlayer() === GetLocalPlayer()) {
+		if (isFFA) {
+			BlzFrameSetVisible(button, false);
+			BlzFrameSetEnable(button, false);
+		} else if (player.options.cameraPan) {
+			const context = GetPlayerId(player.getPlayer()) + 600;
+			const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+			BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp', 0, false);
+		}
 	}
 
 	return button;
