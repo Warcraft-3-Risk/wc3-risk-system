@@ -316,15 +316,21 @@ export class Quests {
 					if (player.killedBy) {
 						const killedByActivePlayer = PlayerManager.getInstance().players.get(player.killedBy);
 
-						// Dependent on whether the killer is still alive or not we have to be careful to not leak his player name
-						if (killedByActivePlayer.status.isActive()) {
-							description += ' killed by ' + NameManager.getInstance().getDisplayName(player.killedBy);
+						if (killedByActivePlayer) {
+							// Dependent on whether the killer is still alive or not we have to be careful to not leak his player name
+							if (killedByActivePlayer.status.isActive()) {
+								description += ' killed by ' + NameManager.getInstance().getDisplayName(player.killedBy);
+							} else {
+								description +=
+									' killed by ' + ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.killedBy);
+							}
+
+							description += ' (' + (killedByActivePlayer.status ? killedByActivePlayer.status.status : 'Unknown') + ')';
 						} else {
 							description +=
 								' killed by ' + ParticipantEntityManager.getParticipantColoredBTagPrefixedWithOptionalTeamNumber(player.killedBy);
+							description += ' (Unknown)';
 						}
-
-						description += ' (' + (killedByActivePlayer.status ? killedByActivePlayer.status.status : 'Unknown') + ')';
 					}
 				});
 

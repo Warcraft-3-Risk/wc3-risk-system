@@ -5,9 +5,15 @@ import { ReplaceGuard } from './replace-guard';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { AlliedKillHandler } from './allied-kill-handler';
 import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
+import { UnitDeathContext } from './unit-death-context';
 
-export function SelfKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (city.getOwner() !== SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit)) return undefined;
+export function SelfKillHandler(city: City, deathContext: UnitDeathContext): boolean {
+	const dyingUnit = deathContext.dyingUnit;
+	const killingUnit = deathContext.killingUnit;
+	const killingOwner = deathContext.killingOwner?.effectiveOwner;
+
+	if (!killingOwner) return undefined;
+	if (city.getOwner() !== killingOwner) return undefined;
 
 	const searchGroup: group = CreateGroup();
 
@@ -41,7 +47,7 @@ export function SelfKillHandler(city: City, dyingUnit: unit, killingUnit: unit):
 	DestroyGroup(searchGroup);
 	//Could not find valid owned guard, check for valid allied guard if its not an FFA game
 	if (!SettingsContext.getInstance().isFFA()) {
-		return AlliedKillHandler(city, dyingUnit, killingUnit);
+		return AlliedKillHandler(city, deathContext);
 	}
 
 	//No valid owned or allied unit found, return false

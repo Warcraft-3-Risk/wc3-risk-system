@@ -20,6 +20,7 @@ export type Options = {
 	countryLabels: boolean;
 	colorblind: boolean;
 	colorContrast: boolean;
+	cameraPan: boolean;
 	// Note: showRating preference is now stored in the rating file itself
 	// via RatingManager.getShowRatingPreference() / setShowRatingPreference()
 };

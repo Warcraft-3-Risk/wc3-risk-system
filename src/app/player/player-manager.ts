@@ -7,6 +7,7 @@ import {
 	buildRatingStatsButton,
 	buildColorblindModeButton,
 	buildColorContrastModeButton,
+	buildCameraPanModeButton,
 } from '../ui/player-preference-buttons';
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
@@ -78,6 +79,7 @@ export class PlayerManager {
 				const labelButton = buildLabelToggleButton(this._playerFromHandle.get(player));
 				const colorblindButton = buildColorblindModeButton(this._playerFromHandle.get(player));
 				const colorContrastButton = buildColorContrastModeButton(this._playerFromHandle.get(player));
+				const cameraPanButton = buildCameraPanModeButton(this._playerFromHandle.get(player));
 				// Only create rating stats button if rating system is enabled
 				const ratingButton = RATING_SYSTEM_ENABLED ? buildRatingStatsButton(this._playerFromHandle.get(player)) : undefined;
 				let contents: string = '';
@@ -90,6 +92,8 @@ export class PlayerManager {
 						BlzFrameSetVisible(valueButton, false);
 						BlzFrameSetVisible(labelButton, false);
 						BlzFrameSetVisible(colorblindButton, false);
+						BlzFrameSetVisible(colorContrastButton, false);
+						BlzFrameSetVisible(cameraPanButton, false);
 						if (ratingButton) {
 							BlzFrameSetVisible(ratingButton, false);
 						}
@@ -316,4 +320,3 @@ export class PlayerManager {
 		return undefined;
 	}
 }
-

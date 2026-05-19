@@ -5,24 +5,25 @@ import { SelfKillHandler as SelfKillHandler } from './self-kill-handler';
 import { InvalidGuardHandler } from './invalid-guard-handler';
 import { AlliedKillHandler } from './allied-kill-handler';
 import { EnemyKillHandler } from './enemy-kill-handler';
+import { UnitDeathContext } from './unit-death-context';
 
-export function HandleGuardDeath(dyingUnit: unit, killingUnit: unit) {
-	const city: LandCity | PortCity = UnitToCity.get(dyingUnit);
+export function HandleGuardDeath(deathContext: UnitDeathContext) {
+	const city: LandCity | PortCity = UnitToCity.get(deathContext.dyingUnit);
 	// debugPrint(`Guard ${GetUnitName(dyingUnit)} is dying in city ${UnitToCity.get(dyingUnit).barrack}`);
 
 	if (!city) return;
 
 	//Check if killing unit is owned
-	let guardChoice: boolean = SelfKillHandler(city, dyingUnit, killingUnit);
+	let guardChoice: boolean = SelfKillHandler(city, deathContext);
 
 	//Check if killing unit is ally
-	if (!guardChoice) guardChoice = AlliedKillHandler(city, dyingUnit, killingUnit);
+	if (!guardChoice) guardChoice = AlliedKillHandler(city, deathContext);
 
 	//Check if killing unit is enemy
-	if (!guardChoice) guardChoice = EnemyKillHandler(city, dyingUnit, killingUnit);
+	if (!guardChoice) guardChoice = EnemyKillHandler(city, deathContext);
 
 	//Handle cases where no valid guard is found
 	if (!guardChoice) {
-		InvalidGuardHandler(city, killingUnit);
+		InvalidGuardHandler(city, deathContext);
 	}
 }
