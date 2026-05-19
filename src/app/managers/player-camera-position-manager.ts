@@ -188,16 +188,20 @@ export default class PlayerCameraPositionManager {
 		const p = GetLocalPlayer();
 		// Only sync if dragging/playing, spectators might not need to sync unless they want to be watched too
 		if (GetPlayerController(p) === MAP_CONTROL_USER) {
-			const x = GetCameraTargetPositionX();
-			const y = GetCameraTargetPositionY();
+			const activePlayer = PlayerManager.getInstance().players.get(p);
+			if (!activePlayer || activePlayer.status.isActive()) {
+				const x = GetCameraTargetPositionX();
+				const y = GetCameraTargetPositionY();
 
-			// Potential optimization: check if moved significantly before sending
-			BlzSendSyncData('cam', `${x}:${y}`);
+				// Potential optimization: check if moved significantly before sending
+				BlzSendSyncData('cam', `${x}:${y}`);
+			}
 		}
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
-			if (!PlayerManager.getInstance().isActive(player)) {
+			const activePlayer = PlayerManager.getInstance().players.get(player);
+			if (!activePlayer || !activePlayer.status.isActive()) {
 				this.removePlayerFrame(player);
 			} else {
 				const frame = this.frames.get(player);
