@@ -100,7 +100,7 @@ describe('MinimapIconManager unit icon colors', () => {
 
 		(manager as any).updateUnitIconColor(frame, unit, localPlayer);
 
-		expect((frame as any).texture).toBe('blue-texture');
+		expect((frame as any).texture).toBe('white-texture');
 	});
 
 	it('updates previously assigned frame color when frame is recycled for a new unit', () => {

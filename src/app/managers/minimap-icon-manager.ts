@@ -755,9 +755,9 @@ export class MinimapIconManager {
 		// Check ally color filter mode
 		// 0 = Player colors, 1/2 = Ally/Enemy colors
 
-		// If the local player owns this city, show it in WHITE (or BLUE in Ally Mode 2)
+		// If the local player owns this city, show it in WHITE
 		if (owner === effectiveLocal) {
-			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
+			const localTexture = this.COLOR_TEXTURES[99];
 			this.setTextureCached(city, iconFrame, localTexture, this.cityLastTexture);
 			return;
 		}
@@ -820,9 +820,9 @@ export class MinimapIconManager {
 		// Used the SharedSlotManager to resolve the real owner (maps SharedSlot -> Player)
 		const owner = sharedSlotManager.getOwnerOfUnit(unit);
 
-		// If the local player owns this unit (or owns the shared slot), show it in WHITE (or BLUE in Ally Mode 2)
+		// If the local player owns this unit (or owns the shared slot), show it in WHITE
 		if (owner === effectiveLocal) {
-			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
+			const localTexture = this.COLOR_TEXTURES[99];
 			this.setTextureCached(iconFrame, iconFrame, localTexture, this.frameLastTexture);
 			return;
 		}
@@ -916,9 +916,9 @@ export class MinimapIconManager {
 		// Check ally color filter mode
 		// 0 = Player colors, 1/2 = Ally/Enemy colors
 
-		// If the local player owns this city, show it in WHITE (or BLUE in Ally Mode 2)
+		// If the local player owns this city, show it in WHITE
 		if (owner === localPlayer) {
-			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
+			const localTexture = this.COLOR_TEXTURES[99];
 			this.setTextureCached(city, iconFrame, localTexture, this.cityLastTexture);
 			return;
 		}
@@ -981,9 +981,9 @@ export class MinimapIconManager {
 			allyColorMode = 2;
 		}
 
-		// If the local player owns this unit (or owns the shared slot), show it in WHITE (or BLUE in Ally Mode 2)
+		// If the local player owns this unit (or owns the shared slot), show it in WHITE
 		if (owner === localPlayer) {
-			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
+			const localTexture = this.COLOR_TEXTURES[99];
 			this.setTextureCached(iconFrame, iconFrame, localTexture, this.frameLastTexture);
 			return;
 		}

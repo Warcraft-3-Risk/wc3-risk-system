@@ -32,7 +32,7 @@ In normal visual modes, it resolves the real owner and applies `GetPlayerColor(r
 
 | Relation to local player | Unit model color in mode 2                    | Minimap color in mode 1/2           |
 | ------------------------ | --------------------------------------------- | ----------------------------------- |
-| Self                     | Blue                                          | White in mode 0/1, Blue in mode 2   |
+| Self                     | Blue                                          | White                               |
 | Ally or teammate         | Teal, or Yellow for colorblind mode           | Teal, or Yellow for colorblind mode |
 | Enemy                    | Red                                           | Red                                 |
 | Neutral                  | Neutral/default; high contrast can tint black | Gray/neutral texture                |
