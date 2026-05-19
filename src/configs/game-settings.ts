@@ -94,6 +94,9 @@ export const RANKED_STARTING_RATING: number = 1000;
 // When disabled: Country creator commands are disabled
 export const EDITOR_DEVELOPER_MODE: boolean = false;
 
+// The number of computer players to force-add when DEV mode is active.
+export const DEV_MODE_COMPUTER_PLAYERS: number = 4;
+
 // Enable/disable rating file encryption. Default is true.
 // When enabled: Rating files are encrypted with XOR+Base64 (production use)
 // When disabled: Rating files are stored as plain text (useful for debugging)

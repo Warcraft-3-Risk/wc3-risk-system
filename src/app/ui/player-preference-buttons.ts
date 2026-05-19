@@ -303,7 +303,7 @@ export function buildColorContrastModeButton(player: ActivePlayer): framehandle 
 }
 
 export function buildCameraPanModeButton(player: ActivePlayer): framehandle {
-	const { SettingsContext } = require('src/app/settings/settings-context') as typeof import('../settings/settings-context');
+	const { SettingsContext } = require('../settings/settings-context.ts') as typeof import('../settings/settings-context');
 	const settings = SettingsContext.getInstance();
 	const isFFA = settings.isFFA();
 

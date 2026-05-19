@@ -17,7 +17,7 @@ import { debugPrint } from '../utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { NameManager } from '../managers/names/name-manager';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
-import { BAN_LIST_ACTIVE, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
+import { BAN_LIST_ACTIVE, RATING_SYSTEM_ENABLED, EDITOR_DEVELOPER_MODE, DEV_MODE_COMPUTER_PLAYERS } from 'src/configs/game-settings';
 import { RatingStatsUI } from '../ui/rating-stats-ui';
 
 const banList: string[] = ['inbreeder#2416', 'remy#22303', 'overthrow#21522', 'vixen#22381'];
@@ -38,6 +38,8 @@ export class PlayerManager {
 		this._playerFromHandle = new Map<player, ActivePlayer>();
 		this._playerControllerHandle = new Map<player, mapcontrol>();
 		this._observerFromHandle = new Map<player, HumanPlayer>();
+
+		let devModeComputersAdded = 0;
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
@@ -61,12 +63,19 @@ export class PlayerManager {
 				continue;
 			}
 
+			let isDevModeComputer = false;
+
 			if (GetPlayerSlotState(player) === PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) === PLAYER_SLOT_STATE_LEFT) {
-				continue;
+				if (EDITOR_DEVELOPER_MODE && devModeComputersAdded < DEV_MODE_COMPUTER_PLAYERS) {
+					isDevModeComputer = true;
+					devModeComputersAdded++;
+				} else {
+					continue;
+				}
 			}
 
-			if (GetPlayerController(player) === MAP_CONTROL_USER || GetPlayerController(player) === MAP_CONTROL_COMPUTER) {
-				const isComputer = GetPlayerController(player) === MAP_CONTROL_COMPUTER;
+			if (GetPlayerController(player) === MAP_CONTROL_USER || GetPlayerController(player) === MAP_CONTROL_COMPUTER || isDevModeComputer) {
+				const isComputer = GetPlayerController(player) === MAP_CONTROL_COMPUTER || isDevModeComputer;
 				const activePlayer = isComputer ? new ComputerPlayer(player) : new HumanPlayer(player);
 				this._playerFromHandle.set(player, activePlayer);
 				this._playerControllerHandle.set(player, isComputer ? MAP_CONTROL_COMPUTER : MAP_CONTROL_USER);
