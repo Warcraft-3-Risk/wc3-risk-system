@@ -138,6 +138,18 @@ import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
 
 // ─── Tests ──────────────────────────────────────────────────────────
 
+interface CityTrackedPlayer {
+	trackedData: {
+		cities: {
+			cities: Array<{ name: string }>;
+		};
+	};
+}
+
+function setCityCount(player: CityTrackedPlayer, count: number): void {
+	player.trackedData.cities.cities = Array.from({ length: count }, (_, i) => ({ name: `City ${i}` }));
+}
+
 describe('VictoryManager.updateAndGetGameState (production code)', () => {
 	beforeEach(() => {
 		resetAllSingletons();
@@ -193,6 +205,40 @@ describe('VictoryManager.updateAndGetGameState (production code)', () => {
 			GlobalGameData.matchState = 'inProgress';
 			VictoryManager.getInstance().updateAndGetGameState();
 			expect(GlobalGameData.leader).toBe(p1);
+		});
+
+		it('sets the leader to the sole city-count victor when the cached leader is stale', () => {
+			const staleLeader = createFakeActivePlayer(0);
+			const cityVictor = createFakeActivePlayer(1);
+			const contender = createFakeActivePlayer(2);
+			setCityCount(staleLeader, 46);
+			setCityCount(cityVictor, 61);
+			setCityCount(contender, 59);
+			setupPlayerManager([staleLeader, cityVictor, contender]);
+
+			GlobalGameData.matchState = 'inProgress';
+			GlobalGameData.leader = staleLeader;
+			const result = VictoryManager.getInstance().updateAndGetGameState();
+
+			expect(result).toBe('DECIDED');
+			expect(GlobalGameData.leader).toBe(cityVictor);
+		});
+
+		it('refreshes a stale displayed leader even before anyone reaches the city threshold', () => {
+			const staleLeader = createFakeActivePlayer(0);
+			const topA = createFakeActivePlayer(1);
+			const topB = createFakeActivePlayer(2);
+			setCityCount(staleLeader, 46);
+			setCityCount(topA, 59);
+			setCityCount(topB, 59);
+			setupPlayerManager([staleLeader, topA, topB]);
+
+			GlobalGameData.matchState = 'inProgress';
+			GlobalGameData.leader = staleLeader;
+			VictoryManager.getInstance().updateLeader();
+
+			expect([topA, topB]).toContain(GlobalGameData.leader);
+			expect(GlobalGameData.leader.trackedData.cities.cities).toHaveLength(59);
 		});
 	});
 

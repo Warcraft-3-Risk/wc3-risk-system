@@ -12,6 +12,8 @@ export interface SortablePlayer {
 	randomSeed?: number;
 	/** Current income value (higher = better). */
 	income: number;
+	/** Current city count (higher = better). Used as a tie-breaker when income is tied. */
+	cities?: number;
 	/** Whether the player has been eliminated. */
 	isEliminated: boolean;
 	/** Turn number on which the player was eliminated (0 if alive). */
@@ -23,12 +25,14 @@ export interface SortableTeam {
 	teamNumber: number;
 	/** Total team income (higher = better). */
 	totalIncome: number;
+	/** Total team cities (higher = better). Used as a tie-breaker when income is tied. */
+	totalCities?: number;
 }
 
 /**
  * Sort players for the scoreboard:
  *   1. Active players come before eliminated players.
- *   2. Among active players: higher income first, tie-break by randomSeed ascending (for initial anonymization), then by player ID ascending.
+ *   2. Among active players: higher income first, tie-break by city count descending, tie-break by randomSeed ascending (for initial anonymization), then by player ID ascending.
  *   3. Among eliminated players: most recently died first, tie-break by player ID ascending.
  *
  * Returns a new sorted array (does not mutate the input).
@@ -46,6 +50,12 @@ export function sortPlayers<T extends SortablePlayer>(players: T[]): T[] {
 
 		if (a.income < b.income) return 1;
 		if (a.income > b.income) return -1;
+
+		if (a.cities !== undefined && b.cities !== undefined) {
+			if (a.cities < b.cities) return 1;
+			if (a.cities > b.cities) return -1;
+		}
+
 		if (a.randomSeed !== undefined && b.randomSeed !== undefined && a.randomSeed !== b.randomSeed) {
 			return a.randomSeed - b.randomSeed;
 		}
@@ -56,7 +66,8 @@ export function sortPlayers<T extends SortablePlayer>(players: T[]): T[] {
 /**
  * Sort teams for the scoreboard:
  *   1. Higher total income first.
- *   2. Tie-break by team number ascending.
+ *   2. Higher total cities first if income is tied.
+ *   3. Tie-break by team number ascending.
  *
  * Returns a new sorted array (does not mutate the input).
  */
@@ -64,6 +75,12 @@ export function sortTeams<T extends SortableTeam>(teams: T[]): T[] {
 	return [...teams].sort((a, b) => {
 		if (a.totalIncome < b.totalIncome) return 1;
 		if (a.totalIncome > b.totalIncome) return -1;
+
+		if (a.totalCities !== undefined && b.totalCities !== undefined) {
+			if (a.totalCities < b.totalCities) return 1;
+			if (a.totalCities > b.totalCities) return -1;
+		}
+
 		return a.teamNumber - b.teamNumber;
 	});
 }

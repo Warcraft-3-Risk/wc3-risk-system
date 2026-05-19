@@ -2,23 +2,25 @@ import { EDITOR_DEVELOPER_MODE, SHOW_PLAYER_CAMERA_POSITIONS } from 'src/configs
 import { PlayerManager } from '../player/player-manager';
 import { debugPrint } from '../utils/debug-print';
 import { EventEmitter } from '../utils/events/event-emitter';
-import { EVENT_ON_PLAYER_LEFT } from '../utils/events/event-constants';
+import { EVENT_ON_PLAYER_LEFT, EVENT_ON_PRE_MATCH } from '../utils/events/event-constants';
 import { CreateObserverButton } from '../utils/observer-helper';
 import { NameManager } from './names/name-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
+import { MinimapIconManager } from './minimap-icon-manager';
+import { SettingsContext } from '../settings/settings-context';
 
 export type CamPositionData = {
 	x: number;
 	y: number;
 };
 
-const LERP_SPEED = 0.04;
+const LERP_SPEED = 0.08;
 
 export default class PlayerCameraPositionManager {
 	private static instance: PlayerCameraPositionManager;
 	private camPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
 	private displayPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
-	private frames: Map<player, { box: framehandle; text: framehandle }> = new Map();
+	private frames: Map<player, { box: framehandle; text: framehandle; minimapIcon: framehandle }> = new Map();
 	private syncTrigger: trigger;
 	private overlayVisible: boolean = false;
 	private toggleButton: framehandle;
@@ -32,7 +34,6 @@ export default class PlayerCameraPositionManager {
 
 	private constructor() {
 		if (!SHOW_PLAYER_CAMERA_POSITIONS) return;
-		if (PlayerManager.getInstance().observers.size === 0) return;
 
 		this.syncTrigger = CreateTrigger();
 
@@ -47,11 +48,15 @@ export default class PlayerCameraPositionManager {
 			this.removePlayerFrame(player.getPlayer());
 		});
 
+		EventEmitter.getInstance().on(EVENT_ON_PRE_MATCH, () => {
+			this.updateEligibility();
+		});
+
 		this.createToggleButton();
 
-		// Network sync timer — keeps the 1s interval to avoid desync
+		// Network sync timer — syncs position every 0.5s
 		const syncTimer = CreateTimer();
-		TimerStart(syncTimer, 1.0, true, () => this.syncLocalPlayerPosition());
+		TimerStart(syncTimer, 0.5, true, () => this.syncLocalPlayerPosition());
 
 		// Local lerp timer — smoothly interpolates world positions toward synced targets (observer-only)
 		const lerpTimer = CreateTimer();
@@ -60,6 +65,50 @@ export default class PlayerCameraPositionManager {
 		// Render timer — repositions frames on screen every frame so they track the observer's camera
 		const renderTimer = CreateTimer();
 		TimerStart(renderTimer, 0.02, true, () => this.renderFrames());
+	}
+
+	private isEligiblePlayer(p: player): boolean {
+		if (EDITOR_DEVELOPER_MODE || IsPlayerObserver(p)) return true;
+
+		const settings = SettingsContext.getInstance();
+		if ((settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode()) && settings.isLobbyTeams()) {
+			if (PlayerManager.getInstance().players.size > 2) {
+				return PlayerManager.getInstance().players.has(p);
+			}
+		}
+
+		return false;
+	}
+
+	private canSeePlayerCam(viewer: player, target: player): boolean {
+		if (viewer === target) return false;
+		if (EDITOR_DEVELOPER_MODE || IsPlayerObserver(viewer)) return true;
+		if (IsPlayerAlly(viewer, target)) return true;
+		return false;
+	}
+
+	private isOverlayVisibleForPlayer(p: player): boolean {
+		if (IsPlayerObserver(p) || EDITOR_DEVELOPER_MODE) {
+			return this.overlayVisible;
+		}
+
+		const localActivePlayer = PlayerManager.getInstance().players.get(p);
+		if (localActivePlayer) {
+			return localActivePlayer.options.cameraPan;
+		}
+
+		return false;
+	}
+
+	private updateEligibility() {
+		const localPlayer = GetLocalPlayer();
+
+		BlzFrameSetVisible(this.toggleButton, false);
+		if (IsPlayerObserver(localPlayer) || EDITOR_DEVELOPER_MODE) {
+			BlzFrameSetVisible(this.toggleButton, true);
+		} else {
+			BlzFrameSetEnable(this.toggleButton, false);
+		}
 	}
 
 	private createToggleButton(): void {
@@ -71,38 +120,58 @@ export default class PlayerCameraPositionManager {
 		BlzFrameSetPoint(this.toggleButton, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.092, -0.025);
 		BlzFrameSetSize(this.toggleButton, 0.1, 0.03);
 		BlzFrameSetText(this.toggleButton, 'Cameras: Off');
-		BlzFrameSetVisible(this.toggleButton, true);
 
-		// Only visible for observers (or dev mode)
+		const localPlayer = GetLocalPlayer();
+
+		// Only visible for observers or developers
 		BlzFrameSetVisible(this.toggleButton, false);
-		if (EDITOR_DEVELOPER_MODE || IsPlayerObserver(GetLocalPlayer())) {
+		if (IsPlayerObserver(localPlayer) || EDITOR_DEVELOPER_MODE) {
 			BlzFrameSetVisible(this.toggleButton, true);
 		} else {
-			// Disable for non-observers so it cannot capture keyboard focus
 			BlzFrameSetEnable(this.toggleButton, false);
 		}
 
 		// Observer hover-click — same pattern as leaderboard button in ranked-statistics-view
-		CreateObserverButton(this.toggleButton, IsPlayerObserver(GetLocalPlayer()), () => {
-			this.overlayVisible = !this.overlayVisible;
-			BlzFrameSetText(this.toggleButton, this.overlayVisible ? 'Cameras: On' : 'Cameras: Off');
-
-			if (!this.overlayVisible) {
-				this.frames.forEach((frame) => {
-					BlzFrameSetVisible(frame.box, false);
-					BlzFrameSetVisible(frame.text, false);
-				});
-			}
-
-			BlzFrameSetEnable(this.toggleButton, false);
-			BlzFrameSetEnable(this.toggleButton, true);
+		CreateObserverButton(this.toggleButton, IsPlayerObserver(localPlayer), () => {
+			this.toggleOverlay();
 		});
 	}
 
-	private createPlayerFrame(p: player): { box: framehandle; text: framehandle } {
+	private toggleOverlay(): void {
+		this.overlayVisible = !this.overlayVisible;
+		BlzFrameSetText(this.toggleButton, this.overlayVisible ? 'Cameras: On' : 'Cameras: Off');
+
+		if (!this.overlayVisible) {
+			this.frames.forEach((frame) => {
+				BlzFrameSetVisible(frame.box, false);
+				BlzFrameSetVisible(frame.text, false);
+				BlzFrameSetVisible(frame.minimapIcon, false);
+			});
+		}
+
+		BlzFrameSetEnable(this.toggleButton, false);
+		BlzFrameSetEnable(this.toggleButton, true);
+	}
+
+	private createPlayerFrame(p: player): { box: framehandle; text: framehandle; minimapIcon: framehandle } {
 		const ctx = GetPlayerId(p) + 1; // offset to avoid context 0 used by TooltipManager
 		const box = BlzCreateFrame('TasToolTipBox', BlzGetFrameByName('ConsoleUIBackdrop', 0), 0, ctx);
 		const text = BlzCreateFrame('TasTooltipText', box, 0, ctx);
+
+		// Create the semi-transparent minimap icon frame
+		const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
+		const minimapIcon = BlzCreateFrameByType('BACKDROP', 'MinimapPlayerCameraIcon', gameUI, '', ctx);
+		BlzFrameSetSize(minimapIcon, 0.006, 0.004); // Slightly larger, 3x2 aspect ratio to mimic a screen
+		BlzFrameSetLevel(minimapIcon, 20); // Render above everything else on minimap
+		const colorIndex = GetHandleId(GetPlayerColor(p));
+		BlzFrameSetTexture(
+			minimapIcon,
+			'ReplaceableTextures\\TeamColor\\TeamColor' + (colorIndex < 10 ? '0' + colorIndex : colorIndex) + '.blp',
+			0,
+			true
+		);
+		BlzFrameSetAlpha(minimapIcon, 175); // More transparent
+		BlzFrameSetVisible(minimapIcon, false);
 
 		BlzFrameSetPoint(box, FRAMEPOINT_BOTTOMLEFT, text, FRAMEPOINT_BOTTOMLEFT, -0.01, -0.01);
 		BlzFrameSetPoint(box, FRAMEPOINT_TOPRIGHT, text, FRAMEPOINT_TOPRIGHT, 0.01, 0.01);
@@ -112,23 +181,27 @@ export default class PlayerCameraPositionManager {
 		BlzFrameSetVisible(box, false);
 		BlzFrameSetVisible(text, false);
 
-		return { box, text };
+		return { box, text, minimapIcon };
 	}
 
 	private syncLocalPlayerPosition() {
 		const p = GetLocalPlayer();
 		// Only sync if dragging/playing, spectators might not need to sync unless they want to be watched too
 		if (GetPlayerController(p) === MAP_CONTROL_USER) {
-			const x = GetCameraTargetPositionX();
-			const y = GetCameraTargetPositionY();
+			const activePlayer = PlayerManager.getInstance().players.get(p);
+			if (!activePlayer || activePlayer.status.isActive()) {
+				const x = GetCameraTargetPositionX();
+				const y = GetCameraTargetPositionY();
 
-			// Potential optimization: check if moved significantly before sending
-			BlzSendSyncData('cam', `${x}:${y}`);
+				// Potential optimization: check if moved significantly before sending
+				BlzSendSyncData('cam', `${x}:${y}`);
+			}
 		}
 
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const player = Player(i);
-			if (!PlayerManager.getInstance().isActive(player)) {
+			const activePlayer = PlayerManager.getInstance().players.get(player);
+			if (!activePlayer || !activePlayer.status.isActive()) {
 				this.removePlayerFrame(player);
 			} else {
 				const frame = this.frames.get(player);
@@ -154,7 +227,8 @@ export default class PlayerCameraPositionManager {
 			const frame = this.createPlayerFrame(p);
 			this.frames.set(p, frame);
 
-			if (this.overlayVisible && (EDITOR_DEVELOPER_MODE || IsPlayerObserver(GetLocalPlayer()))) {
+			const localPlayer = GetLocalPlayer();
+			if (this.isOverlayVisibleForPlayer(localPlayer) && this.isEligiblePlayer(localPlayer) && this.canSeePlayerCam(localPlayer, p)) {
 				const name = NameManager.getInstance().getDisplayName(p);
 				this.setFrameText(frame, name);
 
@@ -205,12 +279,13 @@ export default class PlayerCameraPositionManager {
 	 * Runs every 0.02s so frames track the observer's camera smoothly.
 	 */
 	private renderFrames() {
-		if (!EDITOR_DEVELOPER_MODE && !IsPlayerObserver(GetLocalPlayer())) return;
-		if (!this.overlayVisible) return;
-		if (GlobalGameData.matchState !== 'inProgress') {
+		const localPlayer = GetLocalPlayer();
+
+		if (!this.isEligiblePlayer(localPlayer) || !this.isOverlayVisibleForPlayer(localPlayer) || GlobalGameData.matchState !== 'inProgress') {
 			this.frames.forEach((frame) => {
 				BlzFrameSetVisible(frame.box, false);
 				BlzFrameSetVisible(frame.text, false);
+				BlzFrameSetVisible(frame.minimapIcon, false);
 			});
 			return;
 		}
@@ -218,6 +293,13 @@ export default class PlayerCameraPositionManager {
 		this.displayPositionData.forEach((display, p) => {
 			const frame = this.frames.get(p);
 			if (!frame) return;
+
+			if (!this.canSeePlayerCam(localPlayer, p)) {
+				BlzFrameSetVisible(frame.box, false);
+				BlzFrameSetVisible(frame.text, false);
+				BlzFrameSetVisible(frame.minimapIcon, false);
+				return;
+			}
 
 			const [sx, sy, onScreen] = World2Screen(display.x, display.y, 0);
 			if (onScreen && sy >= 0.14) {
@@ -228,6 +310,10 @@ export default class PlayerCameraPositionManager {
 				BlzFrameSetVisible(frame.box, false);
 				BlzFrameSetVisible(frame.text, false);
 			}
+
+			// Update minimap position
+			MinimapIconManager.getInstance().updateIconPosition(frame.minimapIcon, display.x, display.y);
+			BlzFrameSetVisible(frame.minimapIcon, true);
 		});
 	}
 
@@ -265,6 +351,7 @@ export default class PlayerCameraPositionManager {
 		if (frame) {
 			BlzFrameSetVisible(frame.box, false);
 			BlzFrameSetVisible(frame.text, false);
+			BlzFrameSetVisible(frame.minimapIcon, false);
 			this.frames.delete(p);
 		}
 

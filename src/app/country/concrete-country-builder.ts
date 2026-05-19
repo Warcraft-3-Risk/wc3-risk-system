@@ -13,6 +13,9 @@ import { File } from 'w3ts';
 import { HexColors } from '../utils/hex-colors';
 import { MinimapIconManager } from '../managers/minimap-icon-manager';
 import { CountryLabelManager } from '../managers/country-label-manager';
+import { getCountryLabelsText, normalizeCountryLabels } from '../player/options';
+import { createCityBuildingName } from '../city/city-display-name';
+import { shouldShowCountryLabels } from '../managers/label-visibility';
 
 /**
  * ConcreteCountryBuilder is an implementation of the CountryBuilder interface.
@@ -45,13 +48,14 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 		builder.setBarracks(city.barrack);
 		builder.setCOP(city.cop);
 
-		if (city.name) builder.setName(city.name);
+		builder.setName(createCityBuildingName(city));
 		if (!city.guard) city.guard = guardData;
 
 		builder.setGuard(city.guard);
 		builder.setCityType(city.cityType);
 
 		const result: City = builder.build();
+		result.setLabelData(city.name, city.slot, city.quality);
 		this.cities.push(result);
 
 		return this;
@@ -117,22 +121,29 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 			if (GetLocalPlayer() === player.getPlayer()) {
 				// Load saved labels preference and apply it
 				const labelsPreference = File.read('risk/labels.pld');
-				if (labelsPreference === 'false') {
-					player.options.labels = false;
+				const countryLabels = shouldShowCountryLabels({
+					playerId: GetPlayerId(player.getPlayer()),
+					isObserver: IsPlayerObserver(player.getPlayer()),
+					countryLabels: normalizeCountryLabels(labelsPreference),
+				});
+				player.options.countryLabels = countryLabels;
 
-					// Update button texture and tooltip to match the hidden state
-					const labelButtonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', GetPlayerId(player.getPlayer()) + 200);
-					if (labelButtonBackdrop) {
-						BlzFrameSetTexture(labelButtonBackdrop, 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp', 0, false);
-					}
+				// Update button texture and tooltip to match the saved country label state.
+				const labelButtonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', GetPlayerId(player.getPlayer()) + 200);
+				if (labelButtonBackdrop) {
+					const texture = countryLabels
+						? 'ReplaceableTextures\\CommandButtons\\BTNRecipe.blp'
+						: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp';
+					BlzFrameSetTexture(labelButtonBackdrop, texture, 0, false);
+				}
 
-					const labelButtonTooltip = BlzGetFrameByName('GuardButtonToolTip', GetPlayerId(player.getPlayer()) + 200);
-					if (labelButtonTooltip) {
-						BlzFrameSetText(
-							labelButtonTooltip,
-							`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ${HexColors.RED}Hidden`
-						);
-					}
+				const labelButtonTooltip = BlzGetFrameByName('GuardButtonToolTip', GetPlayerId(player.getPlayer()) + 200);
+				if (labelButtonTooltip) {
+					BlzFrameSetText(
+						labelButtonTooltip,
+						`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles country labels on the map.\nCurrent preference: ` +
+							`${countryLabels ? HexColors.GREEN : HexColors.RED}${getCountryLabelsText(countryLabels)}`
+					);
 				}
 
 				// Initialize custom minimap icons for cities

@@ -219,17 +219,7 @@ export class ScoreboardManager {
 	}
 
 	public updateScoreboardTitle() {
-		// If current leader is eliminated, find the new leader (non-eliminated player with most cities)
-		if (GlobalGameData.leader instanceof ActivePlayer && GlobalGameData.leader.status.isEliminated()) {
-			const allParticipants = VictoryManager.getInstance().getOwnershipByThresholdDescending(0);
-			const validLeader = allParticipants.find((participant) => {
-				if (participant instanceof ActivePlayer) {
-					return !participant.status.isEliminated();
-				}
-				return true; // Teams are already filtered by getActiveTeams()
-			});
-			GlobalGameData.leader = validLeader;
-		}
+		VictoryManager.getInstance().updateLeader();
 
 		if (GlobalGameData.leader) {
 			const requiredCities = VictoryManager.getInstance().getCityCountWin();

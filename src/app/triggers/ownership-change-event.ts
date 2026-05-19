@@ -95,7 +95,7 @@ export function OwnershipChangeEvent() {
 				}
 
 				if (GlobalGameData.matchState === 'inProgress') {
-					VictoryManager.getInstance().setLeader(ParticipantEntityManager.getParticipantByActivePlayer(owner));
+					VictoryManager.getInstance().updateLeader();
 				}
 
 				if (ownerData.countries.get(country) === country.getCities().length) {
