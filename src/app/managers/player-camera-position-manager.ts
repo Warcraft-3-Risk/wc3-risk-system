@@ -161,7 +161,7 @@ export default class PlayerCameraPositionManager {
 		// Create the semi-transparent minimap icon frame
 		const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
 		const minimapIcon = BlzCreateFrameByType('BACKDROP', 'MinimapPlayerCameraIcon', gameUI, '', ctx);
-		BlzFrameSetSize(minimapIcon, 0.006, 0.004); // Slightly larger, 3x2 aspect ratio to mimic a screen
+		BlzFrameSetSize(minimapIcon, 0.009, 0.006); // Slightly larger, 3x2 aspect ratio to mimic a screen
 		BlzFrameSetLevel(minimapIcon, 20); // Render above everything else on minimap
 		const colorIndex = GetHandleId(GetPlayerColor(p));
 		BlzFrameSetTexture(
@@ -170,7 +170,7 @@ export default class PlayerCameraPositionManager {
 			0,
 			true
 		);
-		BlzFrameSetAlpha(minimapIcon, 175); // More transparent
+		BlzFrameSetAlpha(minimapIcon, 200); // More transparent
 		BlzFrameSetVisible(minimapIcon, false);
 
 		BlzFrameSetPoint(box, FRAMEPOINT_BOTTOMLEFT, text, FRAMEPOINT_BOTTOMLEFT, -0.01, -0.01);
