@@ -117,8 +117,8 @@ export default class PlayerCameraPositionManager {
 
 		// Use ScriptDialogButton — same template as the leaderboard button, proven to work with observer hover detection
 		this.toggleButton = BlzCreateFrameByType('GLUETEXTBUTTON', 'CamToggleButton', gameUI, 'ScriptDialogButton', ctx);
-		BlzFrameSetPoint(this.toggleButton, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.092, -0.025);
-		BlzFrameSetSize(this.toggleButton, 0.1, 0.03);
+		BlzFrameSetPoint(this.toggleButton, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.138, -0.025);
+		BlzFrameSetSize(this.toggleButton, 0.02, 0.02);
 		BlzFrameSetText(this.toggleButton, 'Cameras: Off');
 
 		const localPlayer = GetLocalPlayer();
