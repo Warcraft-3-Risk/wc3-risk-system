@@ -58,7 +58,7 @@ export class MinimapIconManager {
 	private isActive: boolean; // Whether custom icons are active (only for world terrain)
 	private readonly COLOR_TEXTURES: string[] = []; // Pre-built texture path lookup table
 	private cityLastTexture: Map<City, string> = new Map(); // Track last-applied texture per city frame
-	private unitLastTexture: Map<unit, string> = new Map(); // Track last-applied texture per unit frame
+	private frameLastTexture: Map<framehandle, string> = new Map(); // Track last-applied texture per framehandle
 
 	// Globals for minimizing color updates across all units
 	private lastGlobalColorMode: number | undefined;
@@ -67,6 +67,7 @@ export class MinimapIconManager {
 	private lastGlobalDeadInFFA: boolean | undefined;
 	private lastGlobalPovPlayer: player | undefined;
 	private lastGlobalOwnershipRevision: number | undefined;
+	private lastGlobalLargeCityIndicators: boolean | undefined;
 
 	private consoleUI: framehandle;
 	private hudScale: number = 1.0;
@@ -79,6 +80,7 @@ export class MinimapIconManager {
 	private readonly CAPITAL_ICON_SIZE = 0.0025; // Capital colored center size (smaller to show borders)
 	private readonly CAPITAL_BORDER_INNER = 0.0035; // Capital inner border size (black ring)
 	private readonly CAPITAL_BORDER_OUTER = 0.0045; // Capital outer border size (white ring)
+	private readonly LARGE_CITY_INDICATOR_SCALE = 1.35;
 	private readonly INITIAL_POOL_SIZE = 2000; // Initial number of frames to create to avoid runtime spikes
 	private readonly UNITS_PER_TICK = 200; // Throttle dynamic units processed per tick
 
@@ -92,6 +94,45 @@ export class MinimapIconManager {
 	private worldMaxY: number;
 	private worldWidth: number;
 	private worldHeight: number;
+
+	private shouldUseLargeCityIndicators(effectiveLocal: player = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer()): boolean {
+		const activePlayer = PlayerManager.getInstance().players.get(effectiveLocal);
+		return activePlayer ? activePlayer.options.largeCityIndicators === true : false;
+	}
+
+	private getCityIndicatorScale(largeCityIndicators: boolean = this.shouldUseLargeCityIndicators()): number {
+		return largeCityIndicators ? this.LARGE_CITY_INDICATOR_SCALE : 1.0;
+	}
+
+	private setSquareFrameSize(frame: framehandle, baseSize: number, scale: number): void {
+		const size = baseSize * scale;
+		BlzFrameSetSize(frame, size, size);
+	}
+
+	public refreshCitySizes(): void {
+		if (!this.isActive) {
+			return;
+		}
+
+		const largeCityIndicators = this.shouldUseLargeCityIndicators();
+		const scale = this.getCityIndicatorScale(largeCityIndicators);
+		for (let i = 0; i < this.cityRecords.length; i++) {
+			const record = this.cityRecords[i];
+			const isCapital = this.capitalIcons.has(record.city);
+
+			if (isCapital) {
+				this.setSquareFrameSize(record.iconFrame, this.CAPITAL_ICON_SIZE, scale);
+				const innerBorder = this.cityBorders.get(record.city);
+				const outerBorder = this.cityOuterBorders.get(record.city);
+				if (innerBorder) this.setSquareFrameSize(innerBorder, this.CAPITAL_BORDER_INNER, scale);
+				if (outerBorder) this.setSquareFrameSize(outerBorder, this.CAPITAL_BORDER_OUTER, scale);
+			} else {
+				this.setSquareFrameSize(record.iconFrame, this.BUILDING_ICON_SIZE, scale);
+			}
+		}
+
+		this.lastGlobalLargeCityIndicators = largeCityIndicators;
+	}
 
 	/**
 	 * Gets the singleton instance.
@@ -273,7 +314,7 @@ export class MinimapIconManager {
 		this.trackedList.trackedFrameList.pop();
 		this.trackedList.trackedRawOwnerList.pop();
 		this.trackedList.trackedUnitIndex.delete(unit);
-		this.unitLastTexture.delete(unit);
+		this.frameLastTexture.delete(frame);
 
 		return frame;
 	}
@@ -317,8 +358,8 @@ export class MinimapIconManager {
 			// Set level to render above minimap (Top level for units)
 			BlzFrameSetLevel(iconFrame, 15);
 
-			// Store the frame
-			this.trackedList.addTrackedUnit(unit, iconFrame, GetOwningPlayer(unit));
+			// Store the frame, initially poisoning the owner cache so the update loop computes it upon first sight
+			this.trackedList.addTrackedUnit(unit, iconFrame, Player(25));
 
 			// Initial update
 			const localPlayer = GetLocalPlayer();
@@ -326,6 +367,11 @@ export class MinimapIconManager {
 			if (IsUnitVisible(unit, effectiveLocal)) {
 				this.updateIconPosition(iconFrame, GetUnitX(unit), GetUnitY(unit));
 				this.updateUnitIconColor(iconFrame, unit, effectiveLocal);
+				// Now that we've explicitly drawn it for this player, update the raw owner list
+				const idx = this.trackedList.trackedUnitIndex.get(unit);
+				if (idx !== undefined) {
+					this.trackedList.trackedRawOwnerList[idx] = GetOwningPlayer(unit);
+				}
 				BlzFrameSetVisible(iconFrame, true);
 			} else {
 				BlzFrameSetVisible(iconFrame, false);
@@ -357,7 +403,7 @@ export class MinimapIconManager {
 		const localPlayer = GetLocalPlayer();
 		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : localPlayer;
 
-		this.unitLastTexture.delete(unit);
+		this.frameLastTexture.delete(iconFrame);
 
 		if (!IsUnitVisible(unit, effectiveLocal)) {
 			this.trackedList.trackedRawOwnerList[index] = Player(25);
@@ -379,6 +425,7 @@ export class MinimapIconManager {
 			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
 			const worldX = city.barrack.defaultX;
 			const worldY = city.barrack.defaultY;
+			const cityIndicatorScale = this.getCityIndicatorScale();
 
 			// Hide the default minimap display for the city's barrack unit
 			BlzSetUnitBooleanField(city.barrack.unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
@@ -395,7 +442,7 @@ export class MinimapIconManager {
 			}
 
 			// Set icon size
-			BlzFrameSetSize(iconFrame, this.BUILDING_ICON_SIZE, this.BUILDING_ICON_SIZE);
+			this.setSquareFrameSize(iconFrame, this.BUILDING_ICON_SIZE, cityIndicatorScale);
 
 			// Set level to render above minimap (and above border if present)
 			BlzFrameSetLevel(iconFrame, 10);
@@ -446,7 +493,7 @@ export class MinimapIconManager {
 	/**
 	 * Updates an icon's position based on world coordinates.
 	 */
-	private updateIconPosition(iconFrame: framehandle, worldX: number, worldY: number): void {
+	public updateIconPosition(iconFrame: framehandle, worldX: number, worldY: number): void {
 		const coords = this.worldToMinimapCoords(worldX, worldY);
 
 		// The default UI is 0.8 width and is always centered at X=0.4 on the screen.
@@ -539,10 +586,15 @@ export class MinimapIconManager {
 		const allyColorMode = localIsColorContrast ? 2 : AllyColorState.getInstance().getMode();
 		const isFFA = SettingsContext.getInstance().isFFA();
 		const isDeadInFFA = isFFA && activeLocalPlayer ? activeLocalPlayer.status.isDead() : false;
+		const localLargeCityIndicators = activeLocalPlayer ? activeLocalPlayer.options.largeCityIndicators === true : false;
 		const sharedSlotManager = SharedSlotManager.getInstance();
 		const currentOwnershipRevision = sharedSlotManager.getOwnershipRevision();
 
-		// Check if any global context parameter changed
+		if (this.lastGlobalLargeCityIndicators !== localLargeCityIndicators) {
+			this.refreshCitySizes();
+		}
+
+		// Check if any global color/ownership context parameter changed
 		if (
 			this.lastGlobalColorMode !== allyColorMode ||
 			this.lastGlobalColorBlind !== localIsColorBlind ||
@@ -750,9 +802,9 @@ export class MinimapIconManager {
 		// Check ally color filter mode
 		// 0 = Player colors, 1/2 = Ally/Enemy colors
 
-		// If the local player owns this city, show it in WHITE (or BLUE in Ally Mode 2)
+		// If the local player owns this city, show it in WHITE
 		if (owner === effectiveLocal) {
-			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
+			const localTexture = this.COLOR_TEXTURES[99];
 			this.setTextureCached(city, iconFrame, localTexture, this.cityLastTexture);
 			return;
 		}
@@ -815,10 +867,10 @@ export class MinimapIconManager {
 		// Used the SharedSlotManager to resolve the real owner (maps SharedSlot -> Player)
 		const owner = sharedSlotManager.getOwnerOfUnit(unit);
 
-		// If the local player owns this unit (or owns the shared slot), show it in WHITE (or BLUE in Ally Mode 2)
+		// If the local player owns this unit (or owns the shared slot), show it in WHITE
 		if (owner === effectiveLocal) {
-			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
-			this.setTextureCached(unit, iconFrame, localTexture, this.unitLastTexture);
+			const localTexture = this.COLOR_TEXTURES[99];
+			this.setTextureCached(iconFrame, iconFrame, localTexture, this.frameLastTexture);
 			return;
 		}
 
@@ -829,7 +881,7 @@ export class MinimapIconManager {
 		if (allyColorMode > 0 && !isReplayViewer) {
 			const ownerId = GetPlayerId(owner as player);
 			if (ownerId >= 24) {
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 				return;
 			}
 
@@ -840,15 +892,15 @@ export class MinimapIconManager {
 				// so show allies as red to avoid confusion with the shared slot's units
 				const allyColor = isColorBlind ? this.COLOR_TEXTURES[4] : this.COLOR_TEXTURES[2]; // Yellow vs Teal
 				const allyTexture = isDeadInFFA ? this.COLOR_TEXTURES[0] : allyColor;
-				this.setTextureCached(unit, iconFrame, allyTexture, this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, allyTexture, this.frameLastTexture);
 			} else if (minimapColor === ConvertPlayerColor(0)) {
 				// Enemy = Red (Player 0 color)
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[0], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[0], this.frameLastTexture);
 			} else if (minimapColor === ConvertPlayerColor(1)) {
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[1], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[1], this.frameLastTexture);
 			} else {
 				// Neutral = Gray (standard WC3 neutral color)
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 			}
 			return;
 		}
@@ -859,11 +911,11 @@ export class MinimapIconManager {
 		const colorIndex = GetHandleId(playerColor);
 
 		if (colorIndex < 0 || colorIndex > 23) {
-			this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+			this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 			return;
 		}
 
-		this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[colorIndex], this.unitLastTexture);
+		this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[colorIndex], this.frameLastTexture);
 	}
 
 	/**
@@ -911,9 +963,9 @@ export class MinimapIconManager {
 		// Check ally color filter mode
 		// 0 = Player colors, 1/2 = Ally/Enemy colors
 
-		// If the local player owns this city, show it in WHITE (or BLUE in Ally Mode 2)
+		// If the local player owns this city, show it in WHITE
 		if (owner === localPlayer) {
-			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
+			const localTexture = this.COLOR_TEXTURES[99];
 			this.setTextureCached(city, iconFrame, localTexture, this.cityLastTexture);
 			return;
 		}
@@ -976,10 +1028,10 @@ export class MinimapIconManager {
 			allyColorMode = 2;
 		}
 
-		// If the local player owns this unit (or owns the shared slot), show it in WHITE (or BLUE in Ally Mode 2)
+		// If the local player owns this unit (or owns the shared slot), show it in WHITE
 		if (owner === localPlayer) {
-			const localTexture = allyColorMode === 2 ? this.COLOR_TEXTURES[1] : this.COLOR_TEXTURES[99];
-			this.setTextureCached(unit, iconFrame, localTexture, this.unitLastTexture);
+			const localTexture = this.COLOR_TEXTURES[99];
+			this.setTextureCached(iconFrame, iconFrame, localTexture, this.frameLastTexture);
 			return;
 		}
 
@@ -991,7 +1043,7 @@ export class MinimapIconManager {
 		if (allyColorMode > 0 && !isReplayViewer) {
 			const ownerId = GetPlayerId(owner as player);
 			if (ownerId >= 24) {
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 				return;
 			}
 
@@ -1003,13 +1055,13 @@ export class MinimapIconManager {
 				const isColorBlind = localActivePlayer && localActivePlayer.options.colorblind;
 				const allyColor = isColorBlind ? this.COLOR_TEXTURES[4] : this.COLOR_TEXTURES[2]; // Yellow vs Teal
 				const allyTexture = isDeadInFFA ? this.COLOR_TEXTURES[0] : allyColor;
-				this.setTextureCached(unit, iconFrame, allyTexture, this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, allyTexture, this.frameLastTexture);
 			} else if (IsPlayerEnemy(owner as player, localPlayer)) {
 				// Enemy = Red
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[0], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[0], this.frameLastTexture);
 			} else {
 				// Neutral = Gray
-				this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+				this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 			}
 			return;
 		}
@@ -1020,11 +1072,11 @@ export class MinimapIconManager {
 		const colorIndex = GetHandleId(playerColor);
 
 		if (colorIndex < 0 || colorIndex > 23) {
-			this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[90], this.unitLastTexture);
+			this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[90], this.frameLastTexture);
 			return;
 		}
 
-		this.setTextureCached(unit, iconFrame, this.COLOR_TEXTURES[colorIndex], this.unitLastTexture);
+		this.setTextureCached(iconFrame, iconFrame, this.COLOR_TEXTURES[colorIndex], this.frameLastTexture);
 	}
 
 	/**
@@ -1057,6 +1109,7 @@ export class MinimapIconManager {
 			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
 			const worldX = city.barrack.defaultX;
 			const worldY = city.barrack.defaultY;
+			const cityIndicatorScale = this.getCityIndicatorScale();
 
 			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Adding double-ring border for capital city', DC.minimap);
 
@@ -1068,7 +1121,7 @@ export class MinimapIconManager {
 			}
 
 			// Set outer border size (same as regular city size)
-			BlzFrameSetSize(outerBorderFrame, this.CAPITAL_BORDER_OUTER, this.CAPITAL_BORDER_OUTER);
+			this.setSquareFrameSize(outerBorderFrame, this.CAPITAL_BORDER_OUTER, cityIndicatorScale);
 
 			// Set white color for outer border
 			BlzFrameSetTexture(outerBorderFrame, this.COLOR_TEXTURES[99], 0, true);
@@ -1090,7 +1143,7 @@ export class MinimapIconManager {
 			}
 
 			// Set inner border size (between outer border and capital icon)
-			BlzFrameSetSize(innerBorderFrame, this.CAPITAL_BORDER_INNER, this.CAPITAL_BORDER_INNER);
+			this.setSquareFrameSize(innerBorderFrame, this.CAPITAL_BORDER_INNER, cityIndicatorScale);
 
 			// Set black color for inner border
 			BlzFrameSetTexture(innerBorderFrame, this.COLOR_TEXTURES[24], 0, true);
@@ -1114,7 +1167,7 @@ export class MinimapIconManager {
 			// Make the capital icon smaller (border makes it stand out)
 			const iconFrame = this.cityIcons.get(city);
 			if (iconFrame) {
-				BlzFrameSetSize(iconFrame, this.CAPITAL_ICON_SIZE, this.CAPITAL_ICON_SIZE);
+				this.setSquareFrameSize(iconFrame, this.CAPITAL_ICON_SIZE, cityIndicatorScale);
 				BlzFrameSetLevel(iconFrame, 13); // Above borders (which are at 11-12)
 
 				// Update color immediately
@@ -1151,13 +1204,14 @@ export class MinimapIconManager {
 		this.capitalIcons.clear();
 
 		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
+		const cityIndicatorScale = this.getCityIndicatorScale();
 
 		// Reset all city icons back to default size and unhide them
 		for (let i = 0; i < this.cityRecords.length; i++) {
 			const record = this.cityRecords[i];
 			const iconFrame = record.iconFrame;
 
-			BlzFrameSetSize(iconFrame, this.BUILDING_ICON_SIZE, this.BUILDING_ICON_SIZE);
+			this.setSquareFrameSize(iconFrame, this.BUILDING_ICON_SIZE, cityIndicatorScale);
 			BlzFrameSetLevel(iconFrame, 11);
 
 			// Force a color update assuming fog is active
@@ -1204,7 +1258,7 @@ export class MinimapIconManager {
 		this.framePool = [];
 		this.lastSeenOwners.clear();
 		this.cityLastTexture.clear();
-		this.unitLastTexture.clear();
+		this.frameLastTexture.clear();
 
 		if (this.updateTimer) {
 			DestroyTimer(this.updateTimer);

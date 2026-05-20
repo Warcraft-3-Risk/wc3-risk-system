@@ -1,6 +1,6 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { TrackedData } from '../data/tracked-data';
-import { DefaultCountryLabels, Options } from '../options';
+import { DefaultCountryLabels, DefaultLargeCityIndicators, Options } from '../options';
 import { Status } from '../status/status';
 import { GamePlayer } from './game-player';
 import { NameManager } from 'src/app/managers/names/name-manager';
@@ -32,6 +32,8 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			countryLabels: DefaultCountryLabels,
 			colorblind: false,
 			colorContrast: false,
+			cameraPan: true,
+			largeCityIndicators: DefaultLargeCityIndicators,
 		};
 		this._killedBy = undefined;
 		this._admin = false;
@@ -65,6 +67,8 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			countryLabels: DefaultCountryLabels,
 			colorblind: false,
 			colorContrast: false,
+			cameraPan: true,
+			largeCityIndicators: DefaultLargeCityIndicators,
 		};
 	}
 

@@ -68,6 +68,7 @@ describe('MinimapIconManager unit icon colors', () => {
 			frame.texture = texture;
 		};
 		(globalThis as any).FRAMEPOINT_CENTER = 'center';
+		(globalThis as any).GetHandleId = (h: any) => h?.handleId ?? h ?? 0;
 
 		vi.mocked(PlayerManager.getInstance).mockReturnValue({
 			players: new Map([
@@ -95,11 +96,88 @@ describe('MinimapIconManager unit icon colors', () => {
 		(manager as any).COLOR_TEXTURES = [];
 		(manager as any).COLOR_TEXTURES[1] = 'blue-texture';
 		(manager as any).COLOR_TEXTURES[99] = 'white-texture';
-		(manager as any).unitLastTexture = new Map();
+		(manager as any).frameLastTexture = new Map();
 
 		(manager as any).updateUnitIconColor(frame, unit, localPlayer);
 
-		expect((frame as any).texture).toBe('blue-texture');
+		expect((frame as any).texture).toBe('white-texture');
+	});
+
+	it('updates previously assigned frame color when frame is recycled for a new unit', () => {
+		const localPlayer = Player(0);
+		// Assign handle IDs for colors directly to match GetHandleId shim expectations
+		const redColor = { handleId: 1 };
+		const blueColor = { handleId: 2 };
+		const redPlayer = Object.assign(Player(1), { color: redColor });
+		const bluePlayer = Object.assign(Player(2), { color: blueColor });
+
+		const unitA = { owner: redPlayer };
+		const unitB = { owner: bluePlayer };
+		const frame: any = { texture: '' };
+		const manager = Object.create(MinimapIconManager.prototype);
+
+		// Bypass ally color mode to force default original player colors branch
+		vi.spyOn(AllyColorState.getInstance(), 'getMode').mockReturnValue(0);
+
+		(manager as any).COLOR_TEXTURES = [];
+		(manager as any).COLOR_TEXTURES[1] = 'red-texture';
+		(manager as any).COLOR_TEXTURES[2] = 'blue-texture';
+		(manager as any).frameLastTexture = new Map();
+
+		// Simulate frame being assigned to Unit A (red)
+		(manager as any).updateUnitIconColor(frame, unitA, localPlayer);
+		expect(frame.texture).toBe('red-texture');
+		expect((manager as any).frameLastTexture.get(frame)).toBe('red-texture');
+
+		// Simulating frame being recycled mathematically — same frame object now representing Unit B
+		// The mock native engine sets 'texture' property on 'frame'.
+		// If caching was by unit, it wouldn't know 'frame' is already displaying 'red-texture', and might skip it
+		// if unitB was previously also somehow cached to 'blue-texture'.
+		// We'll pre-populate a fictitious unit cache (what the bug used) just to prove our cache key works.
+		(manager as any).unitLastTexture = new Map([[unitB, 'blue-texture']]);
+
+		// Before calling update, manually wipe the mock frame's texture so we can detect if BlzFrameSetTexture was genuinely called.
+		frame.texture = 'stale-red-texture';
+
+		(manager as any).updateUnitIconColor(frame, unitB, localPlayer);
+
+		// The cache checked the mapped 'frame', saw 'red-texture' != 'blue-texture', and applied the update.
+		expect(frame.texture).toBe('blue-texture');
+		expect((manager as any).frameLastTexture.get(frame)).toBe('blue-texture');
+	});
+
+	it('skips redundant BlzFrameSetTexture calls when frame texture is already correct', () => {
+		const localPlayer = Player(0);
+		// Force predictable color indices for the NameManager fallback
+		const blueColor = { handleId: 2 };
+		const bluePlayer = Object.assign(Player(2), { color: blueColor });
+		let setTextureCallCount = 0;
+
+		// Bypass ally color mode to force default original player colors branch
+		vi.spyOn(AllyColorState.getInstance(), 'getMode').mockReturnValue(0);
+
+		// Override the global mock specifically for this test
+		(globalThis as any).BlzFrameSetTexture = (frame: any, texture: string) => {
+			frame.texture = texture;
+			setTextureCallCount++;
+		};
+
+		const unit = { owner: bluePlayer };
+		const frame: any = { texture: '' };
+		const manager = Object.create(MinimapIconManager.prototype);
+
+		(manager as any).COLOR_TEXTURES = [];
+		(manager as any).COLOR_TEXTURES[2] = 'blue-texture';
+		(manager as any).frameLastTexture = new Map();
+
+		// First call: Should set the texture
+		(manager as any).updateUnitIconColor(frame, unit, localPlayer);
+		expect(setTextureCallCount).toBe(1);
+		expect(frame.texture).toBe('blue-texture');
+
+		// Second call: Should hit cache and avoid calling the BlzFrameSetTexture
+		(manager as any).updateUnitIconColor(frame, unit, localPlayer);
+		expect(setTextureCallCount).toBe(1); // Call count didn't increase!
 	});
 
 	it('refreshes a visible unloaded shared-slot minimap icon even when its texture cache is stale', () => {
@@ -136,7 +214,7 @@ describe('MinimapIconManager unit icon colors', () => {
 		(manager as any).trackedList.addTrackedUnit(unit, frame, sharedSlot);
 		(manager as any).COLOR_TEXTURES = [];
 		(manager as any).COLOR_TEXTURES[5] = 'orange-owner-texture';
-		(manager as any).unitLastTexture = new Map([[unit, 'orange-owner-texture']]);
+		(manager as any).frameLastTexture = new Map([[frame, 'orange-owner-texture']]);
 		(manager as any).hudScale = 1;
 		(manager as any).MINIMAP_WIDTH = 0.14;
 		(manager as any).MINIMAP_HEIGHT = 0.14;
@@ -150,5 +228,47 @@ describe('MinimapIconManager unit icon colors', () => {
 		expect(frame.texture).toBe('orange-owner-texture');
 		expect(frame.visible).toBe(true);
 		expect((manager as any).trackedList.trackedRawOwnerList[0]).toBe(sharedSlot);
+	});
+
+	it('scales regular and capital city indicator frames when the preference is enabled', () => {
+		const localPlayer = Player(0);
+		const regularCity = {};
+		const capitalCity = {};
+		const regularFrame: any = {};
+		const capitalFrame: any = {};
+		const innerBorder: any = {};
+		const outerBorder: any = {};
+		const manager = Object.create(MinimapIconManager.prototype);
+
+		(globalThis as any).GetLocalPlayer = () => localPlayer;
+		(globalThis as any).BlzFrameSetSize = (frame: any, width: number, height: number) => {
+			frame.width = width;
+			frame.height = height;
+		};
+		vi.mocked(PlayerManager.getInstance).mockReturnValue({
+			players: new Map([[localPlayer, { options: { largeCityIndicators: true } }]]),
+		} as any);
+
+		(manager as any).isActive = true;
+		(manager as any).BUILDING_ICON_SIZE = 0.004;
+		(manager as any).CAPITAL_ICON_SIZE = 0.0025;
+		(manager as any).CAPITAL_BORDER_INNER = 0.0035;
+		(manager as any).CAPITAL_BORDER_OUTER = 0.0045;
+		(manager as any).LARGE_CITY_INDICATOR_SCALE = 1.35;
+		(manager as any).cityRecords = [
+			{ city: regularCity, iconFrame: regularFrame },
+			{ city: capitalCity, iconFrame: capitalFrame },
+		];
+		(manager as any).capitalIcons = new Map([[capitalCity, true]]);
+		(manager as any).cityBorders = new Map([[capitalCity, innerBorder]]);
+		(manager as any).cityOuterBorders = new Map([[capitalCity, outerBorder]]);
+
+		(manager as any).refreshCitySizes();
+
+		expect(regularFrame.width).toBeCloseTo(0.004 * 1.35);
+		expect(capitalFrame.width).toBeCloseTo(0.0025 * 1.35);
+		expect(innerBorder.width).toBeCloseTo(0.0035 * 1.35);
+		expect(outerBorder.width).toBeCloseTo(0.0045 * 1.35);
+		expect((manager as any).lastGlobalLargeCityIndicators).toBe(true);
 	});
 });

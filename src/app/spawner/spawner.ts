@@ -92,10 +92,7 @@ export class Spawner implements Resetable, Ownable {
 			const owningSlot = SharedSlotManager.getInstance().getSlotWithLowestUnitCount(owner);
 			let u: unit = CreateUnit(owningSlot, this.spawnType, GetUnitX(this.unit), GetUnitY(this.unit), 270);
 			if (DEBUG_PRINTS.master)
-				debugPrint(
-					`[SharedSlots] Spawned unit for player ${GetPlayerId(owner)} on slot ${GetPlayerId(owningSlot)}`,
-					DC.sharedSlots
-				);
+				debugPrint(`[SharedSlots] Spawned unit for player ${GetPlayerId(owner)} on slot ${GetPlayerId(owningSlot)}`, DC.sharedSlots);
 			SharedSlotManager.getInstance().incrementUnitCount(owningSlot);
 			UnitLagManager.getInstance().trackUnit(u);
 

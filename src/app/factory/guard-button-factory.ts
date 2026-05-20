@@ -4,7 +4,7 @@ import { HexColors } from '../utils/hex-colors';
 export type ButtonConfig = {
 	player: ActivePlayer;
 	createContext: number;
-	key: oskeytype;
+	key?: oskeytype;
 	textures: {
 		primary: string;
 		secondary: string;
@@ -29,8 +29,6 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 	BlzFrameSetAllPoints(buttonIconFrame, button);
 	BlzFrameSetPoint(button, FRAMEPOINT_TOPLEFT, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_TOPLEFT, config.xOffset, -0.025);
 	BlzFrameSetSize(button, 0.02, 0.02);
-	BlzFrameSetLevel(button, 10);
-	BlzFrameSetLevel(buttonIconFrame, 11);
 	BlzFrameSetTexture(buttonIconFrame, config.textures.primary, 0, true);
 
 	const tooltipFrame = BlzCreateFrame(
@@ -64,21 +62,22 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 		);
 	}
 
-	const executeAction = () => {
-		config.action(config.createContext, config.textures, button);
-		BlzFrameSetEnable(button, false);
-		BlzFrameSetEnable(button, true);
-	};
-
-	const hotkeyTrigger = CreateTrigger();
-
-	BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
-	TriggerAddCondition(hotkeyTrigger, Condition(executeAction));
+	if (config.key !== undefined) {
+		const hotkeyTrigger = CreateTrigger();
+		BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
+		TriggerAddCondition(
+			hotkeyTrigger,
+			Condition(() => config.action(config.createContext, config.textures, button))
+		);
+	}
 
 	const buttonTrig = CreateTrigger();
 
 	BlzTriggerRegisterFrameEvent(buttonTrig, button, FRAMEEVENT_CONTROL_CLICK);
-	TriggerAddCondition(buttonTrig, Condition(executeAction));
+	TriggerAddCondition(
+		buttonTrig,
+		Condition(() => config.action(config.createContext, config.textures, button))
+	);
 
 	BlzFrameSetVisible(button, false);
 

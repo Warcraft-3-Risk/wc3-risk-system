@@ -16,7 +16,12 @@ export function CompareUnitByValue(compareUnit: unit, initialUnit: unit): unit {
 
 	const initialUnitValue: number = GetUnitPointValue(initialUnit);
 	const compareUnitValue: number = GetUnitPointValue(compareUnit);
-	const playerSettings: Options = PlayerManager.getInstance().players.get(SharedSlotManager.getInstance().getOwnerOfUnit(compareUnit)).options;
+	const compareUnitOwner = SharedSlotManager.getInstance().getOwnerOfUnit(compareUnit);
+	// Guard against zombie shared slots whose owner is no longer tracked as a match player.
+	// In that case fall back to keeping the initial unit rather than crashing.
+	const compareUnitPlayer = PlayerManager.getInstance().players.get(compareUnitOwner);
+	if (!compareUnitPlayer) return initialUnit;
+	const playerSettings: Options = compareUnitPlayer.options;
 
 	if (!playerSettings.value && compareUnitValue < initialUnitValue) {
 		return compareUnit;
