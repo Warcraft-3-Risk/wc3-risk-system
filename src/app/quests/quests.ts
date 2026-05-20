@@ -199,6 +199,7 @@ export class Quests {
 			  Example: -mute blue
 
 			${HexColors.YELLOW}Hotkeys:|r
+			F2 - Toggle larger city indicators
 			F4 - Toggle ranked stats window
 			F6 - Toggle guard health bar preference
 			F7 - Toggle guard value display preference

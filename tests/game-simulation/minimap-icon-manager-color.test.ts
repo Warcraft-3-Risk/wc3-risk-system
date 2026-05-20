@@ -229,4 +229,46 @@ describe('MinimapIconManager unit icon colors', () => {
 		expect(frame.visible).toBe(true);
 		expect((manager as any).trackedList.trackedRawOwnerList[0]).toBe(sharedSlot);
 	});
+
+	it('scales regular and capital city indicator frames when the preference is enabled', () => {
+		const localPlayer = Player(0);
+		const regularCity = {};
+		const capitalCity = {};
+		const regularFrame: any = {};
+		const capitalFrame: any = {};
+		const innerBorder: any = {};
+		const outerBorder: any = {};
+		const manager = Object.create(MinimapIconManager.prototype);
+
+		(globalThis as any).GetLocalPlayer = () => localPlayer;
+		(globalThis as any).BlzFrameSetSize = (frame: any, width: number, height: number) => {
+			frame.width = width;
+			frame.height = height;
+		};
+		vi.mocked(PlayerManager.getInstance).mockReturnValue({
+			players: new Map([[localPlayer, { options: { largeCityIndicators: true } }]]),
+		} as any);
+
+		(manager as any).isActive = true;
+		(manager as any).BUILDING_ICON_SIZE = 0.004;
+		(manager as any).CAPITAL_ICON_SIZE = 0.0025;
+		(manager as any).CAPITAL_BORDER_INNER = 0.0035;
+		(manager as any).CAPITAL_BORDER_OUTER = 0.0045;
+		(manager as any).LARGE_CITY_INDICATOR_SCALE = 1.35;
+		(manager as any).cityRecords = [
+			{ city: regularCity, iconFrame: regularFrame },
+			{ city: capitalCity, iconFrame: capitalFrame },
+		];
+		(manager as any).capitalIcons = new Map([[capitalCity, true]]);
+		(manager as any).cityBorders = new Map([[capitalCity, innerBorder]]);
+		(manager as any).cityOuterBorders = new Map([[capitalCity, outerBorder]]);
+
+		(manager as any).refreshCitySizes();
+
+		expect(regularFrame.width).toBeCloseTo(0.004 * 1.35);
+		expect(capitalFrame.width).toBeCloseTo(0.0025 * 1.35);
+		expect(innerBorder.width).toBeCloseTo(0.0035 * 1.35);
+		expect(outerBorder.width).toBeCloseTo(0.0045 * 1.35);
+		expect((manager as any).lastGlobalLargeCityIndicators).toBe(true);
+	});
 });

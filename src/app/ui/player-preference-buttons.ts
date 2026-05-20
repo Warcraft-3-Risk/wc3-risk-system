@@ -4,7 +4,7 @@ import { HexColors } from '../utils/hex-colors';
 import { File } from 'w3ts';
 import { RatingManager } from '../rating/rating-manager';
 import { NameManager } from '../managers/names/name-manager';
-import { getCountryLabelsText } from '../player/options';
+import { getCountryLabelsText, normalizeLargeCityIndicators } from '../player/options';
 
 export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
@@ -360,6 +360,59 @@ export function buildCameraPanModeButton(player: ActivePlayer): framehandle {
 			const context = GetPlayerId(player.getPlayer()) + 600;
 			const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
 			BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp', 0, false);
+		}
+	}
+
+	return button;
+}
+
+export function buildLargeCityIndicatorButton(player: ActivePlayer): framehandle {
+	const preferenceFile = 'risk/largeCity.pld';
+	const getTooltip = (enabled: boolean): string =>
+		`Large City Indicators ${HexColors.TANGERINE}(F2)|r\nMakes minimap city indicators larger.\nCurrent preference: ${
+			enabled ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`
+		}`;
+
+	// Initialize from saved preference for local player. Missing or legacy values stay off by default.
+	if (player.getPlayer() === GetLocalPlayer()) {
+		player.options.largeCityIndicators = normalizeLargeCityIndicators(File.read(preferenceFile));
+	}
+
+	const button = createGuardButton({
+		player: player,
+		createContext: GetPlayerId(player.getPlayer()) + 700,
+		key: OSKEY_F2,
+		textures: {
+			primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTownHall.blp',
+			secondary: 'ReplaceableTextures\\CommandButtons\\BTNTownHall.blp',
+		},
+		xOffset: 0.161,
+		initialTooltipText: getTooltip(player.options.largeCityIndicators),
+		action: (context: number, textures: { primary: string; secondary: string }) => {
+			player.options.largeCityIndicators = !player.options.largeCityIndicators;
+
+			if (player.getPlayer() === GetLocalPlayer()) {
+				File.write(preferenceFile, `${player.options.largeCityIndicators}`);
+
+				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+				const texture = player.options.largeCityIndicators ? textures.secondary : textures.primary;
+
+				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+				BlzFrameSetText(buttonTooltip, getTooltip(player.options.largeCityIndicators));
+
+				const { MinimapIconManager } = require('src/app/managers/minimap-icon-manager') as typeof import('../managers/minimap-icon-manager');
+				MinimapIconManager.getInstance().refreshCitySizes();
+			}
+		},
+	});
+
+	if (player.getPlayer() === GetLocalPlayer()) {
+		if (player.options.largeCityIndicators) {
+			const context = GetPlayerId(player.getPlayer()) + 700;
+			const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+			BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNTownHall.blp', 0, false);
 		}
 	}
 
