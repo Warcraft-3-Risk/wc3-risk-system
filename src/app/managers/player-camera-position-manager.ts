@@ -24,6 +24,7 @@ export default class PlayerCameraPositionManager {
 	private syncTrigger: trigger;
 	private overlayVisible: boolean = false;
 	private toggleButton: framehandle;
+	private toggleIcon: framehandle;
 
 	public static getInstance() {
 		if (this.instance === undefined) {
@@ -104,8 +105,10 @@ export default class PlayerCameraPositionManager {
 		const localPlayer = GetLocalPlayer();
 
 		BlzFrameSetVisible(this.toggleButton, false);
+		BlzFrameSetVisible(this.toggleIcon, false);
 		if (IsPlayerObserver(localPlayer) || EDITOR_DEVELOPER_MODE) {
 			BlzFrameSetVisible(this.toggleButton, true);
+			BlzFrameSetVisible(this.toggleIcon, true);
 		} else {
 			BlzFrameSetEnable(this.toggleButton, false);
 		}
@@ -115,18 +118,26 @@ export default class PlayerCameraPositionManager {
 		const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0);
 		const ctx = 500; // unique context to avoid collision with player frames
 
+		this.toggleIcon = BlzCreateFrameByType('BACKDROP', 'CamToggleIcon', gameUI, '', ctx);
+		BlzFrameSetPoint(this.toggleIcon, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.138, -0.025);
+		BlzFrameSetSize(this.toggleIcon, 0.02, 0.02);
+		BlzFrameSetTexture(this.toggleIcon, 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp', 0, true);
+
 		// Use ScriptDialogButton — same template as the leaderboard button, proven to work with observer hover detection
 		this.toggleButton = BlzCreateFrameByType('GLUETEXTBUTTON', 'CamToggleButton', gameUI, 'ScriptDialogButton', ctx);
 		BlzFrameSetPoint(this.toggleButton, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.138, -0.025);
 		BlzFrameSetSize(this.toggleButton, 0.02, 0.02);
-		BlzFrameSetText(this.toggleButton, 'Cameras: Off');
+		BlzFrameSetText(this.toggleButton, '');
+		BlzFrameSetAlpha(this.toggleButton, 0);
 
 		const localPlayer = GetLocalPlayer();
 
 		// Only visible for observers or developers
 		BlzFrameSetVisible(this.toggleButton, false);
+		BlzFrameSetVisible(this.toggleIcon, false);
 		if (IsPlayerObserver(localPlayer) || EDITOR_DEVELOPER_MODE) {
 			BlzFrameSetVisible(this.toggleButton, true);
+			BlzFrameSetVisible(this.toggleIcon, true);
 		} else {
 			BlzFrameSetEnable(this.toggleButton, false);
 		}
@@ -139,7 +150,12 @@ export default class PlayerCameraPositionManager {
 
 	private toggleOverlay(): void {
 		this.overlayVisible = !this.overlayVisible;
-		BlzFrameSetText(this.toggleButton, this.overlayVisible ? 'Cameras: On' : 'Cameras: Off');
+		BlzFrameSetText(this.toggleButton, '');
+
+		const texture = this.overlayVisible
+			? 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp'
+			: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp';
+		BlzFrameSetTexture(this.toggleIcon, texture, 0, true);
 
 		if (!this.overlayVisible) {
 			this.frames.forEach((frame) => {
