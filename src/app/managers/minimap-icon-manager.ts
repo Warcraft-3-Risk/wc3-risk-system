@@ -67,6 +67,7 @@ export class MinimapIconManager {
 	private lastGlobalDeadInFFA: boolean | undefined;
 	private lastGlobalPovPlayer: player | undefined;
 	private lastGlobalOwnershipRevision: number | undefined;
+	private lastGlobalLargeCityIndicators: boolean | undefined;
 
 	private consoleUI: framehandle;
 	private hudScale: number = 1.0;
@@ -79,6 +80,7 @@ export class MinimapIconManager {
 	private readonly CAPITAL_ICON_SIZE = 0.0025; // Capital colored center size (smaller to show borders)
 	private readonly CAPITAL_BORDER_INNER = 0.0035; // Capital inner border size (black ring)
 	private readonly CAPITAL_BORDER_OUTER = 0.0045; // Capital outer border size (white ring)
+	private readonly LARGE_CITY_INDICATOR_SCALE = 1.35;
 	private readonly INITIAL_POOL_SIZE = 2000; // Initial number of frames to create to avoid runtime spikes
 	private readonly UNITS_PER_TICK = 200; // Throttle dynamic units processed per tick
 
@@ -92,6 +94,45 @@ export class MinimapIconManager {
 	private worldMaxY: number;
 	private worldWidth: number;
 	private worldHeight: number;
+
+	private shouldUseLargeCityIndicators(effectiveLocal: player = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer()): boolean {
+		const activePlayer = PlayerManager.getInstance().players.get(effectiveLocal);
+		return activePlayer ? activePlayer.options.largeCityIndicators === true : false;
+	}
+
+	private getCityIndicatorScale(largeCityIndicators: boolean = this.shouldUseLargeCityIndicators()): number {
+		return largeCityIndicators ? this.LARGE_CITY_INDICATOR_SCALE : 1.0;
+	}
+
+	private setSquareFrameSize(frame: framehandle, baseSize: number, scale: number): void {
+		const size = baseSize * scale;
+		BlzFrameSetSize(frame, size, size);
+	}
+
+	public refreshCitySizes(): void {
+		if (!this.isActive) {
+			return;
+		}
+
+		const largeCityIndicators = this.shouldUseLargeCityIndicators();
+		const scale = this.getCityIndicatorScale(largeCityIndicators);
+		for (let i = 0; i < this.cityRecords.length; i++) {
+			const record = this.cityRecords[i];
+			const isCapital = this.capitalIcons.has(record.city);
+
+			if (isCapital) {
+				this.setSquareFrameSize(record.iconFrame, this.CAPITAL_ICON_SIZE, scale);
+				const innerBorder = this.cityBorders.get(record.city);
+				const outerBorder = this.cityOuterBorders.get(record.city);
+				if (innerBorder) this.setSquareFrameSize(innerBorder, this.CAPITAL_BORDER_INNER, scale);
+				if (outerBorder) this.setSquareFrameSize(outerBorder, this.CAPITAL_BORDER_OUTER, scale);
+			} else {
+				this.setSquareFrameSize(record.iconFrame, this.BUILDING_ICON_SIZE, scale);
+			}
+		}
+
+		this.lastGlobalLargeCityIndicators = largeCityIndicators;
+	}
 
 	/**
 	 * Gets the singleton instance.
@@ -384,6 +425,7 @@ export class MinimapIconManager {
 			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
 			const worldX = city.barrack.defaultX;
 			const worldY = city.barrack.defaultY;
+			const cityIndicatorScale = this.getCityIndicatorScale();
 
 			// Hide the default minimap display for the city's barrack unit
 			BlzSetUnitBooleanField(city.barrack.unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
@@ -400,7 +442,7 @@ export class MinimapIconManager {
 			}
 
 			// Set icon size
-			BlzFrameSetSize(iconFrame, this.BUILDING_ICON_SIZE, this.BUILDING_ICON_SIZE);
+			this.setSquareFrameSize(iconFrame, this.BUILDING_ICON_SIZE, cityIndicatorScale);
 
 			// Set level to render above minimap (and above border if present)
 			BlzFrameSetLevel(iconFrame, 10);
@@ -544,10 +586,15 @@ export class MinimapIconManager {
 		const allyColorMode = localIsColorContrast ? 2 : AllyColorState.getInstance().getMode();
 		const isFFA = SettingsContext.getInstance().isFFA();
 		const isDeadInFFA = isFFA && activeLocalPlayer ? activeLocalPlayer.status.isDead() : false;
+		const localLargeCityIndicators = activeLocalPlayer ? activeLocalPlayer.options.largeCityIndicators === true : false;
 		const sharedSlotManager = SharedSlotManager.getInstance();
 		const currentOwnershipRevision = sharedSlotManager.getOwnershipRevision();
 
-		// Check if any global context parameter changed
+		if (this.lastGlobalLargeCityIndicators !== localLargeCityIndicators) {
+			this.refreshCitySizes();
+		}
+
+		// Check if any global color/ownership context parameter changed
 		if (
 			this.lastGlobalColorMode !== allyColorMode ||
 			this.lastGlobalColorBlind !== localIsColorBlind ||
@@ -1062,6 +1109,7 @@ export class MinimapIconManager {
 			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
 			const worldX = city.barrack.defaultX;
 			const worldY = city.barrack.defaultY;
+			const cityIndicatorScale = this.getCityIndicatorScale();
 
 			if (DEBUG_PRINTS.master) debugPrint('MinimapIconManager: Adding double-ring border for capital city', DC.minimap);
 
@@ -1073,7 +1121,7 @@ export class MinimapIconManager {
 			}
 
 			// Set outer border size (same as regular city size)
-			BlzFrameSetSize(outerBorderFrame, this.CAPITAL_BORDER_OUTER, this.CAPITAL_BORDER_OUTER);
+			this.setSquareFrameSize(outerBorderFrame, this.CAPITAL_BORDER_OUTER, cityIndicatorScale);
 
 			// Set white color for outer border
 			BlzFrameSetTexture(outerBorderFrame, this.COLOR_TEXTURES[99], 0, true);
@@ -1095,7 +1143,7 @@ export class MinimapIconManager {
 			}
 
 			// Set inner border size (between outer border and capital icon)
-			BlzFrameSetSize(innerBorderFrame, this.CAPITAL_BORDER_INNER, this.CAPITAL_BORDER_INNER);
+			this.setSquareFrameSize(innerBorderFrame, this.CAPITAL_BORDER_INNER, cityIndicatorScale);
 
 			// Set black color for inner border
 			BlzFrameSetTexture(innerBorderFrame, this.COLOR_TEXTURES[24], 0, true);
@@ -1119,7 +1167,7 @@ export class MinimapIconManager {
 			// Make the capital icon smaller (border makes it stand out)
 			const iconFrame = this.cityIcons.get(city);
 			if (iconFrame) {
-				BlzFrameSetSize(iconFrame, this.CAPITAL_ICON_SIZE, this.CAPITAL_ICON_SIZE);
+				this.setSquareFrameSize(iconFrame, this.CAPITAL_ICON_SIZE, cityIndicatorScale);
 				BlzFrameSetLevel(iconFrame, 13); // Above borders (which are at 11-12)
 
 				// Update color immediately
@@ -1156,13 +1204,14 @@ export class MinimapIconManager {
 		this.capitalIcons.clear();
 
 		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
+		const cityIndicatorScale = this.getCityIndicatorScale();
 
 		// Reset all city icons back to default size and unhide them
 		for (let i = 0; i < this.cityRecords.length; i++) {
 			const record = this.cityRecords[i];
 			const iconFrame = record.iconFrame;
 
-			BlzFrameSetSize(iconFrame, this.BUILDING_ICON_SIZE, this.BUILDING_ICON_SIZE);
+			this.setSquareFrameSize(iconFrame, this.BUILDING_ICON_SIZE, cityIndicatorScale);
 			BlzFrameSetLevel(iconFrame, 11);
 
 			// Force a color update assuming fog is active

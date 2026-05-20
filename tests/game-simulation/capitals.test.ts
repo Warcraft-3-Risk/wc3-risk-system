@@ -107,6 +107,10 @@ vi.mock('src/app/ui/player-preference-buttons', () => ({
 	buildGuardValueButton: vi.fn(() => ({})),
 	buildLabelToggleButton: vi.fn(() => ({})),
 	buildRatingStatsButton: vi.fn(() => ({})),
+	buildColorblindModeButton: vi.fn(() => ({})),
+	buildColorContrastModeButton: vi.fn(() => ({})),
+	buildCameraPanModeButton: vi.fn(() => ({})),
+	buildLargeCityIndicatorButton: vi.fn(() => ({})),
 }));
 vi.mock('src/app/ui/rating-stats-ui', () => ({
 	RatingStatsUI: vi.fn(),

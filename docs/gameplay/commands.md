@@ -220,16 +220,18 @@ In addition to chat commands, players have UI buttons for guard preferences:
 ```mermaid
 flowchart LR
     subgraph Buttons ["Player Tool Buttons"]
-        B0["High Contrast<br/>Toggle (F3)"]
-        B1["Guard Health<br/>Preference"]
-        B2["Guard Value<br/>Preference"]
-        B3["Label Toggle"]
-        B4["Rating Stats (F4)"]
+        B0["Large City Indicators<br/>Toggle (F2)"]
+        B1["High Contrast<br/>Toggle (F3)"]
+        B2["Guard Health<br/>Preference"]
+        B3["Guard Value<br/>Preference"]
+        B4["Label Toggle"]
+        B5["Rating Stats (F4)"]
     end
 ```
 
 | Button | Function | Related Ability |
 |--------|----------|----------------|
+| Large City Indicators (F2) | Toggle larger minimap city indicators | — |
 | High Contrast (F3) | Toggle High Contrast Ally Color Mode | — |
 | Guard Health | Toggle low/high HP guard preference | `a051` / `a052` |
 | Guard Value | Toggle low/high value guard preference | `a053` / `a054` |

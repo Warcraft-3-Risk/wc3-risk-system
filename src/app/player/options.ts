@@ -1,4 +1,5 @@
 export const DefaultCountryLabels = true;
+export const DefaultLargeCityIndicators = false;
 
 export function normalizeCountryLabels(value?: string): boolean {
 	if (value === 'false' || value === 'none') {
@@ -12,6 +13,10 @@ export function getCountryLabelsText(value: boolean): string {
 	return value ? 'On' : 'Off';
 }
 
+export function normalizeLargeCityIndicators(value?: string): boolean {
+	return value === 'true';
+}
+
 export type Options = {
 	health: boolean;
 	value: boolean;
@@ -21,6 +26,7 @@ export type Options = {
 	colorblind: boolean;
 	colorContrast: boolean;
 	cameraPan: boolean;
+	largeCityIndicators: boolean;
 	// Note: showRating preference is now stored in the rating file itself
 	// via RatingManager.getShowRatingPreference() / setShowRatingPreference()
 };

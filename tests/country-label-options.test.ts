@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { DefaultCountryLabels, getCountryLabelsText, normalizeCountryLabels } from '../src/app/player/options';
+import {
+	DefaultCountryLabels,
+	DefaultLargeCityIndicators,
+	getCountryLabelsText,
+	normalizeCountryLabels,
+	normalizeLargeCityIndicators,
+} from '../src/app/player/options';
 
 describe('country label options', () => {
 	it('defaults country labels on for players', () => {
@@ -23,5 +29,12 @@ describe('country label options', () => {
 	it('describes the two F8 country label states', () => {
 		expect(getCountryLabelsText(true)).toBe('On');
 		expect(getCountryLabelsText(false)).toBe('Off');
+	});
+
+	it('defaults larger city indicators off unless explicitly saved on', () => {
+		expect(DefaultLargeCityIndicators).toBe(false);
+		expect(normalizeLargeCityIndicators(undefined)).toBe(false);
+		expect(normalizeLargeCityIndicators('false')).toBe(false);
+		expect(normalizeLargeCityIndicators('true')).toBe(true);
 	});
 });
