@@ -8,6 +8,7 @@ import { NameManager } from './names/name-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { MinimapIconManager } from './minimap-icon-manager';
 import { SettingsContext } from '../settings/settings-context';
+import { HexColors } from '../utils/hex-colors';
 
 export type CamPositionData = {
 	x: number;
@@ -24,6 +25,7 @@ export default class PlayerCameraPositionManager {
 	private syncTrigger: trigger;
 	private overlayVisible: boolean = false;
 	private toggleButton: framehandle;
+	private iconBackground: framehandle;
 
 	public static getInstance() {
 		if (this.instance === undefined) {
@@ -104,8 +106,10 @@ export default class PlayerCameraPositionManager {
 		const localPlayer = GetLocalPlayer();
 
 		BlzFrameSetVisible(this.toggleButton, false);
+		BlzFrameSetVisible(this.iconBackground, false);
 		if (IsPlayerObserver(localPlayer) || EDITOR_DEVELOPER_MODE) {
 			BlzFrameSetVisible(this.toggleButton, true);
+			BlzFrameSetVisible(this.iconBackground, true);
 		} else {
 			BlzFrameSetEnable(this.toggleButton, false);
 		}
@@ -115,20 +119,44 @@ export default class PlayerCameraPositionManager {
 		const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0);
 		const ctx = 500; // unique context to avoid collision with player frames
 
+		this.iconBackground = BlzCreateFrameByType('BACKDROP', 'CamToggleIcon', gameUI, '', ctx);
+		BlzFrameSetPoint(this.iconBackground, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.138, -0.025);
+		BlzFrameSetSize(this.iconBackground, 0.02, 0.02);
+		BlzFrameSetTexture(this.iconBackground, 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp', 0, true);
+
 		// Use ScriptDialogButton — same template as the leaderboard button, proven to work with observer hover detection
 		this.toggleButton = BlzCreateFrameByType('GLUETEXTBUTTON', 'CamToggleButton', gameUI, 'ScriptDialogButton', ctx);
-		BlzFrameSetPoint(this.toggleButton, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.092, -0.025);
-		BlzFrameSetSize(this.toggleButton, 0.1, 0.03);
-		BlzFrameSetText(this.toggleButton, 'Cameras: Off');
+		BlzFrameSetAllPoints(this.toggleButton, this.iconBackground);
+		BlzFrameSetText(this.toggleButton, '');
+
+		// Hide the normal backgrounds of the ScriptDialogButton so only the highlight is visible over our icon
+		BlzFrameSetVisible(BlzFrameGetChild(this.toggleButton, 0), false);
+		BlzFrameSetVisible(BlzFrameGetChild(this.toggleButton, 1), false);
+		BlzFrameSetVisible(BlzFrameGetChild(this.toggleButton, 2), false);
+
+		// Tooltip
+		const tooltipFrame = BlzCreateFrame('EscMenuControlBackdropTemplate', gameUI, 0, ctx);
+		BlzFrameSetTooltip(this.toggleButton, tooltipFrame);
+
+		const tooltipText = BlzCreateFrameByType('TEXT', 'CamToggleTooltipText', tooltipFrame, '', ctx);
+		BlzFrameSetSize(tooltipText, 0.15, 0);
+		BlzFrameSetTextAlignment(tooltipText, TEXT_JUSTIFY_LEFT, TEXT_JUSTIFY_TOP);
+		BlzFrameSetPoint(tooltipFrame, FRAMEPOINT_BOTTOMLEFT, tooltipText, FRAMEPOINT_BOTTOMLEFT, -0.012, -0.01);
+		BlzFrameSetPoint(tooltipFrame, FRAMEPOINT_TOPRIGHT, tooltipText, FRAMEPOINT_TOPRIGHT, 0.012, 0.01);
+		BlzFrameSetPoint(tooltipText, FRAMEPOINT_TOPLEFT, this.toggleButton, FRAMEPOINT_BOTTOMLEFT, 0, -0.01);
+		BlzFrameSetText(tooltipText, `Observer Cameras ${HexColors.TANGERINE}(Hover)|r\nToggles visibility of observer camera positions on the map.\nCurrent preference: ${HexColors.RED}Off`);
 
 		const localPlayer = GetLocalPlayer();
 
 		// Only visible for observers or developers
 		BlzFrameSetVisible(this.toggleButton, false);
+		BlzFrameSetVisible(this.iconBackground, false);
 		if (IsPlayerObserver(localPlayer) || EDITOR_DEVELOPER_MODE) {
 			BlzFrameSetVisible(this.toggleButton, true);
+			BlzFrameSetVisible(this.iconBackground, true);
 		} else {
 			BlzFrameSetEnable(this.toggleButton, false);
+			BlzFrameSetEnable(this.iconBackground, false);
 		}
 
 		// Observer hover-click — same pattern as leaderboard button in ranked-statistics-view
@@ -139,7 +167,18 @@ export default class PlayerCameraPositionManager {
 
 	private toggleOverlay(): void {
 		this.overlayVisible = !this.overlayVisible;
-		BlzFrameSetText(this.toggleButton, this.overlayVisible ? 'Cameras: On' : 'Cameras: Off');
+		
+		const texture = this.overlayVisible 
+			? 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp' 
+			: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp';
+		
+		BlzFrameSetTexture(this.iconBackground, texture, 0, true);
+
+		// Update tooltip text
+		const tooltipText = BlzGetFrameByName('CamToggleTooltipText', 500);
+		BlzFrameSetText(tooltipText, `Observer Cameras ${HexColors.TANGERINE}(Hover)|r\nToggles visibility of observer camera positions on the map.\nCurrent preference: ` +
+			`${this.overlayVisible ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`
+		);
 
 		if (!this.overlayVisible) {
 			this.frames.forEach((frame) => {
