@@ -165,6 +165,10 @@ gg_rct_Bermuda = nil
 gg_rct_Svalbard = nil
 gg_rct_Taiwan = nil
 gg_rct_VNV_Nation = nil
+gg_rct_EastLeave = nil
+gg_rct_EastEnter = nil
+gg_rct_WestEnter = nil
+gg_rct_WestLeave = nil
 function InitGlobals()
 end
 
@@ -338,6 +342,10 @@ gg_rct_Bermuda = Rect(-7616.0, 7488.0, -7360.0, 7744.0)
 gg_rct_Svalbard = Rect(4672.0, 21952.0, 4928.0, 22208.0)
 gg_rct_Taiwan = Rect(29120.0, 5440.0, 29376.0, 5696.0)
 gg_rct_VNV_Nation = Rect(-6208.0, 11968.0, -5952.0, 12224.0)
+gg_rct_EastLeave = Rect(30272.0, 15296.0, 30336.0, 18400.0)
+gg_rct_EastEnter = Rect(30400.0, 15296.0, 30464.0, 18400.0)
+gg_rct_WestEnter = Rect(-30496.0, 15392.0, -30432.0, 18496.0)
+gg_rct_WestLeave = Rect(-30368.0, 15392.0, -30304.0, 18496.0)
 end
 
 function InitCustomPlayerSlots()

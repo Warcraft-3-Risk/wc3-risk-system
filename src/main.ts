@@ -12,6 +12,7 @@ import { SetConsoleUI } from './app/ui/console';
 import { AllyColorFilterManager } from './app/managers/ally-color-filter-manager';
 import { OwnershipChangeEvent } from './app/triggers/ownership-change-event';
 import { EnterRegionEvent } from './app/triggers/enter-region-event';
+import { WorldEdgeTransportEvent } from './app/triggers/world-edge-transport-event';
 import { LeaveRegionEvent } from './app/triggers/leave-region-event';
 import { SpellEffectEvent } from './app/triggers/spell-effect-event';
 import { PlayerLeaveEvent } from './app/triggers/player-leave-event';
@@ -106,6 +107,7 @@ function tsMain() {
 
 		//Set up triggers
 		EnterRegionEvent();
+		WorldEdgeTransportEvent();
 		LeaveRegionEvent();
 		UnitDamagedEvent();
 		UnitDeathEvent();
