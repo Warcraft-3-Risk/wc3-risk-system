@@ -35,6 +35,7 @@ vi.mock('../src/app/managers/minimap-icon-manager', () => {
 import PlayerCameraPositionManager from '../src/app/managers/player-camera-position-manager';
 import { PlayerManager } from '../src/app/player/player-manager';
 import { PLAYER_STATUS } from '../src/app/player/status/status-enum';
+import { ObserverCameraPositionOverlay } from '../src/app/triggers/visuals/observer-camera-position-overlay';
 
 // Setup some missing specific globals for player camera manager
 (globalThis as any).CreateTrigger = vi.fn().mockReturnValue({});
@@ -49,6 +50,7 @@ import { PLAYER_STATUS } from '../src/app/player/status/status-enum';
 (globalThis as any).BlzFrameSetText = vi.fn();
 (globalThis as any).BlzFrameSetVisible = vi.fn();
 (globalThis as any).BlzFrameSetEnable = vi.fn();
+(globalThis as any).BlzFrameSetAlpha = vi.fn();
 (globalThis as any).BlzFrameSetAbsPoint = vi.fn();
 (globalThis as any).GetCameraTargetPositionX = vi.fn().mockReturnValue(100);
 (globalThis as any).GetCameraTargetPositionY = vi.fn().mockReturnValue(200);
@@ -65,6 +67,7 @@ import { PLAYER_STATUS } from '../src/app/player/status/status-enum';
 (globalThis as any).BlzFrameSetVisible = vi.fn();
 (globalThis as any).BlzFrameSetPoint = vi.fn();
 (globalThis as any).BlzFrameSetSize = vi.fn();
+(globalThis as any).BlzFrameSetTexture = vi.fn();
 (globalThis as any).BlzGetFrameByName = vi.fn().mockReturnValue({});
 (globalThis as any).BlzGetOriginFrame = vi.fn().mockReturnValue({});
 (globalThis as any).BlzTriggerRegisterFrameEvent = vi.fn();
@@ -133,6 +136,7 @@ describe('PlayerCameraPositionManager', () => {
 
 		// Reset singleton
 		(PlayerCameraPositionManager as any).instance = undefined;
+		(ObserverCameraPositionOverlay as any).instance = undefined;
 	});
 
 	it('syncs camera position when the active player is ALIVE', () => {

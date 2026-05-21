@@ -153,7 +153,8 @@ if ((EDITOR_DEVELOPER_MODE || IsPlayerObserver(GetLocalPlayer())) && this.camera
 
 | File                                | Change                                                                                                                                                                     |
 | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `player-camera-position-manager.ts` | Add `cameraOverlayVisible` state (default `false`), create toggle button in constructor, wire `CreateObserverButton`, gate `renderFrames()` and `onSync()` on toggle state |
+| `observer-camera-position-overlay.ts` | Own observer camera position overlay state, create the observer-safe toggle button, wire `CreateObserverButton`                                                           |
+| `player-camera-position-manager.ts`   | Keep camera sync, lerp, and frame rendering; ask `ObserverCameraPositionOverlay` whether observer overlay is enabled                                                     |
 | `observer-helper.ts`                | No changes — reuse existing `CreateObserverButton`                                                                                                                         |
 | `guard-button-factory.ts`           | No changes (or optionally refactor to share button creation, but not required)                                                                                             |
 | `game-settings.ts`                  | No changes needed (existing `SHOW_PLAYER_CAMERA_POSITIONS` still acts as master kill-switch)                                                                               |

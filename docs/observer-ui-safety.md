@@ -30,7 +30,7 @@ The known-good top-left observer toggle shape is:
 6. In the callback, update local UI state, swap the icon texture, apply the
    feature effect, then disable and re-enable the button to release focus.
 
-`PlayerCameraPositionManager.createToggleButton()` is the reference
+`ObserverCameraPositionOverlay.createToggleButton()` is the reference
 implementation. `ObserverRangeIndicator.createToggleButton()` intentionally
 matches that shape.
 
@@ -52,7 +52,9 @@ matches that shape.
 ## Source of Truth in Code
 
 - Safe hover helper: `src/app/utils/observer-helper.ts`
-- Reference observer toggle: `src/app/managers/player-camera-position-manager.ts`
+- Reference observer camera position overlay toggle:
+  `src/app/triggers/visuals/observer-camera-position-overlay.ts`
+- Player camera sync and render loop:
+  `src/app/managers/player-camera-position-manager.ts`
 - Range indicator toggle using the same shape:
   `src/app/triggers/visuals/observer-range-indicator.ts`
-
