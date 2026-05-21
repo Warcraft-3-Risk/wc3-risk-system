@@ -1,5 +1,9 @@
 # Observer Camera Position Toggle — Implementation Plan
 
+> Status: implemented. For future observer UI changes, see
+> `docs/observer-ui-safety.md`. The implemented safe pattern intentionally does
+> not attach tooltip frames to hover-polled observer buttons.
+
 ## Goal
 
 Allow observers to toggle the player camera position overlay on/off via a button in the top-left corner. The default state is **off** (hidden), since the floating name tags can be visually intrusive.
@@ -66,7 +70,8 @@ Create the button in `PlayerCameraPositionManager` (or a dedicated helper called
    	BlzFrameSetVisible(button, true);
    }
    ```
-4. **Tooltip:** Show "Toggle Player Cameras" text on hover.
+4. **Tooltip:** Do not attach tooltip frames to hover-polled observer buttons.
+   Observer controls have desynced from frame structure differences alone.
 5. **Icon textures:** Use an eye/camera icon. Swap between an "on" and "off" texture on toggle.
 
 ### Step 2: Wire Observer Hover-Click via `CreateObserverButton`

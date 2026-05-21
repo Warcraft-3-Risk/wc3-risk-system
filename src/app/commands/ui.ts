@@ -11,7 +11,8 @@ export function UICommand(chatManager: ChatManager) {
 		const ratingButton = BlzGetFrameByName('GuardButton', GetPlayerId(player) + 300);
 		const colorblindButton = BlzGetFrameByName('GuardButton', GetPlayerId(player) + 400);
 		const colorContrastButton = BlzGetFrameByName('GuardButton', GetPlayerId(player) + 500);
-		const signalButton = BlzGetFrameByName('GuardButton', GetPlayerId(player) + 600);
+		const cameraPanButton = BlzGetFrameByName('GuardButton', GetPlayerId(player) + 600);
+		const largeCityIndicatorsButton = BlzGetFrameByName('GuardButton', GetPlayerId(player) + 700);
 
 		let isHidden: boolean = BlzFrameIsVisible(healthButton);
 
@@ -25,7 +26,8 @@ export function UICommand(chatManager: ChatManager) {
 				if (ratingButton) BlzFrameSetVisible(ratingButton, false);
 				if (colorblindButton) BlzFrameSetVisible(colorblindButton, false);
 				if (colorContrastButton) BlzFrameSetVisible(colorContrastButton, false);
-				if (signalButton) BlzFrameSetVisible(signalButton, false);
+				if (cameraPanButton) BlzFrameSetVisible(cameraPanButton, false);
+				if (largeCityIndicatorsButton) BlzFrameSetVisible(largeCityIndicatorsButton, false);
 			}
 		} else {
 			if (player === GetLocalPlayer()) {
@@ -38,7 +40,8 @@ export function UICommand(chatManager: ChatManager) {
 			if (ratingButton) BlzFrameSetVisible(ratingButton, true);
 			if (colorblindButton) BlzFrameSetVisible(colorblindButton, true);
 			if (colorContrastButton) BlzFrameSetVisible(colorContrastButton, true);
-			if (signalButton) BlzFrameSetVisible(signalButton, true);
+			if (cameraPanButton) BlzFrameSetVisible(cameraPanButton, true);
+			if (largeCityIndicatorsButton) BlzFrameSetVisible(largeCityIndicatorsButton, true);
 		}
 	});
 }

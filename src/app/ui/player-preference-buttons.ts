@@ -157,36 +157,6 @@ export function buildColorblindModeButton(player: ActivePlayer): framehandle {
 	return button;
 }
 
-export function buildSignalScopeButton(player: ActivePlayer): framehandle {
-	return createGuardButton({
-		player: player,
-		createContext: GetPlayerId(player.getPlayer()) + 600,
-		key: OSKEY_F2,
-		textures: {
-			primary: 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp',
-			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp',
-		},
-		xOffset: 0.138,
-		initialTooltipText: `Range Indicators ${HexColors.TANGERINE}(F2)|r\nToggles the permanent visibility of city range indicators (signal scopes).\nCurrent preference: ${HexColors.RED}Hidden`,
-		action: (context: number, textures: { primary: string; secondary: string }) => {
-			const { CityVisibilityManager } = require('../triggers/visuals/base-visibility') as typeof import('../triggers/visuals/base-visibility');
-			const isVisible = CityVisibilityManager.getInstance().togglePermanentVisibility(player.getPlayer());
-
-			const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
-			const texture = isVisible ? textures.primary : textures.secondary;
-
-			BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
-
-			const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
-			BlzFrameSetText(
-				buttonTooltip,
-				`Range Indicators ${HexColors.TANGERINE}(F2)|r\nToggles the permanent visibility of city range indicators (signal scopes).\nCurrent preference: ` +
-					`${isVisible ? `${HexColors.GREEN}Visible` : `${HexColors.RED}Hidden`}`
-			);
-		},
-	});
-}
-
 /**
  * Update the F4 rating stats button appearance based on ranked game status
  * Should be called after ranked status is determined in countdown phase
@@ -432,7 +402,8 @@ export function buildLargeCityIndicatorButton(player: ActivePlayer): framehandle
 				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
 				BlzFrameSetText(buttonTooltip, getTooltip(player.options.largeCityIndicators));
 
-				const { MinimapIconManager } = require('src/app/managers/minimap-icon-manager') as typeof import('../managers/minimap-icon-manager');
+				const { MinimapIconManager } =
+					require('src/app/managers/minimap-icon-manager') as typeof import('../managers/minimap-icon-manager');
 				MinimapIconManager.getInstance().refreshCitySizes();
 			}
 		},
