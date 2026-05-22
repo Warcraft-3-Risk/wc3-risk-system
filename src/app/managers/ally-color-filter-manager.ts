@@ -77,14 +77,24 @@ export class AllyColorFilterManager {
 				}
 
 				for (const [city] of CityToCountry) {
-					this.applyColorFilter(city.barrack.unit);
-					this.applyColorFilter(city.cop);
-					if (city.guard && city.guard.unit) {
-						this.applyColorFilter(city.guard.unit);
-					}
+					this.applyCityColorFilterIfVisible(city);
 				}
 			}
 		});
+	}
+
+	private applyCityColorFilterIfVisible(city: { barrack: { unit: unit }; cop: unit; guard?: { unit?: unit } }): void {
+		const localPlayer = GetLocalPlayer();
+
+		if (IsUnitVisible(city.barrack.unit, localPlayer)) {
+			this.applyColorFilter(city.barrack.unit);
+		}
+		if (IsUnitVisible(city.cop, localPlayer)) {
+			this.applyColorFilter(city.cop);
+		}
+		if (city.guard && city.guard.unit && IsUnitVisible(city.guard.unit, localPlayer)) {
+			this.applyColorFilter(city.guard.unit);
+		}
 	}
 
 	public recalculate(): void {

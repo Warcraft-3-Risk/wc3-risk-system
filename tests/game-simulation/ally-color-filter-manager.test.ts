@@ -19,6 +19,7 @@ import { UNIT_TYPE } from '../../src/app/utils/unit-types';
 import { FakeUnitHandle } from '../fixtures/fake-unit';
 import { NEUTRAL_HOSTILE } from '../../src/app/utils/utils';
 import { NameManager } from '../../src/app/managers/names/name-manager';
+import { CityToCountry } from '../../src/app/country/country-map';
 
 describe('AllyColorFilterManager', () => {
 	let localPlayer: any;
@@ -38,6 +39,7 @@ describe('AllyColorFilterManager', () => {
 		(PlayerManager as any).instance = undefined;
 		(AllyColorState as any).instance = undefined;
 		(NameManager as any).instance = undefined;
+		CityToCountry.clear();
 
 		// Mock WC3 globals for this test
 		localPlayer = Player(0) as any;
@@ -69,6 +71,7 @@ describe('AllyColorFilterManager', () => {
 		(globalThis as any).SetUnitVertexColor = (u: any, r: number, g: number, b: number, a: number) => {
 			mockVertexColors.set(u, { r, g, b, a });
 		};
+		(globalThis as any).IsUnitVisible = () => true;
 
 		(globalThis as any).IsUnitType = (u: any, type: UNIT_TYPE) => {
 			if (u.typeIds) return u.typeIds.includes(type);
@@ -312,6 +315,50 @@ describe('AllyColorFilterManager', () => {
 			pollCallback();
 
 			expect(mockVertexColors.get(transport)).toEqual({ r: 255, g: 50, b: 50, a: 255 });
+		});
+
+		it('does not repaint unexplored city structures when color mode state changes', () => {
+			let pollCallback: () => void = () => {};
+			(globalThis as any).CreateTimer = () => ({});
+			(globalThis as any).TimerStart = (_timer: any, _timeout: number, _periodic: boolean, callback: () => void) => {
+				pollCallback = callback;
+			};
+			(globalThis as any).IsUnitVisible = () => false;
+			mockAllyColorFilterState = 0;
+
+			const barrack = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const cop = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const guard = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			CityToCountry.set({ barrack: { unit: barrack }, cop, guard: { unit: guard } } as any, {} as any);
+
+			AllyColorFilterManager.getInstance().startPolling();
+			pollCallback();
+
+			expect(mockVertexColors.has(barrack)).toBe(false);
+			expect(mockVertexColors.has(cop)).toBe(false);
+			expect(mockVertexColors.has(guard)).toBe(false);
+		});
+
+		it('repaints visible city structures when color mode state changes', () => {
+			let pollCallback: () => void = () => {};
+			(globalThis as any).CreateTimer = () => ({});
+			(globalThis as any).TimerStart = (_timer: any, _timeout: number, _periodic: boolean, callback: () => void) => {
+				pollCallback = callback;
+			};
+			(globalThis as any).IsUnitVisible = () => true;
+			mockAllyColorFilterState = 0;
+
+			const barrack = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const cop = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const guard = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			CityToCountry.set({ barrack: { unit: barrack }, cop, guard: { unit: guard } } as any, {} as any);
+
+			AllyColorFilterManager.getInstance().startPolling();
+			pollCallback();
+
+			expect(mockVertexColors.get(barrack)).toEqual({ r: 255, g: 50, b: 50, a: 255 });
+			expect(mockVertexColors.get(cop)).toEqual({ r: 255, g: 50, b: 50, a: 255 });
+			expect(mockVertexColors.get(guard)).toEqual({ r: 255, g: 50, b: 50, a: 255 });
 		});
 	});
 });
