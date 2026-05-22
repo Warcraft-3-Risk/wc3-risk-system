@@ -212,4 +212,16 @@ describe('PlayerCameraPositionManager', () => {
 
 		expect(hideSpy).not.toHaveBeenCalled();
 	});
+
+	it('does not render observer camera overlay during setup-state', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		GlobalGameData.matchState = 'modeSelection';
+
+		(manager as any).observerCameraPositionOverlay.overlayVisible = true;
+		const hideSpy = vi.spyOn(manager as any, 'hidePlayerFrames');
+
+		(manager as any).renderFrames();
+
+		expect(hideSpy).toHaveBeenCalled();
+	});
 });
