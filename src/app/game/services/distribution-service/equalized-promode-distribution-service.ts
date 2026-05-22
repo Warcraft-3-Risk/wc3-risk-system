@@ -1,9 +1,7 @@
 import { City } from 'src/app/city/city';
 import { ActivePlayer } from 'src/app/player/types/active-player';
-import { StandardDistributionService } from './standard-distribution-service';
-import { GlobalGameData } from '../../state/global-game-state';
-import { EqualizedPromodeData } from '../../game-mode/mode/equalized-promode-mode';
 import { RegionToCity } from 'src/app/city/city-map';
+import { PromodeDistributionService } from './promode-distribution-service';
 
 /**
  * Distribution service for Equalized ProMode that ensures fair 1v1 matches.
@@ -14,7 +12,7 @@ import { RegionToCity } from 'src/app/city/city-map';
  * Uses guard coordinates as stable identifiers because City objects get recreated
  * between rounds, but guard coordinates are constant map properties.
  */
-export class EqualizedPromodeDistributionService extends StandardDistributionService {
+export class EqualizedPromodeDistributionService extends PromodeDistributionService {
 	// Save "x_y" coordinate string -> player mapping (coordinates persist across resets, City objects don't)
 	private static savedAllocations: Map<string, player> | undefined = undefined;
 
@@ -84,7 +82,7 @@ export class EqualizedPromodeDistributionService extends StandardDistributionSer
 
 		const players = this.getPlayers();
 		if (players.length !== 2) {
-			super.distribute();
+			await super.distribute();
 			return;
 		}
 
@@ -113,18 +111,7 @@ export class EqualizedPromodeDistributionService extends StandardDistributionSer
 	 * @returns Array of active players.
 	 */
 	private getPlayers(): ActivePlayer[] {
-		const players: ActivePlayer[] = [];
-		const playerList = (this as any).players; // Access protected players property
-
-		// Convert DoublyLinkedList to array
-		const length = playerList.length();
-		for (let i = 0; i < length; i++) {
-			const player = playerList.removeFirst();
-			players.push(player);
-			playerList.addLast(player); // Add back to maintain the list
-		}
-
-		return players;
+		return this.getPlayerList();
 	}
 
 	/**

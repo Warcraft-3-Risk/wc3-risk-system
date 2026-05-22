@@ -36,3 +36,54 @@ export function isCityValidForPlayer(playerCountryCount: number, countryCityCoun
 export function filterEligibleCities<T extends { countryCityCount: number }>(cities: T[]): T[] {
 	return cities.filter((c) => c.countryCityCount > 1);
 }
+
+export type QualityTier = 'S' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F';
+
+export const QUALITY_TIERS: readonly QualityTier[] = ['S', 'A', 'B', 'C', 'D', 'E', 'F'];
+export const TOP_QUALITY_TIERS: readonly QualityTier[] = ['S', 'A', 'B', 'C'];
+
+/**
+ * Normalize arbitrary map quality text into a supported quality tier.
+ * Unknown values return undefined.
+ */
+export function normalizeQualityTier(quality?: string): QualityTier | undefined {
+	if (!quality) return undefined;
+	const normalized = quality.trim().toUpperCase() as QualityTier;
+	return QUALITY_TIERS.includes(normalized) ? normalized : undefined;
+}
+
+/**
+ * Scale a per-tier cap when actual max cities/player is below the baseline.
+ * Uses floor for deterministic conservative ceilings.
+ */
+export function scaleTopTierCap(baseCap: number, maxCitiesPerPlayer: number, baselineCitiesPerPlayer: number): number {
+	if (baseCap <= 0 || maxCitiesPerPlayer <= 0 || baselineCitiesPerPlayer <= 0) return 0;
+	return Math.min(baseCap, Math.floor((baseCap * maxCitiesPerPlayer) / baselineCitiesPerPlayer));
+}
+
+/**
+ * Evenly distributes a quantity across buckets with per-bucket caps.
+ * The output sum is <= total and each bucket <= cap.
+ */
+export function distributeEvenlyWithCaps(total: number, caps: number[]): number[] {
+	const allocations = caps.map(() => 0);
+	let remaining = Math.max(0, total);
+
+	while (remaining > 0) {
+		const eligible = allocations
+			.map((value, index) => ({ index, value, cap: caps[index] }))
+			.filter((x) => x.value < x.cap);
+		if (eligible.length === 0) break;
+
+		const minValue = Math.min(...eligible.map((x) => x.value));
+		const candidates = eligible.filter((x) => x.value === minValue).sort((a, b) => a.index - b.index);
+
+		for (const candidate of candidates) {
+			if (remaining <= 0) break;
+			allocations[candidate.index]++;
+			remaining--;
+		}
+	}
+
+	return allocations;
+}

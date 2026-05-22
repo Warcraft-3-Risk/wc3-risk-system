@@ -18,9 +18,9 @@ import { RegionToCity } from 'src/app/city/city-map';
  */
 export class StandardDistributionService {
 	private citiesPerPlayerUpperBound: number = CITIES_PER_PLAYER_UPPER_BOUND;
-	private maxCitiesPerPlayer: number;
+	protected maxCitiesPerPlayer: number;
 	private cities: City[];
-	private players: DoublyLinkedList<ActivePlayer>;
+	protected players: DoublyLinkedList<ActivePlayer>;
 
 	/**
 	 * Initializes city pool and player list.
@@ -244,5 +244,20 @@ export class StandardDistributionService {
 
 	protected getCities = (): City[] => {
 		return this.cities;
+	};
+
+	protected getMaxCitiesPerPlayer = (): number => {
+		return this.maxCitiesPerPlayer;
+	};
+
+	protected getPlayerList = (): ActivePlayer[] => {
+		const players: ActivePlayer[] = [];
+		const count = this.players.length();
+		for (let i = 0; i < count; i++) {
+			const player = this.players.removeFirst();
+			players.push(player);
+			this.players.addLast(player);
+		}
+		return players;
 	};
 }

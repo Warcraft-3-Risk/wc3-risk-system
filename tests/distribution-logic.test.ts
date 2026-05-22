@@ -1,8 +1,11 @@
 import { describe, it, expect } from 'vitest';
 import {
 	calculateMaxCitiesPerPlayer,
+	distributeEvenlyWithCaps,
 	isCityValidForPlayer,
 	filterEligibleCities,
+	normalizeQualityTier,
+	scaleTopTierCap,
 } from '../src/app/game/services/distribution-service/distribution-logic';
 
 describe('Distribution Logic', () => {
@@ -109,6 +112,52 @@ describe('Distribution Logic', () => {
 
 		it('should return empty array for empty input', () => {
 			expect(filterEligibleCities([])).toEqual([]);
+		});
+	});
+
+	describe('normalizeQualityTier', () => {
+		it('normalizes valid tiers case-insensitively', () => {
+			expect(normalizeQualityTier('s')).toBe('S');
+			expect(normalizeQualityTier(' a ')).toBe('A');
+			expect(normalizeQualityTier('F')).toBe('F');
+		});
+
+		it('returns undefined for unknown or missing values', () => {
+			expect(normalizeQualityTier(undefined)).toBeUndefined();
+			expect(normalizeQualityTier('')).toBeUndefined();
+			expect(normalizeQualityTier('Z')).toBeUndefined();
+		});
+	});
+
+	describe('scaleTopTierCap', () => {
+		it('scales down cap proportionally when max cities are lower than baseline', () => {
+			expect(scaleTopTierCap(4, 22, 22)).toBe(4);
+			expect(scaleTopTierCap(4, 11, 22)).toBe(2);
+			expect(scaleTopTierCap(4, 10, 22)).toBe(1);
+		});
+
+		it('handles invalid inputs safely', () => {
+			expect(scaleTopTierCap(4, 0, 22)).toBe(0);
+			expect(scaleTopTierCap(0, 22, 22)).toBe(0);
+			expect(scaleTopTierCap(4, 22, 0)).toBe(0);
+		});
+	});
+
+	describe('distributeEvenlyWithCaps', () => {
+		it('distributes evenly when capacities are equal', () => {
+			expect(distributeEvenlyWithCaps(7, [10, 10, 10])).toEqual([3, 2, 2]);
+		});
+
+		it('respects per-bucket caps', () => {
+			expect(distributeEvenlyWithCaps(10, [2, 2, 10])).toEqual([2, 2, 6]);
+		});
+
+		it('stops when all caps are filled', () => {
+			expect(distributeEvenlyWithCaps(10, [1, 1, 1])).toEqual([1, 1, 1]);
+		});
+
+		it('handles zero totals', () => {
+			expect(distributeEvenlyWithCaps(0, [3, 3, 3])).toEqual([0, 0, 0]);
 		});
 	});
 });
