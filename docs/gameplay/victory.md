@@ -28,7 +28,7 @@ flowchart TD
     Check["Victory Check<br/>(every tick)"]
     Check --> E{"Only 1 player/team<br/>remaining?"}
     E -- Yes --> EWin["Elimination Victory<br/>(highest priority)"]
-    E -- No --> C{"Any player at<br/>60% cities?"}
+    E -- No --> C{"Any participant at<br/>effective city threshold?"}
     C -- Yes --> Count{"How many at<br/>threshold?"}
     C -- No --> Continue["Game Continues"]
     Count -- 1 Player --> CWin["City Count Victory"]
@@ -38,19 +38,20 @@ flowchart TD
 | Priority | Condition | Description |
 |----------|-----------|-------------|
 | 1 (highest) | **Elimination** | Only one player/team has living units |
-| 2 | **City Count** | One player controls ≥60% of all cities |
+| 2 | **City Count + VP** | One participant reaches the shared threshold using `effectiveCities = cities + victoryPoints` |
 | 3 | **Tie → Overtime** | Multiple players at threshold simultaneously |
 
 ---
 
 ## City Count Victory
 
-The primary win condition — control enough cities to dominate the map.
+The primary win condition — reach enough effective cities to dominate the map.
 
 ### Formula
 
 ```
 citiesNeeded = ⌈totalCities × CITIES_TO_WIN_RATIO⌉
+effectiveCities = ownedCities + victoryPoints
 ```
 
 ### Constants
@@ -59,6 +60,8 @@ citiesNeeded = ⌈totalCities × CITIES_TO_WIN_RATIO⌉
 |---------|-------|-------------|
 | `CITIES_TO_WIN_RATIO` | 0.60 | 60% of cities needed to win |
 | `CITIES_TO_WIN_WARNING_RATIO` | 0.70 | 70% — remaining cities for warning |
+| `VICTORY_POINT_CITY_THRESHOLD` | 70 | City threshold at turn end to bank VP |
+| `VICTORY_POINTS_PER_TURN` | 1 | Victory points gained per qualifying turn |
 
 ### Cities Needed Per Map
 
@@ -219,7 +222,7 @@ Complete victory check flow each tick:
 flowchart TD
     Tick["Every 1-second tick"] --> Single{"Only 1 active<br/>player/team?"}
     Single -- Yes --> ElimWin["ELIMINATION VICTORY"]
-    Single -- No --> Count["Count cities per player"]
+    Single -- No --> Count["Count effective cities per participant"]
     Count --> Threshold{"Any player at<br/>≥ citiesNeeded?"}
     Threshold -- No --> Undecided["UNDECIDED<br/>Game continues"]
     Threshold -- Yes --> HowMany{"How many<br/>at threshold?"}
@@ -297,6 +300,7 @@ Turn 12 (30 seconds later):
 | File | Purpose |
 |------|---------|
 | `src/app/managers/victory-logic.ts` | Pure victory calculation logic |
+| `src/app/managers/victory-point-logic.ts` | Pure victory-point logic |
 | `src/app/managers/victory-manager.ts` | Victory state management |
 | `src/app/game/game-mode/utillity/on-player-status.ts` | Player status transitions |
 | `src/configs/game-settings.ts` | `CITIES_TO_WIN_RATIO`, `OVERTIME_MODIFIER`, `NOMAD_DURATION` |

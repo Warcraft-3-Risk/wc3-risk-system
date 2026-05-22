@@ -78,7 +78,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 				const goldStr = isMyTeam ? `${teamRow.totalGold}` : '-';
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${goldStr}`, row, this.GOLD_COL);
 
-				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalCities}`, row, this.CITIES_COL);
+				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalCitiesDisplay}`, row, this.CITIES_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalKills}`, row, this.KILLS_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalDeaths}`, row, this.DEATHS_COL);
 				row++;
@@ -116,7 +116,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 				const goldStr = isMyTeam ? `${teamRow.totalGold}` : '-';
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${goldStr}`, row, this.GOLD_COL);
 
-				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalCities}`, row, this.CITIES_COL);
+				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalCitiesDisplay}`, row, this.CITIES_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalKills}`, row, this.KILLS_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalDeaths}`, row, this.DEATHS_COL);
 				row++;
@@ -170,7 +170,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 			const elimColor = effectiveLocal === handle ? textColor : grey;
 
 			this.setItemValue(`${teamPrefix}${p.originalColorCode}${p.acctName}`, row, this.PLAYER_COL);
-			this.setItemValue(`${elimColor}${p.cities}`, row, this.CITIES_COL);
+			this.setItemValue(`${elimColor}${p.cityDisplay}`, row, this.CITIES_COL);
 			this.setItemValue(`${elimColor}${p.kills}`, row, this.KILLS_COL);
 			this.setItemValue(`${elimColor}${p.deaths}`, row, this.DEATHS_COL);
 
@@ -183,7 +183,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 			this.setItemValue(`${teamPrefix}${p.displayName}`, row, this.PLAYER_COL);
 
 			const cityTextColor = p.cityCountHighlighted ? HexColors.RED : textColor;
-			this.setItemValue(`${cityTextColor}${p.cities}`, row, this.CITIES_COL);
+			this.setItemValue(`${cityTextColor}${p.cityDisplay}`, row, this.CITIES_COL);
 
 			this.setItemValue(`${textColor}${p.kills}`, row, this.KILLS_COL);
 			this.setItemValue(`${textColor}${p.deaths}`, row, this.DEATHS_COL);

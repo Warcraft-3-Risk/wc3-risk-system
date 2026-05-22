@@ -49,7 +49,7 @@ flowchart TD
     Row --> Identity["Identity<br/>displayName, acctName, btag<br/>originalColorCode"]
     Row --> Status["Status<br/>status, statusDuration<br/>isEliminated, isNomad, isSTFU, isAlive"]
     Row --> Economy["Economy<br/>income, incomeDelta<br/>gold"]
-    Row --> Territory["Territory<br/>cities<br/>cityCountHighlighted"]
+    Row --> Territory["Territory<br/>cities, victoryPoints, effectiveCities, cityDisplay<br/>cityCountHighlighted"]
     Row --> Combat["Combat<br/>kills, deaths<br/>lastCombat, isInCombat"]
     Row --> Meta["Meta<br/>handle, teamNumber<br/>turnDied, ratingChange"]
 ```
@@ -68,6 +68,9 @@ flowchart TD
 | `incomeDelta` | number | Income change from last turn |
 | `gold` | number | Current gold balance |
 | `cities` | number | Number of cities owned |
+| `victoryPoints` | number | Banked victory points |
+| `effectiveCities` | number | `cities + victoryPoints` for victory progress |
+| `cityDisplay` | string | City column text (e.g. `75 (+1)`) |
 | `cityCountHighlighted` | boolean | Whether city count is highlighted (near win) |
 | `kills` | number | Total enemy units killed |
 | `deaths` | number | Total own units lost |

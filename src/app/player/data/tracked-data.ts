@@ -26,6 +26,7 @@ export class TrackedData {
 	private _transports: Set<unit>;
 	private _turnDied: number;
 	private _trainedUnits: Map<number, number>;
+	private _victoryPoints: number;
 
 	constructor(player: player) {
 		this._income = {
@@ -57,6 +58,7 @@ export class TrackedData {
 		this._trainedUnits = new Map<number, number>();
 		this._turnDied = -1;
 		this._lastUnitKilledBy = undefined;
+		this._victoryPoints = 0;
 	}
 
 	public reset() {
@@ -82,6 +84,7 @@ export class TrackedData {
 		this._trainedUnits.clear();
 		this.turnDied = 0;
 		this._lastUnitKilledBy = undefined;
+		this._victoryPoints = 0;
 	}
 
 	public setKDMaps() {
@@ -208,5 +211,13 @@ export class TrackedData {
 
 	public set lastCombat(lastCombat: number) {
 		this._lastCombat = lastCombat;
+	}
+
+	public get victoryPoints(): number {
+		return this._victoryPoints;
+	}
+
+	public set victoryPoints(value: number) {
+		this._victoryPoints = value;
 	}
 }

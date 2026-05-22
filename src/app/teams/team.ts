@@ -8,6 +8,7 @@ export class Team {
 	private cities: number;
 	private kills: number;
 	private deaths: number;
+	private victoryPoints: number;
 
 	public constructor(players: ActivePlayer[], teamNumber: number) {
 		this.teamNumber = teamNumber;
@@ -21,6 +22,7 @@ export class Team {
 		this.cities = 0;
 		this.kills = 0;
 		this.deaths = 0;
+		this.victoryPoints = 0;
 	}
 
 	public getNumber() {
@@ -65,6 +67,14 @@ export class Team {
 
 	public getDeaths() {
 		return this.deaths;
+	}
+
+	public getVictoryPoints() {
+		return this.victoryPoints;
+	}
+
+	public addVictoryPoints(delta: number) {
+		this.victoryPoints += delta;
 	}
 
 	public sortPlayersByIncome() {
@@ -146,6 +156,7 @@ export class Team {
 		this.cities = 0;
 		this.kills = 0;
 		this.deaths = 0;
+		this.victoryPoints = 0;
 
 		// this.teamMembers.forEach((player) => {
 		// 	player.trackedData.reset();

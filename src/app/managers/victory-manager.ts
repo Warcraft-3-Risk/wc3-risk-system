@@ -71,9 +71,13 @@ export class VictoryManager {
 
 		const currentLeader = GlobalGameData.leader;
 		const currentLeaderEliminated = currentLeader instanceof ActivePlayer && currentLeader.status.isEliminated();
-		const highestCount = ParticipantEntityManager.getCityCount(validParticipants[0]);
+		const highestCount = ParticipantEntityManager.getEffectiveCityCount(validParticipants[0]);
 
-		if (currentLeader === undefined || currentLeaderEliminated || ParticipantEntityManager.getCityCount(currentLeader) < highestCount) {
+		if (
+			currentLeader === undefined ||
+			currentLeaderEliminated ||
+			ParticipantEntityManager.getEffectiveCityCount(currentLeader) < highestCount
+		) {
 			GlobalGameData.leader = validParticipants[0];
 		}
 	}
@@ -83,8 +87,8 @@ export class VictoryManager {
 		const participants: ParticipantEntity[] = ParticipantEntityManager.getParticipantEntities();
 
 		return participants
-			.filter((participant) => ParticipantEntityManager.getCityCount(participant) >= threshold)
-			.sort((a, b) => ParticipantEntityManager.getCityCount(b) - ParticipantEntityManager.getCityCount(a));
+			.filter((participant) => ParticipantEntityManager.getEffectiveCityCount(participant) >= threshold)
+			.sort((a, b) => ParticipantEntityManager.getEffectiveCityCount(b) - ParticipantEntityManager.getEffectiveCityCount(a));
 	}
 
 	// This function is used to get the players who have won with the most cities (many players can have the same number of cities)
@@ -103,9 +107,9 @@ export class VictoryManager {
 			return [];
 		}
 
-		// potentialVictors is already sorted in descending order, so the first element has the max city count
-		let max = ParticipantEntityManager.getCityCount(potentialVictors[0]);
-		return potentialVictors.filter((x) => ParticipantEntityManager.getCityCount(x) === max);
+		// potentialVictors is already sorted in descending order, so the first element has the max effective city count
+		let max = ParticipantEntityManager.getEffectiveCityCount(potentialVictors[0]);
+		return potentialVictors.filter((x) => ParticipantEntityManager.getEffectiveCityCount(x) === max);
 	}
 
 	public updateAndGetGameState(): VictoryProgressState {
