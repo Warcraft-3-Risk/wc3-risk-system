@@ -39,6 +39,7 @@ import { PLAYER_STATUS } from '../src/app/player/status/status-enum';
 import { ObserverCameraPositionOverlay } from '../src/app/triggers/visuals/observer-camera-position-overlay';
 import { AllyColorState } from '../src/app/managers/alliances/ally-color-state';
 import { AllyColorFilterManager } from '../src/app/managers/ally-color-filter-manager';
+import { GlobalGameData } from '../src/app/game/state/global-game-state';
 
 // Setup some missing specific globals for player camera manager
 (globalThis as any).CreateTrigger = vi.fn().mockReturnValue({});
@@ -143,6 +144,7 @@ describe('PlayerCameraPositionManager', () => {
 		(ObserverCameraPositionOverlay as any).instance = undefined;
 		(AllyColorState as any).instance = undefined;
 		(AllyColorFilterManager as any).instance = undefined;
+		GlobalGameData.matchState = 'inProgress';
 	});
 
 	it('syncs camera position when the active player is ALIVE', () => {
@@ -247,5 +249,29 @@ describe('PlayerCameraPositionManager', () => {
 		const name = (manager as any).getCameraFrameDisplayName(otherPlayer);
 
 		expect(name).toBe('|cFF00FFFFPlayer 1|r');
+	});
+
+	it('renders observer camera overlay during pre-match countdown', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		GlobalGameData.matchState = 'preMatch';
+
+		(manager as any).observerCameraPositionOverlay.overlayVisible = true;
+		const hideSpy = vi.spyOn(manager as any, 'hidePlayerFrames');
+
+		(manager as any).renderFrames();
+
+		expect(hideSpy).not.toHaveBeenCalled();
+	});
+
+	it('does not render observer camera overlay during setup-state', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		GlobalGameData.matchState = 'modeSelection';
+
+		(manager as any).observerCameraPositionOverlay.overlayVisible = true;
+		const hideSpy = vi.spyOn(manager as any, 'hidePlayerFrames');
+
+		(manager as any).renderFrames();
+
+		expect(hideSpy).toHaveBeenCalled();
 	});
 });
