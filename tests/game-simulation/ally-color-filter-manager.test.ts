@@ -339,6 +339,35 @@ describe('AllyColorFilterManager', () => {
 			expect(mockVertexColors.has(guard)).toBe(false);
 		});
 
+		it('repaints previously seen city structures when color mode changes while they are fogged', () => {
+			let pollCallback: () => void = () => {};
+			(globalThis as any).CreateTimer = () => ({});
+			(globalThis as any).TimerStart = (_timer: any, _timeout: number, _periodic: boolean, callback: () => void) => {
+				pollCallback = callback;
+			};
+			(globalThis as any).IsUnitVisible = () => false;
+			activeLocalPlayer.options.colorContrast = false;
+			mockAllyColorFilterState = 0;
+
+			const barrack = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const cop = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const guard = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const city = { barrack: { unit: barrack }, cop, guard: { unit: guard } };
+			CityToCountry.set(city as any, {} as any);
+
+			const manager = AllyColorFilterManager.getInstance();
+			manager.markCitySeen(city as any);
+			manager.startPolling();
+			pollCallback();
+
+			expect(mockVertexColors.get(barrack)).toEqual({ r: 255, g: 255, b: 255, a: 255 });
+			expect(mockVertexColors.get(cop)).toEqual({ r: 255, g: 255, b: 255, a: 255 });
+			expect(mockVertexColors.get(guard)).toEqual({ r: 255, g: 255, b: 255, a: 255 });
+			expect(mockUnitColors.get(barrack)).toBe(GetPlayerColor(enemyPlayer));
+			expect(mockUnitColors.get(cop)).toBe(GetPlayerColor(enemyPlayer));
+			expect(mockUnitColors.get(guard)).toBe(GetPlayerColor(enemyPlayer));
+		});
+
 		it('repaints visible city structures when color mode state changes', () => {
 			let pollCallback: () => void = () => {};
 			(globalThis as any).CreateTimer = () => ({});

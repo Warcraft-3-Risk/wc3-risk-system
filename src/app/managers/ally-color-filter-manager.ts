@@ -6,9 +6,12 @@ import { AllyColorState } from './alliances/ally-color-state';
 import { CityToCountry } from '../country/country-map';
 import { NameManager } from './names/name-manager';
 
+type ColorFilterCity = { barrack: { unit: unit }; cop: unit; guard?: { unit?: unit } };
+
 export class AllyColorFilterManager {
 	private static instance: AllyColorFilterManager;
 	private pollTimer: timer | undefined;
+	private seenCities: Set<ColorFilterCity> = new Set();
 
 	private cache: {
 		color: playercolor;
@@ -83,17 +86,30 @@ export class AllyColorFilterManager {
 		});
 	}
 
-	private applyCityColorFilterIfVisible(city: { barrack: { unit: unit }; cop: unit; guard?: { unit?: unit } }): void {
-		const localPlayer = GetLocalPlayer();
+	public markCitySeen(city: ColorFilterCity): void {
+		this.seenCities.add(city);
+	}
 
-		if (IsUnitVisible(city.barrack.unit, localPlayer)) {
-			this.applyColorFilter(city.barrack.unit);
+	public clearSeenCityCache(): void {
+		this.seenCities.clear();
+	}
+
+	private applyCityColorFilterIfVisible(city: ColorFilterCity): void {
+		const localPlayer = GetLocalPlayer();
+		const guardUnit = city.guard?.unit;
+		const isVisible =
+			IsUnitVisible(city.barrack.unit, localPlayer) || IsUnitVisible(city.cop, localPlayer) || (guardUnit && IsUnitVisible(guardUnit, localPlayer));
+
+		if (isVisible) {
+			this.markCitySeen(city);
+		} else if (!this.seenCities.has(city)) {
+			return;
 		}
-		if (IsUnitVisible(city.cop, localPlayer)) {
-			this.applyColorFilter(city.cop);
-		}
-		if (city.guard && city.guard.unit && IsUnitVisible(city.guard.unit, localPlayer)) {
-			this.applyColorFilter(city.guard.unit);
+
+		this.applyColorFilter(city.barrack.unit);
+		this.applyColorFilter(city.cop);
+		if (guardUnit) {
+			this.applyColorFilter(guardUnit);
 		}
 	}
 
