@@ -84,13 +84,11 @@ export abstract class City implements Resetable, Ownable {
 		this.owner = player;
 		this._barrack.setOwner(player);
 		SetUnitOwner(this._cop, player, true);
-		this.applyColorFilter();
+		this.refreshColorFilter();
 	}
 
-	private applyColorFilter(): void {
-		const colorFilter = AllyColorFilterManager.getInstance();
-		colorFilter.applyColorFilter(this._barrack.unit);
-		colorFilter.applyColorFilter(this._cop);
+	public refreshColorFilter(): void {
+		AllyColorFilterManager.getInstance().applyCityColorFilter(this);
 	}
 
 	/**
@@ -219,6 +217,8 @@ export abstract class City implements Resetable, Ownable {
 			if (IsPlayerAlly(currOwner, this.owner)) {
 				BlzStartUnitAbilityCooldown(this._barrack.unit, ABILITY_ID.SWAP, BlzGetAbilityCooldown(ABILITY_ID.SWAP, 0));
 			}
+		} else {
+			this.refreshColorFilter();
 		}
 	}
 

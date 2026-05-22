@@ -89,13 +89,13 @@ Path:
 1. `ConcreteCityBuilder.setBarracks()` creates barracks for `NEUTRAL_HOSTILE`.
 2. `Guard.build()` creates the initial guard for `NEUTRAL_HOSTILE`.
 3. `ConcreteCityBuilder.setCOP()` creates the circle of power for `NEUTRAL_HOSTILE`.
-4. `city.setOwner(NEUTRAL_HOSTILE)` applies the city color filter to barracks and COP.
+4. `city.setOwner(NEUTRAL_HOSTILE)` applies the city-aware color filter to barracks, COP, and guard when local visibility allows it.
 5. `main.ts` later calls `city.HideMinimap()`, which changes city ownership to neutral and blackens barracks/COP vertex color for fog safety.
 
 Color notes:
 
 - Initial static units are neutral.
-- Barracks and COP get `applyColorFilter()` during `City.setOwner()`.
+- Barracks, COP, and guard get the city-aware filter during `City.setOwner()`.
 - Guards get `applyColorFilter()` from `Guard.set()` when built.
 - Fog/minimap code may intentionally blacken hidden city structures until seen.
 
@@ -111,16 +111,16 @@ Source:
 Path:
 
 1. Distribution calls `city.setOwner(realPlayer)`.
-2. `City.setOwner()` updates the barracks and COP, and applies the color filter to those two units.
+2. `City.setOwner()` updates the barracks and COP, then runs the city-aware color filter.
 3. Distribution then calls `SetUnitOwner(city.guard.unit, realPlayer, true)`.
 4. The guard is added to the real player's tracked units and the real player's slot count is incremented.
+5. Distribution runs `city.refreshColorFilter()` after the guard owner update.
 
 Color notes:
 
-- Barracks and COP go through the custom color filter immediately.
-- Guards rely on `SetUnitOwner(..., true)` for normal WC3 recoloring at this moment.
-- The distribution paths do not immediately call `AllyColorFilterManager.applyColorFilter(city.guard.unit)` after changing guard ownership.
-- That is acceptable for normal player colors, but it is a risk for custom high-contrast/team relation coloring if the local client already expects mode 2 colors.
+- City components go through the city-aware filter after both structure and guard ownership updates.
+- Hidden, never-seen cities are left alone so their black fog camouflage is preserved.
+- Hidden, previously seen cities use the last seen owner rather than the hidden current owner.
 
 Source:
 
@@ -215,12 +215,12 @@ Path examples:
 - `InvalidGuardHandler` can create a dummy guard for the city owner or killing unit's resolved real owner.
 - `Guard.replace()` routes the selected/new guard through `Guard.set()`.
 - `Guard.set()` adds guard metadata, hides the native minimap marker, and calls `applyColorFilter()`.
+- Guard replacement callers run `city.refreshColorFilter()` after the new guard is installed.
 
 Color notes:
 
 - Dummy guard creation does not use lowest-count slot balancing. These are guard placeholders, not normal movable army units.
-- Guard replacement does apply the custom color filter after the guard is installed.
-- The distribution/capital assignment guard-owner update is the notable exception because it calls `SetUnitOwner()` on an existing guard without an immediate `applyColorFilter()` call.
+- Guard replacement applies a generic unit color immediately, then city refresh reapplies the fog-aware city color decision.
 
 Source:
 
@@ -306,9 +306,9 @@ They are forced to the real player handle so rally-loading continues to work. Th
 
 Only custom ally-color mode turns teammates into teal/yellow relationship colors. If the expectation is "all teammates share one team color," the current code does not do that.
 
-5. Guard ownership during distribution is the main nearby risk.
+5. Guard ownership during distribution is refreshed after final owner assignment.
 
-Initial distribution and capital assignment change guard ownership after `city.setOwner()` has already applied the filter to barracks/COP, and they do not immediately apply the filter to the guard after `SetUnitOwner()`. Normal WC3 color should update because `changeColor` is `true`, but custom relationship/contrast color may be stale until a later refresh.
+Initial distribution and capital assignment change guard ownership after `city.setOwner()` has already updated barracks/COP. They now call `city.refreshColorFilter()` after `SetUnitOwner()` so the final guard owner is included without bypassing fog safety.
 
 6. There is no dedicated regression test for "new unit on shared slot gets real owner model color."
 
@@ -332,7 +332,7 @@ Useful tests to add next:
 3. Spawned shared-slot unit resolves to teal/yellow for teammate in team mode 2.
 4. Trained unit reassigned from real player to shared slot receives the real owner's color.
 5. Trained unit cycling back to the real player receives the same real owner color.
-6. Distribution guard ownership update applies `applyColorFilter()` after `SetUnitOwner()`.
+6. Distribution guard ownership update preserves last-seen fog color after `SetUnitOwner()`.
 
 ## Source of Truth in Code
 

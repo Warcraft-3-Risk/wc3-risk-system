@@ -11,7 +11,7 @@ type ColorFilterCity = { barrack: { unit: unit }; cop: unit; guard?: { unit?: un
 export class AllyColorFilterManager {
 	private static instance: AllyColorFilterManager;
 	private pollTimer: timer | undefined;
-	private seenCities: Set<ColorFilterCity> = new Set();
+	private seenCityOwners: Map<ColorFilterCity, player> = new Map();
 
 	private cache: {
 		color: playercolor;
@@ -80,36 +80,46 @@ export class AllyColorFilterManager {
 				}
 
 				for (const [city] of CityToCountry) {
-					this.applyCityColorFilterIfVisible(city);
+					this.applyCityColorFilter(city);
 				}
 			}
 		});
 	}
 
-	public markCitySeen(city: ColorFilterCity): void {
-		this.seenCities.add(city);
+	public markCitySeen(city: ColorFilterCity, owner: player): void {
+		this.seenCityOwners.set(city, owner);
 	}
 
 	public clearSeenCityCache(): void {
-		this.seenCities.clear();
+		this.seenCityOwners.clear();
 	}
 
-	private applyCityColorFilterIfVisible(city: ColorFilterCity): void {
+	public applyCityColorFilter(city: ColorFilterCity): void {
 		const localPlayer = GetLocalPlayer();
 		const guardUnit = city.guard?.unit;
 		const isVisible =
 			IsUnitVisible(city.barrack.unit, localPlayer) || IsUnitVisible(city.cop, localPlayer) || (guardUnit && IsUnitVisible(guardUnit, localPlayer));
 
 		if (isVisible) {
-			this.markCitySeen(city);
-		} else if (!this.seenCities.has(city)) {
+			const owner = SharedSlotManager.getInstance().getOwnerOfUnit(city.barrack.unit);
+			this.markCitySeen(city, owner);
+			this.applyColorFilter(city.barrack.unit);
+			this.applyColorFilter(city.cop);
+			if (guardUnit) {
+				this.applyColorFilter(guardUnit);
+			}
 			return;
 		}
 
-		this.applyColorFilter(city.barrack.unit);
-		this.applyColorFilter(city.cop);
+		const lastSeenOwner = this.seenCityOwners.get(city);
+		if (!lastSeenOwner) {
+			return;
+		}
+
+		this.applyColorFilterForOwner(city.barrack.unit, lastSeenOwner);
+		this.applyColorFilterForOwner(city.cop, lastSeenOwner);
 		if (guardUnit) {
-			this.applyColorFilter(guardUnit);
+			this.applyColorFilterForOwner(guardUnit, lastSeenOwner);
 		}
 	}
 
@@ -253,6 +263,10 @@ export class AllyColorFilterManager {
 	 */
 	public applyColorFilter(u: unit): void {
 		const owner = SharedSlotManager.getInstance().getOwnerOfUnit(u);
+		this.applyColorFilterForOwner(u, owner);
+	}
+
+	private applyColorFilterForOwner(u: unit, owner: player): void {
 		const isLocalOwner = GetPlayerId(GetLocalPlayer()) === GetPlayerId(owner);
 		const isSpawn = IsUnitType(u, UNIT_TYPE.SPAWN);
 		const alpha = isLocalOwner && isSpawn ? 150 : 255;

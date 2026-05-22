@@ -773,8 +773,9 @@ export class MinimapIconManager {
 		let owner: player;
 
 		if (isVisible) {
+			owner = city.getOwner();
 			const colorFilter = AllyColorFilterManager.getInstance();
-			colorFilter.markCitySeen(city);
+			colorFilter.markCitySeen(city, owner);
 
 			if (GetLocalPlayer() === effectiveLocal) {
 				colorFilter.applyColorFilter(city.barrack.unit);
@@ -785,7 +786,6 @@ export class MinimapIconManager {
 			}
 
 			// City is visible - update and remember the owner
-			owner = city.getOwner();
 			this.lastSeenOwners.set(city, owner);
 		} else {
 			// City is in fog of war - check if we've seen it before
@@ -937,8 +937,9 @@ export class MinimapIconManager {
 		}
 
 		if (isVisible) {
+			owner = city.getOwner();
 			const colorFilter = AllyColorFilterManager.getInstance();
-			colorFilter.markCitySeen(city);
+			colorFilter.markCitySeen(city, owner);
 
 			if (GetLocalPlayer() === localPlayer) {
 				colorFilter.applyColorFilter(city.barrack.unit);
@@ -949,7 +950,6 @@ export class MinimapIconManager {
 			}
 
 			// City is visible - update and remember the owner
-			owner = city.getOwner();
 			this.lastSeenOwners.set(city, owner);
 		} else {
 			// City is in fog of war - check if we've seen it before

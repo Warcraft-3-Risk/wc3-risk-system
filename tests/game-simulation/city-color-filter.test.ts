@@ -38,17 +38,17 @@ class TestCity extends City {
 }
 
 describe('City color filter', () => {
-	let applyColorFilter: ReturnType<typeof vi.fn>;
+	let applyCityColorFilter: ReturnType<typeof vi.fn>;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		applyColorFilter = vi.fn();
+		applyCityColorFilter = vi.fn();
 		vi.mocked(AllyColorFilterManager.getInstance).mockReturnValue({
-			applyColorFilter,
+			applyCityColorFilter,
 		} as any);
 	});
 
-	it('reapplies the current color filter synchronously when ownership changes', () => {
+	it('reapplies the city-aware color filter synchronously when ownership changes', () => {
 		const owner = Player(1);
 		const barrackUnit = { owner: Player(24) };
 		const cop = { owner: Player(24) };
@@ -66,8 +66,7 @@ describe('City color filter', () => {
 
 		city.setOwner(owner);
 
-		expect(applyColorFilter).toHaveBeenCalledTimes(2);
-		expect(applyColorFilter.mock.calls[0][0]).toBe(barrackUnit);
-		expect(applyColorFilter.mock.calls[1][0]).toBe(cop);
+		expect(applyCityColorFilter).toHaveBeenCalledTimes(1);
+		expect(applyCityColorFilter).toHaveBeenCalledWith(city);
 	});
 });

@@ -299,6 +299,30 @@ describe('AllyColorFilterManager', () => {
 		});
 	});
 
+	describe('applyCityColorFilter', () => {
+		it('uses the last seen owner during direct city refreshes while the city is fogged', () => {
+			(globalThis as any).IsUnitVisible = () => false;
+			activeLocalPlayer.options.colorContrast = false;
+			enemyPlayer.color = 'RED_LAST_SEEN_COLOR';
+			const hiddenNewOwner = Player(3) as any;
+			hiddenNewOwner.color = 'BLUE_HIDDEN_CURRENT_COLOR';
+
+			const barrack = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const cop = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const guard = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const city = { barrack: { unit: barrack }, cop, guard: { unit: guard } };
+
+			const manager = AllyColorFilterManager.getInstance();
+			manager.markCitySeen(city as any, enemyPlayer);
+			manager.applyCityColorFilter(city as any);
+
+			expect(mockUnitColors.get(barrack)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(cop)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(guard)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(guard)).not.toBe('BLUE_HIDDEN_CURRENT_COLOR');
+		});
+	});
+
 	describe('startPolling', () => {
 		it('reapplies color filters to tracked transports when color mode state changes', () => {
 			let pollCallback: () => void = () => {};
@@ -356,7 +380,7 @@ describe('AllyColorFilterManager', () => {
 			CityToCountry.set(city as any, {} as any);
 
 			const manager = AllyColorFilterManager.getInstance();
-			manager.markCitySeen(city as any);
+			manager.markCitySeen(city as any, enemyPlayer);
 			manager.startPolling();
 			pollCallback();
 
@@ -366,6 +390,36 @@ describe('AllyColorFilterManager', () => {
 			expect(mockUnitColors.get(barrack)).toBe(GetPlayerColor(enemyPlayer));
 			expect(mockUnitColors.get(cop)).toBe(GetPlayerColor(enemyPlayer));
 			expect(mockUnitColors.get(guard)).toBe(GetPlayerColor(enemyPlayer));
+		});
+
+		it('uses the last seen owner when a seen city changes owner while fogged', () => {
+			let pollCallback: () => void = () => {};
+			(globalThis as any).CreateTimer = () => ({});
+			(globalThis as any).TimerStart = (_timer: any, _timeout: number, _periodic: boolean, callback: () => void) => {
+				pollCallback = callback;
+			};
+			(globalThis as any).IsUnitVisible = () => false;
+			activeLocalPlayer.options.colorContrast = false;
+			mockAllyColorFilterState = 0;
+			enemyPlayer.color = 'RED_LAST_SEEN_COLOR';
+			const hiddenNewOwner = Player(3) as any;
+			hiddenNewOwner.color = 'BLUE_HIDDEN_CURRENT_COLOR';
+
+			const barrack = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const cop = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const guard = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const city = { barrack: { unit: barrack }, cop, guard: { unit: guard } };
+			CityToCountry.set(city as any, {} as any);
+
+			const manager = AllyColorFilterManager.getInstance();
+			manager.markCitySeen(city as any, enemyPlayer);
+			manager.startPolling();
+			pollCallback();
+
+			expect(mockUnitColors.get(barrack)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(cop)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(guard)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(barrack)).not.toBe('BLUE_HIDDEN_CURRENT_COLOR');
 		});
 
 		it('repaints visible city structures when color mode state changes', () => {

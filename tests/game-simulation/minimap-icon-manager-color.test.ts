@@ -257,7 +257,7 @@ describe('MinimapIconManager unit icon colors', () => {
 
 		(manager as any).updateCityIconColorFast(frame, city, true, localPlayer, localPlayer, 2, false, false);
 
-		expect(allyColorFilterMock.markCitySeen).toHaveBeenCalledWith(city);
+		expect(allyColorFilterMock.markCitySeen).toHaveBeenCalledWith(city, enemyPlayer);
 	});
 
 	it('clears ally-color seen city cache when minimap seen cache is cleared', () => {

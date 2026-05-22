@@ -232,6 +232,7 @@ export class StandardDistributionService {
 		player.trackedData.units.add(city.guard.unit);
 
 		SetUnitInvulnerable(city.guard.unit, false);
+		city.refreshColorFilter();
 
 		if (DEBUG_PRINTS.master)
 			debugPrint(`[SharedSlots] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`, DC.sharedSlots);
