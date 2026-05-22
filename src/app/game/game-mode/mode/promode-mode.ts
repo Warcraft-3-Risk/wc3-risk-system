@@ -1,3 +1,4 @@
+import { CityDistributeState } from '../base-game-mode/city-distribute-state';
 import { GameOverState } from '../base-game-mode/game-over-state';
 import { ResetState } from '../base-game-mode/reset-state';
 import { SetPromodeTempVisionState } from '../promode-game-mode/set-promode-temp-vision-state';
@@ -12,7 +13,6 @@ import { UpdatePlayerStatusState } from '../base-game-mode/update-player-status-
 import { EnableControlsState } from '../base-game-mode/enable-controls-state';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { TeamManager } from 'src/app/teams/team-manager';
-import { PromodeCityDistributeState } from '../promode-game-mode/promode-city-distribute-state';
 
 export class PromodeData implements StateData {}
 
@@ -22,7 +22,7 @@ export class PromodeMode extends BaseMode<PromodeData> {
 			new UpdatePlayerStatusState(),
 			new SetupState(),
 			new ApplyFogState(),
-			new PromodeCityDistributeState(),
+			new CityDistributeState(),
 			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),
 			new EnableControlsState(),

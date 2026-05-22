@@ -133,7 +133,7 @@ export class PromodeDistributionService extends StandardDistributionService {
 
 		await this.applyAllocations(allocations);
 		await this.processNeutralCities();
-		this.logDistributionSummary(players, teams, allocations, playerTierCounts, fallbackCounters);
+		this.logDistributionSummary(players, teams, playerTierCounts, fallbackCounters);
 	}
 
 	private buildTeams(players: ActivePlayer[]): ActivePlayer[][] {
@@ -281,7 +281,6 @@ export class PromodeDistributionService extends StandardDistributionService {
 	private logDistributionSummary(
 		players: ActivePlayer[],
 		teams: ActivePlayer[][],
-		allocations: Map<ActivePlayer, City[]>,
 		playerTierCounts: Map<ActivePlayer, TierCounts>,
 		fallbackCounters: FallbackCounters
 	): void {

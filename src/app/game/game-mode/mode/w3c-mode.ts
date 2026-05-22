@@ -1,3 +1,4 @@
+import { CityDistributeState } from '../base-game-mode/city-distribute-state';
 import { ResetState } from '../base-game-mode/reset-state';
 import { SetPromodeTempVisionState } from '../promode-game-mode/set-promode-temp-vision-state';
 import { SetupState } from '../base-game-mode/setup-state';
@@ -18,7 +19,6 @@ import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-sta
 import { W3CTipsState } from '../w3c-mode/w3c-tips-state';
 import { UpdatePlayerStatusState } from '../base-game-mode/update-player-status-state';
 import { EnableControlsState } from '../base-game-mode/enable-controls-state';
-import { PromodeCityDistributeState } from '../promode-game-mode/promode-city-distribute-state';
 
 export class W3CData implements StateData {}
 
@@ -28,7 +28,7 @@ export class W3CMode extends BaseMode<W3CData> {
 			new UpdatePlayerStatusState(),
 			new SetupState(),
 			new ApplyFogState(),
-			new PromodeCityDistributeState(),
+			new CityDistributeState(),
 			new SetPromodeTempVisionState(),
 			new W3CTipsState(),
 			new PromodeCountdownState(),
