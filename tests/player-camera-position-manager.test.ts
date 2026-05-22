@@ -36,6 +36,7 @@ import PlayerCameraPositionManager from '../src/app/managers/player-camera-posit
 import { PlayerManager } from '../src/app/player/player-manager';
 import { PLAYER_STATUS } from '../src/app/player/status/status-enum';
 import { ObserverCameraPositionOverlay } from '../src/app/triggers/visuals/observer-camera-position-overlay';
+import { GlobalGameData } from '../src/app/game/state/global-game-state';
 
 // Setup some missing specific globals for player camera manager
 (globalThis as any).CreateTrigger = vi.fn().mockReturnValue({});
@@ -198,5 +199,17 @@ describe('PlayerCameraPositionManager', () => {
 
 		expect(removeSpy).not.toHaveBeenCalledWith(otherPlayer);
 		expect((manager as any).frames.has(otherPlayer)).toBeTruthy();
+	});
+
+	it('renders observer camera overlay during pre-match countdown', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		GlobalGameData.matchState = 'preMatch';
+
+		(manager as any).observerCameraPositionOverlay.overlayVisible = true;
+		const hideSpy = vi.spyOn(manager as any, 'hidePlayerFrames');
+
+		(manager as any).renderFrames();
+
+		expect(hideSpy).not.toHaveBeenCalled();
 	});
 });

@@ -232,7 +232,8 @@ export default class PlayerCameraPositionManager {
 	private renderFrames() {
 		const localPlayer = GetLocalPlayer();
 
-		if (!this.isEligiblePlayer(localPlayer) || !this.isOverlayVisibleForPlayer(localPlayer) || GlobalGameData.matchState !== 'inProgress') {
+		const isOverlayPhase = GlobalGameData.matchState === 'preMatch' || GlobalGameData.matchState === 'inProgress';
+		if (!this.isEligiblePlayer(localPlayer) || !this.isOverlayVisibleForPlayer(localPlayer) || !isOverlayPhase) {
 			this.hidePlayerFrames();
 			return;
 		}
