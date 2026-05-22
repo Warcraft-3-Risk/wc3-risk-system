@@ -16,6 +16,7 @@ vi.mock('../src/app/managers/names/name-manager', () => {
 			getInstance: vi.fn(() => ({
 				getDisplayName: vi.fn((p) => `Player ${p.id}`),
 				getBtag: vi.fn(() => `Player#1234`),
+				getOriginalColor: vi.fn((p) => p.originalColor ?? p.color ?? p.id ?? 0),
 			})),
 		},
 	};
@@ -36,6 +37,7 @@ import PlayerCameraPositionManager from '../src/app/managers/player-camera-posit
 import { PlayerManager } from '../src/app/player/player-manager';
 import { PLAYER_STATUS } from '../src/app/player/status/status-enum';
 import { ObserverCameraPositionOverlay } from '../src/app/triggers/visuals/observer-camera-position-overlay';
+import { AllyColorState } from '../src/app/managers/alliances/ally-color-state';
 
 // Setup some missing specific globals for player camera manager
 (globalThis as any).CreateTrigger = vi.fn().mockReturnValue({});
@@ -90,6 +92,7 @@ class MockActivePlayer {
 		current: string;
 		isActive: () => boolean;
 	};
+	options = { cameraPan: true, colorblind: false };
 
 	constructor(player: any) {
 		this.player = player;
@@ -137,6 +140,7 @@ describe('PlayerCameraPositionManager', () => {
 		// Reset singleton
 		(PlayerCameraPositionManager as any).instance = undefined;
 		(ObserverCameraPositionOverlay as any).instance = undefined;
+		(AllyColorState as any).instance = undefined;
 	});
 
 	it('syncs camera position when the active player is ALIVE', () => {
@@ -198,5 +202,31 @@ describe('PlayerCameraPositionManager', () => {
 
 		expect(removeSpy).not.toHaveBeenCalledWith(otherPlayer);
 		expect((manager as any).frames.has(otherPlayer)).toBeTruthy();
+	});
+
+	it('uses the stored original player color for camera minimap icons in mode 0', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		otherPlayer.originalColor = PLAYER_COLOR_PURPLE;
+		otherPlayer.color = PLAYER_COLOR_RED;
+
+		const texture = (manager as any).getMinimapIconTexture(otherPlayer);
+
+		expect(texture).toBe('ReplaceableTextures\\TeamColor\\TeamColor03.blp');
+	});
+
+	it('uses ally color mode for camera minimap icons', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		(AllyColorState as any).instance = new AllyColorState({
+			loadMode: () => 1,
+			saveMode: vi.fn(),
+		});
+		(globalThis as any).IsPlayerObserver = vi.fn(() => false);
+		(globalThis as any).IsPlayerAlly = vi.fn(
+			(a: any, b: any) => a === b || (a === localPlayer && b === otherPlayer) || (a === otherPlayer && b === localPlayer)
+		);
+
+		const texture = (manager as any).getMinimapIconTexture(otherPlayer);
+
+		expect(texture).toBe('ReplaceableTextures\\TeamColor\\TeamColor02.blp');
 	});
 });

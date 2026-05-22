@@ -23,12 +23,14 @@ flowchart TD
     Mode --> Normal["Mode 0/1 model: GetPlayerColor(real owner)"]
     Mode --> High["Mode 2 model: self blue, ally teal/yellow, enemy red"]
     Normal --> Apply["SetUnitVertexColor + SetUnitColor"]
+    Mode --> PlayerColor["Separate player-color pass"]
+    PlayerColor --> HealthBars["SetPlayerColor(raw owner) for health bars"]
     High --> Apply
 ```
 
 `AllyColorFilterManager.applyColorFilter(unit)` is the final model-color authority for units that are created, trained, unloaded, or converted into guards.
 
-In normal visual modes, it resolves the real owner and applies `GetPlayerColor(realOwner)`. In custom mode 2, it resolves the real owner and applies local relationship colors:
+In normal visual modes, it resolves the real owner and applies `GetPlayerColor(realOwner)` to the unit model. Health bars are handled by the separate `AllyColorFilterManager.applyPlayerColorFilter()` pass, which resolves the raw owner slot to the real owner and syncs the physical slot with `SetPlayerColor(rawOwner, NameManager.getOriginalColor(realOwner))`. This keeps fallback colors factual even after local ally-mode overrides have changed the engine's current player colors. In custom mode 2, both passes resolve the real owner and apply local relationship colors:
 
 | Relation to local player | Unit model color in mode 2                    | Minimap color in mode 1/2           |
 | ------------------------ | --------------------------------------------- | ----------------------------------- |
@@ -56,7 +58,7 @@ This is useful for native WC3 fallback behavior, but most custom visual systems 
 const owner = SharedSlotManager.getInstance().getOwnerOfUnit(unit);
 ```
 
-This matters when slots are reassigned. `SetPlayerColor(slot, ownerColor)` is updated on reassignment, but `NameManager.getOriginalColor(slot)` intentionally preserves the first original color it saw for that slot. Therefore, systems that want logical unit color should resolve to the real owner before asking for original/current player color.
+This matters when slots are reassigned. `SetPlayerColor(slot, ownerColor)` is updated on reassignment and refreshed by `AllyColorFilterManager.applyPlayerColorFilter()` in normal model-color modes, but `NameManager.getOriginalColor(slot)` intentionally preserves the first original color it saw for that slot. Therefore, systems that want logical unit or health-bar color should resolve to the real owner before asking for original/current player color.
 
 ## Slot Selection and Cycling Back
 
@@ -316,7 +318,7 @@ Existing tests cover shared-slot balancing and the color filter independently. A
 - New created/trained/unloaded units should call `AllyColorFilterManager.applyColorFilter(unit)` after final owner assignment and after any relevant unit type tags, especially `UNIT_TYPE.SPAWN`.
 - Do not rely on `NameManager.getOriginalColor(sharedSlot)` for logical unit color. Resolve the real owner first.
 - Do not use native WC3 ally-color mode 2 for shared-slot units. The map suppresses native mode and implements relationship colors manually.
-- `SetUnitColor` should remain centralized in `AllyColorFilterManager`; the only direct source-level method currently found is `City.setColor()`, which appears unused.
+- `SetUnitColor` should remain centralized in `AllyColorFilterManager.applyColorFilter()`, and raw owner `SetPlayerColor` sync should remain centralized in the separate `AllyColorFilterManager.applyPlayerColorFilter()` pass. The only direct source-level `SetUnitColor` method currently found is `City.setColor()`, which appears unused.
 - Replay and observer behavior should remain mode 0 to avoid POV-specific color shifts.
 
 ## Suggested Regression Tests

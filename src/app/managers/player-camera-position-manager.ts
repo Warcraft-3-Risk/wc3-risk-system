@@ -8,6 +8,7 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { MinimapIconManager } from './minimap-icon-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { ObserverCameraPositionOverlay } from '../triggers/visuals/observer-camera-position-overlay';
+import { AllyColorState } from './alliances/ally-color-state';
 
 export type CamPositionData = {
 	x: number;
@@ -21,6 +22,7 @@ export default class PlayerCameraPositionManager {
 	private camPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
 	private displayPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
 	private frames: Map<player, { box: framehandle; text: framehandle; minimapIcon: framehandle }> = new Map();
+	private minimapIconTextures: Map<player, string> = new Map();
 	private syncTrigger: trigger;
 	private observerCameraPositionOverlay: ObserverCameraPositionOverlay;
 
@@ -114,13 +116,7 @@ export default class PlayerCameraPositionManager {
 		const minimapIcon = BlzCreateFrameByType('BACKDROP', 'MinimapPlayerCameraIcon', gameUI, '', ctx);
 		BlzFrameSetSize(minimapIcon, 0.009, 0.006); // Slightly larger, 3x2 aspect ratio to mimic a screen
 		BlzFrameSetLevel(minimapIcon, 20); // Render above everything else on minimap
-		const colorIndex = GetHandleId(GetPlayerColor(p));
-		BlzFrameSetTexture(
-			minimapIcon,
-			'ReplaceableTextures\\TeamColor\\TeamColor' + (colorIndex < 10 ? '0' + colorIndex : colorIndex) + '.blp',
-			0,
-			true
-		);
+		this.updateMinimapIconColor(p, minimapIcon);
 		BlzFrameSetAlpha(minimapIcon, 200); // More transparent
 		BlzFrameSetVisible(minimapIcon, false);
 
@@ -258,10 +254,42 @@ export default class PlayerCameraPositionManager {
 				BlzFrameSetVisible(frame.text, false);
 			}
 
+			this.updateMinimapIconColor(p, frame.minimapIcon);
+
 			// Update minimap position
 			MinimapIconManager.getInstance().updateIconPosition(frame.minimapIcon, display.x, display.y);
 			BlzFrameSetVisible(frame.minimapIcon, true);
 		});
+	}
+
+	private updateMinimapIconColor(p: player, minimapIcon: framehandle): void {
+		const texture = this.getMinimapIconTexture(p);
+		if (this.minimapIconTextures.get(p) === texture) {
+			return;
+		}
+
+		BlzFrameSetTexture(minimapIcon, texture, 0, true);
+		this.minimapIconTextures.set(p, texture);
+	}
+
+	private getMinimapIconTexture(p: player): string {
+		const localPlayer = GetLocalPlayer();
+		const allyColorState = AllyColorState.getInstance();
+		const activeLocalPlayer = PlayerManager.getInstance().players.get(localPlayer);
+		const isColorBlind = activeLocalPlayer?.options?.colorblind ?? false;
+		const color = allyColorState.getMode() > 0 ? allyColorState.getMinimapColor(p, localPlayer, isColorBlind) : NameManager.getInstance().getOriginalColor(p);
+
+		return this.getTeamColorTexture(color);
+	}
+
+	private getTeamColorTexture(color: playercolor): string {
+		const colorIndex = GetHandleId(color);
+		if (colorIndex < 0 || colorIndex > 23) {
+			return 'ReplaceableTextures\\TeamColor\\TeamColor90.blp';
+		}
+
+		const str = colorIndex < 10 ? '0' + colorIndex : `${colorIndex}`;
+		return 'ReplaceableTextures\\TeamColor\\TeamColor' + str + '.blp';
 	}
 
 	private setFrameText(frame: { box: framehandle; text: framehandle }, name: string): void {
@@ -308,6 +336,7 @@ export default class PlayerCameraPositionManager {
 			BlzFrameSetVisible(frame.text, false);
 			BlzFrameSetVisible(frame.minimapIcon, false);
 			this.frames.delete(p);
+			this.minimapIconTextures.delete(p);
 		}
 
 		this.camPositionData.delete(p);

@@ -4,6 +4,7 @@ import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 import { AllyColorState } from './alliances/ally-color-state';
 import { CityToCountry } from '../country/country-map';
+import { NameManager } from './names/name-manager';
 
 export class AllyColorFilterManager {
 	private static instance: AllyColorFilterManager;
@@ -64,6 +65,7 @@ export class AllyColorFilterManager {
 				lastColorContrast = isColorContrast;
 
 				this.recalculate();
+				this.applyPlayerColorFilter();
 
 				for (const activePlayer of PlayerManager.getInstance().players.values()) {
 					for (const u of activePlayer.trackedData.units) {
@@ -87,6 +89,29 @@ export class AllyColorFilterManager {
 
 	public recalculate(): void {
 		this.updateCache();
+	}
+
+	private setPlayerColorLocally(client: player, affectedPlayer: player, color: playercolor): void {
+		if (GetLocalPlayer() === client && GetPlayerColor(affectedPlayer) !== color) {
+			SetPlayerColor(affectedPlayer, color);
+		}
+	}
+
+	public applyPlayerColorFilter(): void {
+		const allyColorState = AllyColorState.getInstance();
+		const mode = allyColorState.getMode();
+		const localPlayer = GetLocalPlayer();
+		const activeLocalPlayer = PlayerManager.getInstance().players.get(localPlayer);
+		const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
+		const nameManager = NameManager.getInstance();
+
+		for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
+			const rawOwner = Player(i);
+			const owner = SharedSlotManager.getInstance().getOwner(rawOwner);
+			const color = mode === 2 ? allyColorState.getUnitModelColor(owner, localPlayer, isColorBlind) : nameManager.getOriginalColor(owner);
+
+			this.setPlayerColorLocally(localPlayer, rawOwner, color);
+		}
 	}
 
 	private updateCache(): void {
@@ -202,7 +227,8 @@ export class AllyColorFilterManager {
 		if (cacheData) {
 			// Player colors are assigned after this manager is constructed, so normal
 			// color modes must read the live engine color instead of the startup cache.
-			const unitColor = AllyColorState.getInstance().getMode() === 2 ? cacheData.color : GetPlayerColor(owner);
+			const mode = AllyColorState.getInstance().getMode();
+			const unitColor = mode === 2 ? cacheData.color : GetPlayerColor(owner);
 
 			if (isSpawn) {
 				SetUnitVertexColor(u, cacheData.spawnRed, cacheData.spawnGreen, cacheData.spawnBlue, alpha);

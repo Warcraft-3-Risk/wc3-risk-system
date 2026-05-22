@@ -18,6 +18,7 @@ import { PlayerManager } from '../../src/app/player/player-manager';
 import { UNIT_TYPE } from '../../src/app/utils/unit-types';
 import { FakeUnitHandle } from '../fixtures/fake-unit';
 import { NEUTRAL_HOSTILE } from '../../src/app/utils/utils';
+import { NameManager } from '../../src/app/managers/names/name-manager';
 
 describe('AllyColorFilterManager', () => {
 	let localPlayer: any;
@@ -28,6 +29,7 @@ describe('AllyColorFilterManager', () => {
 
 	let mockVertexColors: Map<FakeUnitHandle, { r: number; g: number; b: number; a: number }>;
 	let mockUnitColors: Map<FakeUnitHandle, any>;
+	let mockPlayerColors: Map<any, any>;
 	let mockAllyColorFilterState: number;
 
 	beforeEach(() => {
@@ -35,16 +37,21 @@ describe('AllyColorFilterManager', () => {
 		(SharedSlotManager as any).instance = undefined;
 		(PlayerManager as any).instance = undefined;
 		(AllyColorState as any).instance = undefined;
+		(NameManager as any).instance = undefined;
 
 		// Mock WC3 globals for this test
-		localPlayer = { id: 0, isFakePlayerHandle: true } as any;
-		enemyPlayer = { id: 1, isFakePlayerHandle: true } as any;
-		allyPlayer = { id: 2, isFakePlayerHandle: true } as any;
+		localPlayer = Player(0) as any;
+		enemyPlayer = Player(1) as any;
+		allyPlayer = Player(2) as any;
+		localPlayer.color = 0;
+		enemyPlayer.color = 1;
+		allyPlayer.color = 2;
 		// Set neutralHostilePlayer to exactly what utils imports
 		neutralHostilePlayer = NEUTRAL_HOSTILE;
 
 		(globalThis as any).GetLocalPlayer = () => localPlayer;
-		(globalThis as any).IsPlayerAlly = (p1: any, p2: any) => p1.id === p2.id || (p1.id === localPlayer.id && p2.id === allyPlayer.id);
+		(globalThis as any).IsPlayerAlly = (p1: any, p2: any) =>
+			p1.id === p2.id || (p1.id === localPlayer.id && p2.id === allyPlayer.id) || (p1.id === allyPlayer.id && p2.id === localPlayer.id);
 
 		mockAllyColorFilterState = 2; // Default to High Contrast (Mode 2)
 		(AllyColorFilterManager as any).instance = undefined;
@@ -52,8 +59,13 @@ describe('AllyColorFilterManager', () => {
 
 		mockVertexColors = new Map();
 		mockUnitColors = new Map();
+		mockPlayerColors = new Map();
 		(globalThis as any).GetPlayerColor = (p: any) => p?.color ?? p?.id ?? 0;
 		(globalThis as any).SetUnitColor = (u: any, c: any) => mockUnitColors.set(u, c);
+		(globalThis as any).SetPlayerColor = (p: any, c: any) => {
+			mockPlayerColors.set(p, c);
+			p.color = c;
+		};
 		(globalThis as any).SetUnitVertexColor = (u: any, r: number, g: number, b: number, a: number) => {
 			mockVertexColors.set(u, { r, g, b, a });
 		};
@@ -142,6 +154,23 @@ describe('AllyColorFilterManager', () => {
 			expect(mockUnitColors.get(unit)).toBe('BLUE_AFTER_RANDOMIZATION');
 		});
 
+		it('does not sync the raw owner player color while applying a unit filter', () => {
+			activeLocalPlayer.options.colorContrast = false;
+			const realOwner = Player(1) as any;
+			const rawOwner = Player(12) as any;
+			realOwner.color = 'PURPLE';
+			rawOwner.color = 'MAROON';
+
+			vi.spyOn(SharedSlotManager.getInstance(), 'getOwnerOfUnit').mockImplementation((u: any) => u.realOwner);
+			AllyColorFilterManager.getInstance().recalculate();
+
+			const unit = { owner: rawOwner, realOwner } as unknown as FakeUnitHandle;
+			AllyColorFilterManager.getInstance().applyColorFilter(unit as any);
+
+			expect(mockUnitColors.get(unit)).toBe('PURPLE');
+			expect(mockPlayerColors.size).toBe(0);
+		});
+
 		it('keeps neutral units neutral in custom ally mode 2', () => {
 			activeLocalPlayer.options.colorContrast = false;
 			neutralHostilePlayer.color = 'NEUTRAL_COLOR';
@@ -156,6 +185,39 @@ describe('AllyColorFilterManager', () => {
 
 			expect(mockUnitColors.get(unit)).toBe('NEUTRAL_COLOR');
 			expect(mockVertexColors.get(unit)).toEqual({ r: 255, g: 255, b: 255, a: 255 });
+		});
+	});
+
+	describe('applyPlayerColorFilter', () => {
+		it('syncs raw owner player color to the resolved model color in Mode 0 as a separate pass', () => {
+			activeLocalPlayer.options.colorContrast = false;
+			const realOwner = Player(1) as any;
+			const rawOwner = Player(12) as any;
+			NameManager.getInstance().setColor(realOwner, PLAYER_COLOR_PURPLE);
+			realOwner.color = PLAYER_COLOR_RED;
+			rawOwner.color = PLAYER_COLOR_MAROON;
+
+			vi.spyOn(SharedSlotManager.getInstance(), 'getOwner').mockImplementation((p: any) => (p === rawOwner ? realOwner : p));
+			AllyColorFilterManager.getInstance().applyPlayerColorFilter();
+
+			expect(mockPlayerColors.get(rawOwner)).toBe(PLAYER_COLOR_PURPLE);
+		});
+
+		it('applies relationship player colors in Mode 2 as a separate local pass', () => {
+			localPlayer.color = 'LOCAL_BASE';
+			allyPlayer.color = 'ALLY_BASE';
+			enemyPlayer.color = 'ENEMY_BASE';
+			(AllyColorState as any).instance = new AllyColorState({
+				loadMode: () => 2,
+				saveMode: vi.fn(),
+			});
+			(AllyColorFilterManager as any).instance = undefined;
+
+			AllyColorFilterManager.getInstance().applyPlayerColorFilter();
+
+			expect(mockPlayerColors.get(localPlayer)).toBe(ConvertPlayerColor(1));
+			expect(mockPlayerColors.get(allyPlayer)).toBe(ConvertPlayerColor(2));
+			expect(mockPlayerColors.get(enemyPlayer)).toBe(ConvertPlayerColor(0));
 		});
 	});
 
