@@ -9,6 +9,8 @@ import { MinimapIconManager } from './minimap-icon-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { ObserverCameraPositionOverlay } from '../triggers/visuals/observer-camera-position-overlay';
 import { AllyColorState } from './alliances/ally-color-state';
+import { AllyColorFilterManager } from './ally-color-filter-manager';
+import { ColorStringUtil } from '../utils/color-string-util';
 
 export type CamPositionData = {
 	x: number;
@@ -23,6 +25,7 @@ export default class PlayerCameraPositionManager {
 	private displayPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
 	private frames: Map<player, { box: framehandle; text: framehandle; minimapIcon: framehandle }> = new Map();
 	private minimapIconTextures: Map<player, string> = new Map();
+	private frameTexts: Map<player, string> = new Map();
 	private syncTrigger: trigger;
 	private observerCameraPositionOverlay: ObserverCameraPositionOverlay;
 
@@ -153,8 +156,7 @@ export default class PlayerCameraPositionManager {
 			} else {
 				const frame = this.frames.get(player);
 				if (frame) {
-					const name = NameManager.getInstance().getDisplayName(player);
-					this.setFrameText(frame, name);
+					this.updateCameraFrameText(player, frame);
 				}
 			}
 		}
@@ -176,8 +178,7 @@ export default class PlayerCameraPositionManager {
 
 			const localPlayer = GetLocalPlayer();
 			if (this.isOverlayVisibleForPlayer(localPlayer) && this.isEligiblePlayer(localPlayer) && this.canSeePlayerCam(localPlayer, p)) {
-				const name = NameManager.getInstance().getDisplayName(p);
-				this.setFrameText(frame, name);
+				this.updateCameraFrameText(p, frame);
 
 				const [sx, sy, onScreen] = World2Screen(x, y, 0);
 				if (onScreen && sy >= 0.12) {
@@ -244,6 +245,8 @@ export default class PlayerCameraPositionManager {
 				return;
 			}
 
+			this.updateCameraFrameText(p, frame);
+
 			const [sx, sy, onScreen] = World2Screen(display.x, display.y, 0);
 			if (onScreen && sy >= 0.14) {
 				BlzFrameSetAbsPoint(frame.text, FRAMEPOINT_BOTTOM, sx, sy + 0.025);
@@ -292,6 +295,26 @@ export default class PlayerCameraPositionManager {
 		return 'ReplaceableTextures\\TeamColor\\TeamColor' + str + '.blp';
 	}
 
+	private updateCameraFrameText(p: player, frame: { box: framehandle; text: framehandle }): void {
+		const name = this.getCameraFrameDisplayName(p);
+		if (this.frameTexts.get(p) === name) {
+			return;
+		}
+
+		this.setFrameText(frame, name);
+		this.frameTexts.set(p, name);
+	}
+
+	private getCameraFrameDisplayName(p: player): string {
+		const name = NameManager.getInstance().getDisplayName(p);
+		const allyFilterHex = AllyColorFilterManager.getInstance().getPlayerColorHex(p);
+		if (!allyFilterHex) {
+			return name;
+		}
+
+		return `${allyFilterHex}${ColorStringUtil.stripColorTags(name)}|r`;
+	}
+
 	private setFrameText(frame: { box: framehandle; text: framehandle }, name: string): void {
 		const visLen = this.visibleLength(name);
 		BlzFrameSetSize(frame.text, Math.max(0.02, visLen * 0.005 + 0.01), 0.0058);
@@ -337,6 +360,7 @@ export default class PlayerCameraPositionManager {
 			BlzFrameSetVisible(frame.minimapIcon, false);
 			this.frames.delete(p);
 			this.minimapIconTextures.delete(p);
+			this.frameTexts.delete(p);
 		}
 
 		this.camPositionData.delete(p);

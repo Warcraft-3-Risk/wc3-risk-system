@@ -118,8 +118,8 @@ export class AllyColorFilterManager {
 		const localPlayer = GetLocalPlayer();
 		const localPlayerId = GetPlayerId(localPlayer);
 		const activeLocalPlayer = PlayerManager.getInstance().players.get(localPlayer);
-		const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
-		const isColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
+		const isColorBlind = activeLocalPlayer?.options?.colorblind ?? false;
+		const isColorContrast = activeLocalPlayer?.options?.colorContrast ?? false;
 		const allyColorState = AllyColorState.getInstance();
 		const mode = allyColorState.getMode();
 
@@ -190,24 +190,34 @@ export class AllyColorFilterManager {
 				}
 			}
 
-			if (isColorContrast) {
-				if (GetPlayerId(owner) === GetPlayerId(NEUTRAL_HOSTILE)) {
-					tooltip = '|cFF888888';
-				} else if (isLocalOwner) {
-					tooltip = '|cFF0000FF';
-				} else if (isAlly) {
-					if (isColorBlind) {
-						tooltip = '|cFFFFFF00';
-					} else {
-						tooltip = '|cFF00FFFF';
-					}
-				} else {
-					tooltip = '|cFFFF0000';
-				}
+			if (this.shouldUseRelationshipTextColor(mode, isColorContrast)) {
+				tooltip = this.getRelationshipTextColorHex(owner, localPlayer, isColorBlind);
 			}
 
 			this.cache[i] = { color, red: r, green: g, blue: b, spawnRed: spawnR, spawnGreen: spawnG, spawnBlue: spawnB, tooltip };
 		}
+	}
+
+	private shouldUseRelationshipTextColor(mode: number, isColorContrast: boolean): boolean {
+		return mode === 2 || isColorContrast;
+	}
+
+	private isNeutralOwner(owner: player): boolean {
+		const ownerId = GetPlayerId(owner);
+		return ownerId >= bj_MAX_PLAYERS || ownerId === GetPlayerId(NEUTRAL_HOSTILE);
+	}
+
+	private getRelationshipTextColorHex(owner: player, localPlayer: player, isColorBlind: boolean): string {
+		if (this.isNeutralOwner(owner)) {
+			return '|cFF888888';
+		}
+		if (GetPlayerId(owner) === GetPlayerId(localPlayer)) {
+			return '|cFF0000FF';
+		}
+		if (IsPlayerAlly(localPlayer, owner)) {
+			return isColorBlind ? '|cFFFFFF00' : '|cFF00FFFF';
+		}
+		return '|cFFFF0000';
 	}
 
 	/**
@@ -240,17 +250,28 @@ export class AllyColorFilterManager {
 	}
 
 	/**
-	 * Returns a hex color string (e.g., '|cFF0000FF') corresponding to the unit's
-	 * high contrast color if the filter is active and applies. Otherwise returns undefined.
+	 * Returns a hex color string (e.g., '|cFF0000FF') for UI text that should
+	 * follow the local player's ally-color relationship view.
 	 */
-	public getTooltipColorHex(u: unit): string | undefined {
-		const owner = SharedSlotManager.getInstance().getOwnerOfUnit(u);
-		const playerId = GetPlayerId(owner);
-		const cacheData = this.cache[playerId];
-		if (cacheData) {
-			return cacheData.tooltip;
+	public getPlayerColorHex(owner: player): string | undefined {
+		const localPlayer = GetLocalPlayer();
+		const activeLocalPlayer = PlayerManager.getInstance().players.get(localPlayer);
+		const isColorBlind = activeLocalPlayer?.options?.colorblind ?? false;
+		const isColorContrast = activeLocalPlayer?.options?.colorContrast ?? false;
+		const mode = AllyColorState.getInstance().getMode();
+
+		if (!this.shouldUseRelationshipTextColor(mode, isColorContrast)) {
+			return undefined;
 		}
 
-		return undefined;
+		return this.getRelationshipTextColorHex(owner, localPlayer, isColorBlind);
+	}
+
+	/**
+	 * Returns a hex color string (e.g., '|cFF0000FF') corresponding to the unit's
+	 * ally-color text color if the filter is active and applies. Otherwise returns undefined.
+	 */
+	public getTooltipColorHex(u: unit): string | undefined {
+		return this.getPlayerColorHex(SharedSlotManager.getInstance().getOwnerOfUnit(u));
 	}
 }

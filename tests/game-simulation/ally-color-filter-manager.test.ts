@@ -240,6 +240,19 @@ describe('AllyColorFilterManager', () => {
 			expect(hex).toBe('|cFF00FFFF');
 		});
 
+		it('does not return ally color text for Mode 1 without color contrast', () => {
+			activeLocalPlayer.options.colorContrast = false;
+			(AllyColorState as any).instance = new AllyColorState({
+				loadMode: () => 1,
+				saveMode: vi.fn(),
+			});
+			(AllyColorFilterManager as any).instance = undefined;
+
+			const unit = { owner: allyPlayer } as unknown as FakeUnitHandle;
+			const hex = AllyColorFilterManager.getInstance().getTooltipColorHex(unit as any);
+			expect(hex).toBeUndefined();
+		});
+
 		it('returns yellow for ally units when colorblind in Mode 2', () => {
 			activeLocalPlayer.options.colorblind = true;
 			AllyColorFilterManager.getInstance().recalculate();

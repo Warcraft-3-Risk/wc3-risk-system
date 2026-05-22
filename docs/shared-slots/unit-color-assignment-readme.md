@@ -272,9 +272,11 @@ In mode 2, model colors are local relationship colors:
 
 Team relationships come from WC3 alliance state. Lobby/shared/random team setup calls `Team.giveTeamAlliance()` or `Team.giveTeamFullControl()`, and shared slots are also allied to the real owner and teammates in `SharedSlotManager.givePlayerFullControlOfSlot()` when the game is not FFA.
 
-### Minimap colors
+### Minimap and UI text colors
 
 Custom minimap icons also resolve shared slots to the real owner. In normal mode they use `NameManager.getOriginalColor(realOwner)` to avoid raw slot reassignment changing icon color. In ally-color modes they use local relationship colors.
+
+Tooltip-style UI text uses `AllyColorFilterManager.getPlayerColorHex(owner)` for the same relationship view only in ally color mode 2. That covers the unit hover tooltip and the camera-position in-game overlay label. In modes 0 and 1, those labels fall back to `NameManager.getDisplayName(player)` so the factual/original player display color remains intact.
 
 Source:
 

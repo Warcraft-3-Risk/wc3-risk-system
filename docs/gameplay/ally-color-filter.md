@@ -12,6 +12,7 @@ Warcraft III natively supports an "Ally Color Mode" (toggled via `Alt+A` or the 
 - Units incrementally receive color updates (`applyColorFilter`) applying specific vertex and primary colors based on their ownership relative to the local player.
 - A separate `applyPlayerColorFilter` pass syncs physical raw owner slots with `SetPlayerColor` so WC3 health bars match the unit model color, especially for shared-slot units. Normal-mode fallback uses `NameManager.getOriginalColor(realOwner)` instead of the locally overridden engine color.
 - The player camera-position minimap overlay uses the same minimap ally-color mapping, falling back to `NameManager.getOriginalColor(player)` in mode 0.
+- Tooltip text uses local relationship colors through `AllyColorFilterManager.getPlayerColorHex()` only in ally color mode 2. This covers normal unit hover tooltips and the camera-position in-game overlay label, while modes 0 and 1 keep `NameManager`'s factual display color unless color-contrast mode is enabled.
 - Replays and observers are explicitly bypassed. `getMode()` utilizes `isReplay()` and `IsPlayerObserver()` to permanently lock these clients into `0` (Normal colors). This ensures watching replays never suffers from color-blindness or POV color-shifting.
 
 ## Constraints and Safety Rules

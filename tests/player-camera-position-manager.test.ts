@@ -14,7 +14,7 @@ vi.mock('../src/app/managers/names/name-manager', () => {
 	return {
 		NameManager: {
 			getInstance: vi.fn(() => ({
-				getDisplayName: vi.fn((p) => `Player ${p.id}`),
+				getDisplayName: vi.fn((p) => p.displayName ?? `Player ${p.id}`),
 				getBtag: vi.fn(() => `Player#1234`),
 				getOriginalColor: vi.fn((p) => p.originalColor ?? p.color ?? p.id ?? 0),
 			})),
@@ -38,6 +38,7 @@ import { PlayerManager } from '../src/app/player/player-manager';
 import { PLAYER_STATUS } from '../src/app/player/status/status-enum';
 import { ObserverCameraPositionOverlay } from '../src/app/triggers/visuals/observer-camera-position-overlay';
 import { AllyColorState } from '../src/app/managers/alliances/ally-color-state';
+import { AllyColorFilterManager } from '../src/app/managers/ally-color-filter-manager';
 
 // Setup some missing specific globals for player camera manager
 (globalThis as any).CreateTrigger = vi.fn().mockReturnValue({});
@@ -141,6 +142,7 @@ describe('PlayerCameraPositionManager', () => {
 		(PlayerCameraPositionManager as any).instance = undefined;
 		(ObserverCameraPositionOverlay as any).instance = undefined;
 		(AllyColorState as any).instance = undefined;
+		(AllyColorFilterManager as any).instance = undefined;
 	});
 
 	it('syncs camera position when the active player is ALIVE', () => {
@@ -228,5 +230,22 @@ describe('PlayerCameraPositionManager', () => {
 		const texture = (manager as any).getMinimapIconTexture(otherPlayer);
 
 		expect(texture).toBe('ReplaceableTextures\\TeamColor\\TeamColor02.blp');
+	});
+
+	it('uses ally color mode for camera frame label text', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		(AllyColorState as any).instance = new AllyColorState({
+			loadMode: () => 2,
+			saveMode: vi.fn(),
+		});
+		(globalThis as any).IsPlayerObserver = vi.fn(() => false);
+		(globalThis as any).IsPlayerAlly = vi.fn(
+			(a: any, b: any) => a === b || (a === localPlayer && b === otherPlayer) || (a === otherPlayer && b === localPlayer)
+		);
+		otherPlayer.displayName = '|cFFAABBCCPlayer 1|r';
+
+		const name = (manager as any).getCameraFrameDisplayName(otherPlayer);
+
+		expect(name).toBe('|cFF00FFFFPlayer 1|r');
 	});
 });
