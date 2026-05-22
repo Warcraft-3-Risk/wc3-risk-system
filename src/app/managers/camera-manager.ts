@@ -109,19 +109,6 @@ export default class CameraManager {
 		}
 	}
 
-	public setDistance(player: player, distance: number, persistForLocalPlayer: boolean): void {
-		const data = this.camData.get(player);
-		if (!data) {
-			return;
-		}
-
-		this.checkDistance(data, distance);
-
-		if (persistForLocalPlayer && player === GetLocalPlayer()) {
-			File.write(this.getFilePath(), `${data.distance} ${data.rotation} ${data.angle}`);
-		}
-	}
-
 	/**
 	 * Resets camera settings at a regular interval.
 	 */

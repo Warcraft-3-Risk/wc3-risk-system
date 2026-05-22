@@ -5,8 +5,6 @@ import { File } from 'w3ts';
 import { RatingManager } from '../rating/rating-manager';
 import { NameManager } from '../managers/names/name-manager';
 import { getCountryLabelsText, normalizeLargeCityIndicators } from '../player/options';
-import { CameraDistanceModeManager } from '../managers/camera-distance-mode-manager';
-import { getCameraDistanceModeText } from './camera-distance-mode';
 
 export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
@@ -363,48 +361,6 @@ export function buildCameraPanModeButton(player: ActivePlayer): framehandle {
 			const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
 			BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp', 0, false);
 		}
-	}
-
-	return button;
-}
-
-export function buildCameraDistanceModeButton(player: ActivePlayer): framehandle {
-	const getTooltip = (): string => {
-		const mode = CameraDistanceModeManager.getInstance().getMode();
-		return (
-			`Camera Distance\nCycles your camera distance preset.\nCurrent mode: ${HexColors.GREEN}${getCameraDistanceModeText(mode)}|r\n` +
-			`Pattern: ${HexColors.LIGHT_GRAY}Close → Medium → Far → Medium → Close|r`
-		);
-	};
-
-	const button = createGuardButton({
-		player: player,
-		createContext: GetPlayerId(player.getPlayer()) + 800,
-		textures: {
-			primary: 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp',
-			secondary: 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp',
-		},
-		xOffset: 0.184,
-		initialTooltipText: getTooltip(),
-		action: (context: number) => {
-			if (player.getPlayer() === GetLocalPlayer()) {
-				const mode = CameraDistanceModeManager.getInstance().cycleMode();
-				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
-				const alpha = mode === 'close' ? 150 : mode === 'medium' ? 210 : 255;
-				BlzFrameSetAlpha(buttonBackdrop, alpha);
-
-				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
-				BlzFrameSetText(buttonTooltip, getTooltip());
-			}
-		},
-	});
-
-	if (player.getPlayer() === GetLocalPlayer()) {
-		const context = GetPlayerId(player.getPlayer()) + 800;
-		const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
-		const mode = CameraDistanceModeManager.getInstance().getMode();
-		const alpha = mode === 'close' ? 150 : mode === 'medium' ? 210 : 255;
-		BlzFrameSetAlpha(buttonBackdrop, alpha);
 	}
 
 	return button;
