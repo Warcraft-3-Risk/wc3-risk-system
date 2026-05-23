@@ -19,6 +19,7 @@ export abstract class City implements Resetable, Ownable {
 	private _barrack: Barracks;
 	private _guard: Guard;
 	private _cop: unit;
+	private _effect: effect;
 	private _name?: string;
 	private _slot?: string;
 	private _quality?: string;
@@ -33,6 +34,11 @@ export abstract class City implements Resetable, Ownable {
 		this._barrack = rax;
 		this._guard = guard;
 		this._cop = cop;
+
+		this._effect = AddSpecialEffect('war3mapImported\\TargetIndicatorThinner_TC_100.mdx', rax.defaultX, rax.defaultY);
+		BlzSetSpecialEffectColorByPlayer(this._effect, Player(19));
+		BlzSetSpecialEffectScale(this._effect, 7.5);
+		BlzSetSpecialEffectAlpha(this._effect, 0);
 	}
 
 	public abstract isValidGuard(unit: unit): boolean;
@@ -78,13 +84,11 @@ export abstract class City implements Resetable, Ownable {
 		this.owner = player;
 		this._barrack.setOwner(player);
 		SetUnitOwner(this._cop, player, true);
-		this.applyColorFilter();
+		this.refreshColorFilter();
 	}
 
-	private applyColorFilter(): void {
-		const colorFilter = AllyColorFilterManager.getInstance();
-		colorFilter.applyColorFilter(this._barrack.unit);
-		colorFilter.applyColorFilter(this._cop);
+	public refreshColorFilter(): void {
+		AllyColorFilterManager.getInstance().applyCityColorFilter(this);
 	}
 
 	/**
@@ -136,6 +140,11 @@ export abstract class City implements Resetable, Ownable {
 	/** @returns The Circle of Power of the city */
 	public get cop(): unit {
 		return this._cop;
+	}
+
+	/** @returns The effect of the city */
+	public get effect(): effect {
+		return this._effect;
 	}
 
 	/** @returns The Guard object of the city */
@@ -208,6 +217,8 @@ export abstract class City implements Resetable, Ownable {
 			if (IsPlayerAlly(currOwner, this.owner)) {
 				BlzStartUnitAbilityCooldown(this._barrack.unit, ABILITY_ID.SWAP, BlzGetAbilityCooldown(ABILITY_ID.SWAP, 0));
 			}
+		} else {
+			this.refreshColorFilter();
 		}
 	}
 

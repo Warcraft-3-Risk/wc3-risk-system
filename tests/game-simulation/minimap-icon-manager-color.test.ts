@@ -2,6 +2,12 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import './helpers/wc3-integration-shim';
 
+const allyColorFilterMock = vi.hoisted(() => ({
+	applyColorFilter: vi.fn(),
+	markCitySeen: vi.fn(),
+	clearSeenCityCache: vi.fn(),
+}));
+
 vi.mock('w3ts', () => ({
 	File: { read: vi.fn(() => ''), write: vi.fn() },
 }));
@@ -40,9 +46,7 @@ vi.mock('src/app/settings/settings-context', () => ({
 
 vi.mock('src/app/managers/ally-color-filter-manager', () => ({
 	AllyColorFilterManager: {
-		getInstance: () => ({
-			applyColorFilter: vi.fn(),
-		}),
+		getInstance: () => allyColorFilterMock,
 	},
 }));
 
@@ -228,6 +232,42 @@ describe('MinimapIconManager unit icon colors', () => {
 		expect(frame.texture).toBe('orange-owner-texture');
 		expect(frame.visible).toBe(true);
 		expect((manager as any).trackedList.trackedRawOwnerList[0]).toBe(sharedSlot);
+	});
+
+	it('marks visible cities as seen for fogged ally-color refreshes', () => {
+		const localPlayer = Player(0);
+		const enemyPlayer = Object.assign(Player(1), { color: 1 });
+		const city = {
+			getOwner: () => enemyPlayer,
+			barrack: { unit: { owner: enemyPlayer } },
+			cop: { owner: enemyPlayer },
+			guard: { unit: { owner: enemyPlayer } },
+		};
+		const frame: any = {};
+		const manager = Object.create(MinimapIconManager.prototype);
+
+		(globalThis as any).GetLocalPlayer = () => localPlayer;
+		(globalThis as any).IsPlayerAlly = () => false;
+		(globalThis as any).IsPlayerEnemy = () => true;
+
+		(manager as any).COLOR_TEXTURES = [];
+		(manager as any).COLOR_TEXTURES[0] = 'red-texture';
+		(manager as any).cityLastTexture = new Map();
+		(manager as any).lastSeenOwners = new Map();
+
+		(manager as any).updateCityIconColorFast(frame, city, true, localPlayer, localPlayer, 2, false, false);
+
+		expect(allyColorFilterMock.markCitySeen).toHaveBeenCalledWith(city, enemyPlayer);
+	});
+
+	it('clears ally-color seen city cache when minimap seen cache is cleared', () => {
+		const manager = Object.create(MinimapIconManager.prototype);
+		(manager as any).lastSeenOwners = new Map([[{}, Player(1)]]);
+
+		manager.clearSeenCache();
+
+		expect(allyColorFilterMock.clearSeenCityCache).toHaveBeenCalled();
+		expect((manager as any).lastSeenOwners.size).toBe(0);
 	});
 
 	it('scales regular and capital city indicator frames when the preference is enabled', () => {

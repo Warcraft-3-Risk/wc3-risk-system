@@ -9,6 +9,7 @@ import {
 	buildColorContrastModeButton,
 	buildCameraPanModeButton,
 	buildLargeCityIndicatorButton,
+	setOptionButtonsVisibleForPlayer,
 } from '../ui/player-preference-buttons';
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
@@ -58,6 +59,7 @@ export class PlayerManager {
 				if (RATING_SYSTEM_ENABLED) {
 					humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
 				}
+
 				continue;
 			}
 
@@ -75,31 +77,24 @@ export class PlayerManager {
 					humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
 				}
 
-				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
-				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
-				const labelButton = buildLabelToggleButton(this._playerFromHandle.get(player));
-				const colorblindButton = buildColorblindModeButton(this._playerFromHandle.get(player));
-				const colorContrastButton = buildColorContrastModeButton(this._playerFromHandle.get(player));
-				const cameraPanButton = buildCameraPanModeButton(this._playerFromHandle.get(player));
-				const largeCityIndicatorsButton = buildLargeCityIndicatorButton(this._playerFromHandle.get(player));
+				buildGuardHealthButton(this._playerFromHandle.get(player));
+				buildGuardValueButton(this._playerFromHandle.get(player));
+				buildLabelToggleButton(this._playerFromHandle.get(player));
+				buildColorblindModeButton(this._playerFromHandle.get(player));
+				buildColorContrastModeButton(this._playerFromHandle.get(player));
+				buildCameraPanModeButton(this._playerFromHandle.get(player));
+				buildLargeCityIndicatorButton(this._playerFromHandle.get(player));
 				// Only create rating stats button if rating system is enabled
-				const ratingButton = RATING_SYSTEM_ENABLED ? buildRatingStatsButton(this._playerFromHandle.get(player)) : undefined;
+				if (RATING_SYSTEM_ENABLED) {
+					buildRatingStatsButton(this._playerFromHandle.get(player));
+				}
 				let contents: string = '';
 
 				if (player === GetLocalPlayer()) {
 					contents = File.read('risk/ui.pld');
 
 					if (contents === 'false') {
-						BlzFrameSetVisible(healthButton, false);
-						BlzFrameSetVisible(valueButton, false);
-						BlzFrameSetVisible(labelButton, false);
-						BlzFrameSetVisible(colorblindButton, false);
-						BlzFrameSetVisible(colorContrastButton, false);
-						BlzFrameSetVisible(cameraPanButton, false);
-						BlzFrameSetVisible(largeCityIndicatorsButton, false);
-						if (ratingButton) {
-							BlzFrameSetVisible(ratingButton, false);
-						}
+						setOptionButtonsVisibleForPlayer(player, false);
 					}
 
 					// Note: Rating preference is now stored in the rating file itself

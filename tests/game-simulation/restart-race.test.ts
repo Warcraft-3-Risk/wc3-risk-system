@@ -3,6 +3,21 @@ import './helpers/wc3-integration-shim';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
+const sharedSlotManagerMock = vi.hoisted(() => ({
+	evaluateAndRedistribute: vi.fn(() => false),
+	debugPrintSlotCounts: vi.fn(),
+	getOwnerOfUnit: vi.fn((unit: any) => unit?.owner),
+}));
+
+const allyColorFilterMock = vi.hoisted(() => ({
+	refreshAll: vi.fn(),
+	refreshPlayerAndUnitColors: vi.fn(),
+}));
+
+const optionButtonMock = vi.hoisted(() => ({
+	hideOptionButtonsForPlayers: vi.fn(),
+}));
+
 vi.mock('w3ts', () => ({
 	File: { read: vi.fn(() => ''), write: vi.fn() },
 }));
@@ -35,12 +50,18 @@ vi.mock('src/app/game/game-mode/utillity/on-player-status', () => ({
 
 vi.mock('src/app/game/services/shared-slot-manager', () => ({
 	SharedSlotManager: {
-		getInstance: () => ({
-			evaluateAndRedistribute: () => false,
-			debugPrintSlotCounts: vi.fn(),
-			getOwnerOfUnit: (unit: any) => unit?.owner,
-		}),
+		getInstance: () => sharedSlotManagerMock,
 	},
+}));
+
+vi.mock('src/app/managers/ally-color-filter-manager', () => ({
+	AllyColorFilterManager: {
+		getInstance: () => allyColorFilterMock,
+	},
+}));
+
+vi.mock('src/app/ui/player-preference-buttons', () => ({
+	hideOptionButtonsForPlayers: optionButtonMock.hideOptionButtonsForPlayers,
 }));
 
 vi.mock('src/app/managers/income-manager', () => ({
@@ -181,7 +202,9 @@ describe('immediate restart after match end', () => {
 			isPromode: () => true,
 			isChaosPromode: () => false,
 			isRandomTeams: () => false,
+			isNightFogOn: () => false,
 		} as any);
+		sharedSlotManagerMock.evaluateAndRedistribute.mockReturnValue(false);
 	});
 
 	it('exits the game loop and replays -ng when -ff already moved matchState to postMatch', () => {
@@ -232,5 +255,36 @@ describe('immediate restart after match end', () => {
 
 		expect(order).toEqual(['game-over-entered', 'reset-started']);
 		expect(gameOverState.nextState).toHaveBeenCalledWith(stateData);
+	});
+
+	it('hides option buttons when non-promode post-game stats are shown', () => {
+		const player = {
+			getPlayer: () => Player(0),
+			status: { isEliminated: () => false },
+			trackedData: { bonus: { hideUI: vi.fn() } },
+		};
+		GlobalGameData.prepareMatchData([player as any]);
+		vi.mocked(SettingsContext.getInstance).mockReturnValue({
+			isFFA: () => false,
+			isPromode: () => false,
+			isChaosPromode: () => false,
+			isRandomTeams: () => false,
+			isNightFogOn: () => false,
+		} as any);
+
+		const gameOverState = new GameOverState();
+		gameOverState.onEnterState();
+
+		expect(optionButtonMock.hideOptionButtonsForPlayers).toHaveBeenCalledWith([player]);
+	});
+
+	it('refreshes player and unit colors when shared slot redistribution changes ownership', () => {
+		sharedSlotManagerMock.evaluateAndRedistribute.mockReturnValueOnce(true);
+		const state = new GameLoopState();
+
+		state.onStartTurn(1);
+
+		expect(allyColorFilterMock.refreshPlayerAndUnitColors).toHaveBeenCalledTimes(1);
+		expect(allyColorFilterMock.refreshAll).not.toHaveBeenCalled();
 	});
 });

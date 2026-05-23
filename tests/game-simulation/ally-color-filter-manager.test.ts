@@ -18,6 +18,8 @@ import { PlayerManager } from '../../src/app/player/player-manager';
 import { UNIT_TYPE } from '../../src/app/utils/unit-types';
 import { FakeUnitHandle } from '../fixtures/fake-unit';
 import { NEUTRAL_HOSTILE } from '../../src/app/utils/utils';
+import { NameManager } from '../../src/app/managers/names/name-manager';
+import { CityToCountry } from '../../src/app/country/country-map';
 
 describe('AllyColorFilterManager', () => {
 	let localPlayer: any;
@@ -28,6 +30,7 @@ describe('AllyColorFilterManager', () => {
 
 	let mockVertexColors: Map<FakeUnitHandle, { r: number; g: number; b: number; a: number }>;
 	let mockUnitColors: Map<FakeUnitHandle, any>;
+	let mockPlayerColors: Map<any, any>;
 	let mockAllyColorFilterState: number;
 
 	beforeEach(() => {
@@ -35,16 +38,22 @@ describe('AllyColorFilterManager', () => {
 		(SharedSlotManager as any).instance = undefined;
 		(PlayerManager as any).instance = undefined;
 		(AllyColorState as any).instance = undefined;
+		(NameManager as any).instance = undefined;
+		CityToCountry.clear();
 
 		// Mock WC3 globals for this test
-		localPlayer = { id: 0, isFakePlayerHandle: true } as any;
-		enemyPlayer = { id: 1, isFakePlayerHandle: true } as any;
-		allyPlayer = { id: 2, isFakePlayerHandle: true } as any;
+		localPlayer = Player(0) as any;
+		enemyPlayer = Player(1) as any;
+		allyPlayer = Player(2) as any;
+		localPlayer.color = 0;
+		enemyPlayer.color = 1;
+		allyPlayer.color = 2;
 		// Set neutralHostilePlayer to exactly what utils imports
 		neutralHostilePlayer = NEUTRAL_HOSTILE;
 
 		(globalThis as any).GetLocalPlayer = () => localPlayer;
-		(globalThis as any).IsPlayerAlly = (p1: any, p2: any) => p1.id === p2.id || (p1.id === localPlayer.id && p2.id === allyPlayer.id);
+		(globalThis as any).IsPlayerAlly = (p1: any, p2: any) =>
+			p1.id === p2.id || (p1.id === localPlayer.id && p2.id === allyPlayer.id) || (p1.id === allyPlayer.id && p2.id === localPlayer.id);
 
 		mockAllyColorFilterState = 2; // Default to High Contrast (Mode 2)
 		(AllyColorFilterManager as any).instance = undefined;
@@ -52,11 +61,17 @@ describe('AllyColorFilterManager', () => {
 
 		mockVertexColors = new Map();
 		mockUnitColors = new Map();
+		mockPlayerColors = new Map();
 		(globalThis as any).GetPlayerColor = (p: any) => p?.color ?? p?.id ?? 0;
 		(globalThis as any).SetUnitColor = (u: any, c: any) => mockUnitColors.set(u, c);
+		(globalThis as any).SetPlayerColor = (p: any, c: any) => {
+			mockPlayerColors.set(p, c);
+			p.color = c;
+		};
 		(globalThis as any).SetUnitVertexColor = (u: any, r: number, g: number, b: number, a: number) => {
 			mockVertexColors.set(u, { r, g, b, a });
 		};
+		(globalThis as any).IsUnitVisible = () => true;
 
 		(globalThis as any).IsUnitType = (u: any, type: UNIT_TYPE) => {
 			if (u.typeIds) return u.typeIds.includes(type);
@@ -142,6 +157,23 @@ describe('AllyColorFilterManager', () => {
 			expect(mockUnitColors.get(unit)).toBe('BLUE_AFTER_RANDOMIZATION');
 		});
 
+		it('does not sync the raw owner player color while applying a unit filter', () => {
+			activeLocalPlayer.options.colorContrast = false;
+			const realOwner = Player(1) as any;
+			const rawOwner = Player(12) as any;
+			realOwner.color = 'PURPLE';
+			rawOwner.color = 'MAROON';
+
+			vi.spyOn(SharedSlotManager.getInstance(), 'getOwnerOfUnit').mockImplementation((u: any) => u.realOwner);
+			AllyColorFilterManager.getInstance().recalculate();
+
+			const unit = { owner: rawOwner, realOwner } as unknown as FakeUnitHandle;
+			AllyColorFilterManager.getInstance().applyColorFilter(unit as any);
+
+			expect(mockUnitColors.get(unit)).toBe('PURPLE');
+			expect(mockPlayerColors.size).toBe(0);
+		});
+
 		it('keeps neutral units neutral in custom ally mode 2', () => {
 			activeLocalPlayer.options.colorContrast = false;
 			neutralHostilePlayer.color = 'NEUTRAL_COLOR';
@@ -156,6 +188,55 @@ describe('AllyColorFilterManager', () => {
 
 			expect(mockUnitColors.get(unit)).toBe('NEUTRAL_COLOR');
 			expect(mockVertexColors.get(unit)).toEqual({ r: 255, g: 255, b: 255, a: 255 });
+		});
+	});
+
+	describe('applyPlayerColorFilter', () => {
+		it('syncs raw owner player color to the resolved model color in Mode 0 as a separate pass', () => {
+			activeLocalPlayer.options.colorContrast = false;
+			const realOwner = Player(1) as any;
+			const rawOwner = Player(12) as any;
+			NameManager.getInstance().setColor(realOwner, PLAYER_COLOR_PURPLE);
+			realOwner.color = PLAYER_COLOR_RED;
+			rawOwner.color = PLAYER_COLOR_MAROON;
+
+			vi.spyOn(SharedSlotManager.getInstance(), 'getOwner').mockImplementation((p: any) => (p === rawOwner ? realOwner : p));
+			AllyColorFilterManager.getInstance().applyPlayerColorFilter();
+
+			expect(mockPlayerColors.get(rawOwner)).toBe(PLAYER_COLOR_PURPLE);
+		});
+
+		it('applies relationship player colors in Mode 2 as a separate local pass', () => {
+			localPlayer.color = 'LOCAL_BASE';
+			allyPlayer.color = 'ALLY_BASE';
+			enemyPlayer.color = 'ENEMY_BASE';
+			(AllyColorState as any).instance = new AllyColorState({
+				loadMode: () => 2,
+				saveMode: vi.fn(),
+			});
+			(AllyColorFilterManager as any).instance = undefined;
+
+			AllyColorFilterManager.getInstance().applyPlayerColorFilter();
+
+			expect(mockPlayerColors.get(localPlayer)).toBe(ConvertPlayerColor(1));
+			expect(mockPlayerColors.get(allyPlayer)).toBe(ConvertPlayerColor(2));
+			expect(mockPlayerColors.get(enemyPlayer)).toBe(ConvertPlayerColor(0));
+		});
+	});
+
+	describe('refreshPlayerAndUnitColors', () => {
+		it('resyncs raw shared-slot player colors without waiting for a mode toggle', () => {
+			activeLocalPlayer.options.colorContrast = false;
+			const realOwner = Player(1) as any;
+			const rawOwner = Player(12) as any;
+			NameManager.getInstance().setColor(realOwner, PLAYER_COLOR_PURPLE);
+			realOwner.color = PLAYER_COLOR_RED;
+			rawOwner.color = PLAYER_COLOR_MAROON;
+
+			vi.spyOn(SharedSlotManager.getInstance(), 'getOwner').mockImplementation((p: any) => (p === rawOwner ? realOwner : p));
+			AllyColorFilterManager.getInstance().refreshPlayerAndUnitColors();
+
+			expect(mockPlayerColors.get(rawOwner)).toBe(PLAYER_COLOR_PURPLE);
 		});
 	});
 
@@ -176,6 +257,19 @@ describe('AllyColorFilterManager', () => {
 			const unit = { owner: allyPlayer } as unknown as FakeUnitHandle;
 			const hex = AllyColorFilterManager.getInstance().getTooltipColorHex(unit as any);
 			expect(hex).toBe('|cFF00FFFF');
+		});
+
+		it('does not return ally color text for Mode 1 without color contrast', () => {
+			activeLocalPlayer.options.colorContrast = false;
+			(AllyColorState as any).instance = new AllyColorState({
+				loadMode: () => 1,
+				saveMode: vi.fn(),
+			});
+			(AllyColorFilterManager as any).instance = undefined;
+
+			const unit = { owner: allyPlayer } as unknown as FakeUnitHandle;
+			const hex = AllyColorFilterManager.getInstance().getTooltipColorHex(unit as any);
+			expect(hex).toBeUndefined();
 		});
 
 		it('returns yellow for ally units when colorblind in Mode 2', () => {
@@ -221,6 +315,30 @@ describe('AllyColorFilterManager', () => {
 		});
 	});
 
+	describe('applyCityColorFilter', () => {
+		it('uses the last seen owner during direct city refreshes while the city is fogged', () => {
+			(globalThis as any).IsUnitVisible = () => false;
+			activeLocalPlayer.options.colorContrast = false;
+			enemyPlayer.color = 'RED_LAST_SEEN_COLOR';
+			const hiddenNewOwner = Player(3) as any;
+			hiddenNewOwner.color = 'BLUE_HIDDEN_CURRENT_COLOR';
+
+			const barrack = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const cop = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const guard = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const city = { barrack: { unit: barrack }, cop, guard: { unit: guard } };
+
+			const manager = AllyColorFilterManager.getInstance();
+			manager.markCitySeen(city as any, enemyPlayer);
+			manager.applyCityColorFilter(city as any);
+
+			expect(mockUnitColors.get(barrack)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(cop)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(guard)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(guard)).not.toBe('BLUE_HIDDEN_CURRENT_COLOR');
+		});
+	});
+
 	describe('startPolling', () => {
 		it('reapplies color filters to tracked transports when color mode state changes', () => {
 			let pollCallback: () => void = () => {};
@@ -237,6 +355,109 @@ describe('AllyColorFilterManager', () => {
 			pollCallback();
 
 			expect(mockVertexColors.get(transport)).toEqual({ r: 255, g: 50, b: 50, a: 255 });
+		});
+
+		it('does not repaint unexplored city structures when color mode state changes', () => {
+			let pollCallback: () => void = () => {};
+			(globalThis as any).CreateTimer = () => ({});
+			(globalThis as any).TimerStart = (_timer: any, _timeout: number, _periodic: boolean, callback: () => void) => {
+				pollCallback = callback;
+			};
+			(globalThis as any).IsUnitVisible = () => false;
+			mockAllyColorFilterState = 0;
+
+			const barrack = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const cop = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const guard = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			CityToCountry.set({ barrack: { unit: barrack }, cop, guard: { unit: guard } } as any, {} as any);
+
+			AllyColorFilterManager.getInstance().startPolling();
+			pollCallback();
+
+			expect(mockVertexColors.has(barrack)).toBe(false);
+			expect(mockVertexColors.has(cop)).toBe(false);
+			expect(mockVertexColors.has(guard)).toBe(false);
+		});
+
+		it('repaints previously seen city structures when color mode changes while they are fogged', () => {
+			let pollCallback: () => void = () => {};
+			(globalThis as any).CreateTimer = () => ({});
+			(globalThis as any).TimerStart = (_timer: any, _timeout: number, _periodic: boolean, callback: () => void) => {
+				pollCallback = callback;
+			};
+			(globalThis as any).IsUnitVisible = () => false;
+			activeLocalPlayer.options.colorContrast = false;
+			mockAllyColorFilterState = 0;
+
+			const barrack = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const cop = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const guard = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const city = { barrack: { unit: barrack }, cop, guard: { unit: guard } };
+			CityToCountry.set(city as any, {} as any);
+
+			const manager = AllyColorFilterManager.getInstance();
+			manager.markCitySeen(city as any, enemyPlayer);
+			manager.startPolling();
+			pollCallback();
+
+			expect(mockVertexColors.get(barrack)).toEqual({ r: 255, g: 255, b: 255, a: 255 });
+			expect(mockVertexColors.get(cop)).toEqual({ r: 255, g: 255, b: 255, a: 255 });
+			expect(mockVertexColors.get(guard)).toEqual({ r: 255, g: 255, b: 255, a: 255 });
+			expect(mockUnitColors.get(barrack)).toBe(GetPlayerColor(enemyPlayer));
+			expect(mockUnitColors.get(cop)).toBe(GetPlayerColor(enemyPlayer));
+			expect(mockUnitColors.get(guard)).toBe(GetPlayerColor(enemyPlayer));
+		});
+
+		it('uses the last seen owner when a seen city changes owner while fogged', () => {
+			let pollCallback: () => void = () => {};
+			(globalThis as any).CreateTimer = () => ({});
+			(globalThis as any).TimerStart = (_timer: any, _timeout: number, _periodic: boolean, callback: () => void) => {
+				pollCallback = callback;
+			};
+			(globalThis as any).IsUnitVisible = () => false;
+			activeLocalPlayer.options.colorContrast = false;
+			mockAllyColorFilterState = 0;
+			enemyPlayer.color = 'RED_LAST_SEEN_COLOR';
+			const hiddenNewOwner = Player(3) as any;
+			hiddenNewOwner.color = 'BLUE_HIDDEN_CURRENT_COLOR';
+
+			const barrack = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const cop = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const guard = { owner: hiddenNewOwner } as unknown as FakeUnitHandle;
+			const city = { barrack: { unit: barrack }, cop, guard: { unit: guard } };
+			CityToCountry.set(city as any, {} as any);
+
+			const manager = AllyColorFilterManager.getInstance();
+			manager.markCitySeen(city as any, enemyPlayer);
+			manager.startPolling();
+			pollCallback();
+
+			expect(mockUnitColors.get(barrack)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(cop)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(guard)).toBe('RED_LAST_SEEN_COLOR');
+			expect(mockUnitColors.get(barrack)).not.toBe('BLUE_HIDDEN_CURRENT_COLOR');
+		});
+
+		it('repaints visible city structures when color mode state changes', () => {
+			let pollCallback: () => void = () => {};
+			(globalThis as any).CreateTimer = () => ({});
+			(globalThis as any).TimerStart = (_timer: any, _timeout: number, _periodic: boolean, callback: () => void) => {
+				pollCallback = callback;
+			};
+			(globalThis as any).IsUnitVisible = () => true;
+			mockAllyColorFilterState = 0;
+
+			const barrack = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const cop = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			const guard = { owner: enemyPlayer } as unknown as FakeUnitHandle;
+			CityToCountry.set({ barrack: { unit: barrack }, cop, guard: { unit: guard } } as any, {} as any);
+
+			AllyColorFilterManager.getInstance().startPolling();
+			pollCallback();
+
+			expect(mockVertexColors.get(barrack)).toEqual({ r: 255, g: 50, b: 50, a: 255 });
+			expect(mockVertexColors.get(cop)).toEqual({ r: 255, g: 50, b: 50, a: 255 });
+			expect(mockVertexColors.get(guard)).toEqual({ r: 255, g: 50, b: 50, a: 255 });
 		});
 	});
 });

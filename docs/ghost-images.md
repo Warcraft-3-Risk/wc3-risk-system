@@ -34,6 +34,7 @@ This ensures that while the `CGhostImage` still technically caches a building ow
 
 - Do not rely on `UNIT_BF_HIDE_MINIMAP_DISPLAY` to hide buildings in the fog of war if their ownership is going to change.
 - When adding new capturable structure types, ensure their native minimap footprints are managed via the same vision-based local vertex coloring application if they are distributed in the fog.
+- Ally-color refreshes must not call the normal unit color filter on never-seen fogged city structures. Repaint barracks, circles of power, and city guards when `IsUnitVisible(..., GetLocalPlayer())` is true, or when the city has already been recorded as seen. Fogged seen-city repaints must use the last seen owner, not the hidden current owner, otherwise captures in fog leak through color changes.
 
 ## Source of Truth in Code
 

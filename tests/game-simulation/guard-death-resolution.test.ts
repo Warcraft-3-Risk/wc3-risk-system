@@ -18,6 +18,7 @@ vi.mock('src/app/managers/ally-color-filter-manager', () => ({
 	AllyColorFilterManager: {
 		getInstance: () => ({
 			applyColorFilter: vi.fn(),
+			applyCityColorFilter: vi.fn(),
 		}),
 	},
 }));
@@ -100,6 +101,7 @@ function makeCity(owner: player, guardUnit: TestUnit) {
 		changeOwner: vi.fn((newOwner: player) => {
 			city.owner = newOwner;
 		}),
+		refreshColorFilter: vi.fn(),
 	};
 
 	return city;
@@ -186,6 +188,7 @@ describe('guard death resolution', () => {
 		expect(city.changeOwner).toHaveBeenCalledWith(attacker.getPlayer());
 		expect(city.guard.replace).toHaveBeenCalledWith(createdUnits[0]);
 		expect(UnitToCity.get(createdUnits[0] as unit)).toBe(city);
+		expect(city.refreshColorFilter).toHaveBeenCalledTimes(1);
 	});
 
 	it('uses the captured attacker owner to find attacker-affiliated guard candidates after the killer slot is freed', () => {
@@ -215,5 +218,6 @@ describe('guard death resolution', () => {
 		expect(city.guard.replace).toHaveBeenCalledWith(attackerCandidate);
 		expect(city.changeOwner).toHaveBeenCalledWith(attacker.getPlayer());
 		expect(UnitToCity.get(attackerCandidate as unit)).toBe(city);
+		expect(city.refreshColorFilter).toHaveBeenCalledTimes(1);
 	});
 });

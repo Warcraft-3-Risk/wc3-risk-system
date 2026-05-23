@@ -141,6 +141,36 @@ const frameStore = new Map<string, any>();
 (globalThis as any).UNIT_BF_HIDE_MINIMAP_DISPLAY = 'hide_minimap';
 (globalThis as any).GetFilterUnit = () => null;
 
+// ─── Effect API ─────────────────────────────────────────────────────
+let effectIdCounter = 0;
+const createEffect = (path: string, x?: number, y?: number, target?: any) => ({
+	id: ++effectIdCounter,
+	path,
+	x,
+	y,
+	target,
+	alpha: 255,
+	scale: 1,
+	colorPlayer: undefined as any,
+	destroyed: false,
+});
+
+(globalThis as any).AddSpecialEffect = (path: string, x: number, y: number) => createEffect(path, x, y);
+(globalThis as any).AddSpecialEffectTarget = (path: string, target: any, _attachment: string) =>
+	createEffect(path, undefined, undefined, target);
+(globalThis as any).BlzSetSpecialEffectColorByPlayer = (effect: any, player: any) => {
+	if (effect) effect.colorPlayer = player;
+};
+(globalThis as any).BlzSetSpecialEffectScale = (effect: any, scale: number) => {
+	if (effect) effect.scale = scale;
+};
+(globalThis as any).BlzSetSpecialEffectAlpha = (effect: any, alpha: number) => {
+	if (effect) effect.alpha = alpha;
+};
+(globalThis as any).DestroyEffect = (effect: any) => {
+	if (effect) effect.destroyed = true;
+};
+
 // ─── Region / Rect API ─────────────────────────────────────────────
 (globalThis as any).GetPlayableMapRect = () => ({});
 (globalThis as any).Rect = (_minX: number, _minY: number, _maxX: number, _maxY: number) => ({});

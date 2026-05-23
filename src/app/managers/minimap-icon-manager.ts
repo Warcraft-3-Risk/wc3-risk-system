@@ -530,6 +530,7 @@ export class MinimapIconManager {
 	 */
 	public clearSeenCache(): void {
 		this.lastSeenOwners.clear();
+		AllyColorFilterManager.getInstance().clearSeenCityCache();
 	}
 
 	/**
@@ -772,16 +773,19 @@ export class MinimapIconManager {
 		let owner: player;
 
 		if (isVisible) {
+			owner = city.getOwner();
+			const colorFilter = AllyColorFilterManager.getInstance();
+			colorFilter.markCitySeen(city, owner);
+
 			if (GetLocalPlayer() === effectiveLocal) {
-				AllyColorFilterManager.getInstance().applyColorFilter(city.barrack.unit);
-				AllyColorFilterManager.getInstance().applyColorFilter(city.cop);
+				colorFilter.applyColorFilter(city.barrack.unit);
+				colorFilter.applyColorFilter(city.cop);
 				if (city.guard && city.guard.unit) {
-					AllyColorFilterManager.getInstance().applyColorFilter(city.guard.unit);
+					colorFilter.applyColorFilter(city.guard.unit);
 				}
 			}
 
 			// City is visible - update and remember the owner
-			owner = city.getOwner();
 			this.lastSeenOwners.set(city, owner);
 		} else {
 			// City is in fog of war - check if we've seen it before
@@ -933,16 +937,19 @@ export class MinimapIconManager {
 		}
 
 		if (isVisible) {
+			owner = city.getOwner();
+			const colorFilter = AllyColorFilterManager.getInstance();
+			colorFilter.markCitySeen(city, owner);
+
 			if (GetLocalPlayer() === localPlayer) {
-				AllyColorFilterManager.getInstance().applyColorFilter(city.barrack.unit);
-				AllyColorFilterManager.getInstance().applyColorFilter(city.cop);
+				colorFilter.applyColorFilter(city.barrack.unit);
+				colorFilter.applyColorFilter(city.cop);
 				if (city.guard && city.guard.unit) {
-					AllyColorFilterManager.getInstance().applyColorFilter(city.guard.unit);
+					colorFilter.applyColorFilter(city.guard.unit);
 				}
 			}
 
 			// City is visible - update and remember the owner
-			owner = city.getOwner();
 			this.lastSeenOwners.set(city, owner);
 		} else {
 			// City is in fog of war - check if we've seen it before

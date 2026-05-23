@@ -5,6 +5,7 @@ import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { AllyColorFilterManager } from './ally-color-filter-manager';
 import { ColorStringUtil } from '../utils/color-string-util';
+import { AllyColorState } from './alliances/ally-color-state';
 
 export class TooltipManager {
 	private static instance: TooltipManager;
@@ -53,10 +54,10 @@ export class TooltipManager {
 	private onTick(): void {
 		const focusUnit = BlzGetMouseFocusUnit();
 
-		const currentColorMode = GetAllyColorFilterState();
+		const currentColorMode = AllyColorState.getInstance().getMode();
 		const activeLocalPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());
-		const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
-		const isColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
+		const isColorBlind = activeLocalPlayer?.options?.colorblind ?? false;
+		const isColorContrast = activeLocalPlayer?.options?.colorContrast ?? false;
 
 		const needsRefresh = currentColorMode !== this.lastColorMode || isColorBlind !== this.lastColorBlind || isColorContrast !== this.lastColorContrast;
 		this.lastColorMode = currentColorMode;

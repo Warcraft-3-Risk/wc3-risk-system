@@ -3,11 +3,14 @@ import { PlayerManager } from '../player/player-manager';
 import { debugPrint } from '../utils/debug-print';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_PLAYER_LEFT, EVENT_ON_PRE_MATCH } from '../utils/events/event-constants';
-import { CreateObserverButton } from '../utils/observer-helper';
 import { NameManager } from './names/name-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { MinimapIconManager } from './minimap-icon-manager';
 import { SettingsContext } from '../settings/settings-context';
+import { ObserverCameraPositionOverlay } from '../triggers/visuals/observer-camera-position-overlay';
+import { AllyColorState } from './alliances/ally-color-state';
+import { AllyColorFilterManager } from './ally-color-filter-manager';
+import { ColorStringUtil } from '../utils/color-string-util';
 
 export type CamPositionData = {
 	x: number;
@@ -21,10 +24,10 @@ export default class PlayerCameraPositionManager {
 	private camPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
 	private displayPositionData: Map<player, CamPositionData> = new Map<player, CamPositionData>();
 	private frames: Map<player, { box: framehandle; text: framehandle; minimapIcon: framehandle }> = new Map();
+	private minimapIconTextures: Map<player, string> = new Map();
+	private frameTexts: Map<player, string> = new Map();
 	private syncTrigger: trigger;
-	private overlayVisible: boolean = false;
-	private toggleButton: framehandle;
-	private toggleIcon: framehandle;
+	private observerCameraPositionOverlay: ObserverCameraPositionOverlay;
 
 	public static getInstance() {
 		if (this.instance === undefined) {
@@ -45,15 +48,20 @@ export default class PlayerCameraPositionManager {
 
 		TriggerAddAction(this.syncTrigger, () => this.onSync());
 
+		this.observerCameraPositionOverlay = ObserverCameraPositionOverlay.getInstance();
+		this.observerCameraPositionOverlay.onVisibilityChanged((isVisible) => {
+			if (!isVisible) {
+				this.hidePlayerFrames();
+			}
+		});
+
 		EventEmitter.getInstance().on(EVENT_ON_PLAYER_LEFT, (player) => {
 			this.removePlayerFrame(player.getPlayer());
 		});
 
 		EventEmitter.getInstance().on(EVENT_ON_PRE_MATCH, () => {
-			this.updateEligibility();
+			this.observerCameraPositionOverlay.updateEligibility();
 		});
-
-		this.createToggleButton();
 
 		// Network sync timer — syncs position every 0.5s
 		const syncTimer = CreateTimer();
@@ -90,7 +98,7 @@ export default class PlayerCameraPositionManager {
 
 	private isOverlayVisibleForPlayer(p: player): boolean {
 		if (IsPlayerObserver(p) || EDITOR_DEVELOPER_MODE) {
-			return this.overlayVisible;
+			return this.observerCameraPositionOverlay.isOverlayVisible();
 		}
 
 		const localActivePlayer = PlayerManager.getInstance().players.get(p);
@@ -99,74 +107,6 @@ export default class PlayerCameraPositionManager {
 		}
 
 		return false;
-	}
-
-	private updateEligibility() {
-		const localPlayer = GetLocalPlayer();
-
-		BlzFrameSetVisible(this.toggleButton, false);
-		BlzFrameSetVisible(this.toggleIcon, false);
-		if (IsPlayerObserver(localPlayer) || EDITOR_DEVELOPER_MODE) {
-			BlzFrameSetVisible(this.toggleButton, true);
-			BlzFrameSetVisible(this.toggleIcon, true);
-		} else {
-			BlzFrameSetEnable(this.toggleButton, false);
-		}
-	}
-
-	private createToggleButton(): void {
-		const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0);
-		const ctx = 500; // unique context to avoid collision with player frames
-
-		this.toggleIcon = BlzCreateFrameByType('BACKDROP', 'CamToggleIcon', gameUI, '', ctx);
-		BlzFrameSetPoint(this.toggleIcon, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.138, -0.025);
-		BlzFrameSetSize(this.toggleIcon, 0.02, 0.02);
-		BlzFrameSetTexture(this.toggleIcon, 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp', 0, true);
-
-		// Use ScriptDialogButton — same template as the leaderboard button, proven to work with observer hover detection
-		this.toggleButton = BlzCreateFrameByType('GLUETEXTBUTTON', 'CamToggleButton', gameUI, 'ScriptDialogButton', ctx);
-		BlzFrameSetPoint(this.toggleButton, FRAMEPOINT_TOPLEFT, gameUI, FRAMEPOINT_TOPLEFT, 0.138, -0.025);
-		BlzFrameSetSize(this.toggleButton, 0.02, 0.02);
-		BlzFrameSetText(this.toggleButton, '');
-		BlzFrameSetAlpha(this.toggleButton, 0);
-
-		const localPlayer = GetLocalPlayer();
-
-		// Only visible for observers or developers
-		BlzFrameSetVisible(this.toggleButton, false);
-		BlzFrameSetVisible(this.toggleIcon, false);
-		if (IsPlayerObserver(localPlayer) || EDITOR_DEVELOPER_MODE) {
-			BlzFrameSetVisible(this.toggleButton, true);
-			BlzFrameSetVisible(this.toggleIcon, true);
-		} else {
-			BlzFrameSetEnable(this.toggleButton, false);
-		}
-
-		// Observer hover-click — same pattern as leaderboard button in ranked-statistics-view
-		CreateObserverButton(this.toggleButton, IsPlayerObserver(localPlayer), () => {
-			this.toggleOverlay();
-		});
-	}
-
-	private toggleOverlay(): void {
-		this.overlayVisible = !this.overlayVisible;
-		BlzFrameSetText(this.toggleButton, '');
-
-		const texture = this.overlayVisible
-			? 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp'
-			: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp';
-		BlzFrameSetTexture(this.toggleIcon, texture, 0, true);
-
-		if (!this.overlayVisible) {
-			this.frames.forEach((frame) => {
-				BlzFrameSetVisible(frame.box, false);
-				BlzFrameSetVisible(frame.text, false);
-				BlzFrameSetVisible(frame.minimapIcon, false);
-			});
-		}
-
-		BlzFrameSetEnable(this.toggleButton, false);
-		BlzFrameSetEnable(this.toggleButton, true);
 	}
 
 	private createPlayerFrame(p: player): { box: framehandle; text: framehandle; minimapIcon: framehandle } {
@@ -179,13 +119,7 @@ export default class PlayerCameraPositionManager {
 		const minimapIcon = BlzCreateFrameByType('BACKDROP', 'MinimapPlayerCameraIcon', gameUI, '', ctx);
 		BlzFrameSetSize(minimapIcon, 0.009, 0.006); // Slightly larger, 3x2 aspect ratio to mimic a screen
 		BlzFrameSetLevel(minimapIcon, 20); // Render above everything else on minimap
-		const colorIndex = GetHandleId(GetPlayerColor(p));
-		BlzFrameSetTexture(
-			minimapIcon,
-			'ReplaceableTextures\\TeamColor\\TeamColor' + (colorIndex < 10 ? '0' + colorIndex : colorIndex) + '.blp',
-			0,
-			true
-		);
+		this.updateMinimapIconColor(p, minimapIcon);
 		BlzFrameSetAlpha(minimapIcon, 200); // More transparent
 		BlzFrameSetVisible(minimapIcon, false);
 
@@ -222,8 +156,7 @@ export default class PlayerCameraPositionManager {
 			} else {
 				const frame = this.frames.get(player);
 				if (frame) {
-					const name = NameManager.getInstance().getDisplayName(player);
-					this.setFrameText(frame, name);
+					this.updateCameraFrameText(player, frame);
 				}
 			}
 		}
@@ -245,8 +178,7 @@ export default class PlayerCameraPositionManager {
 
 			const localPlayer = GetLocalPlayer();
 			if (this.isOverlayVisibleForPlayer(localPlayer) && this.isEligiblePlayer(localPlayer) && this.canSeePlayerCam(localPlayer, p)) {
-				const name = NameManager.getInstance().getDisplayName(p);
-				this.setFrameText(frame, name);
+				this.updateCameraFrameText(p, frame);
 
 				const [sx, sy, onScreen] = World2Screen(x, y, 0);
 				if (onScreen && sy >= 0.12) {
@@ -297,12 +229,9 @@ export default class PlayerCameraPositionManager {
 	private renderFrames() {
 		const localPlayer = GetLocalPlayer();
 
-		if (!this.isEligiblePlayer(localPlayer) || !this.isOverlayVisibleForPlayer(localPlayer) || GlobalGameData.matchState !== 'inProgress') {
-			this.frames.forEach((frame) => {
-				BlzFrameSetVisible(frame.box, false);
-				BlzFrameSetVisible(frame.text, false);
-				BlzFrameSetVisible(frame.minimapIcon, false);
-			});
+		const isOverlayPhase = GlobalGameData.matchState === 'preMatch' || GlobalGameData.matchState === 'inProgress';
+		if (!this.isEligiblePlayer(localPlayer) || !this.isOverlayVisibleForPlayer(localPlayer) || !isOverlayPhase) {
+			this.hidePlayerFrames();
 			return;
 		}
 
@@ -317,6 +246,8 @@ export default class PlayerCameraPositionManager {
 				return;
 			}
 
+			this.updateCameraFrameText(p, frame);
+
 			const [sx, sy, onScreen] = World2Screen(display.x, display.y, 0);
 			if (onScreen && sy >= 0.14) {
 				BlzFrameSetAbsPoint(frame.text, FRAMEPOINT_BOTTOM, sx, sy + 0.025);
@@ -327,16 +258,76 @@ export default class PlayerCameraPositionManager {
 				BlzFrameSetVisible(frame.text, false);
 			}
 
+			this.updateMinimapIconColor(p, frame.minimapIcon);
+
 			// Update minimap position
 			MinimapIconManager.getInstance().updateIconPosition(frame.minimapIcon, display.x, display.y);
 			BlzFrameSetVisible(frame.minimapIcon, true);
 		});
 	}
 
+	private updateMinimapIconColor(p: player, minimapIcon: framehandle): void {
+		const texture = this.getMinimapIconTexture(p);
+		if (this.minimapIconTextures.get(p) === texture) {
+			return;
+		}
+
+		BlzFrameSetTexture(minimapIcon, texture, 0, true);
+		this.minimapIconTextures.set(p, texture);
+	}
+
+	private getMinimapIconTexture(p: player): string {
+		const localPlayer = GetLocalPlayer();
+		const allyColorState = AllyColorState.getInstance();
+		const activeLocalPlayer = PlayerManager.getInstance().players.get(localPlayer);
+		const isColorBlind = activeLocalPlayer?.options?.colorblind ?? false;
+		const color = allyColorState.getMode() > 0 ? allyColorState.getMinimapColor(p, localPlayer, isColorBlind) : NameManager.getInstance().getOriginalColor(p);
+
+		return this.getTeamColorTexture(color);
+	}
+
+	private getTeamColorTexture(color: playercolor): string {
+		const colorIndex = GetHandleId(color);
+		if (colorIndex < 0 || colorIndex > 23) {
+			return 'ReplaceableTextures\\TeamColor\\TeamColor90.blp';
+		}
+
+		const str = colorIndex < 10 ? '0' + colorIndex : `${colorIndex}`;
+		return 'ReplaceableTextures\\TeamColor\\TeamColor' + str + '.blp';
+	}
+
+	private updateCameraFrameText(p: player, frame: { box: framehandle; text: framehandle }): void {
+		const name = this.getCameraFrameDisplayName(p);
+		if (this.frameTexts.get(p) === name) {
+			return;
+		}
+
+		this.setFrameText(frame, name);
+		this.frameTexts.set(p, name);
+	}
+
+	private getCameraFrameDisplayName(p: player): string {
+		const name = NameManager.getInstance().getDisplayName(p);
+		const allyFilterHex = AllyColorFilterManager.getInstance().getPlayerColorHex(p);
+		if (!allyFilterHex) {
+			return name;
+		}
+
+		return `${allyFilterHex}${ColorStringUtil.stripColorTags(name)}|r`;
+	}
+
 	private setFrameText(frame: { box: framehandle; text: framehandle }, name: string): void {
 		const visLen = this.visibleLength(name);
 		BlzFrameSetSize(frame.text, Math.max(0.02, visLen * 0.005 + 0.01), 0.0058);
 		BlzFrameSetText(frame.text, name);
+	}
+
+	private hidePlayerFrames(): void {
+		this.frames.forEach((frame) => {
+			BlzFrameSetVisible(frame.box, false);
+			BlzFrameSetVisible(frame.text, false);
+			BlzFrameSetVisible(frame.minimapIcon, false);
+		});
 	}
 
 	// Returns the number of visible characters, stripping |cFFRRGGBB (10 chars) and |r (2 chars)
@@ -369,6 +360,8 @@ export default class PlayerCameraPositionManager {
 			BlzFrameSetVisible(frame.text, false);
 			BlzFrameSetVisible(frame.minimapIcon, false);
 			this.frames.delete(p);
+			this.minimapIconTextures.delete(p);
+			this.frameTexts.delete(p);
 		}
 
 		this.camPositionData.delete(p);

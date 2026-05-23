@@ -4,10 +4,14 @@ import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 import { AllyColorState } from './alliances/ally-color-state';
 import { CityToCountry } from '../country/country-map';
+import { NameManager } from './names/name-manager';
+
+type ColorFilterCity = { barrack: { unit: unit }; cop: unit; guard?: { unit?: unit } };
 
 export class AllyColorFilterManager {
 	private static instance: AllyColorFilterManager;
 	private pollTimer: timer | undefined;
+	private seenCityOwners: Map<ColorFilterCity, player> = new Map();
 
 	private cache: {
 		color: playercolor;
@@ -63,38 +67,103 @@ export class AllyColorFilterManager {
 				lastColorBlind = isColorBlind;
 				lastColorContrast = isColorContrast;
 
-				this.recalculate();
-
-				for (const activePlayer of PlayerManager.getInstance().players.values()) {
-					for (const u of activePlayer.trackedData.units) {
-						this.applyColorFilter(u);
-					}
-					for (const u of activePlayer.trackedData.transports) {
-						this.applyColorFilter(u);
-					}
-				}
-
-				for (const [city] of CityToCountry) {
-					this.applyColorFilter(city.barrack.unit);
-					this.applyColorFilter(city.cop);
-					if (city.guard && city.guard.unit) {
-						this.applyColorFilter(city.guard.unit);
-					}
-				}
+				this.refreshAll();
 			}
 		});
+	}
+
+	public refreshAll(): void {
+		this.refreshPlayerAndUnitColors();
+
+		for (const [city] of CityToCountry) {
+			this.applyCityColorFilter(city);
+		}
+	}
+
+	public refreshPlayerAndUnitColors(): void {
+		this.recalculate();
+		this.applyPlayerColorFilter();
+
+		for (const activePlayer of PlayerManager.getInstance().players.values()) {
+			for (const u of activePlayer.trackedData.units) {
+				this.applyColorFilter(u);
+			}
+			for (const u of activePlayer.trackedData.transports) {
+				this.applyColorFilter(u);
+			}
+		}
+	}
+
+	public markCitySeen(city: ColorFilterCity, owner: player): void {
+		this.seenCityOwners.set(city, owner);
+	}
+
+	public clearSeenCityCache(): void {
+		this.seenCityOwners.clear();
+	}
+
+	public applyCityColorFilter(city: ColorFilterCity): void {
+		const localPlayer = GetLocalPlayer();
+		const guardUnit = city.guard?.unit;
+		const isVisible =
+			IsUnitVisible(city.barrack.unit, localPlayer) || IsUnitVisible(city.cop, localPlayer) || (guardUnit && IsUnitVisible(guardUnit, localPlayer));
+
+		if (isVisible) {
+			const owner = SharedSlotManager.getInstance().getOwnerOfUnit(city.barrack.unit);
+			this.markCitySeen(city, owner);
+			this.applyColorFilter(city.barrack.unit);
+			this.applyColorFilter(city.cop);
+			if (guardUnit) {
+				this.applyColorFilter(guardUnit);
+			}
+			return;
+		}
+
+		const lastSeenOwner = this.seenCityOwners.get(city);
+		if (!lastSeenOwner) {
+			return;
+		}
+
+		this.applyColorFilterForOwner(city.barrack.unit, lastSeenOwner);
+		this.applyColorFilterForOwner(city.cop, lastSeenOwner);
+		if (guardUnit) {
+			this.applyColorFilterForOwner(guardUnit, lastSeenOwner);
+		}
 	}
 
 	public recalculate(): void {
 		this.updateCache();
 	}
 
+	private setPlayerColorLocally(client: player, affectedPlayer: player, color: playercolor): void {
+		if (GetLocalPlayer() === client && GetPlayerColor(affectedPlayer) !== color) {
+			SetPlayerColor(affectedPlayer, color);
+		}
+	}
+
+	public applyPlayerColorFilter(): void {
+		const allyColorState = AllyColorState.getInstance();
+		const mode = allyColorState.getMode();
+		const localPlayer = GetLocalPlayer();
+		const activeLocalPlayer = PlayerManager.getInstance().players.get(localPlayer);
+		const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
+		const nameManager = NameManager.getInstance();
+
+		for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
+			const rawOwner = Player(i);
+			const owner = SharedSlotManager.getInstance().getOwner(rawOwner);
+			const color = mode === 2 ? allyColorState.getUnitModelColor(owner, localPlayer, isColorBlind) : nameManager.getOriginalColor(owner);
+
+			this.setPlayerColorLocally(localPlayer, rawOwner, color);
+		}
+	}
+
 	private updateCache(): void {
 		const localPlayer = GetLocalPlayer();
 		const localPlayerId = GetPlayerId(localPlayer);
 		const activeLocalPlayer = PlayerManager.getInstance().players.get(localPlayer);
-		const isColorBlind = activeLocalPlayer ? activeLocalPlayer.options.colorblind : false;
-		const isColorContrast = activeLocalPlayer ? activeLocalPlayer.options.colorContrast : false;
+		const isColorBlind = activeLocalPlayer?.options?.colorblind ?? false;
+		const isColorContrast = activeLocalPlayer?.options?.colorContrast ?? false;
 		const allyColorState = AllyColorState.getInstance();
 		const mode = allyColorState.getMode();
 
@@ -165,24 +234,34 @@ export class AllyColorFilterManager {
 				}
 			}
 
-			if (isColorContrast) {
-				if (GetPlayerId(owner) === GetPlayerId(NEUTRAL_HOSTILE)) {
-					tooltip = '|cFF888888';
-				} else if (isLocalOwner) {
-					tooltip = '|cFF0000FF';
-				} else if (isAlly) {
-					if (isColorBlind) {
-						tooltip = '|cFFFFFF00';
-					} else {
-						tooltip = '|cFF00FFFF';
-					}
-				} else {
-					tooltip = '|cFFFF0000';
-				}
+			if (this.shouldUseRelationshipTextColor(mode, isColorContrast)) {
+				tooltip = this.getRelationshipTextColorHex(owner, localPlayer, isColorBlind);
 			}
 
 			this.cache[i] = { color, red: r, green: g, blue: b, spawnRed: spawnR, spawnGreen: spawnG, spawnBlue: spawnB, tooltip };
 		}
+	}
+
+	private shouldUseRelationshipTextColor(mode: number, isColorContrast: boolean): boolean {
+		return mode === 2 || isColorContrast;
+	}
+
+	private isNeutralOwner(owner: player): boolean {
+		const ownerId = GetPlayerId(owner);
+		return ownerId >= bj_MAX_PLAYERS || ownerId === GetPlayerId(NEUTRAL_HOSTILE);
+	}
+
+	private getRelationshipTextColorHex(owner: player, localPlayer: player, isColorBlind: boolean): string {
+		if (this.isNeutralOwner(owner)) {
+			return '|cFF888888';
+		}
+		if (GetPlayerId(owner) === GetPlayerId(localPlayer)) {
+			return '|cFF0000FF';
+		}
+		if (IsPlayerAlly(localPlayer, owner)) {
+			return isColorBlind ? '|cFFFFFF00' : '|cFF00FFFF';
+		}
+		return '|cFFFF0000';
 	}
 
 	/**
@@ -192,6 +271,10 @@ export class AllyColorFilterManager {
 	 */
 	public applyColorFilter(u: unit): void {
 		const owner = SharedSlotManager.getInstance().getOwnerOfUnit(u);
+		this.applyColorFilterForOwner(u, owner);
+	}
+
+	private applyColorFilterForOwner(u: unit, owner: player): void {
 		const isLocalOwner = GetPlayerId(GetLocalPlayer()) === GetPlayerId(owner);
 		const isSpawn = IsUnitType(u, UNIT_TYPE.SPAWN);
 		const alpha = isLocalOwner && isSpawn ? 150 : 255;
@@ -202,7 +285,8 @@ export class AllyColorFilterManager {
 		if (cacheData) {
 			// Player colors are assigned after this manager is constructed, so normal
 			// color modes must read the live engine color instead of the startup cache.
-			const unitColor = AllyColorState.getInstance().getMode() === 2 ? cacheData.color : GetPlayerColor(owner);
+			const mode = AllyColorState.getInstance().getMode();
+			const unitColor = mode === 2 ? cacheData.color : GetPlayerColor(owner);
 
 			if (isSpawn) {
 				SetUnitVertexColor(u, cacheData.spawnRed, cacheData.spawnGreen, cacheData.spawnBlue, alpha);
@@ -214,17 +298,28 @@ export class AllyColorFilterManager {
 	}
 
 	/**
-	 * Returns a hex color string (e.g., '|cFF0000FF') corresponding to the unit's
-	 * high contrast color if the filter is active and applies. Otherwise returns undefined.
+	 * Returns a hex color string (e.g., '|cFF0000FF') for UI text that should
+	 * follow the local player's ally-color relationship view.
 	 */
-	public getTooltipColorHex(u: unit): string | undefined {
-		const owner = SharedSlotManager.getInstance().getOwnerOfUnit(u);
-		const playerId = GetPlayerId(owner);
-		const cacheData = this.cache[playerId];
-		if (cacheData) {
-			return cacheData.tooltip;
+	public getPlayerColorHex(owner: player): string | undefined {
+		const localPlayer = GetLocalPlayer();
+		const activeLocalPlayer = PlayerManager.getInstance().players.get(localPlayer);
+		const isColorBlind = activeLocalPlayer?.options?.colorblind ?? false;
+		const isColorContrast = activeLocalPlayer?.options?.colorContrast ?? false;
+		const mode = AllyColorState.getInstance().getMode();
+
+		if (!this.shouldUseRelationshipTextColor(mode, isColorContrast)) {
+			return undefined;
 		}
 
-		return undefined;
+		return this.getRelationshipTextColorHex(owner, localPlayer, isColorBlind);
+	}
+
+	/**
+	 * Returns a hex color string (e.g., '|cFF0000FF') corresponding to the unit's
+	 * ally-color text color if the filter is active and applies. Otherwise returns undefined.
+	 */
+	public getTooltipColorHex(u: unit): string | undefined {
+		return this.getPlayerColorHex(SharedSlotManager.getInstance().getOwnerOfUnit(u));
 	}
 }

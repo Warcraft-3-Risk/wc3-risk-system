@@ -32,4 +32,5 @@ export function InvalidGuardHandler(city: LandCity | PortCity, deathContext: Uni
 	UnitToCity.delete(city.guard.unit);
 	city.guard.replace(newGuard);
 	UnitToCity.set(newGuard, city);
+	city.refreshColorFilter();
 }

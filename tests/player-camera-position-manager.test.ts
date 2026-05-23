@@ -14,8 +14,9 @@ vi.mock('../src/app/managers/names/name-manager', () => {
 	return {
 		NameManager: {
 			getInstance: vi.fn(() => ({
-				getDisplayName: vi.fn((p) => `Player ${p.id}`),
+				getDisplayName: vi.fn((p) => p.displayName ?? `Player ${p.id}`),
 				getBtag: vi.fn(() => `Player#1234`),
+				getOriginalColor: vi.fn((p) => p.originalColor ?? p.color ?? p.id ?? 0),
 			})),
 		},
 	};
@@ -35,6 +36,10 @@ vi.mock('../src/app/managers/minimap-icon-manager', () => {
 import PlayerCameraPositionManager from '../src/app/managers/player-camera-position-manager';
 import { PlayerManager } from '../src/app/player/player-manager';
 import { PLAYER_STATUS } from '../src/app/player/status/status-enum';
+import { ObserverCameraPositionOverlay } from '../src/app/triggers/visuals/observer-camera-position-overlay';
+import { AllyColorState } from '../src/app/managers/alliances/ally-color-state';
+import { AllyColorFilterManager } from '../src/app/managers/ally-color-filter-manager';
+import { GlobalGameData } from '../src/app/game/state/global-game-state';
 
 // Setup some missing specific globals for player camera manager
 (globalThis as any).CreateTrigger = vi.fn().mockReturnValue({});
@@ -49,6 +54,7 @@ import { PLAYER_STATUS } from '../src/app/player/status/status-enum';
 (globalThis as any).BlzFrameSetText = vi.fn();
 (globalThis as any).BlzFrameSetVisible = vi.fn();
 (globalThis as any).BlzFrameSetEnable = vi.fn();
+(globalThis as any).BlzFrameSetAlpha = vi.fn();
 (globalThis as any).BlzFrameSetAbsPoint = vi.fn();
 (globalThis as any).GetCameraTargetPositionX = vi.fn().mockReturnValue(100);
 (globalThis as any).GetCameraTargetPositionY = vi.fn().mockReturnValue(200);
@@ -65,6 +71,7 @@ import { PLAYER_STATUS } from '../src/app/player/status/status-enum';
 (globalThis as any).BlzFrameSetVisible = vi.fn();
 (globalThis as any).BlzFrameSetPoint = vi.fn();
 (globalThis as any).BlzFrameSetSize = vi.fn();
+(globalThis as any).BlzFrameSetTexture = vi.fn();
 (globalThis as any).BlzGetFrameByName = vi.fn().mockReturnValue({});
 (globalThis as any).BlzGetOriginFrame = vi.fn().mockReturnValue({});
 (globalThis as any).BlzTriggerRegisterFrameEvent = vi.fn();
@@ -87,6 +94,7 @@ class MockActivePlayer {
 		current: string;
 		isActive: () => boolean;
 	};
+	options = { cameraPan: true, colorblind: false };
 
 	constructor(player: any) {
 		this.player = player;
@@ -133,6 +141,10 @@ describe('PlayerCameraPositionManager', () => {
 
 		// Reset singleton
 		(PlayerCameraPositionManager as any).instance = undefined;
+		(ObserverCameraPositionOverlay as any).instance = undefined;
+		(AllyColorState as any).instance = undefined;
+		(AllyColorFilterManager as any).instance = undefined;
+		GlobalGameData.matchState = 'inProgress';
 	});
 
 	it('syncs camera position when the active player is ALIVE', () => {
@@ -194,5 +206,72 @@ describe('PlayerCameraPositionManager', () => {
 
 		expect(removeSpy).not.toHaveBeenCalledWith(otherPlayer);
 		expect((manager as any).frames.has(otherPlayer)).toBeTruthy();
+	});
+
+	it('uses the stored original player color for camera minimap icons in mode 0', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		otherPlayer.originalColor = PLAYER_COLOR_PURPLE;
+		otherPlayer.color = PLAYER_COLOR_RED;
+
+		const texture = (manager as any).getMinimapIconTexture(otherPlayer);
+
+		expect(texture).toBe('ReplaceableTextures\\TeamColor\\TeamColor03.blp');
+	});
+
+	it('uses ally color mode for camera minimap icons', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		(AllyColorState as any).instance = new AllyColorState({
+			loadMode: () => 1,
+			saveMode: vi.fn(),
+		});
+		(globalThis as any).IsPlayerObserver = vi.fn(() => false);
+		(globalThis as any).IsPlayerAlly = vi.fn(
+			(a: any, b: any) => a === b || (a === localPlayer && b === otherPlayer) || (a === otherPlayer && b === localPlayer)
+		);
+
+		const texture = (manager as any).getMinimapIconTexture(otherPlayer);
+
+		expect(texture).toBe('ReplaceableTextures\\TeamColor\\TeamColor02.blp');
+	});
+
+	it('uses ally color mode for camera frame label text', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		(AllyColorState as any).instance = new AllyColorState({
+			loadMode: () => 2,
+			saveMode: vi.fn(),
+		});
+		(globalThis as any).IsPlayerObserver = vi.fn(() => false);
+		(globalThis as any).IsPlayerAlly = vi.fn(
+			(a: any, b: any) => a === b || (a === localPlayer && b === otherPlayer) || (a === otherPlayer && b === localPlayer)
+		);
+		otherPlayer.displayName = '|cFFAABBCCPlayer 1|r';
+
+		const name = (manager as any).getCameraFrameDisplayName(otherPlayer);
+
+		expect(name).toBe('|cFF00FFFFPlayer 1|r');
+	});
+
+	it('renders observer camera overlay during pre-match countdown', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		GlobalGameData.matchState = 'preMatch';
+
+		(manager as any).observerCameraPositionOverlay.overlayVisible = true;
+		const hideSpy = vi.spyOn(manager as any, 'hidePlayerFrames');
+
+		(manager as any).renderFrames();
+
+		expect(hideSpy).not.toHaveBeenCalled();
+	});
+
+	it('does not render observer camera overlay during setup-state', () => {
+		const manager = PlayerCameraPositionManager.getInstance();
+		GlobalGameData.matchState = 'modeSelection';
+
+		(manager as any).observerCameraPositionOverlay.overlayVisible = true;
+		const hideSpy = vi.spyOn(manager as any, 'hidePlayerFrames');
+
+		(manager as any).renderFrames();
+
+		expect(hideSpy).toHaveBeenCalled();
 	});
 });

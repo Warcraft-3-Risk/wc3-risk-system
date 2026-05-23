@@ -23,12 +23,14 @@ flowchart TD
     Mode --> Normal["Mode 0/1 model: GetPlayerColor(real owner)"]
     Mode --> High["Mode 2 model: self blue, ally teal/yellow, enemy red"]
     Normal --> Apply["SetUnitVertexColor + SetUnitColor"]
+    Mode --> PlayerColor["Separate player-color pass"]
+    PlayerColor --> HealthBars["SetPlayerColor(raw owner) for health bars"]
     High --> Apply
 ```
 
 `AllyColorFilterManager.applyColorFilter(unit)` is the final model-color authority for units that are created, trained, unloaded, or converted into guards.
 
-In normal visual modes, it resolves the real owner and applies `GetPlayerColor(realOwner)`. In custom mode 2, it resolves the real owner and applies local relationship colors:
+In normal visual modes, it resolves the real owner and applies `GetPlayerColor(realOwner)` to the unit model. Health bars are handled by the separate `AllyColorFilterManager.applyPlayerColorFilter()` pass, which resolves the raw owner slot to the real owner and syncs the physical slot with `SetPlayerColor(rawOwner, NameManager.getOriginalColor(realOwner))`. This keeps fallback colors factual even after local ally-mode overrides have changed the engine's current player colors. In custom mode 2, both passes resolve the real owner and apply local relationship colors:
 
 | Relation to local player | Unit model color in mode 2                    | Minimap color in mode 1/2           |
 | ------------------------ | --------------------------------------------- | ----------------------------------- |
@@ -56,7 +58,7 @@ This is useful for native WC3 fallback behavior, but most custom visual systems 
 const owner = SharedSlotManager.getInstance().getOwnerOfUnit(unit);
 ```
 
-This matters when slots are reassigned. `SetPlayerColor(slot, ownerColor)` is updated on reassignment, but `NameManager.getOriginalColor(slot)` intentionally preserves the first original color it saw for that slot. Therefore, systems that want logical unit color should resolve to the real owner before asking for original/current player color.
+This matters when slots are reassigned. `SetPlayerColor(slot, ownerColor)` is updated on reassignment and refreshed by `AllyColorFilterManager.applyPlayerColorFilter()` in normal model-color modes, but `NameManager.getOriginalColor(slot)` intentionally preserves the first original color it saw for that slot. Therefore, systems that want logical unit or health-bar color should resolve to the real owner before asking for original/current player color.
 
 ## Slot Selection and Cycling Back
 
@@ -87,13 +89,13 @@ Path:
 1. `ConcreteCityBuilder.setBarracks()` creates barracks for `NEUTRAL_HOSTILE`.
 2. `Guard.build()` creates the initial guard for `NEUTRAL_HOSTILE`.
 3. `ConcreteCityBuilder.setCOP()` creates the circle of power for `NEUTRAL_HOSTILE`.
-4. `city.setOwner(NEUTRAL_HOSTILE)` applies the city color filter to barracks and COP.
+4. `city.setOwner(NEUTRAL_HOSTILE)` applies the city-aware color filter to barracks, COP, and guard when local visibility allows it.
 5. `main.ts` later calls `city.HideMinimap()`, which changes city ownership to neutral and blackens barracks/COP vertex color for fog safety.
 
 Color notes:
 
 - Initial static units are neutral.
-- Barracks and COP get `applyColorFilter()` during `City.setOwner()`.
+- Barracks, COP, and guard get the city-aware filter during `City.setOwner()`.
 - Guards get `applyColorFilter()` from `Guard.set()` when built.
 - Fog/minimap code may intentionally blacken hidden city structures until seen.
 
@@ -109,16 +111,16 @@ Source:
 Path:
 
 1. Distribution calls `city.setOwner(realPlayer)`.
-2. `City.setOwner()` updates the barracks and COP, and applies the color filter to those two units.
+2. `City.setOwner()` updates the barracks and COP, then runs the city-aware color filter.
 3. Distribution then calls `SetUnitOwner(city.guard.unit, realPlayer, true)`.
 4. The guard is added to the real player's tracked units and the real player's slot count is incremented.
+5. Distribution runs `city.refreshColorFilter()` after the guard owner update.
 
 Color notes:
 
-- Barracks and COP go through the custom color filter immediately.
-- Guards rely on `SetUnitOwner(..., true)` for normal WC3 recoloring at this moment.
-- The distribution paths do not immediately call `AllyColorFilterManager.applyColorFilter(city.guard.unit)` after changing guard ownership.
-- That is acceptable for normal player colors, but it is a risk for custom high-contrast/team relation coloring if the local client already expects mode 2 colors.
+- City components go through the city-aware filter after both structure and guard ownership updates.
+- Hidden, never-seen cities are left alone so their black fog camouflage is preserved.
+- Hidden, previously seen cities use the last seen owner rather than the hidden current owner.
 
 Source:
 
@@ -213,12 +215,12 @@ Path examples:
 - `InvalidGuardHandler` can create a dummy guard for the city owner or killing unit's resolved real owner.
 - `Guard.replace()` routes the selected/new guard through `Guard.set()`.
 - `Guard.set()` adds guard metadata, hides the native minimap marker, and calls `applyColorFilter()`.
+- Guard replacement callers run `city.refreshColorFilter()` after the new guard is installed.
 
 Color notes:
 
 - Dummy guard creation does not use lowest-count slot balancing. These are guard placeholders, not normal movable army units.
-- Guard replacement does apply the custom color filter after the guard is installed.
-- The distribution/capital assignment guard-owner update is the notable exception because it calls `SetUnitOwner()` on an existing guard without an immediate `applyColorFilter()` call.
+- Guard replacement applies a generic unit color immediately, then city refresh reapplies the fog-aware city color decision.
 
 Source:
 
@@ -270,9 +272,11 @@ In mode 2, model colors are local relationship colors:
 
 Team relationships come from WC3 alliance state. Lobby/shared/random team setup calls `Team.giveTeamAlliance()` or `Team.giveTeamFullControl()`, and shared slots are also allied to the real owner and teammates in `SharedSlotManager.givePlayerFullControlOfSlot()` when the game is not FFA.
 
-### Minimap colors
+### Minimap and UI text colors
 
 Custom minimap icons also resolve shared slots to the real owner. In normal mode they use `NameManager.getOriginalColor(realOwner)` to avoid raw slot reassignment changing icon color. In ally-color modes they use local relationship colors.
+
+Tooltip-style UI text uses `AllyColorFilterManager.getPlayerColorHex(owner)` for the same relationship view only in ally color mode 2. That covers the unit hover tooltip and the camera-position in-game overlay label. In modes 0 and 1, those labels fall back to `NameManager.getDisplayName(player)` so the factual/original player display color remains intact.
 
 Source:
 
@@ -302,9 +306,9 @@ They are forced to the real player handle so rally-loading continues to work. Th
 
 Only custom ally-color mode turns teammates into teal/yellow relationship colors. If the expectation is "all teammates share one team color," the current code does not do that.
 
-5. Guard ownership during distribution is the main nearby risk.
+5. Guard ownership during distribution is refreshed after final owner assignment.
 
-Initial distribution and capital assignment change guard ownership after `city.setOwner()` has already applied the filter to barracks/COP, and they do not immediately apply the filter to the guard after `SetUnitOwner()`. Normal WC3 color should update because `changeColor` is `true`, but custom relationship/contrast color may be stale until a later refresh.
+Initial distribution and capital assignment change guard ownership after `city.setOwner()` has already updated barracks/COP. They now call `city.refreshColorFilter()` after `SetUnitOwner()` so the final guard owner is included without bypassing fog safety.
 
 6. There is no dedicated regression test for "new unit on shared slot gets real owner model color."
 
@@ -316,7 +320,7 @@ Existing tests cover shared-slot balancing and the color filter independently. A
 - New created/trained/unloaded units should call `AllyColorFilterManager.applyColorFilter(unit)` after final owner assignment and after any relevant unit type tags, especially `UNIT_TYPE.SPAWN`.
 - Do not rely on `NameManager.getOriginalColor(sharedSlot)` for logical unit color. Resolve the real owner first.
 - Do not use native WC3 ally-color mode 2 for shared-slot units. The map suppresses native mode and implements relationship colors manually.
-- `SetUnitColor` should remain centralized in `AllyColorFilterManager`; the only direct source-level method currently found is `City.setColor()`, which appears unused.
+- `SetUnitColor` should remain centralized in `AllyColorFilterManager.applyColorFilter()`, and raw owner `SetPlayerColor` sync should remain centralized in the separate `AllyColorFilterManager.applyPlayerColorFilter()` pass. The only direct source-level `SetUnitColor` method currently found is `City.setColor()`, which appears unused.
 - Replay and observer behavior should remain mode 0 to avoid POV-specific color shifts.
 
 ## Suggested Regression Tests
@@ -328,7 +332,7 @@ Useful tests to add next:
 3. Spawned shared-slot unit resolves to teal/yellow for teammate in team mode 2.
 4. Trained unit reassigned from real player to shared slot receives the real owner's color.
 5. Trained unit cycling back to the real player receives the same real owner color.
-6. Distribution guard ownership update applies `applyColorFilter()` after `SetUnitOwner()`.
+6. Distribution guard ownership update preserves last-seen fog color after `SetUnitOwner()`.
 
 ## Source of Truth in Code
 
