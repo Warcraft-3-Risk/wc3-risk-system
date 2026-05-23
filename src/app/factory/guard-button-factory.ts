@@ -26,6 +26,8 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 
 	const buttonIconFrame = BlzCreateFrameByType('BACKDROP', 'GuardButtonBackdrop', button, '', config.createContext);
 
+	BlzFrameSetLevel(button, 10);
+	BlzFrameSetLevel(buttonIconFrame, 11);
 	BlzFrameSetAllPoints(buttonIconFrame, button);
 	BlzFrameSetPoint(button, FRAMEPOINT_TOPLEFT, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_TOPLEFT, config.xOffset, -0.025);
 	BlzFrameSetSize(button, 0.02, 0.02);
@@ -76,7 +78,11 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 	BlzTriggerRegisterFrameEvent(buttonTrig, button, FRAMEEVENT_CONTROL_CLICK);
 	TriggerAddCondition(
 		buttonTrig,
-		Condition(() => config.action(config.createContext, config.textures, button))
+		Condition(() => {
+			config.action(config.createContext, config.textures, button);
+			BlzFrameSetEnable(button, false);
+			BlzFrameSetEnable(button, true);
+		})
 	);
 
 	BlzFrameSetVisible(button, false);
