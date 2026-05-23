@@ -18,6 +18,8 @@ If a document does not describe the current system, it should be updated or remo
 - docs/game-loop/fog-before-distribution-ordering.md
 - docs/game-loop/reset-performance-batching.md
 - docs/game-loop/wait-timer-concurrency-note.md
+- docs/minimap/custom-minimap.md
+- docs/minimap-hud-scaling.md
 - docs/observer-ui-safety.md
 - docs/replay/replay-destroy-multiboard-crash.md
 - docs/replay/replay-minimap-fow-fix.md
