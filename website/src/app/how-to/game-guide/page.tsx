@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState } from "react";
 import sections from "../../data/game-guide-sections.json";
 import { GameGuideSection } from "./__blocks/GameGuideSection";
 
@@ -15,13 +15,23 @@ function getSectionIdFromHash() {
   return hash && sections.some((section) => section.id === hash) ? hash : defaultSectionId;
 }
 
-function subscribeToHashChange(callback: () => void) {
-  window.addEventListener("hashchange", callback);
-  return () => window.removeEventListener("hashchange", callback);
-}
-
 export default function GameGuidePage() {
-  const activeSection = useSyncExternalStore(subscribeToHashChange, getSectionIdFromHash, () => defaultSectionId);
+  const [activeSection, setActiveSection] = useState(defaultSectionId);
+
+  useEffect(() => {
+    const syncSectionFromHash = () => {
+      setActiveSection(getSectionIdFromHash());
+    };
+
+    syncSectionFromHash();
+    window.addEventListener("hashchange", syncSectionFromHash);
+    window.addEventListener("popstate", syncSectionFromHash);
+
+    return () => {
+      window.removeEventListener("hashchange", syncSectionFromHash);
+      window.removeEventListener("popstate", syncSectionFromHash);
+    };
+  }, []);
 
   const handleSectionClick = (id: string) => {
     window.history.pushState(null, "", `#${id}`);

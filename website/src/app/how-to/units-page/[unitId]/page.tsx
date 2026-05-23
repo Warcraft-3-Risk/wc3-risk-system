@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ReactNode } from "react";
 import units from "../../../data/units.json";
+import { withBasePath } from "../../../utils/base-path";
 
 interface UnitDetailPageProps {
   params: Promise<{ unitId: string }>;
@@ -43,14 +44,14 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
           <div className="md:w-1/3 flex justify-center">
             {unit.characterArt ? (
               <img
-                src={unit.characterArt}
+                src={withBasePath(unit.characterArt)}
                 alt={unit.name}
                 data-testid="unit-detail-art"
                 className="max-w-full max-h-80 w-auto h-auto object-contain rounded-lg drop-shadow-lg"
               />
             ) : (
               <div className="w-48 h-48 bg-[--color-primary] rounded-lg flex items-center justify-center">
-                <img src={unit.icon} alt={unit.name} className="w-16 h-16" />
+                <img src={withBasePath(unit.icon)} alt={unit.name} className="w-16 h-16" />
               </div>
             )}
           </div>
@@ -58,7 +59,7 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
           {/* Info */}
           <div className="md:w-2/3">
             <div className="flex items-center gap-3 mb-4">
-              <img src={unit.icon} alt="" className="w-8 h-8 rounded" />
+              <img src={withBasePath(unit.icon)} alt="" className="w-8 h-8 rounded" />
               <h1 data-testid="unit-detail-name" className="text-2xl font-bold text-[--color-accent]">
                 {unit.name}
               </h1>
@@ -80,7 +81,7 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
                 value={
                   <div className="flex items-center gap-1.5">
                     <img 
-                      src={unit.category === "land" ? "/icons/small-icons/city-icon.webp" : "/icons/small-icons/port-icon.webp"} 
+                      src={withBasePath(unit.category === "land" ? "/icons/small-icons/city-icon.webp" : "/icons/small-icons/port-icon.webp")}
                       alt={unit.category === "land" ? "City" : "Port"}
                       className="w-4 h-4 rounded-sm border border-[#2a455a] shadow-sm"
                     />
@@ -113,7 +114,7 @@ export default async function UnitDetailPage({ params }: UnitDetailPageProps) {
                       >
                         {iconPath && (
                           <img
-                            src={iconPath}
+                            src={withBasePath(iconPath)}
                             alt={`${ability} icon`}
                             className="w-5 h-5 rounded-sm object-cover"
                           />

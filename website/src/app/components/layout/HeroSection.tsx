@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
+import { withBasePath } from "../../utils/base-path";
 
 export function HeroSection() {
   return (
@@ -9,7 +10,7 @@ export function HeroSection() {
     >
       <div className="absolute inset-0 z-0">
         <Image 
-          src="/hero-image.png" 
+          src={withBasePath("/hero-image.png")}
           alt="Hero background" 
           fill 
           className="object-cover opacity-50 mix-blend-overlay"
@@ -20,7 +21,7 @@ export function HeroSection() {
 
       <div className="relative z-10 max-w-4xl mx-auto flex flex-col items-center">
         <Image
-          src="/icons/logo/risklogo-full.svg"
+          src={withBasePath("/icons/logo/risklogo-full.svg")}
           alt="Risk Reforged"
           width={480}
           height={160}

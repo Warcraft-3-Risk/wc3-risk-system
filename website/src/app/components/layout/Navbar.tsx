@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import LiveLobbiesIndicator from "./LiveLobbiesIndicator";
+import { withBasePath } from "../../utils/base-path";
 
 interface NavLink {
   label: string;
@@ -29,7 +30,7 @@ export function Navbar() {
         <div className="flex items-center justify-between h-16">
           <Link href="/" data-testid="navbar-logo" className="text-[--color-accent] font-bold text-xl tracking-wide flex items-center gap-2 group">
             <Image 
-              src="/icons/logo/risklogo-single-letter.svg" 
+              src={withBasePath("/icons/logo/risklogo-single-letter.svg")}
               alt="Logo" 
               width={32} 
               height={32} 
@@ -66,7 +67,7 @@ export function Navbar() {
               data-testid="nav-discord-link"
             >
               <Image
-                src="/icons/social-media/Discord.svg"
+                src={withBasePath("/icons/social-media/Discord.svg")}
                 alt="Discord"
                 width={24}
                 height={24}

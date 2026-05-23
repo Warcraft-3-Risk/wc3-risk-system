@@ -1,5 +1,6 @@
 import Link from "next/link";
 import units from "../../data/units.json";
+import { withBasePath } from "../../utils/base-path";
 
 export default function UnitsPage() {
   const landUnits = units.filter((u) => u.category === "land");
@@ -82,14 +83,14 @@ function UnitCard({ unit }: { unit: UnitData }) {
         title={trainingTooltip}
       >
         <img
-          src={trainingIcon}
+          src={withBasePath(trainingIcon)}
           alt={trainingTooltip}
           className="w-6 h-6 rounded-sm border border-[#2a455a] shadow-sm"
         />
       </div>
       <div className="flex items-center gap-3 mb-3">
         <img
-          src={unit.icon}
+          src={withBasePath(unit.icon)}
           alt={unit.name}
           className="w-10 h-10 rounded"
           data-testid={`unit-icon-${unit.id}`}

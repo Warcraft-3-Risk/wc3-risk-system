@@ -2,11 +2,9 @@ import { test, expect } from "@playwright/test";
 import sections from "../src/app/data/game-guide-sections.json";
 
 test.describe("Game Guide", () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto("/how-to/game-guide");
-  });
-
   test("renders the guide shell and all configured sections", async ({ page }) => {
+    await page.goto("/how-to/game-guide");
+
     await expect(page.getByTestId("game-guide-page")).toBeVisible();
     await expect(page.getByTestId("game-guide-heading")).toContainText("Game Guide");
     await expect(page.getByTestId("game-guide-sidebar")).toBeVisible();
@@ -19,6 +17,8 @@ test.describe("Game Guide", () => {
   });
 
   test("loads markdown content for every guide tab", async ({ page }) => {
+    await page.goto("/how-to/game-guide");
+
     for (const section of sections) {
       await test.step(section.title, async () => {
         await page.getByTestId(`guide-nav-${section.id}`).click();
@@ -39,6 +39,8 @@ test.describe("Game Guide", () => {
   });
 
   test("renders guide markdown tables, images, and simplified diagrams", async ({ page }) => {
+    await page.goto("/how-to/game-guide");
+
     await page.getByTestId("guide-nav-units").click();
     await expect(page.getByTestId("guide-content-units")).toContainText("Land Units");
     await expect(page.locator('img[src="/icons/small-icons/rifleman-icon.webp"]').first()).toBeVisible();

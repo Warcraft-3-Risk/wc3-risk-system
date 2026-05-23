@@ -243,6 +243,7 @@ function TutorialCard({ testId, title, youtubeId, guideLink }: TutorialCardProps
           src={`https://www.youtube.com/embed/${youtubeId}`}
           title={title}
           className="absolute top-0 left-0 w-full h-full border-0"
+          loading="lazy"
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
           allowFullScreen
         ></iframe>

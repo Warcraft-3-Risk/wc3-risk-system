@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { withBasePath } from "../../../utils/base-path";
 
 interface GameGuideSectionProps {
   sectionId: string;
@@ -14,7 +15,7 @@ export function GameGuideSection({ sectionId, sourceFile }: GameGuideSectionProp
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(`/game-guide-content/${sourceFile}`)
+    fetch(withBasePath(`/game-guide-content/${sourceFile}`))
       .then((res) => {
         if (!res.ok) throw new Error("Failed to load");
         return res.text();
@@ -23,9 +24,9 @@ export function GameGuideSection({ sectionId, sourceFile }: GameGuideSectionProp
         // Strip out mermaid blocks completely to improve performance and approachability.
         // We will replace them with an empty string or a styled '💡 Strategy Diagram Skipped' block for now.
         const fixed = text
-          .replace(/\.\.\/.\.\/assets\/icons\/small-icons\//g, "/icons/small-icons/")
-          .replace(/\.\.\/.\.\/assets\/icons\/characters\//g, "/icons/characters/")
-          .replace(/\.\.\/.\.\/assets\/icons\/skills\//g, "/icons/skills/")     
+          .replace(/\.\.\/.\.\/assets\/icons\/small-icons\//g, withBasePath("/icons/small-icons/"))
+          .replace(/\.\.\/.\.\/assets\/icons\/characters\//g, withBasePath("/icons/characters/"))
+          .replace(/\.\.\/.\.\/assets\/icons\/skills\//g, withBasePath("/icons/skills/"))
           .replace(/```mermaid[\s\S]*?```/g, "> 💡 *Visual diagram omitted for simplicity based on your device settings.*");
 
         setContent(fixed);
@@ -53,10 +54,14 @@ export function GameGuideSection({ sectionId, sourceFile }: GameGuideSectionProp
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         components={{
-          img: ({ src, alt, ...props }) => (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={src} alt={alt || ""} className="inline-block max-h-8 align-middle rounded shadow-sm" {...props} />
-          )
+          img: ({ src, alt, ...props }) => {
+            const imageSrc = typeof src === "string" ? withBasePath(src) : "";
+
+            return (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={imageSrc} alt={alt || ""} className="inline-block max-h-8 align-middle rounded shadow-sm" {...props} />
+            );
+          }
         }}
       >
         {content || ""}

@@ -1,19 +1,5 @@
 @import "tailwindcss";
 
-@font-face {
-  font-family: 'Friz Quadrata';
-  src: url('/fonts/friz-quadrata-regular.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Montserrat';
-  src: url('/fonts/Montserrat.ttf') format('truetype');
-  font-weight: normal;
-  font-style: normal;
-}
-
 @theme inline {
   --color-primary: #102535;
   --color-secondary: #1b3449;
@@ -23,8 +9,8 @@
   --color-text-primary: #e8edf2;
   --color-text-secondary: #94a3b8;
   --color-border: #2d4a63;
-  --font-sans: "Montserrat", system-ui, sans-serif;
-  --font-display: "Friz Quadrata", system-ui, serif;
+  --font-sans: var(--font-montserrat), system-ui, sans-serif;
+  --font-display: var(--font-friz-quadrata), system-ui, serif;
 }
 
 body {
