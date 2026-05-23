@@ -67,23 +67,31 @@ export class AllyColorFilterManager {
 				lastColorBlind = isColorBlind;
 				lastColorContrast = isColorContrast;
 
-				this.recalculate();
-				this.applyPlayerColorFilter();
-
-				for (const activePlayer of PlayerManager.getInstance().players.values()) {
-					for (const u of activePlayer.trackedData.units) {
-						this.applyColorFilter(u);
-					}
-					for (const u of activePlayer.trackedData.transports) {
-						this.applyColorFilter(u);
-					}
-				}
-
-				for (const [city] of CityToCountry) {
-					this.applyCityColorFilter(city);
-				}
+				this.refreshAll();
 			}
 		});
+	}
+
+	public refreshAll(): void {
+		this.refreshPlayerAndUnitColors();
+
+		for (const [city] of CityToCountry) {
+			this.applyCityColorFilter(city);
+		}
+	}
+
+	public refreshPlayerAndUnitColors(): void {
+		this.recalculate();
+		this.applyPlayerColorFilter();
+
+		for (const activePlayer of PlayerManager.getInstance().players.values()) {
+			for (const u of activePlayer.trackedData.units) {
+				this.applyColorFilter(u);
+			}
+			for (const u of activePlayer.trackedData.transports) {
+				this.applyColorFilter(u);
+			}
+		}
 	}
 
 	public markCitySeen(city: ColorFilterCity, owner: player): void {

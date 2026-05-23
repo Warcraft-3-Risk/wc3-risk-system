@@ -29,6 +29,7 @@ import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { applyEliminatedBuff } from '../utillity/on-player-status';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { EVENT_ON_PLAYER_RESTART } from 'src/app/utils/events/event-constants';
+import { AllyColorFilterManager } from 'src/app/managers/ally-color-filter-manager';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
 	private matchLoopTimer?: timer;
@@ -187,6 +188,9 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		const changed = SharedSlotManager.getInstance().evaluateAndRedistribute();
 		if (DEBUG_PRINTS.master)
 			debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`, DC.redistribute);
+		if (changed) {
+			AllyColorFilterManager.getInstance().refreshPlayerAndUnitColors();
+		}
 
 		if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] === Turn ${turn} Slot Summary ===`, DC.sharedSlots);
 		SharedSlotManager.getInstance().debugPrintSlotCounts();

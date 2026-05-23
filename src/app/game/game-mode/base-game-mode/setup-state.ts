@@ -14,6 +14,7 @@ import { TreeManager } from '../../services/tree-service';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { CountdownMessage } from '../../../utils/messages';
 import { HexColors } from '../../../utils/hex-colors';
+import { AllyColorFilterManager } from 'src/app/managers/ally-color-filter-manager';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -89,6 +90,8 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		if (GlobalGameData.turnCount === 0) {
 			await TreeManager.getInstance().reset();
 		}
+
+		AllyColorFilterManager.getInstance().refreshPlayerAndUnitColors();
 
 		this.nextState(this.stateData);
 

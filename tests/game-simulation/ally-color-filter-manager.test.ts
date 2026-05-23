@@ -224,6 +224,22 @@ describe('AllyColorFilterManager', () => {
 		});
 	});
 
+	describe('refreshPlayerAndUnitColors', () => {
+		it('resyncs raw shared-slot player colors without waiting for a mode toggle', () => {
+			activeLocalPlayer.options.colorContrast = false;
+			const realOwner = Player(1) as any;
+			const rawOwner = Player(12) as any;
+			NameManager.getInstance().setColor(realOwner, PLAYER_COLOR_PURPLE);
+			realOwner.color = PLAYER_COLOR_RED;
+			rawOwner.color = PLAYER_COLOR_MAROON;
+
+			vi.spyOn(SharedSlotManager.getInstance(), 'getOwner').mockImplementation((p: any) => (p === rawOwner ? realOwner : p));
+			AllyColorFilterManager.getInstance().refreshPlayerAndUnitColors();
+
+			expect(mockPlayerColors.get(rawOwner)).toBe(PLAYER_COLOR_PURPLE);
+		});
+	});
+
 	describe('getTooltipColorHex', () => {
 		it('returns gray for neutral units in Mode 2', () => {
 			const unit = { owner: neutralHostilePlayer } as unknown as FakeUnitHandle;
