@@ -1,31 +1,47 @@
 import { test, expect } from "@playwright/test";
+import { mockPatchNotes, mockPatchNotesDelay, mockPatchNotesError, sampleReleases } from "./fixtures";
 
 test.describe("Patch Notes", () => {
-  test.beforeEach(async ({ page }) => {
+  test("renders GitHub releases with markdown, dates, tags, and source links", async ({ page }) => {
+    await mockPatchNotes(page);
     await page.goto("/patch-notes");
-  });
 
-  test("renders page with heading", async ({ page }) => {
+    const release = sampleReleases[0];
+    const article = page.getByTestId(`patch-note-${release.tag_name}`);
+
     await expect(page.getByTestId("patch-notes-page")).toBeVisible();
     await expect(page.getByTestId("patch-notes-heading")).toContainText("Patch Notes");
+    await expect(article).toBeVisible();
+    await expect(article).toContainText(release.name);
+    await expect(article).toContainText(release.tag_name);
+    await expect(article).toContainText("May 23, 2026");
+    await expect(article).toContainText("Highlights");
+    await expect(article).toContainText("Minimap ownership colors");
+    await expect(article.getByRole("link", { name: "View on GitHub" })).toHaveAttribute("href", release.html_url);
+    await expect(article.getByRole("link", { name: "View on GitHub" })).toHaveAttribute("target", "_blank");
   });
 
-  test("shows loading state initially", async ({ page }) => {
-    // The page starts in a loading state before the fetch completes
-    // We check that the page structure exists
-    await expect(page.getByTestId("patch-notes-page")).toBeVisible();
+  test("shows an empty state when GitHub has no releases", async ({ page }) => {
+    await mockPatchNotes(page, []);
+    await page.goto("/patch-notes");
+
+    await expect(page.getByTestId("patch-notes-empty")).toContainText("No patch notes available yet.");
   });
 
-  test("shows either content, empty message, or error after loading", async ({ page }) => {
-    // Wait for loading to complete (either success or failure)
-    await page.waitForTimeout(3000);
+  test("shows an error state when GitHub releases fail", async ({ page }) => {
+    await mockPatchNotesError(page);
+    await page.goto("/patch-notes");
 
-    const hasList = await page.getByTestId("patch-notes-list").isVisible().catch(() => false);
-    const hasError = await page.getByTestId("patch-notes-error").isVisible().catch(() => false);
-    const hasEmpty = await page.getByTestId("patch-notes-empty").isVisible().catch(() => false);
+    await expect(page.getByTestId("patch-notes-error")).toBeVisible();
+    await expect(page.getByTestId("patch-notes-error")).toContainText("Failed to load patch notes");
+    await expect(page.getByTestId("patch-notes-error")).toContainText("Failed to fetch releases");
+  });
 
-    // One of these states should be true after loading
-    expect(hasList || hasError || hasEmpty).toBeTruthy();
+  test("shows loading state while release data is pending", async ({ page }) => {
+    await mockPatchNotesDelay(page);
+    await page.goto("/patch-notes");
+
+    await expect(page.getByTestId("patch-notes-loading")).toContainText("Loading patch notes");
+    await expect(page.getByTestId("patch-notes-empty")).toContainText("No patch notes available yet.");
   });
 });
-
