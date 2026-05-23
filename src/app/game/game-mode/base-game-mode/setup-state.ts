@@ -15,6 +15,7 @@ import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { CountdownMessage } from '../../../utils/messages';
 import { HexColors } from '../../../utils/hex-colors';
 import { AllyColorFilterManager } from 'src/app/managers/ally-color-filter-manager';
+import { restoreOptionButtonsForPlayers } from 'src/app/ui/player-preference-buttons';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -91,6 +92,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			await TreeManager.getInstance().reset();
 		}
 
+		restoreOptionButtonsForPlayers(GlobalGameData.matchPlayers);
 		AllyColorFilterManager.getInstance().refreshPlayerAndUnitColors();
 
 		this.nextState(this.stateData);

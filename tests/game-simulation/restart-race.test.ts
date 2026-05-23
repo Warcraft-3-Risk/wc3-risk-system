@@ -14,6 +14,10 @@ const allyColorFilterMock = vi.hoisted(() => ({
 	refreshPlayerAndUnitColors: vi.fn(),
 }));
 
+const optionButtonMock = vi.hoisted(() => ({
+	hideOptionButtonsForPlayers: vi.fn(),
+}));
+
 vi.mock('w3ts', () => ({
 	File: { read: vi.fn(() => ''), write: vi.fn() },
 }));
@@ -54,6 +58,10 @@ vi.mock('src/app/managers/ally-color-filter-manager', () => ({
 	AllyColorFilterManager: {
 		getInstance: () => allyColorFilterMock,
 	},
+}));
+
+vi.mock('src/app/ui/player-preference-buttons', () => ({
+	hideOptionButtonsForPlayers: optionButtonMock.hideOptionButtonsForPlayers,
 }));
 
 vi.mock('src/app/managers/income-manager', () => ({
@@ -247,6 +255,27 @@ describe('immediate restart after match end', () => {
 
 		expect(order).toEqual(['game-over-entered', 'reset-started']);
 		expect(gameOverState.nextState).toHaveBeenCalledWith(stateData);
+	});
+
+	it('hides option buttons when non-promode post-game stats are shown', () => {
+		const player = {
+			getPlayer: () => Player(0),
+			status: { isEliminated: () => false },
+			trackedData: { bonus: { hideUI: vi.fn() } },
+		};
+		GlobalGameData.prepareMatchData([player as any]);
+		vi.mocked(SettingsContext.getInstance).mockReturnValue({
+			isFFA: () => false,
+			isPromode: () => false,
+			isChaosPromode: () => false,
+			isRandomTeams: () => false,
+			isNightFogOn: () => false,
+		} as any);
+
+		const gameOverState = new GameOverState();
+		gameOverState.onEnterState();
+
+		expect(optionButtonMock.hideOptionButtonsForPlayers).toHaveBeenCalledWith([player]);
 	});
 
 	it('refreshes player and unit colors when shared slot redistribution changes ownership', () => {

@@ -6,6 +6,39 @@ import { RatingManager } from '../rating/rating-manager';
 import { NameManager } from '../managers/names/name-manager';
 import { getCountryLabelsText, normalizeLargeCityIndicators } from '../player/options';
 
+const OPTION_BUTTON_CONTEXT_OFFSETS = [0, 100, 200, 300, 400, 500, 600, 700];
+
+export function setOptionButtonsVisibleForPlayer(player: player, visible: boolean): void {
+	if (player !== GetLocalPlayer()) return;
+
+	for (const offset of OPTION_BUTTON_CONTEXT_OFFSETS) {
+		const button = BlzGetFrameByName('GuardButton', GetPlayerId(player) + offset);
+		if (button) {
+			BlzFrameSetVisible(button, visible);
+		}
+	}
+}
+
+export function areOptionButtonsVisibleForPlayer(player: player): boolean {
+	const healthButton = BlzGetFrameByName('GuardButton', GetPlayerId(player));
+	return healthButton ? BlzFrameIsVisible(healthButton) : false;
+}
+
+export function hideOptionButtonsForPlayers(players: ActivePlayer[]): void {
+	for (const activePlayer of players) {
+		setOptionButtonsVisibleForPlayer(activePlayer.getPlayer(), false);
+	}
+}
+
+export function restoreOptionButtonsForPlayers(players: ActivePlayer[]): void {
+	for (const activePlayer of players) {
+		const player = activePlayer.getPlayer();
+		if (player === GetLocalPlayer()) {
+			setOptionButtonsVisibleForPlayer(player, File.read('risk/ui.pld') !== 'false');
+		}
+	}
+}
+
 export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
 		player: player,
