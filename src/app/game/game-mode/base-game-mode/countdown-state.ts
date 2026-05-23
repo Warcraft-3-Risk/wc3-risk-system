@@ -68,7 +68,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 					// Note: P2P rating sync already started in ModeSelection.run() during settings phase
 				} else {
 					// Only show ranked/unranked message on the first match (not on restarts)
-					if (GlobalGameData.matchCount === 1) {
+					if (GlobalGameData.matchCount === 1 && isFFA) {
 						const message = `${HexColors.TANGERINE}This is an unranked game!|r Ranked play requires at least ${HexColors.TANGERINE}16 eligible FFA players|r.`;
 
 						// Send message only to players who have rating display enabled
@@ -114,6 +114,11 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 				BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 				this.countdownDisplay(duration);
+
+				if (duration >= 1 && duration <= 3) {
+					PlayGlobalSound('Sound\\Interface\\BattleNetTick.flac');
+				}
+
 				if (duration <= 0) {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);
@@ -142,6 +147,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 	}
 
 	countdownDisplay(duration: number): void {
-		CountdownMessage(`The Game will start in\n${duration}`);
+		const durationText = duration <= 3 ? `${HexColors.TANGERINE}${duration}|r` : `${duration}`;
+		CountdownMessage(`The Game will start in\n${durationText}`);
 	}
 }

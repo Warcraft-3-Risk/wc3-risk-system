@@ -25,8 +25,8 @@ jobs:
         shell: pwsh
         run: |
           $TAG = $env:GITHUB_REF -replace 'refs/tags/', ''
-          if ($TAG -notmatch '^\d+\.\d+$') {
-            Write-Error "Tag '$TAG' does not match expected format X.YZ (e.g. 1.23)"
+          if ($TAG -notmatch '^\d+\.\d+(-[\w]+)?$') {
+            Write-Error "Tag '$TAG' does not match expected format X.YZ or X.YZ-suffix (e.g. 1.23, 4.09-unstable)"
             exit 1
           }
           Write-Output "Tag format valid: $TAG"

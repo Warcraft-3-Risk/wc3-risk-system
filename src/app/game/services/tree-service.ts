@@ -1,6 +1,7 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { Destructable } from 'w3ts';
 import { Wait } from 'src/app/utils/wait';
+import { needsReset, computeBatches } from 'src/app/utils/tree-reset-logic';
 
 // Tree type constants
 const BARRENS_TREE = FourCC('T000');
@@ -79,14 +80,13 @@ export class TreeManager implements Resetable {
 	 * Resets the trees to their maximum life if they are damaged.
 	 * Processes trees in batches to avoid frame spikes.
 	 */
-	public async reset(batchSize = 100, intervalSeconds = 0.1): Promise<void> {
+	public async reset(batchSize = 300, intervalSeconds = 0.1): Promise<void> {
 		for (let i = 0; i < this.treeArray.length; i += batchSize) {
 			const end = Math.min(i + batchSize, this.treeArray.length);
 
 			for (let j = i; j < end; j++) {
 				const tree = this.treeArray[j];
-
-				if (GetDestructableLife(tree) < GetDestructableMaxLife(tree)) {
+				if (needsReset(GetDestructableLife(tree), GetDestructableMaxLife(tree))) {
 					DestructableRestoreLife(tree, GetDestructableMaxLife(tree), false);
 					SetDestructableInvulnerable(tree, true);
 				}
@@ -118,7 +118,6 @@ export class TreeManager implements Resetable {
 			}
 
 			if (end < this.treeArray.length) {
-				await Wait.forSeconds(intervalSeconds);
 			}
 		}
 	}

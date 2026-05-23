@@ -1,8 +1,7 @@
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
-import { Wait } from 'src/app/utils/wait';
 import { SettingsContext } from 'src/app/settings/settings-context';
-import { FogManager } from 'src/app/managers/fog-manager';
+import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 
 export class ApplyFogState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -11,6 +10,7 @@ export class ApplyFogState<T extends StateData> extends BaseState<T> {
 
 	async runAsync(): Promise<void> {
 		SettingsContext.getInstance().applyStrategy('Fog');
+		MinimapIconManager.getInstance().clearSeenCache();
 
 		this.nextState(this.stateData);
 	}

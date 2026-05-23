@@ -23,6 +23,7 @@ export class TrackedData {
 
 	private _lastUnitKilledBy: player;
 	private _units: Set<unit>;
+	private _transports: Set<unit>;
 	private _turnDied: number;
 	private _trainedUnits: Map<number, number>;
 
@@ -52,6 +53,7 @@ export class TrackedData {
 		this._roarCasts = 0;
 		this._dispelCasts = 0;
 		this._units = new Set<unit>();
+		this._transports = new Set<unit>();
 		this._trainedUnits = new Map<number, number>();
 		this._turnDied = -1;
 		this._lastUnitKilledBy = undefined;
@@ -76,6 +78,7 @@ export class TrackedData {
 		this.roarCasts = 0;
 		this.dispelCasts = 0;
 		this.units.clear();
+		this.transports.clear();
 		this._trainedUnits.clear();
 		this.turnDied = 0;
 		this._lastUnitKilledBy = undefined;
@@ -148,6 +151,11 @@ export class TrackedData {
 
 	public get units(): Set<unit> {
 		return this._units;
+	}
+
+	// Transports are tracked separately from other units since they have different implications for gameplay (victory conditions) and statistics.
+	public get transports(): Set<unit> {
+		return this._transports;
 	}
 
 	public get denies(): number {

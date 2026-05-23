@@ -22,7 +22,6 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 	async runAsync(): Promise<void> {
 		try {
 			print('Resetting match...');
-			await Wait.forSeconds(2);
 
 			StatisticsController.getInstance().setViewVisibility(false);
 
@@ -36,23 +35,25 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			await removeUnits(50, 0.2);
 
 			print('Resetting countries...');
-			resetCountries();
+			// Lower batch size to reduce micro-stutters from CreateUnit / SetUnitOwner
+			await resetCountries(3, 0.1);
 			await Wait.forSeconds(1);
 
 			print('Resetting kill tracker...');
 			UnitKillTracker.getInstance().reset();
 			print('Resetting minimap icons...');
-			MinimapIconManager.getInstance().reinitialize(Array.from(CityToCountry.keys()));
+			await MinimapIconManager.getInstance().reinitialize(Array.from(CityToCountry.keys()));
+
 			print('Resetting trees...');
 			await TreeManager.getInstance().reset();
 			await Wait.forSeconds(1);
 
 			SharedSlotManager.getInstance().reset();
 
-			GlobalGameData.matchPlayers.forEach((val) => {
+			for (const val of GlobalGameData.matchPlayers) {
 				val.trackedData.reset();
 				val.trackedData.setKDMaps();
-			});
+			}
 
 			const participants = ParticipantEntityManager.getParticipantEntities();
 			ParticipantEntityManager.executeByParticipantEntities(
@@ -62,12 +63,9 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 					team.reset();
 				}
 			);
-			TeamManager.getInstance()
-				.getTeams()
-				.forEach((team) => {
-					team.reset();
-				});
-
+			for (const team of TeamManager.getInstance().getTeams()) {
+				team.reset();
+			}
 			this.nextState(this.stateData);
 		} catch (e) {
 			print(`[ResetState] Error during reset: ${e}`);

@@ -17,7 +17,8 @@ export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer): void {
 		super.onCityCapture(city, preOwner, owner);
-		if (preOwner === owner) return;
+		// preOwner is nil when capturing a neutral hostile city (no ActivePlayer entry)
+		if (!preOwner || preOwner === owner) return;
 
 		if (this.stateData.capitals.get(preOwner.getPlayer()) === city) {
 			LocalMessage(

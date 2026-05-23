@@ -12,6 +12,7 @@ import { debugPrint } from '../utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { LocalMessage } from '../utils/messages';
 import { SharedSlotManager } from '../game/services/shared-slot-manager';
+import { MinimapIconManager } from '../managers/minimap-icon-manager';
 
 /**
  * LandCity is a variant of City for land based terrain.
@@ -57,6 +58,7 @@ export class LandCity extends City {
 			this.guard.replace(unit);
 			UnitToCity.set(this.guard.unit, this);
 			this.guard.reposition();
+			this.refreshColorFilter();
 		}
 	}
 
@@ -133,7 +135,6 @@ export class LandCity extends City {
 		IssueImmediateOrderById(this.barrack.unit, UNIT_ID.CAPITAL);
 
 		// Add capital border on minimap
-		const MinimapIconManager = require('src/app/managers/minimap-icon-manager').MinimapIconManager;
 		MinimapIconManager.getInstance().addCapitalBorder(this);
 	}
 

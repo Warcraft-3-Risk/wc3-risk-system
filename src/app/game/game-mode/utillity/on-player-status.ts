@@ -8,6 +8,7 @@ import { RatingManager } from 'src/app/rating/rating-manager';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
+import { PlayLocalSound } from 'src/app/utils/utils';
 import { CHAOS_STARTING_INCOME, NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
 import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
@@ -24,7 +25,7 @@ export function onPlayerAliveHandle(player: ActivePlayer): void {
 	if (player.trackedData.income.max === 0) {
 		player.trackedData.income.max = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
 	}
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): void {
@@ -79,18 +80,23 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 	}
 
 	if (forfeit) {
-		GlobalMessage(`${playerDisplayName} has forfeited!`, 'Sound\\Interface\\SecretFound.flac');
+		GlobalMessage(`${playerDisplayName} has forfeited!`);
 	} else if (player.killedBy) {
-		GlobalMessage(
-			`${playerDisplayName} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`,
-			'Sound\\Interface\\SecretFound.flac'
-		);
+		GlobalMessage(`${playerDisplayName} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`);
 	} else {
-		GlobalMessage(`${playerDisplayName} has been defeated!`, 'Sound\\Interface\\SecretFound.flac');
+		GlobalMessage(`${playerDisplayName} has been defeated!`);
 	}
 
+	// QuestFailed for the defeated player, SecretFound for everyone else
+	PlayLocalSound('Sound\\Interface\\QuestFailed.flac', player.getPlayer());
+	let announceSound = CreateSound('Sound\\Interface\\SecretFound.flac', false, false, true, 10, 10, '');
+	if (GetLocalPlayer() === player.getPlayer()) SetSoundVolume(announceSound, 0);
+	StartSound(announceSound);
+	KillSoundWhenDone(announceSound);
+	announceSound = undefined;
+
 	Quests.getInstance().updatePlayersQuest();
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 export function onPlayerNomadHandle(player: ActivePlayer): void {
@@ -141,7 +147,7 @@ export function onPlayerNomadHandle(player: ActivePlayer): void {
 		}
 	});
 
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 export function onPlayerLeftHandle(player: ActivePlayer): void {
@@ -181,7 +187,7 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 	GlobalMessage(`${playerDisplayName} has left the game!`, 'Sound\\Interface\\SecretFound.flac');
 
 	PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), PLAYER_STATUS.LEFT);
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 
 	if (player.status.isDead() || player.status.isSTFU()) {
 		player.status.status = PLAYER_STATUS.LEFT;
@@ -216,10 +222,10 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 			timedEventManager.removeTimedEvent(event);
 		}
 
-		ScoreboardManager.getInstance().updatePartial();
+		ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 	});
 
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 /** Maps unit type IDs to their corresponding eliminated player buff ability. */

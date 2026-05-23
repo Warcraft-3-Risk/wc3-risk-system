@@ -283,9 +283,14 @@ export const logger = createLogger({
  * This injects MAP_NAME, MAP_VERSION, MAP_TYPE, and W3C_MODE_ENABLED constants
  * @param config The project configuration
  */
-export function updateTsFileWithConfig(config: IProjectConfig) {
+export function updateTsFileWithConfig(config: IProjectConfig): () => void {
 	const tsFilePath = path.join(__dirname, '..', 'src/app/utils', 'map-info.ts');
 	const w3cModeEnabled = `${config.w3cModeEnabled}` === 'true';
+
+	let originalStr = '';
+	if (fs.existsSync(tsFilePath)) {
+		originalStr = fs.readFileSync(tsFilePath, 'utf8');
+	}
 
 	const fileContent = `
 	//Do not edit - this will automatically update based on the project config.json upon building the map
@@ -297,6 +302,13 @@ export function updateTsFileWithConfig(config: IProjectConfig) {
 
 	fs.writeFileSync(tsFilePath, fileContent);
 	logger.info(`Updated map-info.ts with MAP_TYPE='${config.mapType}'`);
+
+	return () => {
+		if (originalStr) {
+			fs.writeFileSync(tsFilePath, originalStr);
+			logger.info('Restored original map-info.ts');
+		}
+	};
 }
 
 /**

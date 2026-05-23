@@ -1,4 +1,4 @@
-# Project Overview 
+# Project Overview [![CI](https://github.com/Warcraft-3-Risk/wc3-risk-system/actions/workflows/ci.yml/badge.svg)](https://github.com/Warcraft-3-Risk/wc3-risk-system/actions/workflows/ci.yml)
 Wc3 Risk System is a portable custom game system for Warcraft 3. Risk is based off of the ideas and concepts from the
 board game Risk: Global Domination. The system is designed to be easily used by others who are wanting to create their own version of Risk in Warcraft 3 with minimal coding involved.
 

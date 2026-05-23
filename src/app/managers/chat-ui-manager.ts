@@ -30,7 +30,7 @@ export class ChatUIManager {
 	//       [1][0] → 5 children
 	private findChatInput(gameUI: framehandle): framehandle {
 		const count = BlzFrameGetChildrenCount(gameUI);
-		for (let i = count / 2; i < count; i++) {
+		for (let i = getChatInputSearchStartIndex(count); i < count; i++) {
 			const frame = BlzFrameGetChild(gameUI, i);
 			if (BlzFrameGetChildrenCount(frame) !== 2) continue;
 
@@ -44,4 +44,8 @@ export class ChatUIManager {
 		}
 		return undefined;
 	}
+}
+
+export function getChatInputSearchStartIndex(childCount: number): number {
+	return Math.floor(childCount / 2) | 0;
 }

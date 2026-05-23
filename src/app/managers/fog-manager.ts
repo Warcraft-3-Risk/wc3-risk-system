@@ -1,3 +1,5 @@
+import { City } from '../city/city';
+
 /**
  * Service for managing fog state for players in a game.
  */
@@ -67,6 +69,7 @@ export class FogManager {
 	 */
 	public turnFogOff(who?: player) {
 		FogEnable(false);
+		this.removeBlackMask();
 		// if (who) {
 		// 	return FogModifierStart(this._fog.get(who));
 		// }
@@ -74,5 +77,53 @@ export class FogManager {
 		// this._fog.forEach((fog) => {
 		// 	FogModifierStart(fog);
 		// });
+	}
+
+	private _maskModifiers: fogmodifier[] = []; // Persistent black mask modifiers
+	private static readonly CITY_MASK_RADIUS = 400; // Radius around each city to black mask
+
+	/**
+	 * Applies black mask around each city location for all active players.
+	 * The rest of the map remains partially visible (fogged).
+	 * Flow: mask entire map → set entire map to fogged (explored) → re-mask only city areas.
+	 * @param players - The active player handles to mask.
+	 * @param cities - All cities to mask around.
+	 */
+	public applyBlackMask(players: player[], cities: City[]): void {
+		FogMaskEnable(true);
+
+		const worldBounds = GetWorldBounds();
+		for (const p of players) {
+			// First, reset everything to masked (undo startup exploration)
+			SetFogStateRect(p, FOG_OF_WAR_MASKED, worldBounds, true);
+			// Then set everything to fogged (partially visible) so terrain is shown
+			SetFogStateRect(p, FOG_OF_WAR_FOGGED, worldBounds, true);
+
+			// Now black mask only the area around each city
+			for (const city of cities) {
+				const x = city.barrack.defaultX;
+				const y = city.barrack.defaultY;
+				SetFogStateRadius(p, FOG_OF_WAR_MASKED, x, y, FogManager.CITY_MASK_RADIUS, true);
+			}
+		}
+	}
+
+	/**
+	 * Removes all persistent black mask modifiers, restoring normal fog behavior.
+	 */
+	public removeBlackMask(): void {
+		for (const mod of this._maskModifiers) {
+			FogModifierStop(mod);
+			DestroyFogModifier(mod);
+		}
+		this._maskModifiers = [];
+
+		// Force-reveal all masked areas for every player so nothing stays black
+		const worldBounds = GetWorldBounds();
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			SetFogStateRect(Player(i), FOG_OF_WAR_VISIBLE, worldBounds, true);
+		}
+
+		FogMaskEnable(false);
 	}
 }

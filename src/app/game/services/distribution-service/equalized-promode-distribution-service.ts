@@ -29,15 +29,15 @@ export class EqualizedPromodeDistributionService extends StandardDistributionSer
 	 * On Round 1: Generate new random allocations and save them
 	 * On Round 2: Use saved allocations but swap the players
 	 */
-	protected distribute() {
+	protected async distribute() {
 		const roundNumber = EqualizedPromodeDistributionService.currentRoundNumber;
 
 		if (roundNumber === 1) {
 			// Round 1: generate new allocations and save them
-			this.distributeAndSave();
+			await this.distributeAndSave();
 		} else {
 			// Round 2: use saved allocations but swap players
-			this.distributeFromSavedSwapped();
+			await this.distributeFromSavedSwapped();
 		}
 	}
 
@@ -56,12 +56,12 @@ export class EqualizedPromodeDistributionService extends StandardDistributionSer
 	 * Distributes cities randomly and saves the allocations for the next round.
 	 * Saves coordinate->player mappings (coordinates persist across resets).
 	 */
-	private distributeAndSave(): void {
+	private async distributeAndSave(): Promise<void> {
 		// Clear any previous saved allocations
 		EqualizedPromodeDistributionService.savedAllocations = new Map<string, player>();
 
 		// Run standard distribution
-		super.distribute();
+		await super.distribute();
 
 		// Save the allocations using coordinate->player mapping
 		RegionToCity.forEach((city) => {
@@ -76,9 +76,9 @@ export class EqualizedPromodeDistributionService extends StandardDistributionSer
 	 * Distributes cities using saved allocations but with players swapped.
 	 * Looks up each city's original owner by coordinates and swaps to the other player.
 	 */
-	private distributeFromSavedSwapped(): void {
+	private async distributeFromSavedSwapped(): Promise<void> {
 		if (!EqualizedPromodeDistributionService.savedAllocations) {
-			super.distribute();
+			await super.distribute();
 			return;
 		}
 
@@ -97,7 +97,7 @@ export class EqualizedPromodeDistributionService extends StandardDistributionSer
 
 			if (originalOwnerPlayer) {
 				// Find which ActivePlayer corresponds to the original owner
-				const originalOwnerActive = players.find(p => p.getPlayer() === originalOwnerPlayer);
+				const originalOwnerActive = players.find((p) => p.getPlayer() === originalOwnerPlayer);
 
 				if (originalOwnerActive) {
 					// Swap: if original owner was player1, new owner is player2 (and vice versa)

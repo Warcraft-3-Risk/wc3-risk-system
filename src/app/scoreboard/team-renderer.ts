@@ -7,14 +7,15 @@ import { TeamManager } from '../teams/team-manager';
 export class TeamRenderer extends ScoreboardRenderer {
 	private readonly PLAYER_COL = 1;
 	private readonly INCOME_COL = 2;
-	private readonly CITIES_COL = 3;
-	private readonly KILLS_COL = 4;
-	private readonly DEATHS_COL = 5;
-	private readonly STATUS_COL = 6;
+	private readonly GOLD_COL = 3;
+	private readonly CITIES_COL = 4;
+	private readonly KILLS_COL = 5;
+	private readonly DEATHS_COL = 6;
+	private readonly STATUS_COL = 7;
 	private showTeamTotals: boolean;
 
 	public constructor(teamRows: TeamRow[]) {
-		super(6);
+		super(7);
 
 		this.size = 3;
 		teamRows.forEach((t) => {
@@ -28,20 +29,22 @@ export class TeamRenderer extends ScoreboardRenderer {
 			this.showTeamTotals = false;
 		}
 
-		MultiboardSetColumnCount(this.board, 6);
+		MultiboardSetColumnCount(this.board, 7);
 
 		for (let i = 1; i <= this.size; i++) {
 			MultiboardSetRowCount(this.board, MultiboardGetRowCount(this.board) + 1);
-			this.setItemWidth(8.0, i, this.PLAYER_COL);
+			this.setItemWidth(7.5, i, this.PLAYER_COL);
 			this.setItemWidth(2.5, i, this.INCOME_COL);
+			this.setItemWidth(2.5, i, this.GOLD_COL);
 			this.setItemWidth(2.5, i, this.CITIES_COL);
-			this.setItemWidth(4.0, i, this.KILLS_COL);
-			this.setItemWidth(4.0, i, this.DEATHS_COL);
+			this.setItemWidth(3.5, i, this.KILLS_COL);
+			this.setItemWidth(3.5, i, this.DEATHS_COL);
 			this.setItemWidth(4.5, i, this.STATUS_COL);
 		}
 
 		this.setItemValue(`${HexColors.TANGERINE}Player|r`, 1, this.PLAYER_COL);
 		this.setItemValue(`${HexColors.TANGERINE}Inc|r`, 1, this.INCOME_COL);
+		this.setItemValue(`${HexColors.TANGERINE}G|r`, 1, this.GOLD_COL);
 		this.setItemValue(`${HexColors.TANGERINE}C|r`, 1, this.CITIES_COL);
 		this.setItemValue(`${HexColors.TANGERINE}K|r`, 1, this.KILLS_COL);
 		this.setItemValue(`${HexColors.TANGERINE}D|r`, 1, this.DEATHS_COL);
@@ -50,6 +53,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 		// Alert row — full width in first column, hide rest
 		this.setItemWidth(20.0, this.size, this.PLAYER_COL);
 		this.setItemWidth(0.0, this.size, this.INCOME_COL);
+		this.setItemWidth(0.0, this.size, this.GOLD_COL);
 		this.setItemWidth(0.0, this.size, this.CITIES_COL);
 		this.setItemWidth(0.0, this.size, this.KILLS_COL);
 		this.setItemWidth(0.0, this.size, this.DEATHS_COL);
@@ -67,8 +71,13 @@ export class TeamRenderer extends ScoreboardRenderer {
 			const teamRow = data.teams[i];
 
 			if (this.showTeamTotals) {
-				this.setItemValue(`${HexColors.WHITE}Team #${teamRow.number}|r`, row, this.PLAYER_COL);
+				this.setItemValue(`${HexColors.WHITE}Team #${teamRow.teamNumber}|r`, row, this.PLAYER_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalIncome}`, row, this.INCOME_COL);
+
+				const isMyTeam = teamRow.members.length > 0 ? IsPlayerAlly(effectiveLocal, teamRow.members[0].handle) : false;
+				const goldStr = isMyTeam ? `${teamRow.totalGold}` : '-';
+				this.setItemValue(`${HexColors.LIGHT_BLUE}${goldStr}`, row, this.GOLD_COL);
+
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalCities}`, row, this.CITIES_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalKills}`, row, this.KILLS_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalDeaths}`, row, this.DEATHS_COL);
@@ -81,6 +90,11 @@ export class TeamRenderer extends ScoreboardRenderer {
 				const incomeString = p.isAlive || p.isNomad ? `${p.income}` : '-';
 
 				this.setItemValue(`${textColor}${incomeString}`, row, this.INCOME_COL);
+
+				const isMyTeam = teamRow.members.length > 0 ? IsPlayerAlly(effectiveLocal, teamRow.members[0].handle) : false;
+				const playerGoldStr = isMyTeam && (p.isAlive || p.isNomad) ? `${p.gold}` : '-';
+				this.setItemValue(`${textColor}${playerGoldStr}`, row, this.GOLD_COL);
+
 				this.renderPlayerData(p, row, textColor, effectiveLocal, teamRow);
 				row++;
 			}
@@ -95,8 +109,13 @@ export class TeamRenderer extends ScoreboardRenderer {
 			const teamRow = data.teams[i];
 
 			if (this.showTeamTotals) {
-				this.setItemValue(`${HexColors.WHITE}Team #${teamRow.number}|r`, row, this.PLAYER_COL);
+				this.setItemValue(`${HexColors.WHITE}Team #${teamRow.teamNumber}|r`, row, this.PLAYER_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalIncome}`, row, this.INCOME_COL);
+
+				const isMyTeam = teamRow.members.length > 0 ? IsPlayerAlly(effectiveLocal, teamRow.members[0].handle) : false;
+				const goldStr = isMyTeam ? `${teamRow.totalGold}` : '-';
+				this.setItemValue(`${HexColors.LIGHT_BLUE}${goldStr}`, row, this.GOLD_COL);
+
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalCities}`, row, this.CITIES_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalKills}`, row, this.KILLS_COL);
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${teamRow.totalDeaths}`, row, this.DEATHS_COL);
@@ -109,6 +128,11 @@ export class TeamRenderer extends ScoreboardRenderer {
 				const incomeString = p.isAlive || p.isNomad ? `${p.income}` : '-';
 
 				this.setItemValue(`${textColor}${incomeString}`, row, this.INCOME_COL);
+
+				const isMyTeam = teamRow.members.length > 0 ? IsPlayerAlly(effectiveLocal, teamRow.members[0].handle) : false;
+				const playerGoldStr = isMyTeam && (p.isAlive || p.isNomad) ? `${p.gold}` : '-';
+				this.setItemValue(`${textColor}${playerGoldStr}`, row, this.GOLD_COL);
+
 				this.renderPlayerData(p, row, textColor, effectiveLocal, teamRow);
 				row++;
 			}
@@ -145,8 +169,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 			const grey = HexColors.LIGHT_GRAY;
 			const elimColor = effectiveLocal === handle ? textColor : grey;
 
-			const nameColor = p.originalColorCode;
-			this.setItemValue(`${teamPrefix}${nameColor}${p.acctName}`, row, this.PLAYER_COL);
+			this.setItemValue(`${teamPrefix}${p.originalColorCode}${p.acctName}`, row, this.PLAYER_COL);
 			this.setItemValue(`${elimColor}${p.cities}`, row, this.CITIES_COL);
 			this.setItemValue(`${elimColor}${p.kills}`, row, this.KILLS_COL);
 			this.setItemValue(`${elimColor}${p.deaths}`, row, this.DEATHS_COL);

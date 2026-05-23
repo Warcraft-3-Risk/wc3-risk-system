@@ -11,6 +11,8 @@ export default tseslint.config(
 			'maps/**',
 			'assets/**',
 			'docs/**',
+			'.next/**',
+			'website/**',
 		],
 	},
 	{

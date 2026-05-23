@@ -143,3 +143,30 @@ describe('Country.setOwner', () => {
 		});
 	});
 });
+
+describe('Country.reset', () => {
+	beforeEach(() => {
+		vi.clearAllMocks();
+	});
+
+	it('calls spawn.reset() so the spawnMap is cleared between games (regression: 178ac57)', () => {
+		// Without spawn.reset(), game 2 would inherit game 1 unit counts and spawn nothing
+		// for countries that were at capacity.
+		const fakeSpawn = { setOwner: vi.fn(), reset: vi.fn() } as unknown as import('src/app/spawner/spawner').Spawner;
+		const fakeCities = [] as unknown as import('src/app/city/city').City[];
+		const country = new Country('France', fakeCities, fakeSpawn);
+
+		country.reset();
+
+		expect(fakeSpawn.reset).toHaveBeenCalledOnce();
+	});
+
+	it('resets the owner to NEUTRAL_HOSTILE', () => {
+		const country = makeCountry('France');
+		country.setOwner(makePlayer(1));
+
+		country.reset();
+
+		expect(country.getOwner()).toBe(NEUTRAL_HOSTILE);
+	});
+});

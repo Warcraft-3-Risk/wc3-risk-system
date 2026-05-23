@@ -35,13 +35,6 @@ export class UnitLagManager {
 			return;
 		}
 
-		// Only shared slots need their units tracked/fixed.
-		// Exception: transports are always owned by the real player slot (not a shared slot),
-		// but still need custom minimap tracking so they retain the player's color.
-		if (!SharedSlotManager.getInstance().isAnySharedSlotOwnerOfUnit(unit) && !IsUnitType(unit, UNIT_TYPE.TRANSPORT)) {
-			return;
-		}
-
 		// Color the unit to match the real owner instead of using SetPlayerColor (which corrupts WC3 native End-Game screen)
 		//const realOwner = SharedSlotManager.getInstance().getOwnerOfUnit(unit);
 

@@ -1,3 +1,5 @@
+import { SettingsContext } from 'src/app/settings/settings-context';
+import { PlayerManager } from 'src/app/player/player-manager';
 import { GlobalGameData } from '../../state/global-game-state';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { BaseState } from '../state/base-state';
@@ -17,7 +19,7 @@ export class CapitalAssignCountrytNameState extends BaseState<CapitalsData> {
 			NameManager.getInstance().setName(player, 'country');
 		});
 
-		ScoreboardManager.getInstance().updateFull();
+		ScoreboardManager.getInstance().updateFull(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 
 		this.nextState(this.stateData);

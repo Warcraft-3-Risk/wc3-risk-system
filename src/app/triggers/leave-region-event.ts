@@ -39,6 +39,7 @@ export function LeaveRegionEvent() {
 			UnitToCity.delete(city.guard.unit);
 			city.guard.replace(guardChoice);
 			UnitToCity.set(guardChoice, city);
+			city.refreshColorFilter();
 			DestroyGroup(g);
 			g = undefined;
 			guardChoice = undefined;
