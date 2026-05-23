@@ -1,23 +1,31 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import sections from "../../data/game-guide-sections.json";
 import { GameGuideSection } from "./__blocks/GameGuideSection";
 
-export default function GameGuidePage() {
-  const [activeSection, setActiveSection] = useState(sections[0].id);
+const defaultSectionId = sections[0].id;
 
-  useEffect(() => {
-    // If there is a hash in the URL like #maps, switch to that tab!
-    const hash = window.location.hash.replace("#", "");
-    if (hash && sections.some((s) => s.id === hash)) {
-      setActiveSection(hash);
-    }
-  }, []);
+function getSectionIdFromHash() {
+  if (typeof window === "undefined") {
+    return defaultSectionId;
+  }
+
+  const hash = window.location.hash.replace("#", "");
+  return hash && sections.some((section) => section.id === hash) ? hash : defaultSectionId;
+}
+
+function subscribeToHashChange(callback: () => void) {
+  window.addEventListener("hashchange", callback);
+  return () => window.removeEventListener("hashchange", callback);
+}
+
+export default function GameGuidePage() {
+  const activeSection = useSyncExternalStore(subscribeToHashChange, getSectionIdFromHash, () => defaultSectionId);
 
   const handleSectionClick = (id: string) => {
-    setActiveSection(id);
     window.history.pushState(null, "", `#${id}`);
+    window.dispatchEvent(new Event("hashchange"));
   };
 
   return (
@@ -42,7 +50,7 @@ export default function GameGuidePage() {
                 }`}
               >
 
-                <span className="tracking-wide">{section.title}</span>
+                <span>{section.title}</span>
               </button>
             ))}
           </nav>

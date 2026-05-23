@@ -27,6 +27,15 @@ test.describe("Homepage", () => {
     await expect(page.getByTestId("quick-link-community")).toBeVisible();
   });
 
+  test("latest mainline update is visible", async ({ page }) => {
+    await expect(page.getByTestId("latest-update-section")).toBeVisible();
+    await expect(page.getByTestId("latest-update-heading")).toContainText("Risk Europe unstable12");
+    await expect(page.getByTestId("latest-update-minimap")).toContainText("Minimap Clarity");
+    await expect(page.getByTestId("latest-update-colors")).toContainText("High Contrast Colors");
+    await expect(page.getByTestId("latest-update-observer")).toContainText("Observer Tools");
+    await expect(page.getByTestId("latest-update-transports")).toContainText("Transport Polish");
+  });
+
   test("stats section shows game statistics", async ({ page }) => {
     await expect(page.getByTestId("stats-section")).toBeVisible();
     await expect(page.getByTestId("stat-maps")).toContainText("3");

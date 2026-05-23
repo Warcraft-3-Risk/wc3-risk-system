@@ -31,7 +31,7 @@ test.describe("Game Guide", () => {
     const expectedSections = [
       "game-modes", "game-loop", "economy", "units", "victory",
       "maps", "cities-countries", "naval", "rating", "diplomacy",
-      "commands", "advanced", "scoreboard",
+      "ally-color-filter", "commands", "advanced", "scoreboard",
     ];
     for (const section of expectedSections) {
       await expect(page.getByTestId(`guide-nav-${section}`)).toBeVisible();

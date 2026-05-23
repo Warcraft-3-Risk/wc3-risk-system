@@ -60,6 +60,12 @@
     "sourceFile": "diplomacy.md"
   },
   {
+    "id": "ally-color-filter",
+    "title": "Ally Color Filter",
+    "description": "High contrast colors, shared-slot ownership, minimap and replay-safe color rules",
+    "sourceFile": "ally-color-filter.md"
+  },
+  {
     "id": "commands",
     "title": "Commands",
     "description": "All chat commands and player tools",

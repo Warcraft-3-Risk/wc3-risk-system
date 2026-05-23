@@ -11,6 +11,7 @@
 - [Shared Slot System](#shared-slot-system)
 - [Fog of War](#fog-of-war)
 - [Minimap System](#minimap-system)
+- [Pause Consumption](#pause-consumption)
 - [Event System](#event-system)
 - [Replay System](#replay-system)
 - [State Machine](#state-machine)
@@ -36,10 +37,10 @@ flowchart TD
 
 ### Configuration
 
-| Setting | Value | Description |
-|---------|-------|-------------|
-| `MAX_PLAYERS_FOR_SHARED_SLOT_ALLOCATION` | 11 | Threshold to activate shared slots |
-| `SHARED_SLOT_ALLOCATION_ENABLED` | true | Feature toggle |
+| Setting                                  | Value | Description                        |
+| ---------------------------------------- | ----- | ---------------------------------- |
+| `MAX_PLAYERS_FOR_SHARED_SLOT_ALLOCATION` | 11    | Threshold to activate shared slots |
+| `SHARED_SLOT_ALLOCATION_ENABLED`         | true  | Feature toggle                     |
 
 ### Redistribution
 
@@ -63,6 +64,7 @@ flowchart TD
 ### Unit Placement
 
 New units are assigned to the slot with the fewest units:
+
 ```
 targetSlot = getSlotWithLowestUnitCount(player)
 ```
@@ -77,11 +79,11 @@ Fog of War (FoW) limits visibility, forcing strategic scouting.
 
 ### Fog Modes
 
-| Mode | ID | Description |
-|------|-----|-------------|
-| **Off** | 0 | Full map visibility for all players |
-| **On** | 1 | Permanent fog — only see around owned cities/units |
-| **Night** | 2 | Day/night cycle — fog toggles every 2 turns |
+| Mode      | ID  | Description                                        |
+| --------- | --- | -------------------------------------------------- |
+| **Off**   | 0   | Full map visibility for all players                |
+| **On**    | 1   | Permanent fog — only see around owned cities/units |
+| **Night** | 2   | Day/night cycle — fog toggles every 2 turns        |
 
 ### Implementation
 
@@ -103,6 +105,7 @@ See [Game Loop → Day/Night Cycle](./game-loop.md#daynight-cycle) for the compl
 ### Observer Visibility
 
 Observers **always** have full visibility regardless of fog settings:
+
 - `FOG_OF_WAR_VISIBLE` applied to entire map for observers
 - This applies in all fog modes
 
@@ -124,27 +127,44 @@ flowchart TD
 
 ### Frame Pool
 
-| Setting | Value | Description |
-|---------|-------|-------------|
+| Setting           | Value | Description                       |
+| ----------------- | ----- | --------------------------------- |
 | Initial pool size | 2,000 | Starting number of minimap frames |
-| Expansion step | 200 | Frames added when pool exhausted |
-| Shrink behavior | Never | Pool only grows, never shrinks |
+| Expansion step    | 200   | Frames added when pool exhausted  |
+| Shrink behavior   | Never | Pool only grows, never shrinks    |
 
 ### Performance Characteristics
 
-| Metric | Value | Notes |
-|--------|-------|-------|
+| Metric           | Value       | Notes                                 |
+| ---------------- | ----------- | ------------------------------------- |
 | Update frequency | 0.1 seconds | Processes all cities + units per tick |
-| Cities per map | ~200-555 | Depending on terrain |
-| Units at peak | ~1000 | With 18+ players and full spawns |
-| Native calls/sec | ~90,000 | With 1000 units (estimated) |
+| Cities per map   | ~200-555    | Depending on terrain                  |
+| Units at peak    | ~1000       | With 18+ players and full spawns      |
+| Native calls/sec | ~90,000     | With 1000 units (estimated)           |
 
 ### Custom Icons
 
 When `FORCE_CUSTOM_MINIMAP_ICONS` is enabled (default: true):
+
 - Custom colored icons replace default WC3 minimap dots
 - Player colors are accurately represented
 - Icons are hidden for guard units (to avoid clutter)
+
+---
+
+## Pause Consumption
+
+In large multiplayer games, players repeatedly pausing the game can disrupt the flow and negatively impact continuous gameplay.
+
+To prevent this, the game uses a **Pause Consumption** mechanic at the start of the match (during the Mode Selection phase).
+
+### How It Works
+
+If the number of human players is **14 or more**, the system automatically consumes the built-in pause quota for every player. It does this by rapidly pausing and unpausing the game 3 times locally for each player.
+
+- **Threshold:** Activated when `players.size >= 14`.
+- **Mechanism:** Executes `PauseGame(true)` and `PauseGame(false)` three times on game initialization.
+- **Result:** Players are blocked from pausing via the default WC3 (F10 -> Pause) system for the rest of the game, ensuring continuous gameplay.
 
 ---
 
@@ -165,16 +185,17 @@ flowchart TD
 
 ### Key Events
 
-| Event | Trigger | Listeners |
-|-------|---------|-----------|
-| `EVENT_ON_PLAYER_FORFEIT` | Player types `-ff` | Victory check, status update |
-| `EVENT_ON_PLAYER_RESTART` | Player types `-restart` | Game reset |
-| `EVENT_ON_PLAYER_STATUS_CHANGE` | Status transition | Scoreboard, UI, income |
-| Country ownership change | City captured/lost | Income, labels, spawners |
+| Event                           | Trigger                 | Listeners                    |
+| ------------------------------- | ----------------------- | ---------------------------- |
+| `EVENT_ON_PLAYER_FORFEIT`       | Player types `-ff`      | Victory check, status update |
+| `EVENT_ON_PLAYER_RESTART`       | Player types `-restart` | Game reset                   |
+| `EVENT_ON_PLAYER_STATUS_CHANGE` | Status transition       | Scoreboard, UI, income       |
+| Country ownership change        | City captured/lost      | Income, labels, spawners     |
 
 ### Error Boundaries
 
 The event emitter includes error boundaries to prevent one listener's error from crashing others:
+
 - Each listener callback is wrapped in try/catch
 - Errors are logged but don't propagate
 - Other listeners still receive the event
@@ -188,18 +209,19 @@ WC3 Risk has special handling for replay compatibility.
 ### Replay POV Detection
 
 In replays, `GetLocalPlayer()` may not return the expected player. The system uses specialized detection:
+
 - Detects whether the viewer is watching a replay
 - Identifies the replay viewer's POV (point of view)
 - Adjusts UI elements accordingly
 
 ### Replay Safety Rules
 
-| System | Rule | Reason |
-|--------|------|--------|
-| **Multiboard** | Hide, don't destroy | Destroying multiboards crashes replays |
-| **Scoreboard** | POV-aware rendering | Different data shown based on viewer |
-| **Minimap** | FOW-compatible icons | Icons visible through fog in replays |
-| **UI Frames** | Reuse over recreate | Avoid handle leaks in replay playback |
+| System         | Rule                 | Reason                                 |
+| -------------- | -------------------- | -------------------------------------- |
+| **Multiboard** | Hide, don't destroy  | Destroying multiboards crashes replays |
+| **Scoreboard** | POV-aware rendering  | Different data shown based on viewer   |
+| **Minimap**    | FOW-compatible icons | Icons visible through fog in replays   |
+| **UI Frames**  | Reuse over recreate  | Avoid handle leaks in replay playback  |
 
 ### Multiboard Safety
 
@@ -209,7 +231,7 @@ flowchart TD
     Done --> Replay{"In replay?"}
     Replay -- Yes --> Hide["HIDE multiboard<br/>(safe for replays)"]
     Replay -- No --> Hide2["HIDE multiboard<br/>(still prefer hide)"]
-    
+
     Note["⚠️ Never DESTROY multiboards<br/>— causes replay crashes"]
 ```
 
@@ -236,14 +258,15 @@ flowchart TD
 
 Each state implements:
 
-| Method | Description |
-|--------|-------------|
+| Method           | Description                     |
+| ---------------- | ------------------------------- |
 | `onEnterState()` | Called when entering this state |
-| `onExitState()` | Called when leaving this state |
+| `onExitState()`  | Called when leaving this state  |
 
 ### State Transition
 
 States advance sequentially through the mode's state array. The state machine:
+
 1. Calls `onExitState()` on the current state
 2. Advances the index
 3. Calls `onEnterState()` on the next state
@@ -258,6 +281,7 @@ resetInstance() → Destroy instance (for testing)
 ```
 
 Five singletons support `resetInstance()`:
+
 - PlayerManager
 - IncomeManager
 - VictoryManager
@@ -272,13 +296,14 @@ WC3 Risk maintains a ban list for disruptive players.
 
 ### Configuration
 
-| Setting | Value |
-|---------|-------|
-| `BAN_LIST_ACTIVE` | true |
+| Setting           | Value |
+| ----------------- | ----- |
+| `BAN_LIST_ACTIVE` | true  |
 
 ### Banned Players
 
 Players on the ban list are automatically removed when they join:
+
 - Ban list is checked during player initialization
 - Banned players cannot participate in games
 - List is maintained in source code
@@ -287,17 +312,17 @@ Players on the ban list are automatically removed when they join:
 
 ## Source Code Reference
 
-| File | Purpose |
-|------|---------|
-| `src/app/game/services/shared-slot-manager.ts` | Shared slot allocation |
-| `src/app/managers/fog-manager.ts` | Fog of war management |
-| `src/app/utils/events/event-emitter.ts` | Typed event system |
-| `src/app/utils/events/event-constants.ts` | Event name constants |
-| `src/app/utils/events/event-map.ts` | Event type map |
-| `src/app/libs/state-machine.ts` | State machine implementation |
-| `src/app/statistics/replay-manager.ts` | Replay system |
-| `docs/replay/` | Replay-specific documentation |
-| `docs/shared-slots/` | Shared slot documentation |
+| File                                           | Purpose                       |
+| ---------------------------------------------- | ----------------------------- |
+| `src/app/game/services/shared-slot-manager.ts` | Shared slot allocation        |
+| `src/app/managers/fog-manager.ts`              | Fog of war management         |
+| `src/app/utils/events/event-emitter.ts`        | Typed event system            |
+| `src/app/utils/events/event-constants.ts`      | Event name constants          |
+| `src/app/utils/events/event-map.ts`            | Event type map                |
+| `src/app/libs/state-machine.ts`                | State machine implementation  |
+| `src/app/statistics/replay-manager.ts`         | Replay system                 |
+| `docs/replay/`                                 | Replay-specific documentation |
+| `docs/shared-slots/`                           | Shared slot documentation     |
 
 ---
 

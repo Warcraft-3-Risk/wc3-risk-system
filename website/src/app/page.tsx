@@ -7,6 +7,59 @@ export default function Home() {
     <div data-testid="homepage">
       <HeroSection />
 
+      {/* Latest Mainline Update */}
+      <section data-testid="latest-update-section" className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6 mb-8">
+          <div>
+            <p className="text-sm font-bold uppercase text-[--color-accent] mb-3">
+              Latest from main
+            </p>
+            <h2 data-testid="latest-update-heading" className="text-3xl font-bold text-[--color-text-primary] mb-3">
+              Risk Europe unstable12: clearer control in large matches
+            </h2>
+            <p className="text-base text-[--color-text-secondary] leading-relaxed max-w-3xl">
+              The current mainline build highlights better minimap readability, relationship-based color modes,
+              observer camera tools, and more reliable transport handling for crowded games.
+            </p>
+          </div>
+          <Link
+            href="/how-to/game-guide#ally-color-filter"
+            data-testid="latest-update-guide-link"
+            className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-[--color-surface] border border-[--color-border] text-[--color-text-primary] hover:border-[--color-accent] hover:text-[--color-accent] transition-colors font-semibold"
+          >
+            Read the updated guide
+            <ExternalLink size={16} />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+          <UpdateCard
+            testId="latest-update-minimap"
+            icon={<Map size={28} />}
+            title="Minimap Clarity"
+            description="Custom icons now better preserve city, unit, and shared-slot ownership colors, with F2 large city indicators for faster scanning."
+          />
+          <UpdateCard
+            testId="latest-update-colors"
+            icon={<Shield size={28} />}
+            title="High Contrast Colors"
+            description="F3 color contrast and F5 colorblind preferences apply local ally, enemy, and neutral colors while keeping replays stable."
+          />
+          <UpdateCard
+            testId="latest-update-observer"
+            icon={<Users size={28} />}
+            title="Observer Tools"
+            description="Observers and supported team modes can track camera positions, minimap camera markers, and range indicators with dedicated toggles."
+          />
+          <UpdateCard
+            testId="latest-update-transports"
+            icon={<Swords size={28} />}
+            title="Transport Polish"
+            description="Transport patrol, autoload, observer cargo labels, and post-unload minimap/color refreshes make naval movement easier to follow."
+          />
+        </div>
+      </section>
+
       {/* Quick Links */}
       <section data-testid="quick-links-section" className="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <h2 data-testid="quick-links-heading" className="text-3xl font-bold text-[--color-accent] mb-12 text-center tracking-wide">
@@ -154,6 +207,23 @@ function StatBlock({ testId, value, label }: StatBlockProps) {
     <div data-testid={testId} className="p-6 bg-[#0a1820]/30 rounded-xl border border-[--color-border] hover:border-[--color-accent]/50 transition-colors">
       <div className="text-5xl font-bold text-[--color-accent] mb-3 drop-shadow-[0_0_15px_rgba(249,199,1,0.3)]">{value}</div>
       <div className="text-lg text-[--color-text-primary] font-medium tracking-wide uppercase">{label}</div>
+    </div>
+  );
+}
+
+interface UpdateCardProps {
+  testId: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}
+
+function UpdateCard({ testId, icon, title, description }: UpdateCardProps) {
+  return (
+    <div data-testid={testId} className="h-full p-5 bg-[#0a1820]/40 rounded-lg border border-[--color-border]">
+      <div className="text-[--color-accent] mb-4">{icon}</div>
+      <h3 className="text-lg font-bold text-[--color-text-primary] mb-2">{title}</h3>
+      <p className="text-sm text-[--color-text-secondary] leading-relaxed">{description}</p>
     </div>
   );
 }

@@ -2,12 +2,24 @@
 
 import { useLiveLobbies } from '@/core/utils/useLiveLobbies';
 import { Users, Globe, User } from 'lucide-react';
-import { useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 
 export default function LiveLobbiesIndicator() {
   const { lobbies, loading, error } = useLiveLobbies();
   const [isHovered, setIsHovered] = useState(false);
+  const [currentTime, setCurrentTime] = useState<number | null>(null);
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    const updateCurrentTime = () => setCurrentTime(Math.floor(Date.now() / 1000));
+    const timeoutId = setTimeout(updateCurrentTime, 0);
+    const intervalId = setInterval(updateCurrentTime, 30_000);
+
+    return () => {
+      clearTimeout(timeoutId);
+      clearInterval(intervalId);
+    };
+  }, []);
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
@@ -48,8 +60,9 @@ export default function LiveLobbiesIndicator() {
   };
 
   const formatTimeSince = (timestamp: number) => {
-    const now = Math.floor(Date.now() / 1000);
-    const diff = now - timestamp;
+    if (currentTime === null) return 'Recently';
+
+    const diff = currentTime - timestamp;
     const minutes = Math.floor(diff / 60);
     
     if (minutes < 1) return 'Just now';

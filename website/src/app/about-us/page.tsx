@@ -57,6 +57,16 @@ export default function AboutUsPage() {
             description="From basic Riflemen to powerful Tanks and Battleships — a diverse roster for every strategy."
             testId="feature-units"
           />
+          <FeatureCard
+            title="Minimap & Color Tools"
+            description="Custom minimap icons, large city indicators, high contrast colors, and colorblind preferences keep large matches readable."
+            testId="feature-minimap-colors"
+          />
+          <FeatureCard
+            title="Observer Support"
+            description="Camera markers, range indicators, and transport cargo labels make competitive games easier to follow and review."
+            testId="feature-observer-tools"
+          />
         </div>
       </section>
 
