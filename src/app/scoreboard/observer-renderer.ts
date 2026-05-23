@@ -117,7 +117,7 @@ export class ObserverRenderer extends ScoreboardRenderer {
 
 		this.setItemValue(`${teamPrefix}${p.originalColorCode}${p.acctName}|r`, row, this.PLAYER_COL);
 		this.setItemValue(`${grey}-`, row, this.GOLD_COL);
-		this.setItemValue(`${grey}${p.cities}`, row, this.CITIES_COL);
+		this.setItemValue(`${grey}${p.cityDisplay}`, row, this.CITIES_COL);
 		this.setItemValue(`${grey}${p.kills}`, row, this.KILLS_COL);
 		this.setItemValue(`${grey}${p.deaths}`, row, this.DEATHS_COL);
 
@@ -143,7 +143,7 @@ export class ObserverRenderer extends ScoreboardRenderer {
 
 		// Cities
 		const cityTextColor = p.cityCountHighlighted ? HexColors.RED : textColor;
-		this.setItemValue(`${cityTextColor}${p.cities}`, row, this.CITIES_COL);
+		this.setItemValue(`${cityTextColor}${p.cityDisplay}`, row, this.CITIES_COL);
 
 		// Kills & Deaths — combat highlight
 		const combatColor = p.isInCombat ? HexColors.LIGHT_BLUE : textColor;

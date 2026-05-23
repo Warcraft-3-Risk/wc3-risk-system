@@ -6,6 +6,7 @@ import { Team } from '../teams/team';
 import { TeamManager } from '../teams/team-manager';
 import { HexColors } from './hex-colors';
 import { LocalMessage } from './messages';
+import { calculateEffectiveCityCount } from '../managers/victory-point-logic';
 
 export type ParticipantEntity = ActivePlayer | Team;
 
@@ -16,6 +17,25 @@ export class ParticipantEntityManager {
 		} else {
 			return entity.trackedData.cities.cities.length;
 		}
+	}
+
+	public static getVictoryPoints(entity: ParticipantEntity): number {
+		if (entity instanceof Team) {
+			return entity.getVictoryPoints();
+		}
+		return entity.trackedData.victoryPoints ?? 0;
+	}
+
+	public static addVictoryPoints(entity: ParticipantEntity, delta: number): void {
+		if (entity instanceof Team) {
+			entity.addVictoryPoints(delta);
+			return;
+		}
+		entity.trackedData.victoryPoints += delta;
+	}
+
+	public static getEffectiveCityCount(entity: ParticipantEntity): number {
+		return calculateEffectiveCityCount(this.getCityCount(entity), this.getVictoryPoints(entity));
 	}
 
 	public static getDisplayName(entity: ParticipantEntity, preferNameIfOneTeamMember: boolean = true): string {

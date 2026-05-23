@@ -225,7 +225,10 @@ export class ScoreboardManager {
 			const requiredCities = VictoryManager.getInstance().getCityCountWin();
 			const leaderDisplayName = ParticipantEntityManager.getDisplayName(GlobalGameData.leader);
 			const leaderCityCount = ParticipantEntityManager.getCityCount(GlobalGameData.leader);
-			const isLeaderCityCountHighlighted = leaderCityCount >= requiredCities;
+			const leaderVictoryPoints = ParticipantEntityManager.getVictoryPoints(GlobalGameData.leader);
+			const leaderEffectiveCityCount = ParticipantEntityManager.getEffectiveCityCount(GlobalGameData.leader);
+			const isLeaderCityCountHighlighted = leaderEffectiveCityCount >= requiredCities;
+			const leaderCityDisplay = leaderVictoryPoints > 0 ? `${leaderCityCount} (+${leaderVictoryPoints})` : `${leaderCityCount}`;
 
 			const overtimeSetting = SettingsContext.getInstance().getOvertimeSetting();
 			const overtimeSuffix = isOvertimeActive(GlobalGameData.turnCount, overtimeSetting)
@@ -233,9 +236,9 @@ export class ScoreboardManager {
 				: `${isOvertimeEnabled(overtimeSetting) ? ` (Overtime in: ${getTurnsUntilOvertimeIsActivated(GlobalGameData.turnCount, overtimeSetting)})` : ''}`;
 
 			if (isLeaderCityCountHighlighted) {
-				this.setTitle(`${leaderDisplayName} ${HexColors.RED}${leaderCityCount}|r/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`);
+				this.setTitle(`${leaderDisplayName} ${HexColors.RED}${leaderCityDisplay}|r/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`);
 			} else {
-				this.setTitle(`${leaderDisplayName} ${leaderCityCount}/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`);
+				this.setTitle(`${leaderDisplayName} ${leaderCityDisplay}/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`);
 			}
 		} else {
 			const overtimeSetting = SettingsContext.getInstance().getOvertimeSetting();

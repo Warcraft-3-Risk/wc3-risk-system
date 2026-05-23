@@ -4,6 +4,8 @@
 //Used to control how many of total cities you need.
 //This is a percentage of the total cities .6 = 60%
 export const CITIES_TO_WIN_RATIO: number = 0.6;
+export const VICTORY_POINT_CITY_THRESHOLD: number = 70;
+export const VICTORY_POINTS_PER_TURN: number = 1;
 
 //This is the starting gold for each player. 4 gold by default.
 export const STARTING_INCOME: number = 4;

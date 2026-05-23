@@ -87,13 +87,14 @@ import type { ActivePlayer } from 'src/app/player/types/active-player';
 
 // ─── Test helpers ───────────────────────────────────────────────────
 
-function createFakeActivePlayer(id: number, income: number, delta: number, cities: number): ActivePlayer {
+function createFakeActivePlayer(id: number, income: number, delta: number, cities: number, victoryPoints: number = 0): ActivePlayer {
 	const handle = { id };
 	return {
 		getPlayer: () => handle,
 		trackedData: {
 			income: { income, delta, max: income },
 			cities: { cities: Array.from({ length: cities }, (_, i) => ({ name: `City${i}` })), max: cities },
+			victoryPoints,
 			countries: new Map(),
 			killsDeaths: new Map([[handle, { killValue: 5, deathValue: 2 }]]),
 			lastCombat: 0,
@@ -115,6 +116,7 @@ function createFakeTeam(num: number, income: number, cities: number) {
 		getNumber: () => num,
 		getIncome: () => income,
 		getCities: () => cities,
+		getVictoryPoints: () => 0,
 		getKills: () => 10,
 		getDeaths: () => 3,
 		getMembers: () => [],
@@ -133,6 +135,17 @@ describe('ScoreboardDataModel income freezing', () => {
 	});
 
 	describe('refreshValues preserves income from last refresh', () => {
+		it('uses effective cities for highlight and city display format', () => {
+			const playerWithVP = createFakeActivePlayer(0, 20, 5, 10, 40);
+			model.refresh([playerWithVP], true);
+
+			expect(model.players[0].cities).toBe(10);
+			expect(model.players[0].victoryPoints).toBe(40);
+			expect(model.players[0].effectiveCities).toBe(50);
+			expect(model.players[0].cityDisplay).toBe('10 (+40)');
+			expect(model.players[0].cityCountHighlighted).toBe(true);
+		});
+
 		it('does not update player income when live data changes mid-turn', () => {
 			// Initial full refresh establishes baseline
 			model.refresh(players, true);

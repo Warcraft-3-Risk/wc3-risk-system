@@ -8,6 +8,7 @@ import { VictoryManager } from '../managers/victory-manager';
 import { RatingManager } from '../rating/rating-manager';
 import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
 import { sortPlayers, sortTeams } from '../utils/scoreboard-sort-logic';
+import { calculateEffectiveCityCount } from '../managers/victory-point-logic';
 
 export interface PlayerRow {
 	playerId: number;
@@ -18,6 +19,9 @@ export interface PlayerRow {
 	incomeDelta: number;
 	gold: number;
 	cities: number;
+	victoryPoints: number;
+	effectiveCities: number;
+	cityDisplay: string;
 	kills: number;
 	deaths: number;
 	status: string;
@@ -44,6 +48,9 @@ export interface TeamRow {
 	totalIncome: number;
 	totalGold: number;
 	totalCities: number;
+	totalVictoryPoints: number;
+	totalEffectiveCities: number;
+	totalCitiesDisplay: string;
 	totalKills: number;
 	totalDeaths: number;
 	members: PlayerRow[];
@@ -133,6 +140,10 @@ export class ScoreboardDataModel {
 
 			// Update team-level totals (income preserved from last full refresh)
 			teamRow.totalCities = teamRow.team.getCities();
+			teamRow.totalVictoryPoints = teamRow.team.getVictoryPoints();
+			teamRow.totalEffectiveCities = calculateEffectiveCityCount(teamRow.totalCities, teamRow.totalVictoryPoints);
+			teamRow.totalCitiesDisplay =
+				teamRow.totalVictoryPoints > 0 ? `${teamRow.totalCities} (+${teamRow.totalVictoryPoints})` : `${teamRow.totalCities}`;
 			teamRow.totalGold = teamRow.members.reduce((sum, m) => sum + m.gold, 0);
 			teamRow.totalKills = teamRow.team.getKills();
 			teamRow.totalDeaths = teamRow.team.getDeaths();
@@ -156,6 +167,8 @@ export class ScoreboardDataModel {
 
 		const requiredCities = VictoryManager.getInstance().getCityCountWin();
 		const cities = data.cities.cities.length;
+		const victoryPoints = ((data as unknown) as { victoryPoints?: number }).victoryPoints ?? 0;
+		const effectiveCities = calculateEffectiveCityCount(cities, victoryPoints);
 
 		let ratingChange: PlayerRow['ratingChange'] = undefined;
 		if (p.status.isEliminated()) {
@@ -185,6 +198,9 @@ export class ScoreboardDataModel {
 			incomeDelta: data.income.delta,
 			gold: GetPlayerState(handle, PLAYER_STATE_RESOURCE_GOLD),
 			cities,
+			victoryPoints,
+			effectiveCities,
+			cityDisplay: victoryPoints > 0 ? `${cities} (+${victoryPoints})` : `${cities}`,
 			kills: kd ? kd.killValue : 0,
 			deaths: kd ? kd.deathValue : 0,
 			status: p.status.status,
@@ -202,7 +218,7 @@ export class ScoreboardDataModel {
 			acctName: nameManager.getAcct(handle),
 			btag: nameManager.getBtag(handle),
 			originalColorCode: nameManager.getOriginalColorCode(handle),
-			cityCountHighlighted: cities >= requiredCities,
+			cityCountHighlighted: effectiveCities >= requiredCities,
 		};
 	}
 
@@ -216,6 +232,9 @@ export class ScoreboardDataModel {
 			totalIncome: team.getIncome(),
 			totalGold: 0,
 			totalCities: 0,
+			totalVictoryPoints: 0,
+			totalEffectiveCities: 0,
+			totalCitiesDisplay: '0',
 			totalKills: 0,
 			totalDeaths: 0,
 			members: [] as PlayerRow[],
@@ -247,6 +266,12 @@ export class ScoreboardDataModel {
 				totalIncome: teamRow.totalIncome,
 				totalGold: members.reduce((sum, m) => sum + m.gold, 0),
 				totalCities: teamRow.team.getCities(),
+				totalVictoryPoints: teamRow.team.getVictoryPoints(),
+				totalEffectiveCities: calculateEffectiveCityCount(teamRow.team.getCities(), teamRow.team.getVictoryPoints()),
+				totalCitiesDisplay:
+					teamRow.team.getVictoryPoints() > 0
+						? `${teamRow.team.getCities()} (+${teamRow.team.getVictoryPoints()})`
+						: `${teamRow.team.getCities()}`,
 				totalKills: teamRow.team.getKills(),
 				totalDeaths: teamRow.team.getDeaths(),
 				members,

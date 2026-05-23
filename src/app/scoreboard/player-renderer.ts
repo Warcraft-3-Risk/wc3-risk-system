@@ -113,7 +113,7 @@ export class PlayerRenderer extends ScoreboardRenderer {
 			const elimColor = effectiveLocal === p.handle ? textColor : grey;
 
 			this.setItemValue(`${p.originalColorCode}${p.acctName}`, row, this.PLAYER_COL);
-			this.setItemValue(`${elimColor}${p.cities}`, row, this.CITIES_COL);
+			this.setItemValue(`${elimColor}${p.cityDisplay}`, row, this.CITIES_COL);
 			this.setItemValue(`${elimColor}${p.kills}`, row, this.KILLS_COL);
 			this.setItemValue(`${elimColor}${p.deaths}`, row, this.DEATHS_COL);
 
@@ -126,7 +126,7 @@ export class PlayerRenderer extends ScoreboardRenderer {
 			this.setItemValue(`${p.displayName}`, row, this.PLAYER_COL);
 
 			const cityTextColor = p.cityCountHighlighted ? HexColors.RED : textColor;
-			this.setItemValue(`${cityTextColor}${p.cities}`, row, this.CITIES_COL);
+			this.setItemValue(`${cityTextColor}${p.cityDisplay}`, row, this.CITIES_COL);
 
 			this.setItemValue(`${textColor}${p.kills}`, row, this.KILLS_COL);
 			this.setItemValue(`${textColor}${p.deaths}`, row, this.DEATHS_COL);
