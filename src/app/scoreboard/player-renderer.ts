@@ -14,7 +14,7 @@ export class PlayerRenderer extends ScoreboardRenderer {
 
 	public constructor(playerCount: number) {
 		super(6);
-		this.size = playerCount + 3;
+		this.size = playerCount + 1;
 
 		MultiboardSetColumnCount(this.board, 6);
 
@@ -83,8 +83,8 @@ export class PlayerRenderer extends ScoreboardRenderer {
 		});
 	}
 
-	public renderAlert(player: player, countryName: string): void {
-		this.setItemValue(`${NameManager.getInstance().getDisplayName(player)} claimed ${HexColors.TANGERINE}${countryName}|r`, this.size, 1);
+	public renderAlert(_player: player, _countryName: string): void {
+		// Player-facing scoreboards intentionally omit capture alerts.
 	}
 
 	// Hides instead of destroying — see ScoreboardRenderer.destroy()
