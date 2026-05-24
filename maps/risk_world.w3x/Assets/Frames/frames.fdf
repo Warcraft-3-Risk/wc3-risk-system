@@ -209,7 +209,8 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 				MenuItem "FFA",     -2,
 				MenuItem "Lobby Teams",     -2,
 				MenuItem "Lobby Teams (Shared)",     -2,
-				//MenuItem "Random Teams of: ",     -2,
+				MenuItem "Random Teams",     -2,
+				MenuItem "Random Teams (Shared)",     -2,
 			}
 		}
 

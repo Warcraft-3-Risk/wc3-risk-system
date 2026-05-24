@@ -3,10 +3,16 @@ import { LargeSearchRadius, SmallSearchRadius } from './search-radii';
 import { City } from 'src/app/city/city';
 import { ReplaceGuard } from './replace-guard';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
+import { UnitDeathContext } from './unit-death-context';
 //This is where it falls for the bug. city = Owned city. killingUnit = killingCity. dyingUnit = dyingGuard
-export function EnemyKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (!UnitLagManager.IsUnitEnemy(killingUnit, city.getOwner())) return null;
-	if (IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE) && IsUnitType(dyingUnit, UNIT_TYPE_SAPPER)) return null;
+export function EnemyKillHandler(city: City, deathContext: UnitDeathContext): boolean {
+	const dyingUnit = deathContext.dyingUnit;
+	const killingUnit = deathContext.killingUnit;
+	const killingOwner = deathContext.killingOwner?.effectiveOwner;
+
+	if (!killingOwner) return undefined;
+	if (!IsPlayerEnemy(killingOwner, city.getOwner())) return undefined;
+	if (IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE) && IsUnitType(dyingUnit, UNIT_TYPE_SAPPER)) return undefined;
 
 	const searchGroup: group = CreateGroup();
 
@@ -27,7 +33,8 @@ export function EnemyKillHandler(city: City, dyingUnit: unit, killingUnit: unit)
 		LargeSearchRadius,
 		(unit, player) => UnitLagManager.IsUnitAlly(unit, player),
 		dyingUnit,
-		killingUnit
+		killingUnit,
+		killingOwner
 	);
 
 	//Could not find valid units within large radius of guard, so we search in small radius by killer
@@ -38,7 +45,8 @@ export function EnemyKillHandler(city: City, dyingUnit: unit, killingUnit: unit)
 			SmallSearchRadius,
 			(unit, player) => UnitLagManager.IsUnitAlly(unit, player),
 			killingUnit,
-			killingUnit
+			killingUnit,
+			killingOwner
 		);
 	}
 

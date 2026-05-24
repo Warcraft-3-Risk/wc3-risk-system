@@ -63,8 +63,8 @@ export class StatisticsModel {
 		return this.columns;
 	}
 
-	public getRival(player: ActivePlayer): ActivePlayer | null {
-		let rival: ActivePlayer | null = null;
+	public getRival(player: ActivePlayer): ActivePlayer | undefined {
+		let rival: ActivePlayer | undefined = undefined;
 		let maxKills = 0;
 
 		this.matchPlayers
@@ -108,10 +108,9 @@ export class StatisticsModel {
 				? 'No Overtime'
 				: OvertimeStringsColorFormatted[settingsManager.getSettings().Overtime.option]) +
 			'|r, ';
-		settings +=
-			FogColors[settingsManager.getSettings().Fog] + 'Fog|r ' + FogOptionsColorFormatted[settingsManager.getSettings().Fog];
+		settings += FogColors[settingsManager.getSettings().Fog] + 'Fog|r ' + FogOptionsColorFormatted[settingsManager.getSettings().Fog];
 
-		this.timePlayed = `${HexColors.TANGERINE}Game Time:|r ${formattedTime}
+		this.timePlayed = `${HexColors.TANGERINE}Game Time:|r ${formattedTime} ${HexColors.TANGERINE}OS Time:|r ${os.date('%Y-%m-%d %H:%M:%S')}
 		${HexColors.TANGERINE}Total Turns:|r ${totalTurns.toFixed(2)}
 		${HexColors.TANGERINE}Version:|r ${MAP_TYPE.charAt(0).toUpperCase() + MAP_TYPE.slice(1)} v${MAP_VERSION}
 		${HexColors.TANGERINE}Settings:|r ${settings}`;
@@ -156,8 +155,12 @@ export class StatisticsModel {
 			const teamAPlayers = teamA.getMembers();
 			const teamBPlayers = teamB.getMembers();
 
-			const teamALongestLife = Math.max(...teamAPlayers.map((player) => !player.status.isEliminated() ? 999999 : player.trackedData.turnDied));
-			const teamBLongestLife = Math.max(...teamBPlayers.map((player) => !player.status.isEliminated() ? 999999 : player.trackedData.turnDied));
+			const teamALongestLife = Math.max(
+				...teamAPlayers.map((player) => (!player.status.isEliminated() ? 999999 : player.trackedData.turnDied))
+			);
+			const teamBLongestLife = Math.max(
+				...teamBPlayers.map((player) => (!player.status.isEliminated() ? 999999 : player.trackedData.turnDied))
+			);
 
 			if (teamALongestLife !== teamBLongestLife) {
 				return teamBLongestLife - teamALongestLife;

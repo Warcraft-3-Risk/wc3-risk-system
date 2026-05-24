@@ -1,5 +1,7 @@
 import { debugPrint } from 'src/app/utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
+import { W3C_MODE_ENABLED } from 'src/app/utils/map-info';
 
 interface EntityData {
 	entity: player;
@@ -21,7 +23,7 @@ export class WinTracker {
 
 			if (IsPlayerObserver(player)) continue;
 
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_PLAYING) {
+			if (GetPlayerSlotState(player) === PLAYER_SLOT_STATE_PLAYING) {
 				entityList.push(player);
 			}
 		}
@@ -55,7 +57,7 @@ export class WinTracker {
 			}
 		});
 
-		debugPrint(`Played matches: ${playedMatchCount}`, 'WinTracker');
+		if (DEBUG_PRINTS.master) debugPrint(`Played matches: ${playedMatchCount}`, DC.winTracker);
 
 		return playedMatchCount;
 	}
@@ -81,12 +83,16 @@ export class WinTracker {
 	}
 
 	private updateUI() {
+		// Only update the mapInfo frame score display in W3C mode
+		// In non-W3C modes, the mapInfo frame shows the version number
+		if (!W3C_MODE_ENABLED) return;
+
 		const mapInfo: framehandle = BlzGetFrameByName('mapInfo', 0);
 		const leader: EntityData = this.entityData.get(this.currentLeader);
 		let otherEntity: EntityData;
 
 		this.entityData.forEach((entityData, entity) => {
-			if (entity != this.currentLeader) {
+			if (entity !== this.currentLeader) {
 				otherEntity = this.entityData.get(entity);
 			}
 		});
@@ -106,7 +112,7 @@ export class WinTracker {
 		let otherEntity: EntityData;
 
 		this.entityData.forEach((entityData, entity) => {
-			if (entity != this.currentLeader) {
+			if (entity !== this.currentLeader) {
 				otherEntity = this.entityData.get(entity);
 			}
 		});

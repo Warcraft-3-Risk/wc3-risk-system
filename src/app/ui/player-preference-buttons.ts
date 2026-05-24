@@ -1,9 +1,43 @@
 import { createGuardButton } from '../factory/guard-button-factory';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { CityToCountry } from '../country/country-map';
-import { Country } from '../country/country';
 import { File } from 'w3ts';
+import { RatingManager } from '../rating/rating-manager';
+import { NameManager } from '../managers/names/name-manager';
+import { getCountryLabelsText, normalizeLargeCityIndicators } from '../player/options';
+
+const OPTION_BUTTON_CONTEXT_OFFSETS = [0, 100, 200, 300, 400, 500, 600, 700];
+
+export function setOptionButtonsVisibleForPlayer(player: player, visible: boolean): void {
+	if (player !== GetLocalPlayer()) return;
+
+	for (const offset of OPTION_BUTTON_CONTEXT_OFFSETS) {
+		const button = BlzGetFrameByName('GuardButton', GetPlayerId(player) + offset);
+		if (button) {
+			BlzFrameSetVisible(button, visible);
+		}
+	}
+}
+
+export function areOptionButtonsVisibleForPlayer(player: player): boolean {
+	const healthButton = BlzGetFrameByName('GuardButton', GetPlayerId(player));
+	return healthButton ? BlzFrameIsVisible(healthButton) : false;
+}
+
+export function hideOptionButtonsForPlayers(players: ActivePlayer[]): void {
+	for (const activePlayer of players) {
+		setOptionButtonsVisibleForPlayer(activePlayer.getPlayer(), false);
+	}
+}
+
+export function restoreOptionButtonsForPlayers(players: ActivePlayer[]): void {
+	for (const activePlayer of players) {
+		const player = activePlayer.getPlayer();
+		if (player === GetLocalPlayer()) {
+			setOptionButtonsVisibleForPlayer(player, File.read('risk/ui.pld') !== 'false');
+		}
+	}
+}
 
 export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
@@ -63,6 +97,19 @@ export function buildGuardValueButton(player: ActivePlayer): framehandle {
 }
 
 export function buildLabelToggleButton(player: ActivePlayer): framehandle {
+	const getLabelTexture = (countryLabels: boolean, textures: { primary: string; secondary: string }): string => {
+		return countryLabels ? textures.primary : textures.secondary;
+	};
+
+	const getLabelTooltip = (countryLabels: boolean): string => {
+		const color = countryLabels ? HexColors.GREEN : HexColors.RED;
+
+		return (
+			`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles country labels on the map.\nCurrent preference: ` +
+			`${color}${getCountryLabelsText(countryLabels)}`
+		);
+	};
+
 	return createGuardButton({
 		player: player,
 		createContext: GetPlayerId(player.getPlayer()) + 200,
@@ -72,36 +119,77 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp',
 		},
 		xOffset: 0.046,
-		initialTooltipText: `Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ${HexColors.GREEN}Visible`,
+		initialTooltipText: getLabelTooltip(player.options.countryLabels),
 		action: (context: number, textures: { primary: string; secondary: string }) => {
-			player.options.labels = !player.options.labels;
+			player.options.countryLabels = !player.options.countryLabels;
 
 			// Only update visuals for the local player
-			if (player.getPlayer() == GetLocalPlayer()) {
+			if (player.getPlayer() === GetLocalPlayer()) {
 				// Save labels preference to file
-				File.write('risk/labels.pld', `${player.options.labels}`);
-
-				// Toggle visibility for all country labels
-				const countrySet: Set<Country> = new Set(CityToCountry.values());
-				countrySet.forEach((country) => {
-					country.setLabelVisibility(player.options.labels);
-				});
+				File.write('risk/labels.pld', `${player.options.countryLabels}`);
 
 				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
-				const texture = player.options.labels ? textures.primary : textures.secondary;
+				const texture = getLabelTexture(player.options.countryLabels, textures);
+
+				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+				BlzFrameSetText(buttonTooltip, getLabelTooltip(player.options.countryLabels));
+			}
+		},
+	});
+}
+
+export function buildColorblindModeButton(player: ActivePlayer): framehandle {
+	// Initialize from saved preference for local player
+	if (player.getPlayer() === GetLocalPlayer()) {
+		const savedPreference = File.read('risk/colorblind.pld');
+		if (savedPreference === 'true') {
+			player.options.colorblind = true;
+		}
+	}
+
+	const button = createGuardButton({
+		player: player,
+		createContext: GetPlayerId(player.getPlayer()) + 400,
+		key: OSKEY_F5,
+		textures: {
+			primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNSentryWard.blp',
+			secondary: 'ReplaceableTextures\\CommandButtons\\BTNSentryWard.blp',
+		},
+		xOffset: 0.092,
+		initialTooltipText: `Colorblind Mode ${HexColors.TANGERINE}(F5)|r\nToggles ally minimap color between Teal and Yellow in Color Mode 1.\nCurrent preference: ${player.options.colorblind ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`,
+		action: (context: number, textures: { primary: string; secondary: string }) => {
+			player.options.colorblind = !player.options.colorblind;
+
+			if (player.getPlayer() === GetLocalPlayer()) {
+				File.write('risk/colorblind.pld', `${player.options.colorblind}`);
+
+				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+				const texture = player.options.colorblind ? textures.secondary : textures.primary;
 
 				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
 
 				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
 				BlzFrameSetText(
 					buttonTooltip,
-					`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ` +
-						`${player.options.labels ? `${HexColors.GREEN}Visible` : `${HexColors.RED}Hidden`}`
+					`Colorblind Mode ${HexColors.TANGERINE}(F5)|r\nToggles ally minimap color between Teal and Yellow in Color Mode 1.\nCurrent preference: ` +
+						`${player.options.colorblind ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`
 				);
 			}
 		},
 	});
+
+	// Set initial texture state for the button since createGuardButton defaults to primary
+	if (player.getPlayer() === GetLocalPlayer() && player.options.colorblind) {
+		const context = GetPlayerId(player.getPlayer()) + 400;
+		const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+		BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNSentryWard.blp', 0, false);
+	}
+
+	return button;
 }
+
 /**
  * Update the F4 rating stats button appearance based on ranked game status
  * Should be called after ranked status is determined in countdown phase
@@ -109,7 +197,7 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
  * @param isRanked Whether the game is ranked
  */
 export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isRanked: boolean): void {
-	if (GetLocalPlayer() != player.getPlayer()) {
+	if (GetLocalPlayer() !== player.getPlayer()) {
 		return;
 	}
 
@@ -123,8 +211,6 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 
 	if (isRanked) {
 		// For ranked games, show icon based on player's preference
-		const { RatingManager } = require('src/app/rating/rating-manager');
-		const { NameManager } = require('src/app/managers/names/name-manager');
 		const ratingManager = RatingManager.getInstance();
 		const btag = NameManager.getInstance().getBtag(player.getPlayer());
 		const showRating = ratingManager.getShowRatingPreference(btag);
@@ -143,18 +229,10 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 		}
 	} else {
 		// For unranked games, always show disabled icon
-		BlzFrameSetTexture(
-			buttonBackdrop,
-			'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
-			0,
-			false
-		);
+		BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp', 0, false);
 
 		if (buttonTooltip) {
-			BlzFrameSetText(
-				buttonTooltip,
-				`Ranked Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`
-			);
+			BlzFrameSetText(buttonTooltip, `Ranked Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`);
 		}
 	}
 }
@@ -171,25 +249,18 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 		xOffset: 0.069,
 		initialTooltipText: `Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
 		action: (context: number, textures: { primary: string; secondary: string }, button) => {
-			if (GetLocalPlayer() == player.getPlayer()) {
-				// Import RatingManager at runtime to check ranked status
-				const { RatingManager } = require('src/app/rating/rating-manager');
+			if (GetLocalPlayer() === player.getPlayer()) {
 				const ratingManager = RatingManager.getInstance();
 
 				// Check if this is a ranked game - if not, show message and do nothing
 				if (!ratingManager.isRankedGame()) {
-					DisplayTimedTextToPlayer(
-						player.getPlayer(),
-						0,
-						0,
-						3,
-						`${HexColors.TANGERINE}Ranked stats are unavailable in unranked games.|r`
-					);
+					DisplayTimedTextToPlayer(player.getPlayer(), 0, 0, 3, `${HexColors.TANGERINE}Ranked stats are unavailable in unranked games.|r`);
 					return;
 				}
 
-				// Import RatingSyncManager at runtime to check sync status
-				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager');
+				// Runtime require to avoid circular dependency:
+				// player-preference-buttons -> RatingSyncManager -> PlayerManager -> player-preference-buttons
+				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager') as typeof import('../rating/rating-sync-manager');
 
 				// Check if sync is complete before allowing UI access
 				if (!RatingSyncManager.getInstance().isSyncComplete()) {
@@ -212,4 +283,172 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 			}
 		},
 	});
+}
+
+export function buildColorContrastModeButton(player: ActivePlayer): framehandle {
+	// Initialize from saved preference for local player
+	if (player.getPlayer() === GetLocalPlayer()) {
+		const savedPreference = File.read('risk/colorcontrast.pld');
+		if (savedPreference === 'true') {
+			player.options.colorContrast = true;
+		}
+	}
+
+	const button = createGuardButton({
+		player: player,
+		createContext: GetPlayerId(player.getPlayer()) + 500,
+		key: OSKEY_F3,
+		textures: {
+			primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNLocustSwarm.blp',
+			secondary: 'ReplaceableTextures\\CommandButtons\\BTNLocustSwarm.blp',
+		},
+		xOffset: 0.115,
+		initialTooltipText: `Color Contrast Mode ${HexColors.TANGERINE}(F3)|r\nToggles high contrast colors for units on the map.\nCurrent preference: ${player.options.colorContrast ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`,
+		action: (context: number, textures: { primary: string; secondary: string }) => {
+			player.options.colorContrast = !player.options.colorContrast;
+
+			if (player.getPlayer() === GetLocalPlayer()) {
+				File.write('risk/colorcontrast.pld', `${player.options.colorContrast}`);
+
+				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+				const texture = player.options.colorContrast ? textures.secondary : textures.primary;
+
+				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+				BlzFrameSetText(
+					buttonTooltip,
+					`Color Contrast Mode ${HexColors.TANGERINE}(F3)|r\nToggles high contrast colors for units on the map.\nCurrent preference: ` +
+						`${player.options.colorContrast ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`
+				);
+			}
+		},
+	});
+
+	// Set initial texture state for the button since createGuardButton defaults to primary
+	if (player.getPlayer() === GetLocalPlayer() && player.options.colorContrast) {
+		const context = GetPlayerId(player.getPlayer()) + 500;
+		const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+		BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNLocustSwarm.blp', 0, false);
+	}
+
+	return button;
+}
+
+export function buildCameraPanModeButton(player: ActivePlayer): framehandle {
+	const { SettingsContext } = require('src/app/settings/settings-context') as typeof import('../settings/settings-context');
+	const settings = SettingsContext.getInstance();
+	const isFFA = settings.isFFA();
+
+	// Initialize from saved preference for local player
+	if (player.getPlayer() === GetLocalPlayer()) {
+		const savedPreference = File.read('risk/camPan.pld');
+		if (savedPreference === 'true') {
+			player.options.cameraPan = true;
+		} else if (savedPreference === 'false') {
+			player.options.cameraPan = false;
+		} else {
+			if ((settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode()) && settings.isLobbyTeams()) {
+				player.options.cameraPan = true;
+			} else {
+				player.options.cameraPan = true; // Enabled by default now
+			}
+		}
+	}
+
+	const button = createGuardButton({
+		player: player,
+		createContext: GetPlayerId(player.getPlayer()) + 600,
+		key: OSKEY_F9,
+		textures: {
+			primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp',
+			secondary: 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp',
+		},
+		xOffset: 0.138,
+		initialTooltipText: `Ally Cameras ${HexColors.TANGERINE}(F9)|r\nToggles visibility of allied camera positions on the map.\nCurrent preference: ${player.options.cameraPan ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`,
+		action: (context: number, textures: { primary: string; secondary: string }) => {
+			player.options.cameraPan = !player.options.cameraPan;
+
+			if (player.getPlayer() === GetLocalPlayer()) {
+				File.write('risk/camPan.pld', `${player.options.cameraPan}`);
+
+				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+				const texture = player.options.cameraPan ? textures.secondary : textures.primary;
+
+				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+				BlzFrameSetText(
+					buttonTooltip,
+					`Ally Cameras ${HexColors.TANGERINE}(F9)|r\nToggles visibility of allied camera positions on the map.\nCurrent preference: ` +
+						`${player.options.cameraPan ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`}`
+				);
+			}
+		},
+	});
+
+	// Set initial texture state for the button since createGuardButton defaults to primary
+	if (player.getPlayer() === GetLocalPlayer()) {
+		if (player.options.cameraPan) {
+			const context = GetPlayerId(player.getPlayer()) + 600;
+			const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+			BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNTelescope.blp', 0, false);
+		}
+	}
+
+	return button;
+}
+
+export function buildLargeCityIndicatorButton(player: ActivePlayer): framehandle {
+	const preferenceFile = 'risk/largeCity.pld';
+	const getTooltip = (enabled: boolean): string =>
+		`Large City Indicators ${HexColors.TANGERINE}(F2)|r\nMakes minimap city indicators larger.\nCurrent preference: ${
+			enabled ? `${HexColors.GREEN}On` : `${HexColors.RED}Off`
+		}`;
+
+	// Initialize from saved preference for local player. Missing or legacy values stay off by default.
+	if (player.getPlayer() === GetLocalPlayer()) {
+		player.options.largeCityIndicators = normalizeLargeCityIndicators(File.read(preferenceFile));
+	}
+
+	const button = createGuardButton({
+		player: player,
+		createContext: GetPlayerId(player.getPlayer()) + 700,
+		key: OSKEY_F2,
+		textures: {
+			primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTownHall.blp',
+			secondary: 'ReplaceableTextures\\CommandButtons\\BTNTownHall.blp',
+		},
+		xOffset: 0.161,
+		initialTooltipText: getTooltip(player.options.largeCityIndicators),
+		action: (context: number, textures: { primary: string; secondary: string }) => {
+			player.options.largeCityIndicators = !player.options.largeCityIndicators;
+
+			if (player.getPlayer() === GetLocalPlayer()) {
+				File.write(preferenceFile, `${player.options.largeCityIndicators}`);
+
+				const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+				const texture = player.options.largeCityIndicators ? textures.secondary : textures.primary;
+
+				BlzFrameSetTexture(buttonBackdrop, texture, 0, false);
+
+				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
+				BlzFrameSetText(buttonTooltip, getTooltip(player.options.largeCityIndicators));
+
+				const { MinimapIconManager } =
+					require('src/app/managers/minimap-icon-manager') as typeof import('../managers/minimap-icon-manager');
+				MinimapIconManager.getInstance().refreshCitySizes();
+			}
+		},
+	});
+
+	if (player.getPlayer() === GetLocalPlayer()) {
+		if (player.options.largeCityIndicators) {
+			const context = GetPlayerId(player.getPlayer()) + 700;
+			const buttonBackdrop = BlzGetFrameByName('GuardButtonBackdrop', context);
+			BlzFrameSetTexture(buttonBackdrop, 'ReplaceableTextures\\CommandButtons\\BTNTownHall.blp', 0, false);
+		}
+	}
+
+	return button;
 }

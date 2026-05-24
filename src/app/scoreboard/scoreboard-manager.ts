@@ -1,22 +1,32 @@
 import { GlobalGameData } from '../game/state/global-game-state';
-import { OvertimeManager } from '../managers/overtime-manager';
+import { isOvertimeActive, isOvertimeEnabled, getTurnsUntilOvertimeIsActivated } from '../managers/overtime-logic';
 import { VictoryManager } from '../managers/victory-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
 import { ParticipantEntityManager } from '../utils/participant-entity';
-import { ObserverBoard } from './observer-board';
-import { Scoreboard } from './scoreboard';
-import { StandardBoard } from './standard-board';
-import { TeamBoard } from './team-board';
+import { SettingsContext } from '../settings/settings-context';
+import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
+import { ScoreboardDataModel } from './scoreboard-data-model';
+import { ScoreboardRenderer } from './scoreboard-renderer';
+import { PlayerRenderer } from './player-renderer';
+import { TeamRenderer } from './team-renderer';
+import { ObserverRenderer } from './observer-renderer';
+import { SessionRenderer } from './session-renderer';
 
-export type ScoreboardTypes = 'standard' | 'obs';
+export type ScoreboardViewType = 'standard' | 'obs';
 
 export class ScoreboardManager {
 	private static instance: ScoreboardManager;
-	private scoreboards: Record<ScoreboardTypes, Scoreboard>;
+	private dataModel: ScoreboardDataModel;
+	private renderers: Record<ScoreboardViewType, ScoreboardRenderer | undefined>;
+	private sessionRenderer: SessionRenderer | undefined = undefined;
+	private activePlayers: ActivePlayer[] = [];
+	private observers: player[] = [];
+	private lastObservedPlayer: player | undefined = undefined;
 
 	private constructor() {
-		this.scoreboards = {
+		this.dataModel = new ScoreboardDataModel();
+		this.renderers = {
 			standard: undefined,
 			obs: undefined,
 		};
@@ -26,84 +36,201 @@ export class ScoreboardManager {
 		return this.instance || (this.instance = new this());
 	}
 
-	public ffaSetup(players: ActivePlayer[]) {
-		this.scoreboards.standard = new StandardBoard(players);
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 */
+	public static resetInstance(): void {
+		this.instance = undefined as unknown as ScoreboardManager;
 	}
 
-	public teamSetup() {
-		this.scoreboards.standard = new TeamBoard();
+	public ffaSetup(players: ActivePlayer[]) {
+		this.dataModel.refresh(players, true);
+
+		// Reuse existing renderer inside the same game mode if structurally compatible
+		if (
+			this.renderers.standard &&
+			this.renderers.standard instanceof PlayerRenderer &&
+			(this.renderers.standard as any).size === players.length + 3
+		) {
+			this.renderers.standard.renderFull(this.dataModel);
+			this.renderers.standard.setVisibility(true);
+			return;
+		}
+
+		const renderer = new PlayerRenderer(players.length);
+		renderer.renderFull(this.dataModel);
+		this.renderers.standard = renderer;
+	}
+
+	public teamSetup(players: ActivePlayer[]) {
+		this.dataModel.refresh(players, false);
+
+		if (
+			this.renderers.standard &&
+			this.renderers.standard instanceof TeamRenderer &&
+			(this.renderers.standard as any).size === this.dataModel.teams.length + 3
+		) {
+			this.renderers.standard.renderFull(this.dataModel);
+			this.renderers.standard.setVisibility(true);
+			return;
+		}
+
+		const renderer = new TeamRenderer(this.dataModel.teams);
+		renderer.renderFull(this.dataModel);
+		this.renderers.standard = renderer;
 	}
 
 	public obsSetup(players: ActivePlayer[], observers: player[]) {
+		this.observers = observers;
+
 		if (observers.length >= 1) {
-			this.scoreboards.obs = new ObserverBoard(players);
-			this.scoreboards.obs.setVisibility(false);
-			this.scoreboards.standard.setVisibility(true);
+			this.dataModel.refresh(players, this.isFFA(players));
+
+			if (
+				!(this.renderers.obs && this.renderers.obs instanceof ObserverRenderer && (this.renderers.obs as any).size === players.length + 3)
+			) {
+				this.renderers.obs = new ObserverRenderer(players.length);
+			}
+			const obsRenderer = this.renderers.obs;
+			obsRenderer.renderFull(this.dataModel);
+
+			obsRenderer.setVisibility(false);
+			if (this.renderers.standard) this.renderers.standard.setVisibility(true);
 
 			observers.forEach((handle) => {
-				if (GetLocalPlayer() == handle) {
-					if (this.scoreboards.standard) this.scoreboards.standard.setVisibility(false);
-					if (this.scoreboards.obs) this.scoreboards.obs.setVisibility(true);
+				if (GetLocalPlayer() === handle) {
+					if (this.renderers.standard) this.renderers.standard.setVisibility(false);
+					obsRenderer.setVisibility(true);
 				}
 			});
 		}
 	}
 
 	public toggleVisibility(bool: boolean) {
-		this.iterateBoards((board) => board.setVisibility(bool));
+		if (!bool) {
+			this.iterateRenderers((r) => r.setVisibility(false));
+			return;
+		}
+
+		// When showing, respect observer/player board assignment
+		if (this.renderers.obs) {
+			if (this.renderers.standard) this.renderers.standard.setVisibility(true);
+
+			this.observers.forEach((handle) => {
+				if (GetLocalPlayer() === handle) {
+					if (this.renderers.standard) this.renderers.standard.setVisibility(false);
+					this.renderers.obs!.setVisibility(true);
+				}
+			});
+		} else {
+			this.iterateRenderers((r) => r.setVisibility(true));
+		}
 	}
 
-	public updateFull() {
-		this.iterateBoards((board) => board.updateFull());
+	public updateFull(activePlayers: ActivePlayer[], isFFA: boolean, observers?: player[]) {
+		this.checkReplayPovBoardSwap();
+		this.dataModel.refresh(activePlayers, isFFA);
+		this.iterateRenderers((r) => r.renderFull(this.dataModel));
 	}
 
-	public updatePartial() {
-		this.iterateBoards((board) => board.updatePartial());
+	public updatePartial(activePlayers: ActivePlayer[], isFFA: boolean, observers?: player[]) {
+		this.checkReplayPovBoardSwap();
+		this.dataModel.refreshValues(activePlayers, isFFA);
+		this.iterateRenderers((r) => r.renderPartial(this.dataModel));
+	}
+
+	/**
+	 * Lightweight POV check for use outside the game loop (e.g. countdown).
+	 * Only swaps board visibility — does not refresh data or re-render.
+	 */
+	public updateReplayPov() {
+		this.checkReplayPovBoardSwap();
 	}
 
 	public setTitle(str: string) {
-		this.iterateBoards((board) => board.setTitle(str));
+		this.iterateRenderers((r) => r.setTitle(str));
 	}
 
 	public setAlert(player: player, alert: string) {
-		this.iterateBoards((board) => board.setAlert(player, alert));
+		this.iterateRenderers((r) => r.renderAlert(player, alert));
 	}
 
 	public destroyBoards() {
-		this.iterateBoards((board) => board.destroy());
-		this.scoreboards = { standard: undefined, obs: undefined };
+		this.iterateRenderers((r) => {
+			r.setVisibility(false);
+			r.destroy();
+		});
+		this.renderers = { standard: undefined, obs: undefined };
 	}
 
-	private iterateBoards(callback: (board: Scoreboard) => void) {
-		Object.values(this.scoreboards).forEach((board) => {
-			if (board) {
-				callback(board);
+	public sessionSetup(players: ActivePlayer[]): void {
+		if (!this.sessionRenderer) {
+			this.sessionRenderer = new SessionRenderer(players);
+		}
+	}
+
+	public showSessionBoard(): void {
+		if (this.sessionRenderer) {
+			this.sessionRenderer.setVisibility(true);
+		}
+	}
+
+	public hideSessionBoard(): void {
+		if (this.sessionRenderer) {
+			this.sessionRenderer.setVisibility(false);
+		}
+	}
+
+	public getSessionBoard(): SessionRenderer | undefined {
+		return this.sessionRenderer;
+	}
+
+	private iterateRenderers(callback: (renderer: ScoreboardRenderer) => void) {
+		Object.values(this.renderers).forEach((renderer) => {
+			if (renderer) {
+				callback(renderer);
 			}
 		});
 	}
 
-	public updateScoreboardTitle() {
-		// If current leader is eliminated, find the new leader (non-eliminated player with most cities)
-		if (GlobalGameData.leader instanceof ActivePlayer && GlobalGameData.leader.status.isEliminated()) {
-			const allParticipants = VictoryManager.getInstance().getOwnershipByThresholdDescending(0);
-			const validLeader = allParticipants.find((participant) => {
-				if (participant instanceof ActivePlayer) {
-					return !participant.status.isEliminated();
-				}
-				return true; // Teams are already filtered by getActiveTeams()
-			});
-			GlobalGameData.leader = validLeader;
+	private isFFA(players: ActivePlayer[]): boolean {
+		return SettingsContext.getInstance().isFFA() || players.length <= 2;
+	}
+
+	private checkReplayPovBoardSwap(): void {
+		if (!isReplay() || !this.renderers.obs) return;
+
+		const observed = getReplayObservedPlayer();
+		if (observed === this.lastObservedPlayer) return;
+
+		this.lastObservedPlayer = observed;
+
+		// Refresh effectiveLocal so renderers use the new POV
+		this.dataModel.refreshEffectiveLocal();
+
+		const isObserver = this.observers.some((obs) => obs === observed);
+		if (isObserver) {
+			if (this.renderers.standard) this.renderers.standard.setVisibility(false);
+			this.renderers.obs.setVisibility(true);
+		} else {
+			this.renderers.obs.setVisibility(false);
+			if (this.renderers.standard) this.renderers.standard.setVisibility(true);
 		}
+	}
+
+	public updateScoreboardTitle() {
+		VictoryManager.getInstance().updateLeader();
 
 		if (GlobalGameData.leader) {
-			const requiredCities = VictoryManager.getCityCountWin();
+			const requiredCities = VictoryManager.getInstance().getCityCountWin();
 			const leaderDisplayName = ParticipantEntityManager.getDisplayName(GlobalGameData.leader);
 			const leaderCityCount = ParticipantEntityManager.getCityCount(GlobalGameData.leader);
 			const isLeaderCityCountHighlighted = leaderCityCount >= requiredCities;
 
-			const overtimeSuffix = OvertimeManager.isOvertimeActive()
+			const overtimeSetting = SettingsContext.getInstance().getOvertimeSetting();
+			const overtimeSuffix = isOvertimeActive(GlobalGameData.turnCount, overtimeSetting)
 				? ` ${HexColors.RED}(Overtime)|r`
-				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
+				: `${isOvertimeEnabled(overtimeSetting) ? ` (Overtime in: ${getTurnsUntilOvertimeIsActivated(GlobalGameData.turnCount, overtimeSetting)})` : ''}`;
 
 			if (isLeaderCityCountHighlighted) {
 				this.setTitle(`${leaderDisplayName} ${HexColors.RED}${leaderCityCount}|r/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`);
@@ -111,9 +238,10 @@ export class ScoreboardManager {
 				this.setTitle(`${leaderDisplayName} ${leaderCityCount}/${HexColors.RED}${requiredCities}|r${overtimeSuffix}`);
 			}
 		} else {
-			const overtimeSuffix = OvertimeManager.isOvertimeActive()
+			const overtimeSetting = SettingsContext.getInstance().getOvertimeSetting();
+			const overtimeSuffix = isOvertimeActive(GlobalGameData.turnCount, overtimeSetting)
 				? ` ${HexColors.RED}(Overtime)|r`
-				: `${OvertimeManager.isOvertimeEnabled() ? ` (Overtime in: ${OvertimeManager.getTurnsUntilOvertimeIsActivated()})` : ''}`;
+				: `${isOvertimeEnabled(overtimeSetting) ? ` (Overtime in: ${getTurnsUntilOvertimeIsActivated(GlobalGameData.turnCount, overtimeSetting)})` : ''}`;
 			this.setTitle(`Risk Europe${overtimeSuffix}`);
 		}
 	}

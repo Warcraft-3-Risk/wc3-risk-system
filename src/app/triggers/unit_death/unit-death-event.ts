@@ -6,20 +6,22 @@ import { SPAWNER_UNITS } from '../../spawner/spawner';
 import { UNIT_TYPE } from '../../utils/unit-types';
 import { HandleGuardDeath } from './handle-guard-death';
 import { TeamManager } from 'src/app/teams/team-manager';
-import { GlobalGameData } from 'src/app/game/state/global-game-state';
 import { EVENT_ON_UNIT_KILLED } from 'src/app/utils/events/event-constants';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { ClientManager } from 'src/app/game/services/client-manager';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
+import { SharedSlotManager } from 'src/app/game/services/shared-slot-manager';
+import { GlobalGameData } from 'src/app/game/state/global-game-state';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { updateUnitNameWithKillValue } from '../../utils/unit-name-helper';
+import { CaptureUnitDeathContext } from './unit-death-context';
 
 export function UnitDeathEvent() {
 	const t: trigger = CreateTrigger();
 
 	for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
-		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_DEATH, null);
+		TriggerRegisterPlayerUnitEvent(t, Player(i), EVENT_PLAYER_UNIT_DEATH, undefined);
 	}
 
 	TriggerAddCondition(
@@ -27,24 +29,29 @@ export function UnitDeathEvent() {
 		Condition(() => {
 			const dyingUnit: unit = GetTriggerUnit();
 			const killingUnit: unit = GetKillingUnit();
-			debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`);
+			const deathContext = CaptureUnitDeathContext(dyingUnit, killingUnit);
+			if (DEBUG_PRINTS.master)
+				debugPrint(`Unit Death Event Triggered for ${GetUnitName(dyingUnit)} killed by ${GetUnitName(killingUnit)}`, DC.events);
 
 			// Decrement slot unit count using raw WC3 owner (not resolved real player)
-			const rawDyingUnitOwner = GetOwningPlayer(dyingUnit);
-			debugPrint(`[SlotCount] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`);
-			ClientManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
-
-			// Clean up originalOwnerMap entry for neutralized units
-			ClientManager.getInstance().clearOriginalOwner(dyingUnit);
+			const rawDyingUnitOwner = deathContext.dyingOwner.rawOwner;
+			if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] Unit died on slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.sharedSlots);
+			SharedSlotManager.getInstance().decrementUnitCount(rawDyingUnitOwner);
 
 			// Check if this slot is pending free and now has 0 units
-			if (ClientManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) && ClientManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0) {
-				debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`);
-				ClientManager.getInstance().evaluateAndRedistribute();
+			// Skip redistribution during postMatch — reset will clean up all slot state
+			if (
+				GlobalGameData.matchState !== 'postMatch' &&
+				SharedSlotManager.getInstance().getPendingFreeSlots().has(rawDyingUnitOwner) &&
+				SharedSlotManager.getInstance().getUnitCount(rawDyingUnitOwner) === 0
+			) {
+				if (DEBUG_PRINTS.master)
+					debugPrint(`[Redistribute] Triggered by: unit death on pending free slot ${GetPlayerId(rawDyingUnitOwner)}`, DC.redistribute);
+				SharedSlotManager.getInstance().evaluateAndRedistribute();
 			}
 
-			const dyingUnitOwnerHandle: player = ClientManager.getInstance().getOwnerOfUnit(dyingUnit);
-			const killingUnitOwnerHandle: player = ClientManager.getInstance().getOwnerOfUnit(killingUnit);
+			const dyingUnitOwnerHandle: player = deathContext.dyingOwner.effectiveOwner;
+			const killingUnitOwnerHandle: player = deathContext.killingOwner?.effectiveOwner;
 			const dyingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(dyingUnitOwnerHandle);
 			const killingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(killingUnitOwnerHandle);
 
@@ -64,13 +71,13 @@ export function UnitDeathEvent() {
 						const totalKillValue = UnitKillTracker.getInstance().addKillValue(killingUnit, pointValue);
 						updateUnitNameWithKillValue(killingUnit, totalKillValue);
 					} else {
-						debugPrint(`[KILL TRACKER] Skipping deny - unit killed its own unit`);
+						if (DEBUG_PRINTS.master) debugPrint(`[KILL TRACKER] Skipping deny - unit killed its own unit`, DC.killTracker);
 					}
 				} else if (killingUnit) {
-					debugPrint(`[KILL TRACKER] Skipping name update - killing unit is a building`);
+					if (DEBUG_PRINTS.master) debugPrint(`[KILL TRACKER] Skipping name update - killing unit is a building`, DC.killTracker);
 				}
 			} catch (e) {
-				debugPrint(`[KILL TRACKER ERROR] Exception: ${e}`);
+				if (DEBUG_PRINTS.master) debugPrint(`[KILL TRACKER ERROR] Exception: ${e}`, DC.killTracker);
 			}
 
 			// Remove the dying unit from kill tracking
@@ -98,7 +105,7 @@ export function UnitDeathEvent() {
 				if (dyingUnitOwner) teamManager.getTeamFromPlayer(dyingUnitOwnerHandle).updateDeathCount(GetUnitPointValue(dyingUnit));
 			}
 
-			if (IsUnitType(dyingUnit, UNIT_TYPE.GUARD)) HandleGuardDeath(dyingUnit, killingUnit);
+			if (IsUnitType(dyingUnit, UNIT_TYPE.GUARD)) HandleGuardDeath(deathContext);
 
 			TransportManager.getInstance().onDeath(killingUnit, dyingUnit);
 

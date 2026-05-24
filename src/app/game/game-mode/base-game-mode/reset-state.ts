@@ -6,12 +6,13 @@ import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { FogManager } from 'src/app/managers/fog-manager';
-import { ClientManager } from '../../services/client-manager';
+import { SharedSlotManager } from '../../services/shared-slot-manager';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { GlobalGameData } from '../../state/global-game-state';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
-import { debugPrint } from '../../../utils/debug-print';
+import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
+import { CityToCountry } from 'src/app/country/country-map';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -21,7 +22,6 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 	async runAsync(): Promise<void> {
 		try {
 			print('Resetting match...');
-			await Wait.forSeconds(2);
 
 			StatisticsController.getInstance().setViewVisibility(false);
 
@@ -31,24 +31,29 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			SetTimeOfDayScale(0);
 			SetTimeOfDay(12.0);
 
-			print('Resetting countries...');
-			resetCountries();
-			await Wait.forSeconds(1);
 			print('Removing units...');
-			removeUnits();
+			await removeUnits(50, 0.2);
+
+			print('Resetting countries...');
+			// Lower batch size to reduce micro-stutters from CreateUnit / SetUnitOwner
+			await resetCountries(3, 0.1);
 			await Wait.forSeconds(1);
+
 			print('Resetting kill tracker...');
 			UnitKillTracker.getInstance().reset();
+			print('Resetting minimap icons...');
+			await MinimapIconManager.getInstance().reinitialize(Array.from(CityToCountry.keys()));
+
 			print('Resetting trees...');
-			TreeManager.getInstance().reset();
+			await TreeManager.getInstance().reset();
 			await Wait.forSeconds(1);
 
-			ClientManager.getInstance().reset();
+			SharedSlotManager.getInstance().reset();
 
-			GlobalGameData.matchPlayers.forEach((val) => {
+			for (const val of GlobalGameData.matchPlayers) {
 				val.trackedData.reset();
 				val.trackedData.setKDMaps();
-			});
+			}
 
 			const participants = ParticipantEntityManager.getParticipantEntities();
 			ParticipantEntityManager.executeByParticipantEntities(
@@ -58,15 +63,12 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 					team.reset();
 				}
 			);
-			TeamManager.getInstance()
-				.getTeams()
-				.forEach((team) => {
-					team.reset();
-				});
-
+			for (const team of TeamManager.getInstance().getTeams()) {
+				team.reset();
+			}
 			this.nextState(this.stateData);
 		} catch (e) {
-			debugPrint(e as string);
+			print(`[ResetState] Error during reset: ${e}`);
 		}
 	}
 }

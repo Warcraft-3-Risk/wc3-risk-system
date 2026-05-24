@@ -4,7 +4,7 @@ import { HexColors } from '../utils/hex-colors';
 export type ButtonConfig = {
 	player: ActivePlayer;
 	createContext: number;
-	key: oskeytype;
+	key?: oskeytype;
 	textures: {
 		primary: string;
 		secondary: string;
@@ -26,6 +26,8 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 
 	const buttonIconFrame = BlzCreateFrameByType('BACKDROP', 'GuardButtonBackdrop', button, '', config.createContext);
 
+	BlzFrameSetLevel(button, 10);
+	BlzFrameSetLevel(buttonIconFrame, 11);
 	BlzFrameSetAllPoints(buttonIconFrame, button);
 	BlzFrameSetPoint(button, FRAMEPOINT_TOPLEFT, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), FRAMEPOINT_TOPLEFT, config.xOffset, -0.025);
 	BlzFrameSetSize(button, 0.02, 0.02);
@@ -53,7 +55,7 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 	if (config.initialTooltipText) {
 		BlzFrameSetText(tooltipText, config.initialTooltipText);
 	} else {
-		const str = config.key == OSKEY_F6 ? 'Health' : 'Value';
+		const str = config.key === OSKEY_F6 ? 'Health' : 'Value';
 
 		BlzFrameSetText(
 			tooltipText,
@@ -62,25 +64,30 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 		);
 	}
 
-	const hotkeyTrigger = CreateTrigger();
-
-	BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
-	TriggerAddCondition(
-		hotkeyTrigger,
-		Condition(() => config.action(config.createContext, config.textures, button))
-	);
+	if (config.key !== undefined) {
+		const hotkeyTrigger = CreateTrigger();
+		BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
+		TriggerAddCondition(
+			hotkeyTrigger,
+			Condition(() => config.action(config.createContext, config.textures, button))
+		);
+	}
 
 	const buttonTrig = CreateTrigger();
 
-	BlzTriggerRegisterFrameEvent(hotkeyTrigger, button, FRAMEEVENT_CONTROL_CLICK);
+	BlzTriggerRegisterFrameEvent(buttonTrig, button, FRAMEEVENT_CONTROL_CLICK);
 	TriggerAddCondition(
 		buttonTrig,
-		Condition(() => config.action(config.createContext, config.textures, button))
+		Condition(() => {
+			config.action(config.createContext, config.textures, button);
+			BlzFrameSetEnable(button, false);
+			BlzFrameSetEnable(button, true);
+		})
 	);
 
 	BlzFrameSetVisible(button, false);
 
-	if (GetLocalPlayer() == config.player.getPlayer()) {
+	if (GetLocalPlayer() === config.player.getPlayer()) {
 		BlzFrameSetVisible(button, true);
 	}
 

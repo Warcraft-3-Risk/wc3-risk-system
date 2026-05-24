@@ -1,8 +1,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import War3Map from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/map';
-import { compileMap, getFilesInDirectory, loadJsonFile, loadTerrainConfig, logger, toArrayBuffer, IProjectConfig, toBuffer, updateTsFileWithConfig } from './utils';
-import War3MapW3i from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/w3i/file';
+import { compileMap, getFilesInDirectory, loadTerrainConfig, logger, toArrayBuffer, IProjectConfig, updateTsFileWithConfig } from './utils';
 import War3MapWts from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/wts/file';
 
 function main() {
@@ -43,34 +42,37 @@ function buildTerrain(terrain: string, minifyOverride?: boolean) {
 		config.minifyScript = minify;
 	}
 
-	updateTsFileWithConfig(config);
+	const restoreMapInfo = updateTsFileWithConfig(config);
 
-	// compileMap will sync object editor files from risk_europe to dist/ automatically
-	const result = compileMap(config);
+	try {
+		// compileMap will sync object editor files from risk_europe to dist/ automatically
+		const result = compileMap(config);
 
-	if (!result) {
-		logger.error(`Failed to compile map.`);
-		return;
+		if (!result) {
+			logger.error(`Failed to compile map.`);
+			return;
+		}
+
+		logger.info(`Creating w3x archive...`);
+		const outputFolder = config.outputFolder || './dist';
+		fs.mkdirSync(outputFolder, { recursive: true });
+
+		const w3cModeEnabled = `${config.w3cModeEnabled}` === 'true';
+
+		const distDir = `./dist/${config.mapFolder}`;
+		const ddsDir = path.join(__dirname, '..', distDir, 'war3mapPreview.dds');
+		const mapName = `${config.mapName} ${config.mapVersion}${w3cModeEnabled ? ' w3c' : ''}.w3x`;
+		const formattedMapName = mapName.replaceAll(' ', '_');
+
+		if (fs.existsSync(ddsDir)) {
+			const copyDest = path.join(__dirname, '..', distDir, 'war3mapMap.dds');
+			fs.renameSync(ddsDir, copyDest);
+		}
+
+		createMapFromDir(`${outputFolder}/${formattedMapName}`, distDir, config);
+	} finally {
+		restoreMapInfo();
 	}
-
-	logger.info(`Creating w3x archive...`);
-	if (!fs.existsSync(config.outputFolder)) {
-		fs.mkdirSync(config.outputFolder);
-	}
-
-	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
-
-	const distDir = `./dist/${config.mapFolder}`;
-	const ddsDir = path.join(__dirname, '..', distDir, 'war3mapPreview.dds');
-	const mapName = `${config.mapName} ${config.mapVersion}${w3cModeEnabled ? ' w3c' : ''}.w3x`;
-	const formattedMapName = mapName.replaceAll(' ', '_');
-
-	if (fs.existsSync(ddsDir)) {
-		const copyDest = path.join(__dirname, '..', distDir, 'war3mapMap.dds');
-		fs.renameSync(ddsDir, copyDest);
-	}
-
-	createMapFromDir(`${config.outputFolder}/${formattedMapName}`, distDir, config);
 }
 
 /**

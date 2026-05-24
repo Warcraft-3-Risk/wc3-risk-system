@@ -5,11 +5,17 @@ import {
 	buildGuardValueButton,
 	buildLabelToggleButton,
 	buildRatingStatsButton,
+	buildColorblindModeButton,
+	buildColorContrastModeButton,
+	buildCameraPanModeButton,
+	buildLargeCityIndicatorButton,
+	setOptionButtonsVisibleForPlayer,
 } from '../ui/player-preference-buttons';
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
 import { debugPrint } from '../utils/debug-print';
+import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { NameManager } from '../managers/names/name-manager';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 import { BAN_LIST_ACTIVE, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
@@ -39,7 +45,7 @@ export class PlayerManager {
 
 			if (BAN_LIST_ACTIVE && !W3C_MODE_ENABLED) {
 				banList.forEach((name) => {
-					if (NameManager.getInstance().getBtag(player).toLowerCase() == name) {
+					if (NameManager.getInstance().getBtag(player).toLowerCase() === name) {
 						CustomDefeatBJ(player, 'You are map banned! Appeal: discord.gg/wc3risk');
 						ClearTextMessages();
 					}
@@ -53,14 +59,15 @@ export class PlayerManager {
 				if (RATING_SYSTEM_ENABLED) {
 					humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
 				}
+
 				continue;
 			}
 
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) == PLAYER_SLOT_STATE_LEFT) {
+			if (GetPlayerSlotState(player) === PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) === PLAYER_SLOT_STATE_LEFT) {
 				continue;
 			}
 
-			if (GetPlayerController(player) == MAP_CONTROL_USER || GetPlayerController(player) == MAP_CONTROL_COMPUTER) {
+			if (GetPlayerController(player) === MAP_CONTROL_USER || GetPlayerController(player) === MAP_CONTROL_COMPUTER) {
 				const humanPlayer = new HumanPlayer(player);
 				this._playerFromHandle.set(player, humanPlayer);
 				this._playerControllerHandle.set(player, MAP_CONTROL_USER);
@@ -70,23 +77,24 @@ export class PlayerManager {
 					humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
 				}
 
-				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
-				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
-				const labelButton = buildLabelToggleButton(this._playerFromHandle.get(player));
+				buildGuardHealthButton(this._playerFromHandle.get(player));
+				buildGuardValueButton(this._playerFromHandle.get(player));
+				buildLabelToggleButton(this._playerFromHandle.get(player));
+				buildColorblindModeButton(this._playerFromHandle.get(player));
+				buildColorContrastModeButton(this._playerFromHandle.get(player));
+				buildCameraPanModeButton(this._playerFromHandle.get(player));
+				buildLargeCityIndicatorButton(this._playerFromHandle.get(player));
 				// Only create rating stats button if rating system is enabled
-				const ratingButton = RATING_SYSTEM_ENABLED ? buildRatingStatsButton(this._playerFromHandle.get(player)) : null;
+				if (RATING_SYSTEM_ENABLED) {
+					buildRatingStatsButton(this._playerFromHandle.get(player));
+				}
 				let contents: string = '';
 
-				if (player == GetLocalPlayer()) {
+				if (player === GetLocalPlayer()) {
 					contents = File.read('risk/ui.pld');
 
-					if (contents == 'false') {
-						BlzFrameSetVisible(healthButton, false);
-						BlzFrameSetVisible(valueButton, false);
-						BlzFrameSetVisible(labelButton, false);
-						if (ratingButton) {
-							BlzFrameSetVisible(ratingButton, false);
-						}
+					if (contents === 'false') {
+						setOptionButtonsVisibleForPlayer(player, false);
 					}
 
 					// Note: Rating preference is now stored in the rating file itself
@@ -98,11 +106,19 @@ export class PlayerManager {
 	}
 
 	public static getInstance(): PlayerManager {
-		if (this._instance == null) {
+		if (this._instance === undefined) {
 			this._instance = new PlayerManager();
 		}
 
 		return this._instance;
+	}
+
+	/**
+	 * Reset the singleton instance. For testing purposes only.
+	 * Allows tests to start with a fresh PlayerManager.
+	 */
+	public static resetInstance(): void {
+		this._instance = undefined as unknown as PlayerManager;
 	}
 
 	public getEmptyPlayerSlots(): player[] {
@@ -115,7 +131,7 @@ export class PlayerManager {
 				continue;
 			}
 
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY) {
+			if (GetPlayerSlotState(player) === PLAYER_SLOT_STATE_EMPTY) {
 				players.push(player);
 			}
 		}
@@ -135,7 +151,7 @@ export class PlayerManager {
 			}
 
 			// Only consider players that have left
-			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_LEFT) {
+			if (GetPlayerSlotState(player) !== PLAYER_SLOT_STATE_LEFT) {
 				continue;
 			}
 
@@ -145,16 +161,20 @@ export class PlayerManager {
 				continue;
 			}
 
-			// If the player has no units and no cities, consider them for client allocation
-			debugPrint(
-				`Player ${GetPlayerId(player)} has left. Units: ${activePlayer.trackedData.units.size}, Cities: ${activePlayer.trackedData.cities.cities.length}`
-			);
+			// If the player has no units and no cities, consider them for shared slot allocation
+			if (DEBUG_PRINTS.master)
+				debugPrint(
+					`Player ${GetPlayerId(player)} has left. Units: ${activePlayer.trackedData.units.size}, Cities: ${activePlayer.trackedData.cities.cities.length}`,
+					DC.player
+				);
 
 			if (activePlayer.trackedData.units.size === 0 && activePlayer.trackedData.cities.cities.length === 0) {
-				debugPrint(`Player ${GetPlayerId(player)} added to left players list for potential client allocation.`);
+				if (DEBUG_PRINTS.master)
+					debugPrint(`Player ${GetPlayerId(player)} added to left players list for potential shared slot allocation.`, DC.player);
 				players.push(player);
 			} else {
-				debugPrint(`Player ${GetPlayerId(player)} not added to left players list (has units or cities).`);
+				if (DEBUG_PRINTS.master)
+					debugPrint(`Player ${GetPlayerId(player)} not added to left players list (has units or cities).`, DC.player);
 			}
 		}
 		return players;
@@ -171,11 +191,11 @@ export class PlayerManager {
 				continue;
 			}
 
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) == PLAYER_SLOT_STATE_LEFT) {
+			if (GetPlayerSlotState(player) === PLAYER_SLOT_STATE_EMPTY || GetPlayerSlotState(player) === PLAYER_SLOT_STATE_LEFT) {
 				continue;
 			}
 
-			if (GetPlayerController(player) == MAP_CONTROL_USER) {
+			if (GetPlayerController(player) === MAP_CONTROL_USER) {
 				activePlayers.push(new HumanPlayer(player));
 			}
 		}
@@ -284,6 +304,12 @@ export class PlayerManager {
 
 	public getHost(): ActivePlayer | undefined {
 		for (const [, value] of this._playerFromHandle) {
+			if (value.getPlayer() === Player(0)) {
+				return value;
+			}
+		}
+
+		for (const [, value] of this._observerFromHandle) {
 			if (value.getPlayer() === Player(0)) {
 				return value;
 			}

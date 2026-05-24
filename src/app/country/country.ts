@@ -14,7 +14,6 @@ export class Country implements Resetable {
 	private readonly cities: City[];
 	private readonly spawn: Spawner;
 	private owner: player;
-	private countryLabel: texttag | undefined;
 
 	/**
 	 * Country constructor.
@@ -29,13 +28,10 @@ export class Country implements Resetable {
 	}
 
 	/**
-	 * Resets the country, which involves resetting all its cities and spawn.
+	 * Resets the country, which involves resetting its spawn and owner.
+	 * The cities are no longer reset here to allow for batching yields.
 	 */
 	public reset(): void {
-		this.cities.forEach((city) => {
-			city.reset();
-		});
-
 		this.spawn.reset();
 		this.owner = NEUTRAL_HOSTILE;
 	}
@@ -65,41 +61,20 @@ export class Country implements Resetable {
 	 * @param player - The player object representing the new owner.
 	 */
 	public setOwner(player: player): void {
-		if (player == null) player = NEUTRAL_HOSTILE;
+		if (player === undefined) player = NEUTRAL_HOSTILE;
 
+		const previousOwner = this.owner;
 		this.owner = player;
 		this.spawn.setOwner(player);
-		this.onOwnerChange();
-	}
-
-	public createText(): void {
-		const offsetX: number = GetUnitX(this.spawn.unit) - 100;
-		const offsetY: number = GetUnitY(this.spawn.unit) - 300;
-		const lengthCheck: number = this.name.length * 5.5 < 200 ? this.name.length * 5.5 : 200;
-
-		this.countryLabel = CreateTextTag();
-		SetTextTagText(this.countryLabel, `${HexColors.TANGERINE} ${this.name} +${this.getCities().length} `, 0.028);
-		SetTextTagPos(this.countryLabel, offsetX - lengthCheck, offsetY, 16.0);
-		SetTextTagVisibility(this.countryLabel, true);
-		SetTextTagPermanent(this.countryLabel, true);
-	}
-
-	/**
-	 * Sets the visibility of the country label.
-	 * @param visible - Whether the label should be visible.
-	 */
-	public setLabelVisibility(visible: boolean): void {
-		if (this.countryLabel) {
-			SetTextTagVisibility(this.countryLabel, visible);
-		}
+		this.onOwnerChange(previousOwner);
 	}
 
 	/**
 	 * Called when the owner of the country changes.
 	 * Triggers various game events.
 	 */
-	private onOwnerChange() {
-		if (this.owner == NEUTRAL_HOSTILE) return;
+	private onOwnerChange(previousOwner: player) {
+		if (this.owner === NEUTRAL_HOSTILE) return;
 
 		this.cities.forEach((city) => {
 			const effect = AddSpecialEffect(
@@ -112,5 +87,9 @@ export class Country implements Resetable {
 		});
 
 		LocalMessage(this.owner, `${this.name} ${HexColors.WHITE}has been conquered!|r`, 'Sound\\Interface\\Rescue.flac');
+
+		if (previousOwner !== undefined && previousOwner !== NEUTRAL_HOSTILE) {
+			LocalMessage(previousOwner, `${this.name} ${HexColors.WHITE}has been lost!|r`, 'Sound\\Interface\\QuestFailed.flac');
+		}
 	}
 }

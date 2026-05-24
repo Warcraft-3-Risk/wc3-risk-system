@@ -69,7 +69,7 @@ export class UnrankedStatisticsView implements IStatisticsView {
 	}
 
 	public setVisibilityForPlayer(isVisible: boolean, player: player): void {
-		if (GetLocalPlayer() == player) {
+		if (GetLocalPlayer() === player) {
 			BlzFrameSetVisible(this.backdrop, isVisible);
 		}
 	}
@@ -87,7 +87,7 @@ export class UnrankedStatisticsView implements IStatisticsView {
 	public getMinimizeButtonText(): string {
 		let buttonText: string = '';
 
-		if (GetLocalPlayer() == GetLocalPlayer()) {
+		if (GetLocalPlayer() === GetLocalPlayer()) {
 			buttonText = BlzFrameGetText(this.minimizeButton);
 		}
 
@@ -140,7 +140,7 @@ export class UnrankedStatisticsView implements IStatisticsView {
 	}
 
 	public showStats(player: player): void {
-		if (GetLocalPlayer() == player) {
+		if (GetLocalPlayer() === player) {
 			BlzFrameSetSize(this.backdrop, 1, 0.64);
 			BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26);
 			BlzFrameSetText(this.minimizeButton, 'Minimize');
@@ -154,7 +154,7 @@ export class UnrankedStatisticsView implements IStatisticsView {
 	}
 
 	public hideStats(player: player): void {
-		if (GetLocalPlayer() == player) {
+		if (GetLocalPlayer() === player) {
 			BlzFrameSetSize(this.backdrop, 1, 0.08);
 			BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_CENTER, 0.4, 0.26 + (0.64 - 0.08) / 2);
 			BlzFrameSetText(this.minimizeButton, 'Maximize');
@@ -179,7 +179,7 @@ export class UnrankedStatisticsView implements IStatisticsView {
 		const buttonTrigger: trigger = CreateTrigger();
 		BlzTriggerRegisterFrameEvent(buttonTrigger, button, FRAMEEVENT_CONTROL_CLICK);
 		TriggerAddAction(buttonTrigger, () => {
-			if (GetLocalPlayer() == GetTriggerPlayer()) {
+			if (GetLocalPlayer() === GetTriggerPlayer()) {
 				onClick(true);
 			}
 		});
@@ -215,7 +215,7 @@ export class UnrankedStatisticsView implements IStatisticsView {
 	}
 
 	private updatePaginationButtons(): void {
-		if (GetLocalPlayer() == GetLocalPlayer()) {
+		if (GetLocalPlayer() === GetLocalPlayer()) {
 			this.setButtonEnabled(this.leftButton, this.page.getCurrentPage() > 0);
 			this.setButtonEnabled(this.rightButton, this.page.getCurrentPage() < this.page.getTotalPages() - 1);
 		}
@@ -253,14 +253,14 @@ export class UnrankedStatisticsView implements IStatisticsView {
 		BlzFrameSetPoint(this.pageIndicator, FRAMEPOINT_CENTER, this.footerBackdrop, FRAMEPOINT_CENTER, 0, 0);
 
 		this.leftButton = this.CreateFooterButton(this.footerBackdrop, 'UnrankedLeftFooterButton', 'Previous', -0.1, (executeAction) => {
-			if (GetLocalPlayer() == GetLocalPlayer() && executeAction) {
+			if (GetLocalPlayer() === GetLocalPlayer() && executeAction) {
 				this.page.previousPage();
 				this.updatePaginationButtons();
 			}
 		});
 
 		this.rightButton = this.CreateFooterButton(this.footerBackdrop, 'UnrankedRightFooterButton', 'Next', 0.1, (executeAction) => {
-			if (GetLocalPlayer() == GetLocalPlayer() && executeAction) {
+			if (GetLocalPlayer() === GetLocalPlayer() && executeAction) {
 				this.page.nextPage();
 				this.updatePaginationButtons();
 			}
@@ -304,13 +304,13 @@ export class UnrankedStatisticsView implements IStatisticsView {
 					BlzFrameSetSize(iconFrame, iconSize, iconSize);
 					BlzFrameSetPoint(iconFrame, FRAMEPOINT_TOPLEFT, headerFrame, FRAMEPOINT_TOPLEFT, 0, yGap + iconVerticalOffset);
 
-					// Get icon path - may be null if rating is disabled
+					// Get icon path - may be undefined if rating is disabled
 					const iconPath = columnData.iconFunction(player);
 					if (iconPath) {
 						BlzFrameSetTexture(iconFrame, iconPath, 0, true);
 						BlzFrameSetVisible(iconFrame, true);
 					} else {
-						// Hide icon when iconFunction returns null (e.g., rating disabled)
+						// Hide icon when iconFunction returns undefined (e.g., rating disabled)
 						BlzFrameSetVisible(iconFrame, false);
 					}
 

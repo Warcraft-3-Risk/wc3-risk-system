@@ -1,0 +1,29 @@
+[
+  {
+    "slug": "season-3-launch",
+    "title": "Season 3 — New Ranked System",
+    "date": "2025-03-15",
+    "summary": "The new ranked season brings an improved ELO system, new placement matches, and updated rank tiers. Compete with players worldwide on the Europe, Asia, and World maps.",
+    "content": "## Season 3 is Live!\n\nWe're excited to announce the launch of **Season 3** with a completely revamped ranking system.\n\n### What's New\n\n- **Improved ELO calculations** — more accurate skill representation\n- **New placement pool** — 5 placement matches to calibrate your rank\n- **Updated rank tiers** — Bronze through Grandmaster\n- **Kill bonus pool** — earn extra rating from eliminations\n\n### How to Participate\n\nJoin any ranked game on Battle.net with 16+ players. Your rating will automatically be tracked through the wc3stats integration.\n\nGood luck on the battlefield, commanders!",
+    "image": null,
+    "tags": ["ranked", "season", "update"]
+  },
+  {
+    "slug": "world-map-release",
+    "title": "World Map — Now Available",
+    "date": "2025-02-01",
+    "summary": "The long-awaited World map is here! Featuring 212 countries, 555 cities, and 74 ports across all continents.",
+    "content": "## The World Map Has Arrived\n\nAfter months of development, the **World Map** is now available for all game modes.\n\n### Map Stats\n\n| Stat | Value |\n|------|-------|\n| Countries | 212 |\n| Cities | 555 |\n| Ports | 74 |\n\n### Features\n\n- All continents represented with accurate borders\n- Naval routes connecting major oceans\n- Balanced country distribution for competitive play\n- Support for up to 23 players\n\nDownload the latest version from Battle.net and try it out!",
+    "image": null,
+    "tags": ["map", "release", "world"]
+  },
+  {
+    "slug": "tournament-spring-2025",
+    "title": "Spring 2025 Tournament Announced",
+    "date": "2025-01-20",
+    "summary": "The first official Risk Reforged tournament of 2025 is coming! Sign up now to compete for prizes and glory.",
+    "content": "## Spring 2025 Tournament\n\nWe're hosting the first major tournament of the year!\n\n### Details\n\n- **Format:** Single elimination, Best of 3\n- **Map:** Europe (Standard mode)\n- **Players:** 32 slots available\n- **Prizes:** Community recognition and bragging rights\n\n### Schedule\n\n- Registration: January 20 – February 15\n- Group Stage: February 22 – March 8\n- Playoffs: March 15 – March 22\n- Finals: March 29\n\nStay tuned for more details on our Discord server!",
+    "image": null,
+    "tags": ["tournament", "competitive", "event"]
+  }
+]

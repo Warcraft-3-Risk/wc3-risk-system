@@ -2,11 +2,16 @@ import { GetUnitsInRangeByAllegiance, GetUnitsInRangeOfUnitByAllegiance } from '
 import { SmallSearchRadius } from './search-radii';
 import { City } from 'src/app/city/city';
 import { ReplaceGuard } from './replace-guard';
-import { ClientManager } from 'src/app/game/services/client-manager';
 import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
+import { UnitDeathContext } from './unit-death-context';
 
-export function AlliedKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (!UnitLagManager.IsUnitAlly(killingUnit, city.getOwner())) return null;
+export function AlliedKillHandler(city: City, deathContext: UnitDeathContext): boolean {
+	const dyingUnit = deathContext.dyingUnit;
+	const killingUnit = deathContext.killingUnit;
+	const killingOwner = deathContext.killingOwner?.effectiveOwner;
+
+	if (!killingOwner) return undefined;
+	if (killingOwner !== city.getOwner() && !IsPlayerAlly(killingOwner, city.getOwner())) return undefined;
 
 	const searchGroup: group = CreateGroup();
 
@@ -17,7 +22,8 @@ export function AlliedKillHandler(city: City, dyingUnit: unit, killingUnit: unit
 		SmallSearchRadius,
 		(unit, player) => UnitLagManager.IsUnitAlly(unit, player),
 		dyingUnit,
-		killingUnit
+		killingUnit,
+		killingOwner
 	);
 
 	//Could not find valid units within large radius of guard, so we search in small radius by killer
@@ -27,14 +33,15 @@ export function AlliedKillHandler(city: City, dyingUnit: unit, killingUnit: unit
 			city,
 			SmallSearchRadius,
 			(unit, player) => UnitLagManager.IsUnitAlly(unit, player),
-			killingUnit
+			killingUnit,
+			killingOwner
 		);
 	}
 
 	//Found valid guard units, set unit as guard
 	if (BlzGroupGetSize(searchGroup) >= 1) {
 		ReplaceGuard(city, searchGroup);
-		city.setOwner(ClientManager.getInstance().getOwnerOfUnit(killingUnit));
+		city.setOwner(killingOwner);
 		DestroyGroup(searchGroup);
 		return true;
 	}

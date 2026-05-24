@@ -10,7 +10,7 @@ export class ChatManager {
 	 * @returns The singleton instance.
 	 */
 	public static getInstance() {
-		if (this._instance == null) {
+		if (this._instance === undefined) {
 			this._instance = new ChatManager();
 		}
 		return this._instance;

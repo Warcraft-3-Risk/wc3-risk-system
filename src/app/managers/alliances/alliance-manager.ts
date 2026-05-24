@@ -38,7 +38,7 @@ export class AllianceManager {
 	}
 
 	public static getInstance(): AllianceManager {
-		if (this._instance == null) {
+		if (this._instance === undefined) {
 			this._instance = new AllianceManager();
 		}
 
@@ -52,7 +52,7 @@ export class AllianceManager {
 	 * @returns true if the players are allied to each other or the same player, false otherwise.
 	 */
 	public isCoAllied(playerA: player, playerB: player): boolean {
-		if (playerA == playerB) return true;
+		if (playerA === playerB) return true;
 
 		if (this.isAllied(playerA, playerB)) {
 			if (this.isAllied(playerB, playerA)) {
@@ -79,7 +79,7 @@ export class AllianceManager {
 	public clearAlliances(): void {
 		this._alliances.forEach((val: Alliance, key: number | player) => {
 			val.disband();
-			val = null;
+			val = undefined;
 
 			if (typeof key !== 'number') {
 				SetPlayerTeam(key, GetPlayerId(key));
@@ -105,9 +105,9 @@ export class AllianceManager {
 
 			if (IsPlayerObserver(p)) continue;
 
-			if (GetPlayerController(p) == MAP_CONTROL_USER) {
+			if (GetPlayerController(p) === MAP_CONTROL_USER) {
 				players.push(p);
-			} else if (GetPlayerController(p) == MAP_CONTROL_COMPUTER) {
+			} else if (GetPlayerController(p) === MAP_CONTROL_COMPUTER) {
 				extraSlots.push(p);
 			}
 		}
@@ -161,7 +161,7 @@ export class AllianceManager {
 	 * @returns true if they are playing and not an observer
 	 */
 	private isValidPlayer(player: player): boolean {
-		if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_PLAYING) return false; // Only consider active slots (human/computers)
+		if (GetPlayerSlotState(player) !== PLAYER_SLOT_STATE_PLAYING) return false; // Only consider active slots (human/computers)
 		if (IsPlayerObserver(player)) return false; // Do not consider obs
 		return true;
 	}
