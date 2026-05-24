@@ -879,4 +879,13 @@ export function SetCountriesEurope() {
 			{ name: 'Cherbourg', slot: 'N', quality: 'D', barrack: { typeId: UNIT_ID.PORT, x: -5440.0, y: -1730.0 }, cityType: 'port' },
 		],
 	});
+	CountrySettings.push({
+		name: 'Faroe Islands',
+		spawnerData: {
+			unitData: { x: -4800.0, y: 7882.0 },
+		},
+		cities: [
+			{ name: 'Thorshavn', slot: 'Capital', quality: 'B', barrack: { typeId: UNIT_ID.PORT, x: -4513.0, y: 7410.0 }, cityType: 'port' },
+		],
+	});
 }
