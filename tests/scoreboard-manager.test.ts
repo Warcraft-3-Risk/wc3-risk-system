@@ -132,6 +132,8 @@ describe('ScoreboardManager decoupling', () => {
 		});
 		(globalThis as any).BlzCreateFrameByType = vi.fn(() => ({}));
 		(globalThis as any).BlzFrameSetTextAlignment = vi.fn();
+		(globalThis as any).BlzFrameSetTexture = vi.fn();
+		(globalThis as any).BlzFrameSetLevel = vi.fn();
 		(globalThis as any).CreateTimer = vi.fn(() => ({}));
 		(globalThis as any).TimerStart = vi.fn();
 		(globalThis as any).ORIGIN_FRAME_GAME_UI = 'game-ui';

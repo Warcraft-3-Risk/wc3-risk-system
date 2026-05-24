@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FrameScoreboard } from 'src/app/scoreboard/frame-scoreboard';
 import { PlayerRow, ScoreboardDataModel } from 'src/app/scoreboard/scoreboard-data-model';
 import { HexColors } from 'src/app/utils/hex-colors';
+import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
@@ -15,6 +16,7 @@ vi.mock('src/app/managers/names/name-manager', () => ({
 
 interface FakeFrame {
 	name: string;
+	parent: FakeFrame | undefined;
 	text: string;
 	visible: boolean;
 	children: FakeFrame[];
@@ -23,13 +25,17 @@ interface FakeFrame {
 	width: number;
 	height: number;
 	horizontalAlignment: unknown;
+	texture: string;
+	level: number;
+	blend: boolean;
 }
 
 const framesByName = new Map<string, FakeFrame>();
 
-function createFrame(name: string): FakeFrame {
+function createFrame(name: string, parent?: FakeFrame): FakeFrame {
 	const frame = {
 		name,
+		parent,
 		text: '',
 		visible: true,
 		children: [],
@@ -38,7 +44,11 @@ function createFrame(name: string): FakeFrame {
 		width: 0,
 		height: 0,
 		horizontalAlignment: undefined,
+		texture: '',
+		level: 0,
+		blend: false,
 	};
+	parent?.children.push(frame);
 	framesByName.set(name, frame);
 	return frame;
 }
@@ -56,8 +66,8 @@ function installFrameRuntime(): void {
 	(globalThis as any).TEXT_JUSTIFY_CENTER = 'center';
 
 	(globalThis as any).BlzGetOriginFrame = vi.fn(() => createFrame('GameUI'));
-	(globalThis as any).BlzCreateFrame = vi.fn((name: string) => createFrame(name));
-	(globalThis as any).BlzCreateFrameByType = vi.fn((_type: string, name: string) => createFrame(name));
+	(globalThis as any).BlzCreateFrame = vi.fn((name: string, parent?: FakeFrame) => createFrame(name, parent));
+	(globalThis as any).BlzCreateFrameByType = vi.fn((_type: string, name: string, parent?: FakeFrame) => createFrame(name, parent));
 	(globalThis as any).BlzFrameSetSize = vi.fn((frame: FakeFrame, width: number, height: number) => {
 		frame.width = width;
 		frame.height = height;
@@ -78,6 +88,13 @@ function installFrameRuntime(): void {
 		frame.horizontalAlignment = horizontal;
 	});
 	(globalThis as any).BlzFrameSetScale = vi.fn();
+	(globalThis as any).BlzFrameSetLevel = vi.fn((frame: FakeFrame, level: number) => {
+		frame.level = level;
+	});
+	(globalThis as any).BlzFrameSetTexture = vi.fn((frame: FakeFrame, texture: string, _flag: number, blend: boolean) => {
+		frame.texture = texture;
+		frame.blend = blend;
+	});
 	(globalThis as any).BlzFrameSetText = vi.fn((frame: FakeFrame, text: string) => {
 		frame.text = text;
 	});
@@ -91,12 +108,10 @@ function installFrameRuntime(): void {
 	(globalThis as any).CreateTimer = vi.fn(() => ({}));
 	(globalThis as any).TimerStart = vi.fn();
 	(globalThis as any).PanCameraToTimed = vi.fn();
-	(globalThis as any).BlzGetLocalClientWidth = vi.fn(() => 1920);
-	(globalThis as any).BlzGetLocalClientHeight = vi.fn(() => 1080);
 }
 
-function makeActiveRow(): PlayerRow {
-	return {
+function makeActiveRow(overrides: Partial<PlayerRow> = {}): PlayerRow {
+	const row = {
 		playerId: 0,
 		randomSeed: 0,
 		player: {
@@ -113,7 +128,7 @@ function makeActiveRow(): PlayerRow {
 		cities: 8,
 		kills: 3,
 		deaths: 1,
-		status: 'Alive',
+		status: PLAYER_STATUS.ALIVE,
 		statusDuration: 0,
 		isEliminated: false,
 		isNomad: false,
@@ -130,6 +145,8 @@ function makeActiveRow(): PlayerRow {
 		originalColorCode: HexColors.WHITE,
 		cityCountHighlighted: false,
 	} as unknown as PlayerRow;
+
+	return { ...row, ...overrides };
 }
 
 describe('FrameScoreboard', () => {
@@ -162,10 +179,38 @@ describe('FrameScoreboard', () => {
 		}
 	});
 
-	it('anchors the scoreboard against the widescreen right edge', () => {
+	it('keeps the backdrop inside the unclipped game UI frame', () => {
 		new FrameScoreboard(1);
 
-		expect(framesByName.get('BackdropTemplate')?.x).toBeCloseTo(0.9298, 4);
+		expect(framesByName.get('BackdropTemplate')?.x).toBeCloseTo(0.8, 4);
 		expect(framesByName.get('BackdropTemplate')?.y).toBeCloseTo(0.56, 4);
+	});
+
+	it('renders status icons instead of status text', () => {
+		const scoreboard = new FrameScoreboard(5);
+		const data = {
+			players: [
+				makeActiveRow(),
+				makeActiveRow({ isInCombat: true }),
+				makeActiveRow({ status: PLAYER_STATUS.NOMAD, isNomad: true }),
+				makeActiveRow({ status: PLAYER_STATUS.DEAD, isEliminated: true, isAlive: false }),
+				makeActiveRow({ status: PLAYER_STATUS.LEFT, isEliminated: true, isAlive: false }),
+			],
+		} as ScoreboardDataModel;
+
+		scoreboard.renderFull(data);
+
+		expect(framesByName.get('FSStatusIcon0')?.texture).toBe('ReplaceableTextures\\CommandButtons\\BTNStop.blp');
+		expect(framesByName.get('FSStatusIcon1')?.texture).toBe('ReplaceableTextures\\CommandButtons\\BTNAttack.blp');
+		expect(framesByName.get('FSStatusIcon2')?.texture).toBe('ReplaceableTextures\\CommandButtons\\BTNShade.blp');
+		expect(framesByName.get('FSStatusIcon3')?.texture).toBe('ReplaceableTextures\\CommandButtons\\BTNAnimateDead.blp');
+		expect(framesByName.get('FSStatusIcon4')?.texture).toBe('ReplaceableTextures\\CommandButtonsDisabled\\DISBTNAnimateDead.blp');
+
+		for (let row = 0; row < 5; row++) {
+			expect(framesByName.get(`FSStatusIcon${row}`)?.parent).toBe(framesByName.get(`FSCell${row}_7`));
+			expect(framesByName.get(`FSStatusIcon${row}`)?.level).toBeGreaterThan(0);
+			expect(framesByName.get(`FSStatusIcon${row}`)?.blend).toBe(true);
+			expect(framesByName.get(`FSCell${row}_7`)?.text).toBe('');
+		}
 	});
 });

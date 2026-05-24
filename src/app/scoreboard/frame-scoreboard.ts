@@ -2,6 +2,7 @@ import { HexColors } from '../utils/hex-colors';
 import { NameManager } from '../managers/names/name-manager';
 import type { ScoreboardDataModel, PlayerRow } from './scoreboard-data-model';
 import { getFrameScoreboardCameraPosition } from './frame-scoreboard-camera';
+import { PLAYER_STATUS } from '../player/status/status-enum';
 
 type FrameScoreboardColumnAlignment = 'left' | 'right';
 
@@ -45,14 +46,18 @@ export class FrameScoreboard {
 	private static readonly ALERT_HEIGHT = 0.014;
 	private static readonly TOP_PADDING = 0.005;
 	private static readonly SIDE_PADDING = 0.008;
-	private static readonly SCREEN_CENTER_X = 0.4;
-	private static readonly SCREEN_HEIGHT = 0.6;
-	private static readonly LEGACY_RIGHT_EDGE_X = 0.8;
-	private static readonly RIGHT_EDGE_INSET = 0.0035;
+	private static readonly TOP_RIGHT_X = 0.8;
 	private static readonly TOP_EDGE_Y = 0.56;
+	private static readonly STATUS_ICON_SIZE = 0.0105;
 	private static readonly CELL_SCALE = 0.82;
 	private static readonly HEADER_SCALE = 0.82;
 	private static readonly TITLE_SCALE = 0.82;
+
+	private static readonly STATUS_TEXTURE_ALIVE = 'ReplaceableTextures\\CommandButtons\\BTNStop.blp';
+	private static readonly STATUS_TEXTURE_COMBAT = 'ReplaceableTextures\\CommandButtons\\BTNAttack.blp';
+	private static readonly STATUS_TEXTURE_NOMAD = 'ReplaceableTextures\\CommandButtons\\BTNShade.blp';
+	private static readonly STATUS_TEXTURE_DEAD = 'ReplaceableTextures\\CommandButtons\\BTNAnimateDead.blp';
+	private static readonly STATUS_TEXTURE_LEFT = 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNAnimateDead.blp';
 
 	private static readonly COLUMNS: FrameScoreboardColumn[] = [
 		{ header: `${HexColors.TANGERINE}Player|r`, width: 0.06, gap: 0, alignment: 'left' },
@@ -70,6 +75,7 @@ export class FrameScoreboard {
 	private titleText: framehandle;
 	private headerCells: framehandle[] = [];
 	private cells: framehandle[][] = []; // [row][col]
+	private statusIcons: framehandle[] = [];
 	private alertText: framehandle;
 	private hoverButtons: framehandle[] = [];
 	private rowPlayerHandles: (player | undefined)[] = [];
@@ -83,6 +89,8 @@ export class FrameScoreboard {
 			typeof BlzCreateFrame === 'function' &&
 			typeof BlzCreateFrameByType === 'function' &&
 			typeof BlzFrameSetTextAlignment === 'function' &&
+			typeof BlzFrameSetTexture === 'function' &&
+			typeof BlzFrameSetLevel === 'function' &&
 			typeof CreateTimer === 'function' &&
 			typeof TimerStart === 'function' &&
 			typeof ORIGIN_FRAME_GAME_UI !== 'undefined' &&
@@ -108,7 +116,7 @@ export class FrameScoreboard {
 		// Create backdrop using FDF template with proper 9-slice bordered background
 		this.backdrop = BlzCreateFrame('BackdropTemplate', gameUI, 0, ctx);
 		BlzFrameSetSize(this.backdrop, FrameScoreboard.BACKDROP_WIDTH, contentHeight);
-		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_TOPRIGHT, FrameScoreboard.getRightEdgeX(), FrameScoreboard.TOP_EDGE_Y);
+		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_TOPRIGHT, FrameScoreboard.TOP_RIGHT_X, FrameScoreboard.TOP_EDGE_Y);
 		BlzFrameSetAlpha(this.backdrop, 180);
 
 		// Transparent container for text so backdrop alpha doesn't affect readability
@@ -171,11 +179,14 @@ export class FrameScoreboard {
 				cellX += column.width;
 			}
 
+			this.statusIcons[row] = this.createStatusIcon(row, ctx);
+
 			// Hide rows beyond playerCount
 			if (row >= this.playerCount) {
 				for (let col = 0; col < FrameScoreboard.COLUMNS.length; col++) {
 					BlzFrameSetVisible(this.cells[row][col], false);
 				}
+				BlzFrameSetVisible(this.statusIcons[row], false);
 			}
 		}
 
@@ -308,11 +319,7 @@ export class FrameScoreboard {
 		this.setCellText(row, FrameScoreboard.COL_DEATHS, `${combatColor}${p.deaths}`);
 
 		// Status
-		if (p.isNomad) {
-			this.setCellText(row, FrameScoreboard.COL_STATUS, `${HexColors.ORANGE}${p.statusDuration}`);
-		} else {
-			this.setCellText(row, FrameScoreboard.COL_STATUS, `${p.status}`);
-		}
+		this.setStatusIcon(row, this.getActiveStatusTexture(p));
 	}
 
 	private renderEliminatedRow(p: PlayerRow, row: number): void {
@@ -337,11 +344,7 @@ export class FrameScoreboard {
 		this.setCellText(row, FrameScoreboard.COL_DEATHS, `${grey}${p.deaths}`);
 
 		// Status
-		if (p.isSTFU) {
-			this.setCellText(row, FrameScoreboard.COL_STATUS, `${grey}${p.status} ${p.statusDuration}`);
-		} else {
-			this.setCellText(row, FrameScoreboard.COL_STATUS, `${p.status}`);
-		}
+		this.setStatusIcon(row, this.getEliminatedStatusTexture(p));
 	}
 
 	private formatEliminatedIncome(p: PlayerRow): string {
@@ -377,19 +380,44 @@ export class FrameScoreboard {
 		return TEXT_JUSTIFY_RIGHT;
 	}
 
-	private static getRightEdgeX(): number {
-		if (typeof BlzGetLocalClientWidth !== 'function' || typeof BlzGetLocalClientHeight !== 'function') {
-			return FrameScoreboard.LEGACY_RIGHT_EDGE_X - FrameScoreboard.RIGHT_EDGE_INSET;
+	private getActiveStatusTexture(row: PlayerRow): string {
+		if (row.isNomad) {
+			return FrameScoreboard.STATUS_TEXTURE_NOMAD;
 		}
 
-		const height = BlzGetLocalClientHeight();
-		if (height <= 0) {
-			return FrameScoreboard.LEGACY_RIGHT_EDGE_X - FrameScoreboard.RIGHT_EDGE_INSET;
+		if (row.isInCombat) {
+			return FrameScoreboard.STATUS_TEXTURE_COMBAT;
 		}
 
-		const aspectRatio = BlzGetLocalClientWidth() / height;
-		const screenRightEdge = FrameScoreboard.SCREEN_CENTER_X + (FrameScoreboard.SCREEN_HEIGHT * aspectRatio) / 2;
-		return Math.max(FrameScoreboard.LEGACY_RIGHT_EDGE_X, screenRightEdge) - FrameScoreboard.RIGHT_EDGE_INSET;
+		return FrameScoreboard.STATUS_TEXTURE_ALIVE;
+	}
+
+	private getEliminatedStatusTexture(row: PlayerRow): string {
+		if (row.status === PLAYER_STATUS.LEFT) {
+			return FrameScoreboard.STATUS_TEXTURE_LEFT;
+		}
+
+		return FrameScoreboard.STATUS_TEXTURE_DEAD;
+	}
+
+	private setStatusIcon(row: number, texture: string): void {
+		this.setCellText(row, FrameScoreboard.COL_STATUS, '');
+		BlzFrameSetTexture(this.statusIcons[row], texture, 0, true);
+		BlzFrameSetVisible(this.statusIcons[row], true);
+	}
+
+	private createStatusIcon(row: number, ctx: number): framehandle {
+		const statusCell = this.cells[row][FrameScoreboard.COL_STATUS];
+		const statusColumn = FrameScoreboard.COLUMNS[FrameScoreboard.COL_STATUS];
+		const iconOffsetX = (statusColumn.width - FrameScoreboard.STATUS_ICON_SIZE) / 2;
+		const statusIcon = BlzCreateFrameByType('BACKDROP', `FSStatusIcon${row}`, statusCell, '', ctx + 1500 + row);
+
+		BlzFrameSetSize(statusIcon, FrameScoreboard.STATUS_ICON_SIZE, FrameScoreboard.STATUS_ICON_SIZE);
+		BlzFrameSetPoint(statusIcon, FRAMEPOINT_TOPLEFT, statusCell, FRAMEPOINT_TOPLEFT, iconOffsetX, 0);
+		BlzFrameSetLevel(statusIcon, 10);
+		BlzFrameSetVisible(statusIcon, row < this.playerCount);
+
+		return statusIcon;
 	}
 
 	private setCellText(row: number, col: number, text: string): void {
@@ -400,6 +428,7 @@ export class FrameScoreboard {
 		for (let col = 0; col < FrameScoreboard.COLUMNS.length; col++) {
 			BlzFrameSetText(this.cells[row][col], '');
 		}
+		BlzFrameSetVisible(this.statusIcons[row], false);
 	}
 
 }
