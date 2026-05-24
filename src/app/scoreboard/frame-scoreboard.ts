@@ -1,10 +1,16 @@
 import { HexColors } from '../utils/hex-colors';
 import { NameManager } from '../managers/names/name-manager';
-import { ScoreboardDataModel, PlayerRow } from './scoreboard-data-model';
-import { SettingsContext } from '../settings/settings-context';
-import { TeamManager } from '../teams/team-manager';
-import { RatingManager } from '../rating/rating-manager';
-import PlayerCameraPositionManager from '../managers/player-camera-position-manager';
+import type { ScoreboardDataModel, PlayerRow } from './scoreboard-data-model';
+import { getFrameScoreboardCameraPosition } from './frame-scoreboard-camera';
+
+type FrameScoreboardColumnAlignment = 'left' | 'right';
+
+interface FrameScoreboardColumn {
+	header: string;
+	width: number;
+	gap: number;
+	alignment: FrameScoreboardColumnAlignment;
+}
 
 /**
  * Custom frame-based scoreboard that replicates the multiboard layout using UI frames.
@@ -19,7 +25,6 @@ import PlayerCameraPositionManager from '../managers/player-camera-position-mana
  */
 export class FrameScoreboard {
 	private static readonly MAX_ROWS = 24;
-	private static readonly COL_COUNT = 8;
 	private static readonly CREATE_CONTEXT = 900;
 
 	// Column indices
@@ -40,26 +45,24 @@ export class FrameScoreboard {
 	private static readonly ALERT_HEIGHT = 0.014;
 	private static readonly TOP_PADDING = 0.005;
 	private static readonly SIDE_PADDING = 0.008;
+	private static readonly SCREEN_CENTER_X = 0.4;
+	private static readonly SCREEN_HEIGHT = 0.6;
+	private static readonly LEGACY_RIGHT_EDGE_X = 0.8;
+	private static readonly RIGHT_EDGE_INSET = 0.0035;
+	private static readonly TOP_EDGE_Y = 0.56;
 	private static readonly CELL_SCALE = 0.82;
 	private static readonly HEADER_SCALE = 0.82;
 	private static readonly TITLE_SCALE = 0.82;
 
-	// Column widths
-	private static readonly COL_WIDTHS = [0.06, 0.025, 0.018, 0.025, 0.028, 0.025, 0.025, 0.03];
-
-	// Gap before each column (extra spacing between columns)
-	private static readonly COL_GAPS = [0, 0, 0, 0, 0.005, 0.005, 0.005, 0.01];
-
-	// Per-column horizontal alignment: right for numbers, left for text
-	private static readonly COL_ALIGN = [
-		TEXT_JUSTIFY_LEFT,   // Player
-		TEXT_JUSTIFY_RIGHT,  // Income (base)
-		TEXT_JUSTIFY_LEFT,   // Delta
-		TEXT_JUSTIFY_RIGHT,  // Gold
-		TEXT_JUSTIFY_RIGHT,  // Cities
-		TEXT_JUSTIFY_RIGHT,  // Kills
-		TEXT_JUSTIFY_RIGHT,  // Deaths
-		TEXT_JUSTIFY_LEFT,   // Status
+	private static readonly COLUMNS: FrameScoreboardColumn[] = [
+		{ header: `${HexColors.TANGERINE}Player|r`, width: 0.06, gap: 0, alignment: 'left' },
+		{ header: `${HexColors.TANGERINE}Inc|r`, width: 0.025, gap: 0, alignment: 'right' },
+		{ header: '', width: 0.018, gap: 0, alignment: 'left' },
+		{ header: `${HexColors.TANGERINE}G|r`, width: 0.025, gap: 0, alignment: 'right' },
+		{ header: `${HexColors.TANGERINE}C|r`, width: 0.028, gap: 0.005, alignment: 'right' },
+		{ header: `${HexColors.TANGERINE}K|r`, width: 0.025, gap: 0.005, alignment: 'right' },
+		{ header: `${HexColors.TANGERINE}D|r`, width: 0.025, gap: 0.005, alignment: 'right' },
+		{ header: `${HexColors.TANGERINE}Status|r`, width: 0.03, gap: 0.01, alignment: 'left' },
 	];
 
 	private backdrop: framehandle;
@@ -69,10 +72,24 @@ export class FrameScoreboard {
 	private cells: framehandle[][] = []; // [row][col]
 	private alertText: framehandle;
 	private hoverButtons: framehandle[] = [];
-	private rowPlayerHandles: (player | null)[] = [];
+	private rowPlayerHandles: (player | undefined)[] = [];
 	private trackingTimer: timer;
 	private playerCount: number = 0;
 	private isShowing: boolean = false;
+
+	public static isRuntimeAvailable(): boolean {
+		return (
+			typeof BlzGetOriginFrame === 'function' &&
+			typeof BlzCreateFrame === 'function' &&
+			typeof BlzCreateFrameByType === 'function' &&
+			typeof BlzFrameSetTextAlignment === 'function' &&
+			typeof CreateTimer === 'function' &&
+			typeof TimerStart === 'function' &&
+			typeof ORIGIN_FRAME_GAME_UI !== 'undefined' &&
+			typeof FRAMEPOINT_TOPRIGHT !== 'undefined' &&
+			typeof TEXT_JUSTIFY_LEFT !== 'undefined'
+		);
+	}
 
 	public constructor(playerCount: number) {
 		this.playerCount = playerCount;
@@ -91,7 +108,7 @@ export class FrameScoreboard {
 		// Create backdrop using FDF template with proper 9-slice bordered background
 		this.backdrop = BlzCreateFrame('BackdropTemplate', gameUI, 0, ctx);
 		BlzFrameSetSize(this.backdrop, FrameScoreboard.BACKDROP_WIDTH, contentHeight);
-		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_TOPRIGHT, 0.8, 0.56);
+		BlzFrameSetAbsPoint(this.backdrop, FRAMEPOINT_TOPRIGHT, FrameScoreboard.getRightEdgeX(), FrameScoreboard.TOP_EDGE_Y);
 		BlzFrameSetAlpha(this.backdrop, 180);
 
 		// Transparent container for text so backdrop alpha doesn't affect readability
@@ -119,30 +136,18 @@ export class FrameScoreboard {
 
 		// Header row
 		const headerY = -(FrameScoreboard.TOP_PADDING + FrameScoreboard.TITLE_HEIGHT);
-		const headerLabels = [
-			`${HexColors.TANGERINE}Player|r`,
-			`${HexColors.TANGERINE}Inc|r`,
-			``,
-			`${HexColors.TANGERINE}G|r`,
-			`${HexColors.TANGERINE}C|r`,
-			`${HexColors.TANGERINE}K|r`,
-			`${HexColors.TANGERINE}D|r`,
-			`${HexColors.TANGERINE}Status|r`,
-		];
-
 		let xOffset = FrameScoreboard.SIDE_PADDING;
-		// Per-column header nudge to align with scaled data cells
-		const headerNudges = [0, -0.004, -0.004, -0.005, -0.007, -0.007, -0.0075, -0.008];
-		for (let col = 0; col < FrameScoreboard.COL_COUNT; col++) {
-			xOffset += FrameScoreboard.COL_GAPS[col];
+		for (let col = 0; col < FrameScoreboard.COLUMNS.length; col++) {
+			const column = FrameScoreboard.COLUMNS[col];
+			xOffset += column.gap;
 			const cell = BlzCreateFrameByType('TEXT', `FSHeader${col}`, this.container, '', ctx + col);
-			BlzFrameSetPoint(cell, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, xOffset + headerNudges[col], headerY);
-			BlzFrameSetSize(cell, FrameScoreboard.COL_WIDTHS[col], FrameScoreboard.HEADER_HEIGHT);
-			BlzFrameSetText(cell, headerLabels[col]);
-			BlzFrameSetTextAlignment(cell, TEXT_JUSTIFY_MIDDLE, FrameScoreboard.COL_ALIGN[col]);
+			BlzFrameSetPoint(cell, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, xOffset, headerY);
+			BlzFrameSetSize(cell, column.width, FrameScoreboard.HEADER_HEIGHT);
+			BlzFrameSetText(cell, column.header);
+			BlzFrameSetTextAlignment(cell, TEXT_JUSTIFY_MIDDLE, this.getColumnAlignment(column));
 			BlzFrameSetScale(cell, FrameScoreboard.HEADER_SCALE);
 			this.headerCells.push(cell);
-			xOffset += FrameScoreboard.COL_WIDTHS[col];
+			xOffset += column.width;
 		}
 
 		// Data rows
@@ -152,22 +157,23 @@ export class FrameScoreboard {
 			const rowY = dataStartY - row * FrameScoreboard.ROW_HEIGHT;
 			let cellX = FrameScoreboard.SIDE_PADDING;
 
-			for (let col = 0; col < FrameScoreboard.COL_COUNT; col++) {
-				cellX += FrameScoreboard.COL_GAPS[col];
-				const cellCtx = ctx + 100 + row * FrameScoreboard.COL_COUNT + col;
+			for (let col = 0; col < FrameScoreboard.COLUMNS.length; col++) {
+				const column = FrameScoreboard.COLUMNS[col];
+				cellX += column.gap;
+				const cellCtx = ctx + 100 + row * FrameScoreboard.COLUMNS.length + col;
 				const cell = BlzCreateFrameByType('TEXT', `FSCell${row}_${col}`, this.container, '', cellCtx);
 				BlzFrameSetPoint(cell, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, cellX, rowY);
-				BlzFrameSetSize(cell, FrameScoreboard.COL_WIDTHS[col], FrameScoreboard.ROW_HEIGHT);
+				BlzFrameSetSize(cell, column.width, FrameScoreboard.ROW_HEIGHT);
 				BlzFrameSetText(cell, '');
-				BlzFrameSetTextAlignment(cell, TEXT_JUSTIFY_MIDDLE, FrameScoreboard.COL_ALIGN[col]);
+				BlzFrameSetTextAlignment(cell, TEXT_JUSTIFY_MIDDLE, this.getColumnAlignment(column));
 				BlzFrameSetScale(cell, FrameScoreboard.CELL_SCALE);
 				this.cells[row].push(cell);
-				cellX += FrameScoreboard.COL_WIDTHS[col];
+				cellX += column.width;
 			}
 
 			// Hide rows beyond playerCount
 			if (row >= this.playerCount) {
-				for (let col = 0; col < FrameScoreboard.COL_COUNT; col++) {
+				for (let col = 0; col < FrameScoreboard.COLUMNS.length; col++) {
 					BlzFrameSetVisible(this.cells[row][col], false);
 				}
 			}
@@ -189,12 +195,12 @@ export class FrameScoreboard {
 		// Uses GLUETEXTBUTTON + ScriptDialogButton so hover detection works for
 		// both playing players and observers (child[5] highlight visibility polling).
 		for (let row = 0; row < FrameScoreboard.MAX_ROWS; row++) {
-			this.rowPlayerHandles[row] = null;
+			this.rowPlayerHandles[row] = undefined;
 			const btnCtx = ctx + 500 + row;
 			const btn = BlzCreateFrameByType('GLUETEXTBUTTON', `FSHoverBtn${row}`, this.container, 'ScriptDialogButton', btnCtx);
 			const rowY = dataStartY - row * FrameScoreboard.ROW_HEIGHT;
 			BlzFrameSetPoint(btn, FRAMEPOINT_TOPLEFT, this.backdrop, FRAMEPOINT_TOPLEFT, FrameScoreboard.SIDE_PADDING, rowY);
-			BlzFrameSetSize(btn, FrameScoreboard.COL_WIDTHS[FrameScoreboard.COL_PLAYER], FrameScoreboard.ROW_HEIGHT);
+			BlzFrameSetSize(btn, FrameScoreboard.COLUMNS[FrameScoreboard.COL_PLAYER].width, FrameScoreboard.ROW_HEIGHT);
 			BlzFrameSetText(btn, '');
 			BlzFrameSetAlpha(btn, 0);
 			BlzFrameSetVisible(btn, row < this.playerCount);
@@ -209,7 +215,7 @@ export class FrameScoreboard {
 				if (BlzFrameIsVisible(BlzFrameGetChild(this.hoverButtons[i], 5))) {
 					const target = this.rowPlayerHandles[i];
 					if (target) {
-						const pos = PlayerCameraPositionManager.getInstance().getCameraPosition(target);
+						const pos = getFrameScoreboardCameraPosition(target);
 						if (pos) {
 							PanCameraToTimed(pos.x, pos.y, 0.25);
 						}
@@ -247,7 +253,7 @@ export class FrameScoreboard {
 		}
 		// Clear any unused rows
 		for (let r = row; r < this.playerCount; r++) {
-			this.rowPlayerHandles[r] = null;
+			this.rowPlayerHandles[r] = undefined;
 			this.clearRow(r);
 		}
 	}
@@ -276,14 +282,14 @@ export class FrameScoreboard {
 	}
 
 	private renderActiveRow(p: PlayerRow, row: number): void {
-		const teamPrefix = this.getTeamPrefix(p.handle);
+		const teamPrefix = this.getTeamPrefix(p);
 		const textColor = HexColors.WHITE;
 
 		// Player name (colored)
 		this.setCellText(row, FrameScoreboard.COL_PLAYER, `${teamPrefix}${p.displayName}`);
 
 		// Income: base right-aligned, delta left-aligned in separate column
-		const delta = p.player.trackedData.income.delta;
+		const delta = p.incomeDelta;
 		const baseIncome = p.income - delta;
 		this.setCellText(row, FrameScoreboard.COL_INCOME, `${textColor}${baseIncome}`);
 		this.setCellText(row, FrameScoreboard.COL_DELTA, `${textColor}(${this.formatIncomeDelta(delta)}${textColor})`);
@@ -311,7 +317,7 @@ export class FrameScoreboard {
 
 	private renderEliminatedRow(p: PlayerRow, row: number): void {
 		const grey = HexColors.LIGHT_GRAY;
-		const teamPrefix = this.getTeamPrefix(p.handle);
+		const teamPrefix = this.getTeamPrefix(p);
 
 		// Player name
 		this.setCellText(row, FrameScoreboard.COL_PLAYER, `${grey}${teamPrefix}${p.displayName}`);
@@ -339,8 +345,7 @@ export class FrameScoreboard {
 	}
 
 	private formatEliminatedIncome(p: PlayerRow): string {
-		const ratingManager = RatingManager.getInstance();
-		if (p.ratingChange && ratingManager.isRankedGame() && ratingManager.isRatingSystemEnabled()) {
+		if (p.ratingChange) {
 			const { effectiveChange, wasFloorProtected } = p.ratingChange;
 			const color = effectiveChange > 0 || (effectiveChange === 0 && !wasFloorProtected)
 				? HexColors.GREEN
@@ -357,11 +362,34 @@ export class FrameScoreboard {
 		return `${HexColors.RED}${delta}|r`;
 	}
 
-	private getTeamPrefix(handle: player): string {
-		if (!SettingsContext.getInstance().isFFA()) {
-			return `${HexColors.TANGERINE}[${TeamManager.getInstance().getTeamNumberFromPlayer(handle)}]|r`;
+	private getTeamPrefix(row: PlayerRow): string {
+		if (row.teamNumber > 0) {
+			return `${HexColors.TANGERINE}[${row.teamNumber}]|r`;
 		}
 		return '';
+	}
+
+	private getColumnAlignment(column: FrameScoreboardColumn): textaligntype {
+		if (column.alignment === 'left') {
+			return TEXT_JUSTIFY_LEFT;
+		}
+
+		return TEXT_JUSTIFY_RIGHT;
+	}
+
+	private static getRightEdgeX(): number {
+		if (typeof BlzGetLocalClientWidth !== 'function' || typeof BlzGetLocalClientHeight !== 'function') {
+			return FrameScoreboard.LEGACY_RIGHT_EDGE_X - FrameScoreboard.RIGHT_EDGE_INSET;
+		}
+
+		const height = BlzGetLocalClientHeight();
+		if (height <= 0) {
+			return FrameScoreboard.LEGACY_RIGHT_EDGE_X - FrameScoreboard.RIGHT_EDGE_INSET;
+		}
+
+		const aspectRatio = BlzGetLocalClientWidth() / height;
+		const screenRightEdge = FrameScoreboard.SCREEN_CENTER_X + (FrameScoreboard.SCREEN_HEIGHT * aspectRatio) / 2;
+		return Math.max(FrameScoreboard.LEGACY_RIGHT_EDGE_X, screenRightEdge) - FrameScoreboard.RIGHT_EDGE_INSET;
 	}
 
 	private setCellText(row: number, col: number, text: string): void {
@@ -369,7 +397,7 @@ export class FrameScoreboard {
 	}
 
 	private clearRow(row: number): void {
-		for (let col = 0; col < FrameScoreboard.COL_COUNT; col++) {
+		for (let col = 0; col < FrameScoreboard.COLUMNS.length; col++) {
 			BlzFrameSetText(this.cells[row][col], '');
 		}
 	}

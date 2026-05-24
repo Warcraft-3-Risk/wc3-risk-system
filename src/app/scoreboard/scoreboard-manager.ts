@@ -239,8 +239,18 @@ export class ScoreboardManager {
 	 * For testing: shown to all players. Eventually: observer-only.
 	 */
 	private initFrameScoreboard(players: ActivePlayer[]): void {
-		this.frameScoreboard = new FrameScoreboard(players.length);
-		this.frameScoreboard.renderFull(this.dataModel);
+		if (!FrameScoreboard.isRuntimeAvailable()) {
+			return;
+		}
+
+		try {
+			this.frameScoreboard = new FrameScoreboard(players.length);
+			this.frameScoreboard.renderFull(this.dataModel);
+		} catch (error) {
+			print(`Frame scoreboard failed to initialize: ${error}`);
+			this.frameScoreboard = undefined;
+			return;
+		}
 
 		// For testing: hide multiboard and show frame scoreboard for everyone
 		this.iterateRenderers((r) => r.setVisibility(false));

@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 vi.mock('w3ts', () => ({ File: {} }));
 vi.mock('w3ts/system/file', () => ({
 	File: class {
@@ -76,6 +78,7 @@ vi.mock('src/app/utils/game-status', () => ({
 (globalThis as any).PLAYER_STATE_RESOURCE_GOLD = 'gold';
 (globalThis as any).Player = (id: number) => ({ id });
 (globalThis as any).PLAYER_NEUTRAL_AGGRESSIVE = 24;
+(globalThis as any).print = vi.fn();
 
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { ActivePlayer } from 'src/app/player/types/active-player';
@@ -120,5 +123,24 @@ describe('ScoreboardManager decoupling', () => {
 
 		// Should have been passed directly to data model
 		expect(refreshSpy).toHaveBeenCalledWith([dummyPlayer], true);
+	});
+
+	it('falls back to native scoreboard when frame scoreboard setup fails', () => {
+		(globalThis as any).BlzGetOriginFrame = vi.fn(() => ({}));
+		(globalThis as any).BlzCreateFrame = vi.fn(() => {
+			throw new Error('missing frame template');
+		});
+		(globalThis as any).BlzCreateFrameByType = vi.fn(() => ({}));
+		(globalThis as any).BlzFrameSetTextAlignment = vi.fn();
+		(globalThis as any).CreateTimer = vi.fn(() => ({}));
+		(globalThis as any).TimerStart = vi.fn();
+		(globalThis as any).ORIGIN_FRAME_GAME_UI = 'game-ui';
+		(globalThis as any).FRAMEPOINT_TOPRIGHT = 'top-right';
+		(globalThis as any).TEXT_JUSTIFY_LEFT = 'left';
+
+		const sm = ScoreboardManager.getInstance();
+
+		expect(() => sm.ffaSetup([])).not.toThrow();
+		expect(setVisibilityMock).not.toHaveBeenCalledWith(false);
 	});
 });

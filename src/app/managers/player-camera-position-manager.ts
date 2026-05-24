@@ -11,6 +11,7 @@ import { ObserverCameraPositionOverlay } from '../triggers/visuals/observer-came
 import { AllyColorState } from './alliances/ally-color-state';
 import { AllyColorFilterManager } from './ally-color-filter-manager';
 import { ColorStringUtil } from '../utils/color-string-util';
+import { setFrameScoreboardCameraPositionProvider } from '../scoreboard/frame-scoreboard-camera';
 
 export type CamPositionData = {
 	x: number;
@@ -37,6 +38,8 @@ export default class PlayerCameraPositionManager {
 	}
 
 	private constructor() {
+		setFrameScoreboardCameraPositionProvider((player) => this.getCameraPosition(player));
+
 		if (!SHOW_PLAYER_CAMERA_POSITIONS) return;
 
 		this.syncTrigger = CreateTrigger();
