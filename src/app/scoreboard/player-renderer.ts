@@ -14,7 +14,7 @@ export class PlayerRenderer extends ScoreboardRenderer {
 
 	public constructor(playerCount: number) {
 		super(6);
-		this.size = playerCount + 1;
+		this.size = playerCount + 2;
 
 		MultiboardSetColumnCount(this.board, 6);
 
