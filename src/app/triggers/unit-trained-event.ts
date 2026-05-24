@@ -6,6 +6,8 @@ import { ActivePlayer } from '../player/types/active-player';
 import { debugPrint } from '../utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { UNIT_TYPE } from '../utils/unit-types';
+import { AllyColorFilterManager } from '../managers/ally-color-filter-manager';
+import { GlobalGameData } from '../game/state/global-game-state';
 
 export const UnitTrainedTrigger: trigger = CreateTrigger();
 
@@ -14,6 +16,14 @@ export function UnitTrainedEvent() {
 		UnitTrainedTrigger,
 		Condition(() => {
 			const trainedUnit = GetTrainedUnit();
+
+			// If the match has already ended by the time the training completes, immediately remove the unit to prevent post-match shenanigans.
+			// We can't cancel the training in the UnitTrainStartTrigger since it fires before the training actually begins, but we can catch it
+			// here in UnitTrainedTrigger which fires as soon as training finishes.
+			if (GlobalGameData.matchState === 'postMatch') {
+				RemoveUnit(trainedUnit);
+				return false;
+			}
 
 			UnitToCity.get(GetTriggerUnit()).onUnitTrain(trainedUnit);
 
@@ -57,9 +67,13 @@ export function UnitTrainedEvent() {
 
 			const player: ActivePlayer = PlayerManager.getInstance().players.get(realOwner);
 
-			if (!IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
+			if (IsUnitType(trainedUnit, UNIT_TYPE.TRANSPORT)) {
+				player.trackedData.transports.add(trainedUnit);
+			} else {
 				player.trackedData.units.add(trainedUnit);
 			}
+
+			AllyColorFilterManager.getInstance().applyColorFilter(trainedUnit);
 
 			return false;
 		})

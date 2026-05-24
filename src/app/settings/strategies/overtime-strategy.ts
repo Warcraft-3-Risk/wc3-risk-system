@@ -1,8 +1,6 @@
 import { SettingsStrategy } from './settings-strategy';
 import { HexColors } from 'src/app/utils/hex-colors';
-import { OvertimeManager } from 'src/app/managers/overtime-manager';
-
-export type OvertimeSetting = 0 | 30 | 60 | undefined;
+import { OvertimeSetting } from 'src/app/managers/overtime-logic';
 
 export interface OvertimeOptions {
 	option: number;
@@ -31,37 +29,13 @@ export const OvertimeStringsColorFormatted: Record<number, string> = {
 
 export class OvertimeStrategy implements SettingsStrategy {
 	private readonly overtime: OvertimeOptions;
-	private readonly strategyMap: Map<number, () => void> = new Map([
-		[0, this.handleTurboOption],
-		[1, this.handleMediumOption],
-		[2, this.handleExtendedOption],
-		[3, this.handleOffOption],
-	]);
 
 	constructor(overtime: OvertimeOptions) {
 		this.overtime = overtime;
 	}
 
 	public apply(): void {
-		const handler = this.strategyMap.get(this.overtime.option);
-		if (handler) {
-			handler();
-		}
-	}
-
-	private handleTurboOption(): void {
-		OvertimeManager.getInstance().setOvertimeSetting(0);
-	}
-
-	private handleMediumOption(): void {
-		OvertimeManager.getInstance().setOvertimeSetting(30);
-	}
-
-	private handleExtendedOption(): void {
-		OvertimeManager.getInstance().setOvertimeSetting(60);
-	}
-
-	private handleOffOption(): void {
-		OvertimeManager.getInstance().setOvertimeSetting(undefined);
+		// Overtime is now passively resolved via SettingsContext.getOvertimeSetting()
+		// No active assignment required.
 	}
 }

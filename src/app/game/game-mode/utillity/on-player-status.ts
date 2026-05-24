@@ -25,7 +25,7 @@ export function onPlayerAliveHandle(player: ActivePlayer): void {
 	if (player.trackedData.income.max === 0) {
 		player.trackedData.income.max = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
 	}
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): void {
@@ -96,7 +96,7 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 	announceSound = undefined;
 
 	Quests.getInstance().updatePlayersQuest();
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 export function onPlayerNomadHandle(player: ActivePlayer): void {
@@ -147,7 +147,7 @@ export function onPlayerNomadHandle(player: ActivePlayer): void {
 		}
 	});
 
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 export function onPlayerLeftHandle(player: ActivePlayer): void {
@@ -187,7 +187,7 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 	GlobalMessage(`${playerDisplayName} has left the game!`, 'Sound\\Interface\\SecretFound.flac');
 
 	PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), PLAYER_STATUS.LEFT);
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 
 	if (player.status.isDead() || player.status.isSTFU()) {
 		player.status.status = PLAYER_STATUS.LEFT;
@@ -222,10 +222,10 @@ export function onPlayerSTFUHandle(player: ActivePlayer): void {
 			timedEventManager.removeTimedEvent(event);
 		}
 
-		ScoreboardManager.getInstance().updatePartial();
+		ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 	});
 
-	ScoreboardManager.getInstance().updatePartial();
+	ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 }
 
 /** Maps unit type IDs to their corresponding eliminated player buff ability. */

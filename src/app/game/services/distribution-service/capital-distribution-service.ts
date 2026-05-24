@@ -18,9 +18,9 @@ export class CapitalDistributionService extends StandardDistributionService {
 	/**
 	 * Implements the distribution algorithm.
 	 */
-	protected distribute() {
+	protected async distribute() {
 		const assignedCapitalCities = new Set(this.selectedPlayerCapitalCities.values());
 		this.setCities(this.getCities().filter((city) => !assignedCapitalCities.has(city)));
-		super.distribute();
+		await super.distribute();
 	}
 }

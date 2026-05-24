@@ -4,11 +4,11 @@ import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
-import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { SHARED_SLOT_ALLOCATION_ENABLED, DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { GlobalGameData } from '../state/global-game-state';
 import { PLAYER_COLORS } from '../../utils/player-colors';
 import { NameManager } from '../../managers/names/name-manager';
+import { MatchFormat } from '../match-format-enum';
 
 interface SharedSlot extends player {}
 
@@ -45,11 +45,23 @@ export class SharedSlotManager implements Resetable {
 	// Slots of eliminated players that still have units alive
 	private pendingFreeSlots: Set<player> = new Set<player>();
 
+	// Monotonically increasing revision counter for mapping state.
+	// Used by subsystems (like MinimapIconManager) to cache resolved owners.
+	private ownershipRevision = 0;
+
 	private constructor() {
 		// Initialize shared slot manager
 		this.availableSlots = [];
 		this.playerToSlots = new Map<player, SharedSlot[]>();
 		this.slotToPlayer = new Map<SharedSlot, player>();
+	}
+
+	public getOwnershipRevision(): number {
+		return this.ownershipRevision;
+	}
+
+	private bumpOwnershipRevision(): void {
+		this.ownershipRevision++;
 	}
 
 	public incrementUnitCount(slot: player): void {
@@ -186,9 +198,9 @@ export class SharedSlotManager implements Resetable {
 				}
 			}
 
-			// Only reclaim if they have no units AND no cities, otherwise we could end up in a situation 
-			// where a player is eliminated but still has a city on the map and we accidentally free their slot 
-			// to someone else, causing ownership issues with that city. 
+			// Only reclaim if they have no units AND no cities, otherwise we could end up in a situation
+			// where a player is eliminated but still has a city on the map and we accidentally free their slot
+			// to someone else, causing ownership issues with that city.
 			const activePlayerData = PlayerManager.getInstance().players.get(elimPlayer);
 			const hasCities = activePlayerData && activePlayerData.trackedData.cities.cities.length > 0;
 
@@ -352,7 +364,7 @@ export class SharedSlotManager implements Resetable {
 		// 5. FINALIZE: Update scoreboard
 		ScoreboardManager.getInstance().toggleVisibility(false);
 		ScoreboardManager.getInstance().toggleVisibility(true);
-		ScoreboardManager.getInstance().updateFull();
+		ScoreboardManager.getInstance().updateFull(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 
 		return true;
 	}
@@ -362,6 +374,8 @@ export class SharedSlotManager implements Resetable {
 			debugPrint(`[Redistribute] Tearing down slot ${GetPlayerId(slot)} (prev owner: ${GetPlayerId(previousOwner)})`, DC.redistribute);
 		this.enableAdvancedControl(previousOwner, slot, false);
 		this.enableAdvancedControl(slot, previousOwner, false);
+
+		this.bumpOwnershipRevision();
 
 		// Un-ally from all OTHER existing shared slots of the same player
 		const siblingSlots = this.playerToSlots.get(previousOwner) || [];
@@ -416,6 +430,8 @@ export class SharedSlotManager implements Resetable {
 		}
 		if (DEBUG_PRINTS.master)
 			debugPrint(`[Redistribute] Wiped all alliances for slot ${GetPlayerId(slot)} before reassignment`, DC.redistribute);
+
+		this.bumpOwnershipRevision();
 
 		if (!this.playerToSlots.has(newOwner)) {
 			this.playerToSlots.set(newOwner, []);
@@ -575,10 +591,9 @@ export class SharedSlotManager implements Resetable {
 		return slots && slots.length > 0 ? slots[0] : player;
 	}
 
-	reset(): void {
+	public reset(): void {
 		// Reset all player colors and names to default
 		if (DEBUG_PRINTS.master) debugPrint('SharedSlotManager: Resetting all player colors and names to default', DC.sharedSlots);
-		NameManager.getInstance().resetOriginalColors();
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			const p = Player(i);
 
@@ -595,6 +610,8 @@ export class SharedSlotManager implements Resetable {
 				}
 			}
 		}
+
+		this.bumpOwnershipRevision();
 
 		this.playerToSlots.clear();
 		this.slotToPlayer.clear();

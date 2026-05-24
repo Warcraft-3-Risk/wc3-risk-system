@@ -8,6 +8,7 @@ import { UNIT_TYPE } from '../utils/unit-types';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { ABILITY_ID } from 'src/configs/ability-id';
 import { SharedSlotManager } from '../game/services/shared-slot-manager';
+import { AllyColorFilterManager } from '../managers/ally-color-filter-manager';
 
 /**
  * Abstract class for a City.
@@ -18,6 +19,10 @@ export abstract class City implements Resetable, Ownable {
 	private _barrack: Barracks;
 	private _guard: Guard;
 	private _cop: unit;
+	private _effect: effect;
+	private _name?: string;
+	private _slot?: string;
+	private _quality?: string;
 
 	/**
 	 * @param rax The barracks for the city
@@ -29,6 +34,11 @@ export abstract class City implements Resetable, Ownable {
 		this._barrack = rax;
 		this._guard = guard;
 		this._cop = cop;
+
+		this._effect = AddSpecialEffect('war3mapImported\\TargetIndicatorThinner_TC_100.mdx', rax.defaultX, rax.defaultY);
+		BlzSetSpecialEffectColorByPlayer(this._effect, Player(19));
+		BlzSetSpecialEffectScale(this._effect, 7.5);
+		BlzSetSpecialEffectAlpha(this._effect, 0);
 	}
 
 	public abstract isValidGuard(unit: unit): boolean;
@@ -37,14 +47,34 @@ export abstract class City implements Resetable, Ownable {
 	public abstract isPort(): boolean;
 	public abstract isCapital(): boolean;
 
+	public setLabelData(name?: string, slot?: string, quality?: string): void {
+		this._name = name;
+		this._slot = slot;
+		this._quality = quality;
+	}
+
 	/** Resets the city, returning it to its default state */
 	public reset(): void {
-		UnitToCity.delete(this.guard.unit);
+		if (this.guard.unit) {
+			UnitToCity.delete(this.guard.unit);
+		}
 		SetUnitOwner(this._cop, NEUTRAL_HOSTILE, true);
 		this.owner = NEUTRAL_HOSTILE;
 		this._barrack.reset();
 		this._guard.reset();
-		UnitToCity.set(this.guard.unit, this);
+		if (this.guard.unit) {
+			UnitToCity.set(this.guard.unit, this);
+		}
+	}
+
+	public HideMinimap() {
+		BlzSetUnitBooleanField(this._barrack.unit, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, false);
+		BlzSetUnitBooleanField(this._cop, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, false);
+		this.changeOwner(NEUTRAL_HOSTILE);
+		SetUnitVertexColor(this._barrack.unit, 0, 0, 0, 255);
+		SetUnitVertexColor(this._cop, 0, 0, 0, 255);
+		BlzSetUnitBooleanField(this._barrack.unit, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, true);
+		BlzSetUnitBooleanField(this._cop, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, true);
 	}
 
 	/**
@@ -54,6 +84,11 @@ export abstract class City implements Resetable, Ownable {
 		this.owner = player;
 		this._barrack.setOwner(player);
 		SetUnitOwner(this._cop, player, true);
+		this.refreshColorFilter();
+	}
+
+	public refreshColorFilter(): void {
+		AllyColorFilterManager.getInstance().applyCityColorFilter(this);
 	}
 
 	/**
@@ -83,9 +118,33 @@ export abstract class City implements Resetable, Ownable {
 		return this._barrack;
 	}
 
+	/** @returns The display name of the city. */
+	public get name(): string {
+		if (this._name) {
+			return this._name;
+		}
+
+		return GetUnitName(this._barrack.unit);
+	}
+
+	/** @returns The map balancing slot label for the city. */
+	public get slot(): string | undefined {
+		return this._slot;
+	}
+
+	/** @returns The map balancing quality grade for the city. */
+	public get quality(): string | undefined {
+		return this._quality;
+	}
+
 	/** @returns The Circle of Power of the city */
 	public get cop(): unit {
 		return this._cop;
+	}
+
+	/** @returns The effect of the city */
+	public get effect(): effect {
+		return this._effect;
 	}
 
 	/** @returns The Guard object of the city */
@@ -130,21 +189,26 @@ export abstract class City implements Resetable, Ownable {
 		const y: number = GetUnitY(targUnit);
 		const oldGuard: unit = this.guard.unit;
 
-		UnitToCity.delete(this.guard.unit);
+		if (this.guard.unit) {
+			UnitToCity.delete(this.guard.unit);
+		}
 		this.guard.replace(targUnit);
-		UnitToCity.set(this.guard.unit, this);
+		if (this.guard.unit) {
+			UnitToCity.set(this.guard.unit, this);
+		}
 
 		//IsTerrainPathable Returns negated results for some reason. Gj Blizzard
-		if (!IsUnitType(oldGuard, UNIT_TYPE_GIANT) && IsTerrainPathable(x, y, PATHING_TYPE_WALKABILITY)) {
-			SetUnitPosition(oldGuard, this._barrack.defaultX, this._barrack.defaultY);
-		} else {
-			SetUnitPosition(oldGuard, x, y);
+		if (oldGuard) {
+			if (!IsUnitType(oldGuard, UNIT_TYPE_GIANT) && IsTerrainPathable(x, y, PATHING_TYPE_WALKABILITY)) {
+				SetUnitPosition(oldGuard, this._barrack.defaultX, this._barrack.defaultY);
+			} else {
+				SetUnitPosition(oldGuard, x, y);
+			}
 		}
 
 		this.guard.reposition();
 
 		const newOwner: player = SharedSlotManager.getInstance().getOwnerOfUnit(this.guard.unit);
-
 		if (this.owner !== newOwner) {
 			const currOwner = this.owner;
 
@@ -153,6 +217,8 @@ export abstract class City implements Resetable, Ownable {
 			if (IsPlayerAlly(currOwner, this.owner)) {
 				BlzStartUnitAbilityCooldown(this._barrack.unit, ABILITY_ID.SWAP, BlzGetAbilityCooldown(ABILITY_ID.SWAP, 0));
 			}
+		} else {
+			this.refreshColorFilter();
 		}
 	}
 

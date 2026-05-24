@@ -2,36 +2,36 @@
 
 ## Motivation
 
-Players can toggle WC3 ally color filter modes with Alt+A. In this map, shared-slot ownership is used so many units that appear to belong to a player are actually owned by shared-slot handles.
+Warcraft 3 allows players to toggle ally color filter modes natively with Alt+A. However, in this map, shared-slot ownership is extensively utilized, meaning many units that appear to belong to a player are actually owned by neutral 'shared-slot' handles.
 
-When native mode 2 is selected, unit colors briefly move toward the expected ally/enemy view, but then settle into WC3 native defaults:
+When native mode 2 (High Contrast) is activated by the engine, it blindly applies colors based on raw slot ownership:
+- Local player units become Blue
+- Allies and shared-slot units become Teal
+- Enemies become Red
 
-- local player units become blue
-- allies and shared-slot units become teal
-- enemies become red
-
-This is not the intended presentation for this project because shared-slot units are supposed to be treated as the local player's units for gameplay readability.
+This inherently breaks Shared Slot mechanics, as shared-slot units are incorrectly treated as 'allies' by the engine rather than as the player's own units. Furthermore, native UI tooltips containing hardcoded color codes bypass native UI recoloring efforts.
 
 ## Current Behavior
 
-The project intentionally blocks native AllyColorFilterState mode 2.
-
-- A periodic timer checks GetAllyColorFilterState and forces mode 2 back to mode 0.
-- Icon color update logic also guards against mode 2 and resets it to mode 0.
-- Supported visual behavior remains mode 0 and mode 1 style rendering through project icon logic.
-
-This preserves shared-slot ownership readability and avoids misleading ally teal coloring on shared-slot units.
+To resolve this limitation, the map completely disables the native Mode 2 engine feature and implements a custom robust High Contrast option:
+- A custom UI button in the top left (F3) allows the player to toggle **High Contrast Mode**, which is saved to their local preferences.
+- A fast polling loop inside MinimapIconManager continuously checks and resets the native engine's SetAllyColorFilterState(0) to automatically suppress the effects if the player presses Alt+A.
+- The custom High Contrast mode is applied manually through SetUnitColor (3D Models), SetUnitVertexColor (Tinting), and Minimap blip updates via the AllyColorFilterManager.
+- True ownership is correctly resolved through the SharedSlotManager so shared units behave visually like local player units.
+- Null owners (NEUTRAL_HOSTILE) are tinted completely black.
+- A custom 'colorblind' option replaces the teal allied color with yellow.
+- Embedded native Warcraft 3 hex color tags in custom names/tooltips are stripped before appending the new High Contrast hex code to prevent the engine renderer from reverting text colors.
 
 ## Constraints and Safety Rules
 
-- Treat native mode 2 as an engine limitation for this map ruleset.
-- Do not ship features that depend on native mode 2 preserving custom shared-slot semantics.
-- Do not rely on local SetPlayerColor or SetUnitColor override loops as a fix for this specific issue.
-- Keep shared-slot ownership resolution through SharedSlotManager helpers when determining icon colors.
-- Keep replay and observer logic consistent with existing effective local player handling.
+- Attempting to use the native Alt+A Mode 2 is actively combated by the map. We treat the visual effect of it as a complete breakage of Shared Slots.
+- All new unit generation (Spawns, Training, Guard Changes) MUST be passed through AllyColorFilterManager.getInstance().applyColorFilter(unit).
+- Using SetUnitColor directly outside of AllyColorFilterManager is restricted.
+- When rendering custom names/tooltips, strictly strip legacy W3 color tags using ColorStringUtil.stripColorTags(text) before prepending the calculated string prefix.
 
 ## Source of Truth in Code
 
+- src/app/managers/ally-color-filter-manager.ts
 - src/app/managers/minimap-icon-manager.ts
 - src/app/game/services/shared-slot-manager.ts
-- src/app/utils/game-status.ts
+- src/app/utils/color-string-util.ts

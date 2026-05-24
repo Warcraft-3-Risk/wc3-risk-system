@@ -107,6 +107,10 @@ vi.mock('src/app/ui/player-preference-buttons', () => ({
 	buildGuardValueButton: vi.fn(() => ({})),
 	buildLabelToggleButton: vi.fn(() => ({})),
 	buildRatingStatsButton: vi.fn(() => ({})),
+	buildColorblindModeButton: vi.fn(() => ({})),
+	buildColorContrastModeButton: vi.fn(() => ({})),
+	buildCameraPanModeButton: vi.fn(() => ({})),
+	buildLargeCityIndicatorButton: vi.fn(() => ({})),
 }));
 vi.mock('src/app/ui/rating-stats-ui', () => ({
 	RatingStatsUI: vi.fn(),
@@ -132,9 +136,11 @@ vi.mock('src/app/managers/names/name-manager', () => ({
 }));
 vi.mock('src/app/managers/overtime-manager', () => ({
 	OvertimeManager: {
-		isOvertimeEnabled: () => false,
-		getOvertimeSettingValue: () => 999,
-		getTurnCountPostOvertime: () => 0,
+		getInstance: () => ({
+			isOvertimeEnabled: () => false,
+			getOvertimeSettingValue: () => 999,
+			getTurnCountPostOvertime: () => 0,
+		}),
 	},
 }));
 vi.mock('src/app/utils/messages', () => ({

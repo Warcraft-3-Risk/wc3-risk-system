@@ -13,7 +13,7 @@ import { City } from 'src/app/city/city';
 import { StateData } from '../state/state-data';
 import { PLAYER_COLOR_CODES_MAP } from 'src/app/utils/player-colors';
 import { PlayerManager } from 'src/app/player/player-manager';
-import { OvertimeManager } from 'src/app/managers/overtime-manager';
+import { isOvertimeActive } from 'src/app/managers/overtime-logic';
 import { Team } from 'src/app/teams/team';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { debugPrint } from 'src/app/utils/debug-print';
@@ -27,10 +27,17 @@ import { IncomeManager } from 'src/app/managers/income-manager';
 import { RatingManager } from 'src/app/rating/rating-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { applyEliminatedBuff } from '../utillity/on-player-status';
+import { EventEmitter } from 'src/app/utils/events/event-emitter';
+import { EVENT_ON_PLAYER_RESTART } from 'src/app/utils/events/event-constants';
+import { AllyColorFilterManager } from 'src/app/managers/ally-color-filter-manager';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
+	private matchLoopTimer?: timer;
+	private hasFinishedMatchLoop = false;
+
 	onEnterState() {
 		GlobalGameData.matchState = 'inProgress';
+		this.hasFinishedMatchLoop = false;
 
 		// Capture initial game data for rating calculations
 		// This locks in player count and ratings at game start - never changes during game
@@ -49,20 +56,18 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		this.onStartTurn(GlobalGameData.turnCount);
 
-		const _matchLoopTimer: timer = CreateTimer();
+		this.matchLoopTimer = CreateTimer();
 
 		updateTickUI();
 
-		TimerStart(_matchLoopTimer, TICK_DURATION_IN_SECONDS, true, () => {
+		TimerStart(this.matchLoopTimer, TICK_DURATION_IN_SECONDS, true, () => {
 			try {
 				// End game if only one player is remaining
 				this.endIfLastActivePlayer();
 
 				// Check if the match is over
 				if (this.isMatchOver()) {
-					PauseTimer(_matchLoopTimer);
-					DestroyTimer(_matchLoopTimer);
-					this.nextState(this.stateData);
+					this.finishMatchLoop();
 					return;
 				}
 
@@ -71,9 +76,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 				// Stop game loop if match is over
 				if (this.isMatchOver()) {
-					PauseTimer(_matchLoopTimer);
-					DestroyTimer(_matchLoopTimer);
-					this.nextState(this.stateData);
+					this.finishMatchLoop();
 					return;
 				}
 
@@ -91,6 +94,20 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				if (DEBUG_PRINTS.master) debugPrint('Error in Timer ' + error, DC.gameMode);
 			}
 		});
+	}
+
+	private finishMatchLoop(): boolean {
+		if (this.hasFinishedMatchLoop) return false;
+		this.hasFinishedMatchLoop = true;
+
+		if (this.matchLoopTimer) {
+			PauseTimer(this.matchLoopTimer);
+			DestroyTimer(this.matchLoopTimer);
+			this.matchLoopTimer = undefined;
+		}
+
+		this.nextState(this.stateData);
+		return true;
 	}
 
 	endIfLastActivePlayer(): boolean {
@@ -171,12 +188,15 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		const changed = SharedSlotManager.getInstance().evaluateAndRedistribute();
 		if (DEBUG_PRINTS.master)
 			debugPrint(`GameLoopState: Slot redistribution on turn start: ${changed ? 'changes made' : 'no changes'}`, DC.redistribute);
+		if (changed) {
+			AllyColorFilterManager.getInstance().refreshPlayerAndUnitColors();
+		}
 
 		if (DEBUG_PRINTS.master) debugPrint(`[SharedSlots] === Turn ${turn} Slot Summary ===`, DC.sharedSlots);
 		SharedSlotManager.getInstance().debugPrintSlotCounts();
 
 		if (!changed) {
-			ScoreboardManager.getInstance().updateFull();
+			ScoreboardManager.getInstance().updateFull(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 		}
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		GlobalGameData.matchPlayers
@@ -198,7 +218,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			GlobalGameData.matchState = 'postMatch';
 		}
 
-		ScoreboardManager.getInstance().updateFull();
+		ScoreboardManager.getInstance().updateFull(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 
 		// Save preliminary ratings for crash recovery (only for ranked games)
 		const ratingManager = RatingManager.getInstance();
@@ -223,12 +243,12 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	onTick(tick: number): void {
 		VictoryManager.getInstance().updateAndGetGameState();
 
-		ScoreboardManager.getInstance().updatePartial();
+		ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 	}
 
 	private messageGameState() {
 		let playersToAnnounce = VictoryManager.getInstance().getOwnershipByThresholdDescending(
-			VictoryManager.getCityCountWin() * CITIES_TO_WIN_WARNING_RATIO
+			VictoryManager.getInstance().getCityCountWin() * CITIES_TO_WIN_WARNING_RATIO
 		);
 
 		// Filter out eliminated players from announcements
@@ -242,7 +262,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		if (playersToAnnounce.length === 0) return;
 
 		// Find the maximum city count among players above win threshold (for determining actual ties)
-		const winThreshold = VictoryManager.getCityCountWin();
+		const winThreshold = VictoryManager.getInstance().getCityCountWin();
 		let maxCityCount = 0;
 		playersToAnnounce.forEach((participant) => {
 			const cities = ParticipantEntityManager.getCityCount(participant);
@@ -254,16 +274,16 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		function playerCityCountDescription(candidate: ActivePlayer, state: VictoryProgressState, maxCities: number) {
 			const playerCities = candidate.trackedData.cities.cities.length;
 			// Only show "TIED to win" if player has the maximum city count (actually tied)
-			if (state === 'TIE' && playerCities >= VictoryManager.getCityCountWin() && playerCities === maxCities) {
+			if (state === 'TIE' && playerCities >= VictoryManager.getInstance().getCityCountWin() && playerCities === maxCities) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
-				const remainingCities = VictoryManager.getCityCountWin() - playerCities;
+				const remainingCities = VictoryManager.getInstance().getCityCountWin() - playerCities;
 				if (remainingCities < 0) {
 					return `satisfies the city count to win!`;
 				} else if (remainingCities === 0) {
 					return `must maintain their city count this round to win!`;
 				} else {
-					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - playerCities}|r more to win!`;
+					return `needs ${HexColors.RED}${VictoryManager.getInstance().getCityCountWin() - playerCities}|r more to win!`;
 				}
 			}
 		}
@@ -279,16 +299,16 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		function teamCityCountDescription(candidate: Team, state: VictoryProgressState, maxCities: number) {
 			const teamCities = candidate.getCities();
 			// Only show "TIED to win" if team has the maximum city count (actually tied)
-			if (state === 'TIE' && teamCities >= VictoryManager.getCityCountWin() && teamCities === maxCities) {
+			if (state === 'TIE' && teamCities >= VictoryManager.getInstance().getCityCountWin() && teamCities === maxCities) {
 				return `is ${HexColors.RED}TIED|r to win!`;
 			} else {
-				const remainingCities = VictoryManager.getCityCountWin() - teamCities;
+				const remainingCities = VictoryManager.getInstance().getCityCountWin() - teamCities;
 				if (remainingCities < 0) {
 					return `satisfies the city count to win!`;
 				} else if (remainingCities === 0) {
 					return `must maintain their city count this round to win!`;
 				} else {
-					return `needs ${HexColors.RED}${VictoryManager.getCityCountWin() - teamCities}|r more to win!`;
+					return `needs ${HexColors.RED}${VictoryManager.getInstance().getCityCountWin() - teamCities}|r more to win!`;
 				}
 			}
 		}
@@ -299,11 +319,12 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			return line;
 		}
 
+		const overtimeSetting = SettingsContext.getInstance().getOvertimeSetting();
 		const tiedMessage =
 			VictoryManager.GAME_VICTORY_STATE === 'TIE'
-				? `${OvertimeManager.isOvertimeActive() ? `${HexColors.RED}TIED!\nGAME EXTENDED BY ONE ROUND!|r` : ''}`
+				? `${isOvertimeActive(GlobalGameData.turnCount, overtimeSetting) ? `${HexColors.RED}TIED!\nGAME EXTENDED BY ONE ROUND!|r` : ''}`
 				: '';
-		const overtimeMessage = OvertimeManager.isOvertimeActive() ? `${HexColors.RED}OVERTIME!|r` : '';
+		const overtimeMessage = isOvertimeActive(GlobalGameData.turnCount, overtimeSetting) ? `${HexColors.RED}OVERTIME!|r` : '';
 
 		if (playersToAnnounce[0] instanceof Team) {
 			const playerMessages = playersToAnnounce
@@ -322,7 +343,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer): void {
 		super.onCityCapture(city, preOwner, owner);
-		ScoreboardManager.getInstance().updatePartial();
+		ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 	}
 
@@ -337,15 +358,23 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			}
 		}
 
-		ScoreboardManager.getInstance().updatePartial();
+		ScoreboardManager.getInstance().updatePartial(Array.from(PlayerManager.getInstance().players.values()), SettingsContext.getInstance().isFFA());
 	}
 
 	// GameLoopState uses GlobalGameData.matchState to determine if the match is over
 	// This is preferable as it allows the state to clean up and transition to the next state
 	onPlayerRestart(player: ActivePlayer) {
+		if (GlobalGameData.matchState === 'postMatch') {
+			if (this.finishMatchLoop()) {
+				EventEmitter.getInstance().emit(EVENT_ON_PLAYER_RESTART, player);
+			}
+			return;
+		}
+
 		const humanPlayersCount: number = PlayerManager.getInstance().getHumanPlayersCount();
 		if (humanPlayersCount === 1) {
 			GlobalGameData.matchState = 'postMatch';
+			this.finishMatchLoop();
 		}
 	}
 

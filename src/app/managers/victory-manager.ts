@@ -6,12 +6,12 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { PLAYER_STATUS } from '../player/status/status-enum';
 import { PlayerManager } from '../player/player-manager';
 import { TeamManager } from '../teams/team-manager';
-import { OvertimeManager } from './overtime-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { ParticipantEntity, ParticipantEntityManager } from '../utils/participant-entity';
 import { debugPrint } from '../utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { GlobalMessage } from '../utils/messages';
+import { isOvertimeEnabled, getTurnCountPostOvertime } from './overtime-logic';
 
 export type VictoryProgressState = 'UNDECIDED' | 'TIE' | 'DECIDED';
 
@@ -21,15 +21,27 @@ export class VictoryManager {
 
 	private winTracker: WinTracker;
 
-	private constructor() {
+	private constructor(
+		private playerManager: PlayerManager,
+		private teamManager: TeamManager,
+		private settingsContext: SettingsContext
+	) {
 		this.winTracker = new WinTracker();
 	}
 
 	public static getInstance(): VictoryManager {
 		if (this.instance === undefined) {
-			this.instance = new VictoryManager();
+			this.instance = new VictoryManager(PlayerManager.getInstance(), TeamManager.getInstance(), SettingsContext.getInstance());
 		}
 
+		return this.instance;
+	}
+
+	/**
+	 * Initialize the VictoryManager with explicitly provided dependencies.
+	 */
+	public static init(playerManager: PlayerManager, teamManager: TeamManager, settingsContext: SettingsContext): VictoryManager {
+		this.instance = new VictoryManager(playerManager, teamManager, settingsContext);
 		return this.instance;
 	}
 
@@ -41,22 +53,28 @@ export class VictoryManager {
 	}
 
 	public removePlayer(player: ActivePlayer, status: PLAYER_STATUS) {
-		PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), status);
+		this.playerManager.setPlayerStatus(player.getPlayer(), status);
 	}
 
-	public setLeader(participant: ParticipantEntity) {
-		// Don't set eliminated players as leader
-		if (participant instanceof ActivePlayer && participant.status.isEliminated()) {
-			return;
+	public updateLeader() {
+		const allParticipants = this.getOwnershipByThresholdDescending(0);
+		const validParticipants: ParticipantEntity[] = [];
+		for (let i = 0; i < allParticipants.length; i++) {
+			const participant = allParticipants[i];
+			if (participant instanceof ActivePlayer && participant.status.isEliminated()) {
+				continue;
+			}
+			validParticipants.push(participant);
 		}
 
-		// If current leader is eliminated, always replace them
-		const currentLeaderEliminated = GlobalGameData.leader instanceof ActivePlayer && GlobalGameData.leader.status.isEliminated();
+		if (validParticipants.length === 0) return;
 
-		if (GlobalGameData.leader === undefined || currentLeaderEliminated) {
-			GlobalGameData.leader = participant;
-		} else if (ParticipantEntityManager.getCityCount(participant) > ParticipantEntityManager.getCityCount(GlobalGameData.leader)) {
-			GlobalGameData.leader = participant;
+		const currentLeader = GlobalGameData.leader;
+		const currentLeaderEliminated = currentLeader instanceof ActivePlayer && currentLeader.status.isEliminated();
+		const highestCount = ParticipantEntityManager.getCityCount(validParticipants[0]);
+
+		if (currentLeader === undefined || currentLeaderEliminated || ParticipantEntityManager.getCityCount(currentLeader) < highestCount) {
+			GlobalGameData.leader = validParticipants[0];
 		}
 	}
 
@@ -71,7 +89,7 @@ export class VictoryManager {
 
 	// This function is used to get the players who have won with the most cities (many players can have the same number of cities)
 	public victors(): ParticipantEntity[] {
-		let potentialVictors = this.getOwnershipByThresholdDescending(VictoryManager.getCityCountWin());
+		let potentialVictors = this.getOwnershipByThresholdDescending(this.getCityCountWin());
 
 		// Filter out eliminated players - they cannot be victors even if they have enough cities
 		potentialVictors = potentialVictors.filter((participant) => {
@@ -93,7 +111,7 @@ export class VictoryManager {
 	public updateAndGetGameState(): VictoryProgressState {
 		// Check if there is only one player or team alive (this takes priority)
 		let eliminationVictory = false;
-		VictoryManager.getInstance().haveAllOpponentsBeenEliminated((participant) => {
+		this.haveAllOpponentsBeenEliminated((participant) => {
 			GlobalGameData.leader = participant;
 			eliminationVictory = true;
 		});
@@ -110,10 +128,12 @@ export class VictoryManager {
 		if (playerWinCandidates.length === 0) {
 			VictoryManager.GAME_VICTORY_STATE = 'UNDECIDED';
 		} else if (playerWinCandidates.length === 1) {
-			if (DEBUG_PRINTS.master) debugPrint(
-				ParticipantEntityManager.getDisplayName(playerWinCandidates[0]) + ' has met the city count victory condition!',
-				DC.victory
-			);
+			if (DEBUG_PRINTS.master)
+				debugPrint(
+					ParticipantEntityManager.getDisplayName(playerWinCandidates[0]) + ' has met the city count victory condition!',
+					DC.victory
+				);
+			GlobalGameData.leader = playerWinCandidates[0];
 			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
 		} else {
 			VictoryManager.GAME_VICTORY_STATE = 'TIE';
@@ -122,25 +142,28 @@ export class VictoryManager {
 		return VictoryManager.GAME_VICTORY_STATE;
 	}
 
-	public static getCityCountWin(): number {
-		if (OvertimeManager.isOvertimeEnabled() && GlobalGameData.turnCount >= OvertimeManager.getOvertimeSettingValue()) {
-			return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * OvertimeManager.getTurnCountPostOvertime();
+	public getCityCountWin(): number {
+		const setting = this.settingsContext.getOvertimeSetting();
+		if (isOvertimeEnabled(setting) && GlobalGameData.turnCount >= (setting as number)) {
+			return (
+				Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO) - OVERTIME_MODIFIER * getTurnCountPostOvertime(GlobalGameData.turnCount, setting)
+			);
 		}
 
 		return Math.ceil(RegionToCity.size * CITIES_TO_WIN_RATIO);
 	}
 
 	public haveAllOpponentsBeenEliminated(fnAllEnemiesEleminated: (remainingParticipant: ParticipantEntity) => void): void {
-		if (!SettingsContext.getInstance().isFFA()) {
-			const activeTeams = TeamManager.getInstance().getActiveTeams();
+		if (!this.settingsContext.isFFA()) {
+			const activeTeams = this.teamManager.getActiveTeams();
 			if (activeTeams.length <= 1) {
 				fnAllEnemiesEleminated(activeTeams[0].getMemberWithHighestIncome());
 				return;
 			}
 		}
 
-		if (PlayerManager.getInstance().activePlayersThatAreAlive.size <= 1) {
-			const remainingPlayer = Array.from(PlayerManager.getInstance().activePlayersThatAreAlive.values())[0];
+		if (this.playerManager.activePlayersThatAreAlive.size <= 1) {
+			const remainingPlayer = Array.from(this.playerManager.activePlayersThatAreAlive.values())[0];
 			return fnAllEnemiesEleminated(remainingPlayer);
 		}
 		return;

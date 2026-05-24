@@ -7,8 +7,11 @@ import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
 import { VictoryManager } from '../managers/victory-manager';
 import { RatingManager } from '../rating/rating-manager';
 import { isReplay, getReplayObservedPlayer } from '../utils/game-status';
+import { sortPlayers, sortTeams } from '../utils/scoreboard-sort-logic';
 
 export interface PlayerRow {
+	playerId: number;
+	randomSeed: number;
 	player: ActivePlayer;
 	handle: player;
 	income: number;
@@ -37,8 +40,9 @@ export interface PlayerRow {
 
 export interface TeamRow {
 	team: Team;
-	number: number;
+	teamNumber: number;
 	totalIncome: number;
+	totalGold: number;
 	totalCities: number;
 	totalKills: number;
 	totalDeaths: number;
@@ -50,6 +54,7 @@ export class ScoreboardDataModel {
 	private _players: PlayerRow[] = [];
 	private _teams: TeamRow[] = [];
 	private _effectiveLocal: player;
+	private playerSeeds = new Map<player, number>();
 
 	public get players(): PlayerRow[] {
 		return this._players;
@@ -71,20 +76,7 @@ export class ScoreboardDataModel {
 		this._effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
 		this._players = activePlayers.map((p) => this.buildPlayerRow(p));
 
-		this._players.sort((a, b) => {
-			if (!a.isEliminated && b.isEliminated) return -1;
-			if (a.isEliminated && !b.isEliminated) return 1;
-
-			if (a.isEliminated && b.isEliminated) {
-				if (a.turnDied > b.turnDied) return -1;
-				if (a.turnDied < b.turnDied) return 1;
-				return GetPlayerId(a.handle) - GetPlayerId(b.handle);
-			}
-
-			if (a.income < b.income) return 1;
-			if (a.income > b.income) return -1;
-			return GetPlayerId(a.handle) - GetPlayerId(b.handle);
-		});
+		this._players = sortPlayers(this._players);
 
 		if (!isFFA) {
 			this.buildTeamRows();
@@ -141,6 +133,7 @@ export class ScoreboardDataModel {
 
 			// Update team-level totals (income preserved from last full refresh)
 			teamRow.totalCities = teamRow.team.getCities();
+			teamRow.totalGold = teamRow.members.reduce((sum, m) => sum + m.gold, 0);
 			teamRow.totalKills = teamRow.team.getKills();
 			teamRow.totalDeaths = teamRow.team.getDeaths();
 			teamRow.isEliminated = teamRow.members.every((m) => m.isEliminated);
@@ -149,6 +142,11 @@ export class ScoreboardDataModel {
 
 	private buildPlayerRow(p: ActivePlayer): PlayerRow {
 		const handle = p.getPlayer();
+
+		if (!this.playerSeeds.has(handle)) {
+			this.playerSeeds.set(handle, Math.random());
+		}
+
 		const data = p.trackedData;
 		const nameManager = NameManager.getInstance();
 		const kd = data.killsDeaths.get(handle);
@@ -156,7 +154,7 @@ export class ScoreboardDataModel {
 		const gameTimeInSeconds = GlobalGameData.turnCount * TURN_DURATION_IN_SECONDS + (TURN_DURATION_IN_SECONDS - GlobalGameData.tickCounter);
 		const isInCombat = gameTimeInSeconds > 15 && gameTimeInSeconds - data.lastCombat <= 15;
 
-		const requiredCities = VictoryManager.getCityCountWin();
+		const requiredCities = VictoryManager.getInstance().getCityCountWin();
 		const cities = data.cities.cities.length;
 
 		let ratingChange: PlayerRow['ratingChange'] = undefined;
@@ -179,6 +177,8 @@ export class ScoreboardDataModel {
 		}
 
 		return {
+			playerId: GetPlayerId(handle),
+			randomSeed: this.playerSeeds.get(handle)!,
 			player: p,
 			handle,
 			income: data.income.income,
@@ -208,41 +208,47 @@ export class ScoreboardDataModel {
 
 	private buildTeamRows(): void {
 		const teamManager = TeamManager.getInstance();
-		const teams = [...teamManager.getTeams()];
 
-		// Sort teams by income descending, tie-break by team number
-		teams.sort((a, b) => {
-			if (a.getIncome() < b.getIncome()) return 1;
-			if (a.getIncome() > b.getIncome()) return -1;
-			return a.getNumber() - b.getNumber();
-		});
+		// Construct initial unsorted array
+		let teamsData: TeamRow[] = teamManager.getTeams().map((team) => ({
+			team,
+			teamNumber: team.getNumber(),
+			totalIncome: team.getIncome(),
+			totalGold: 0,
+			totalCities: 0,
+			totalKills: 0,
+			totalDeaths: 0,
+			members: [] as PlayerRow[],
+			isEliminated: false,
+		}));
+
+		teamsData = sortTeams(teamsData);
 
 		// Build a lookup from player handle to PlayerRow
+		// Note: _players is already sorted by income at this point!
 		const rowLookup = new Map<player, PlayerRow>();
 		this._players.forEach((row) => rowLookup.set(row.handle, row));
 
-		this._teams = teams.map((team) => {
-			const members = team
+		this._teams = teamsData.map((teamRow) => {
+			// Because _players is already sorted, mapping from members will inherently preserve that sort! Wait actually, team.getMembers() uses native arrangement. Let's just sort members using sortPlayers.
+
+			let members = teamRow.team
 				.getMembers()
 				.map((m) => rowLookup.get(m.getPlayer()))
 				.filter((r): r is PlayerRow => r !== undefined);
 
-			// Sort members within each team by income descending, tie-break by playerID
-			members.sort((a, b) => {
-				if (a.income < b.income) return 1;
-				if (a.income > b.income) return -1;
-				return GetPlayerId(a.handle) - GetPlayerId(b.handle);
-			});
+			members = sortPlayers(members);
 
 			const isEliminated = members.every((m) => m.isEliminated);
 
 			return {
-				team,
-				number: team.getNumber(),
-				totalIncome: team.getIncome(),
-				totalCities: team.getCities(),
-				totalKills: team.getKills(),
-				totalDeaths: team.getDeaths(),
+				team: teamRow.team,
+				teamNumber: teamRow.teamNumber,
+				totalIncome: teamRow.totalIncome,
+				totalGold: members.reduce((sum, m) => sum + m.gold, 0),
+				totalCities: teamRow.team.getCities(),
+				totalKills: teamRow.team.getKills(),
+				totalDeaths: teamRow.team.getDeaths(),
 				members,
 				isEliminated,
 			};

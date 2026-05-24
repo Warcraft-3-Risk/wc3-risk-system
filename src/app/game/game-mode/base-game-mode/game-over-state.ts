@@ -15,7 +15,7 @@ import { Team } from 'src/app/teams/team';
 import { LocalMessage } from 'src/app/utils/messages';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { PlayLocalSound } from 'src/app/utils/utils';
-
+import { hideOptionButtonsForPlayers } from 'src/app/ui/player-preference-buttons';
 
 export class GameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -55,6 +55,7 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 			this.recordSessionStats();
 		} else {
 			// Non-promode: show full statistics board
+			hideOptionButtonsForPlayers(GlobalGameData.matchPlayers);
 			StatisticsController.getInstance().refreshView();
 			StatisticsController.getInstance().setViewVisibility(true);
 			StatisticsController.getInstance().writeStatisticsData();
@@ -148,7 +149,7 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 			}
 		});
 
-		sessionBoard.updateFull();
+		sessionBoard.updateFull(); /* TODO sessionBoard decoupling */
 		ScoreboardManager.getInstance().showSessionBoard();
 	}
 

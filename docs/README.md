@@ -18,11 +18,14 @@ If a document does not describe the current system, it should be updated or remo
 - docs/game-loop/fog-before-distribution-ordering.md
 - docs/game-loop/reset-performance-batching.md
 - docs/game-loop/wait-timer-concurrency-note.md
+- docs/minimap/shared-slot-effective-ownership.md
+- docs/observer-ui-safety.md
 - docs/replay/replay-destroy-multiboard-crash.md
 - docs/replay/replay-minimap-fow-fix.md
 - docs/replay/replay-scoreboard-pov.md
 - docs/shared-slots/replay-pov-detection.md
 - docs/shared-slots/shared-slots-current-behavior.md
+- docs/shared-slots/unit-color-assignment-readme.md
 - docs/shared-slots/ally-color-mode-2-engine-limitation.md
 
 ## Excluded Document Types

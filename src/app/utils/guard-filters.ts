@@ -15,17 +15,19 @@ export function GetUnitsInRangeByAllegiance(
 	city: City,
 	radius: number,
 	allegianceCheck: (filterUnit: unit, player: player) => boolean,
-	unit?: unit
+	unit?: unit,
+	referenceOwner?: player
 ) {
 	const x: number = !unit ? city.guard.defaultX : GetUnitX(unit);
 	const y: number = !unit ? city.guard.defaultY : GetUnitY(unit);
+	const owner = referenceOwner || city.getOwner();
 
 	GroupEnumUnitsInRange(
 		g,
 		x,
 		y,
 		radius,
-		Filter(() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), city.getOwner()))
+		Filter(() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), owner))
 	);
 }
 
@@ -35,18 +37,18 @@ export function GetUnitsInRangeOfUnitByAllegiance(
 	radius: number,
 	allegianceCheck: (filterUnit: unit, player: player) => boolean,
 	dyingUnit: unit,
-	killingUnit: unit
+	killingUnit: unit,
+	referenceOwner?: player
 ) {
 	const x: number = GetUnitX(dyingUnit);
 	const y: number = GetUnitY(dyingUnit);
+	const owner = referenceOwner || SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit);
 
 	GroupEnumUnitsInRange(
 		g,
 		x,
 		y,
 		radius,
-		Filter(
-			() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), SharedSlotManager.getInstance().getOwnerOfUnit(killingUnit))
-		)
+		Filter(() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), owner))
 	);
 }

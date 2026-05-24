@@ -142,6 +142,7 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 
 		city.changeOwner(player);
 		SetUnitOwner(city.guard.unit, player, true);
+		city.refreshColorFilter();
 
 		this.stateData.playerCapitalSelections.set(player, city);
 

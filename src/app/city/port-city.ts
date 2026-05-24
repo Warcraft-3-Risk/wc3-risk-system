@@ -54,6 +54,7 @@ export class PortCity extends City {
 			this.guard.replace(unit);
 			UnitToCity.set(this.guard.unit, this);
 			this.guard.reposition();
+			this.refreshColorFilter();
 		}
 	}
 
