@@ -1,5 +1,4 @@
 import { ResetState } from '../base-game-mode/reset-state';
-import { SetPromodeTempVisionState } from '../promode-game-mode/set-promode-temp-vision-state';
 import { SetupState } from '../base-game-mode/setup-state';
 import { BaseMode } from './base-mode';
 import { BaseState } from '../state/base-state';
@@ -30,7 +29,6 @@ export class EqualizedPromodeMode extends BaseMode<EqualizedPromodeData> {
 			new SetupState(),
 			new ApplyFogState(),
 			new EqualizedCityDistributeState(),
-			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),
 			new EnableControlsState(),
 			new ProModeGameLoopState(),

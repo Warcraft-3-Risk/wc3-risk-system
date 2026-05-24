@@ -90,9 +90,8 @@ export function getStateSequence(modeName: GameModeName): string[] {
 			return [
 				'UpdatePlayerStatusState',
 				'SetupState',
-				'CityDistributeState',
 				'ApplyFogState',
-				'SetPromodeTempVisionState',
+				'CityDistributeState',
 				'PromodeCountdownState',
 				'EnableControlsState',
 				'ProModeGameLoopState',
@@ -121,9 +120,8 @@ export function getStateSequence(modeName: GameModeName): string[] {
 			return [
 				'UpdatePlayerStatusState',
 				'SetupState',
-				'CityDistributeState',
 				'ApplyFogState',
-				'SetPromodeTempVisionState',
+				'CityDistributeState',
 				'W3CTipsState',
 				'PromodeCountdownState',
 				'EnableControlsState',
@@ -136,9 +134,8 @@ export function getStateSequence(modeName: GameModeName): string[] {
 			return [
 				'UpdatePlayerStatusState',
 				'SetupState',
-				'EqualizedCityDistributeState',
 				'ApplyFogState',
-				'SetPromodeTempVisionState',
+				'EqualizedCityDistributeState',
 				'PromodeCountdownState',
 				'EnableControlsState',
 				'ProModeGameLoopState',

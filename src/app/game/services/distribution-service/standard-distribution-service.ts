@@ -12,6 +12,8 @@ import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { Wait } from 'src/app/utils/wait';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { RegionToCity } from 'src/app/city/city-map';
+import { GlobalGameData } from '../../state/global-game-state';
+import { SettingsContext } from 'src/app/settings/settings-context';
 
 /**
  * Handles the distribution of cities among active players.
@@ -21,6 +23,7 @@ export class StandardDistributionService {
 	private maxCitiesPerPlayer: number;
 	private cities: City[];
 	private players: DoublyLinkedList<ActivePlayer>;
+	private sharedVisionUnits: Map<unit, player[]> = new Map();
 
 	/**
 	 * Initializes city pool and player list.
@@ -41,7 +44,8 @@ export class StandardDistributionService {
 	 * @param callback - Function to call after distribution is complete.
 	 */
 	public runDistro(callback: () => void): void {
-		this.distribute().then(() => {
+		this.distribute().then(async () => {
+			await this.releaseDistributedCityVision();
 			callback();
 		});
 	}
@@ -233,10 +237,55 @@ export class StandardDistributionService {
 
 		SetUnitInvulnerable(city.guard.unit, false);
 		city.refreshColorFilter();
+		this.revealDistributedCity(city);
 
 		if (DEBUG_PRINTS.master)
 			debugPrint(`[SharedSlots] Guard distributed to player ${GetPlayerId(player.getPlayer())}, incrementing count`, DC.sharedSlots);
 		SharedSlotManager.getInstance().incrementUnitCount(player.getPlayer());
+	}
+
+	private revealDistributedCity(city: City): void {
+		if (SettingsContext.getInstance().isFogOff()) {
+			return;
+		}
+
+		const players = GlobalGameData.matchPlayers.length > 0 ? GlobalGameData.matchPlayers : Array.from(PlayerManager.getInstance().players.values());
+		for (const activePlayer of players) {
+			const playerHandle = activePlayer.getPlayer();
+			this.shareUnitVision(city.barrack.unit, playerHandle);
+			this.shareUnitVision(city.cop, playerHandle);
+			if (city.guard && city.guard.unit) {
+				this.shareUnitVision(city.guard.unit, playerHandle);
+			}
+		}
+
+		city.refreshColorFilter();
+	}
+
+	private shareUnitVision(unitHandle: unit, playerHandle: player): void {
+		UnitShareVision(unitHandle, playerHandle, true);
+
+		const players = this.sharedVisionUnits.get(unitHandle) || [];
+		players.push(playerHandle);
+		this.sharedVisionUnits.set(unitHandle, players);
+	}
+
+	private async releaseDistributedCityVision(): Promise<void> {
+		if (this.sharedVisionUnits.size === 0) {
+			return;
+		}
+
+		// Keep the final batch visible long enough for the 0.2s minimap/color tick
+		// to record the distributed owner before shared vision is revoked.
+		await Wait.forSeconds(0.25);
+
+		for (const [unitHandle, players] of this.sharedVisionUnits) {
+			players.forEach((playerHandle) => {
+				UnitShareVision(unitHandle, playerHandle, false);
+			});
+		}
+
+		this.sharedVisionUnits.clear();
 	}
 
 	protected setCities = (cities: City[]): void => {

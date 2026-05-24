@@ -84,7 +84,7 @@ export class EqualizedPromodeDistributionService extends StandardDistributionSer
 
 		const players = this.getPlayers();
 		if (players.length !== 2) {
-			super.distribute();
+			await super.distribute();
 			return;
 		}
 

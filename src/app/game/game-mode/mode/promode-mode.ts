@@ -1,7 +1,6 @@
 import { CityDistributeState } from '../base-game-mode/city-distribute-state';
 import { GameOverState } from '../base-game-mode/game-over-state';
 import { ResetState } from '../base-game-mode/reset-state';
-import { SetPromodeTempVisionState } from '../promode-game-mode/set-promode-temp-vision-state';
 import { SetupState } from '../base-game-mode/setup-state';
 import { BaseMode } from './base-mode';
 import { BaseState } from '../state/base-state';
@@ -23,7 +22,6 @@ export class PromodeMode extends BaseMode<PromodeData> {
 			new SetupState(),
 			new ApplyFogState(),
 			new CityDistributeState(),
-			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),
 			new EnableControlsState(),
 			new ProModeGameLoopState(),

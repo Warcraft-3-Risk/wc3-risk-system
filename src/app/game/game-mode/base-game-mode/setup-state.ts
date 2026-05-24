@@ -87,8 +87,9 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		StatisticsController.getInstance().useCurrentActivePlayers();
 		Quests.getInstance().updatePlayersQuest();
 
-		// To reset and reduce tree hp on first turn
-		if (GlobalGameData.turnCount === 0) {
+		// Initial map setup needs trees normalized before the first match.
+		// Restarts do this in ResetState without blocking the mode transition.
+		if (GlobalGameData.matchCount === 1 && GlobalGameData.turnCount === 0) {
 			await TreeManager.getInstance().reset();
 		}
 

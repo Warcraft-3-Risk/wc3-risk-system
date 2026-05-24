@@ -1,6 +1,5 @@
 import { CityDistributeState } from '../base-game-mode/city-distribute-state';
 import { ResetState } from '../base-game-mode/reset-state';
-import { SetPromodeTempVisionState } from '../promode-game-mode/set-promode-temp-vision-state';
 import { SetupState } from '../base-game-mode/setup-state';
 import { BaseMode } from './base-mode';
 import { BaseState } from '../state/base-state';
@@ -29,7 +28,6 @@ export class W3CMode extends BaseMode<W3CData> {
 			new SetupState(),
 			new ApplyFogState(),
 			new CityDistributeState(),
-			new SetPromodeTempVisionState(),
 			new W3CTipsState(),
 			new PromodeCountdownState(),
 			new EnableControlsState(),

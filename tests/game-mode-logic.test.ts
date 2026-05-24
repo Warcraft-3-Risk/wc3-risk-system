@@ -82,20 +82,20 @@ describe('getStateSequence (state sequences per mode)', () => {
 		expect(getStateSequence('StandardMode')).toHaveLength(10);
 	});
 
-	it('PromodeMode has exactly 10 states', () => {
-		expect(getStateSequence('PromodeMode')).toHaveLength(10);
+	it('PromodeMode has exactly 9 states', () => {
+		expect(getStateSequence('PromodeMode')).toHaveLength(9);
 	});
 
 	it('CapitalsMode has exactly 13 states', () => {
 		expect(getStateSequence('CapitalsMode')).toHaveLength(13);
 	});
 
-	it('W3CMode has exactly 11 states', () => {
-		expect(getStateSequence('W3CMode')).toHaveLength(11);
+	it('W3CMode has exactly 10 states', () => {
+		expect(getStateSequence('W3CMode')).toHaveLength(10);
 	});
 
-	it('EqualizedPromodeMode has exactly 10 states', () => {
-		expect(getStateSequence('EqualizedPromodeMode')).toHaveLength(10);
+	it('EqualizedPromodeMode has exactly 9 states', () => {
+		expect(getStateSequence('EqualizedPromodeMode')).toHaveLength(9);
 	});
 
 	it('StandardMode state order matches production', () => {
@@ -117,9 +117,8 @@ describe('getStateSequence (state sequences per mode)', () => {
 		expect(getStateSequence('PromodeMode')).toEqual([
 			'UpdatePlayerStatusState',
 			'SetupState',
-			'CityDistributeState',
 			'ApplyFogState',
-			'SetPromodeTempVisionState',
+			'CityDistributeState',
 			'PromodeCountdownState',
 			'EnableControlsState',
 			'ProModeGameLoopState',
@@ -150,9 +149,8 @@ describe('getStateSequence (state sequences per mode)', () => {
 		expect(getStateSequence('W3CMode')).toEqual([
 			'UpdatePlayerStatusState',
 			'SetupState',
-			'CityDistributeState',
 			'ApplyFogState',
-			'SetPromodeTempVisionState',
+			'CityDistributeState',
 			'W3CTipsState',
 			'PromodeCountdownState',
 			'EnableControlsState',
@@ -166,9 +164,8 @@ describe('getStateSequence (state sequences per mode)', () => {
 		expect(getStateSequence('EqualizedPromodeMode')).toEqual([
 			'UpdatePlayerStatusState',
 			'SetupState',
-			'EqualizedCityDistributeState',
 			'ApplyFogState',
-			'SetPromodeTempVisionState',
+			'EqualizedCityDistributeState',
 			'PromodeCountdownState',
 			'EnableControlsState',
 			'ProModeGameLoopState',
@@ -527,7 +524,7 @@ describe('simulateStateMachine', () => {
 	it('processes all states in W3CMode sequence', () => {
 		const seq = getStateSequence('W3CMode');
 		const result = simulateStateMachine(seq);
-		expect(result.totalTransitions).toBe(11);
+		expect(result.totalTransitions).toBe(10);
 	});
 
 	it('always triggers restart after processing all states', () => {
@@ -547,9 +544,9 @@ describe('simulateMultipleGameCycles (restart cycles)', () => {
 		expect(result.cycleLength).toBe(10);
 	});
 
-	it('3 consecutive games of PromodeMode = 30 states + 3 restarts', () => {
+	it('3 consecutive games of PromodeMode = 27 states + 3 restarts', () => {
 		const result = simulateMultipleGameCycles(getStateSequence('PromodeMode'), 3);
-		expect(result.totalStatesEntered).toBe(30);
+		expect(result.totalStatesEntered).toBe(27);
 		expect(result.totalRestarts).toBe(3);
 	});
 
@@ -561,7 +558,7 @@ describe('simulateMultipleGameCycles (restart cycles)', () => {
 
 	it('10 consecutive games still work (no state accumulation)', () => {
 		const result = simulateMultipleGameCycles(getStateSequence('W3CMode'), 10);
-		expect(result.totalStatesEntered).toBe(110);
+		expect(result.totalStatesEntered).toBe(100);
 		expect(result.totalRestarts).toBe(10);
 	});
 });
@@ -697,7 +694,7 @@ describe('Full game scenarios', () => {
 
 		const sm = simulateMultipleGameCycles(seq, 3);
 		expect(sm.totalRestarts).toBe(3);
-		expect(sm.totalStatesEntered).toBe(30);
+		expect(sm.totalStatesEntered).toBe(27);
 	});
 
 	it('Capitals game: full state sequence with capital-specific states', () => {

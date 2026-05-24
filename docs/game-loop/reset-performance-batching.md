@@ -16,7 +16,9 @@ The match reset flow (triggered by `-ng` after game over) previously executed al
 
 ### Tree Reset Batching
 
-`TreeManager.reset()` iterates all trees in batches of 100 with 0.1s yields. Only trees whose life is below their maximum are restored. After restoring life, trees are set invulnerable for 3 seconds (then invulnerability is removed in batches) to prevent immediate re-destruction during the async window.
+`TreeManager.reset()` iterates all trees in batches of 300 with 0.1s yields. Only trees whose life is below their maximum are restored. After restoring life, trees are set invulnerable for 3 seconds (then invulnerability is removed in batches) to prevent immediate re-destruction during the async window.
+
+During `ResetState`, tree reset is started as a best-effort background pass and is not awaited before the mode transition. This prevents long tree batches from blocking automatic restarts such as Equalized Promode round 1 -> round 2. Initial first-match setup still awaits tree reset once before gameplay starts.
 
 ## Constraints and Safety Rules
 

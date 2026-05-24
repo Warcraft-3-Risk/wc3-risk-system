@@ -62,12 +62,6 @@ vi.mock('../src/app/game/game-mode/base-game-mode/enable-controls-state', () => 
 		onPlayerLeft() {}
 	},
 }));
-vi.mock('../src/app/game/game-mode/promode-game-mode/set-promode-temp-vision-state', () => ({
-	SetPromodeTempVisionState: class {
-		onPlayerForfeit() {}
-		onPlayerLeft() {}
-	},
-}));
 vi.mock('../src/app/game/game-mode/promode-game-mode/promode-countdown-state', () => ({
 	PromodeCountdownState: class {
 		onPlayerForfeit() {}

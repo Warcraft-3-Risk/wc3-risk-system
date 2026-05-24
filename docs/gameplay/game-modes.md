@@ -91,7 +91,7 @@ stateDiagram-v2
 
 ## Promode
 
-A competitive mode with modified setup — cities are distributed before fog is applied, and temporary vision is granted during a planning phase.
+A competitive mode with modified setup — fog is applied before distribution, and each assigned city is briefly revealed to all players as distribution runs.
 
 ### State Sequence
 
@@ -99,10 +99,9 @@ A competitive mode with modified setup — cities are distributed before fog is 
 stateDiagram-v2
     [*] --> UpdatePlayerStatus
     UpdatePlayerStatus --> Setup
-    Setup --> CityDistribute
-    CityDistribute --> ApplyFog
-    ApplyFog --> SetPromodeTempVision
-    SetPromodeTempVision --> PromodeCountdown
+    Setup --> ApplyFog
+    ApplyFog --> CityDistribute
+    CityDistribute --> PromodeCountdown
     PromodeCountdown --> EnableControls
     EnableControls --> ProModeGameLoop
     ProModeGameLoop --> GameOver
@@ -114,19 +113,18 @@ stateDiagram-v2
 |---|-------|-------------|
 | 1 | **UpdatePlayerStatus** | Detect active/leaving players |
 | 2 | **Setup** | Initialize map |
-| 3 | **CityDistribute** | Distribute cities *before* fog (players see initial layout) |
-| 4 | **ApplyFog** | Apply fog of war |
-| 5 | **SetPromodeTempVision** | Grant temporary full-map vision for planning |
-| 6 | **PromodeCountdown** | Extended countdown with vision |
-| 7 | **EnableControls** | Unlock controls |
-| 8 | **ProModeGameLoop** | Competitive game loop |
-| 9 | **GameOver** | Results and ratings |
-| 10 | **Reset** | Cleanup |
+| 3 | **ApplyFog** | Apply fog of war before ownership changes |
+| 4 | **CityDistribute** | Distribute cities and reveal each assigned city to all players |
+| 5 | **PromodeCountdown** | Extended countdown |
+| 6 | **EnableControls** | Unlock controls |
+| 7 | **ProModeGameLoop** | Competitive game loop |
+| 8 | **GameOver** | Results and ratings |
+| 9 | **Reset** | Cleanup |
 
 ### Key Differences from Standard
-- Cities visible before fog is applied (strategic planning)
-- Temporary vision phase lets players scout the full map
-- Fog → distribute order is reversed compared to Standard
+- Fog is active before ownership changes to avoid stale enemy-color caching.
+- Each distributed city is revealed to every match player as setup assigns it.
+- The old post-distribution shared-country reveal step is skipped.
 
 ### Chaos Promode (Promode Setting = 3)
 - Same state sequence as Promode
@@ -193,10 +191,9 @@ A competitive mode designed for the W3Champions matchmaking platform with automa
 stateDiagram-v2
     [*] --> UpdatePlayerStatus
     UpdatePlayerStatus --> Setup
-    Setup --> CityDistribute
-    CityDistribute --> ApplyFog
-    ApplyFog --> SetPromodeTempVision
-    SetPromodeTempVision --> W3CTips
+    Setup --> ApplyFog
+    ApplyFog --> CityDistribute
+    CityDistribute --> W3CTips
     W3CTips --> PromodeCountdown
     PromodeCountdown --> EnableControls
     EnableControls --> ProModeGameLoop
@@ -227,10 +224,9 @@ A two-match competitive format. Match 1 plays normally; Match 2 uses the exact s
 stateDiagram-v2
     [*] --> UpdatePlayerStatus
     UpdatePlayerStatus --> Setup
-    Setup --> EqualizedCityDistribute
-    EqualizedCityDistribute --> ApplyFog
-    ApplyFog --> SetPromodeTempVision
-    SetPromodeTempVision --> PromodeCountdown
+    Setup --> ApplyFog
+    ApplyFog --> EqualizedCityDistribute
+    EqualizedCityDistribute --> PromodeCountdown
     PromodeCountdown --> EnableControls
     EnableControls --> ProModeGameLoop
     ProModeGameLoop --> EqualizedPromodeGameOver

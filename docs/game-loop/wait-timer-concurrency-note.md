@@ -33,7 +33,7 @@ A shared-timer design causes cross-cancellation:
 ## Source of Truth in Code
 
 - src/app/utils/wait.ts
-- src/app/game/game-mode/promode-game-mode/set-promode-temp-vision-state.ts
+- src/app/game/services/distribution-service/standard-distribution-service.ts
 - src/app/game/services/tree-service.ts
 - src/app/game/game-mode/base-game-mode/setup-state.ts
 
