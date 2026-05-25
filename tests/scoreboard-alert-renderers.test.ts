@@ -155,7 +155,7 @@ describe('scoreboard capture alerts', () => {
 		expect(setItemValueMock).toHaveBeenCalledWith({ row: 3, col: 0 }, 'Player1 claimed |cffffcc00France|r');
 	});
 
-	it('routes capture alerts to observers through the scoreboard manager', () => {
+	it('routes capture alerts to active scoreboards through the scoreboard manager', () => {
 		const playerHandle = { id: 1 } as player;
 		const observerHandle = { id: 24 } as player;
 		const manager = ScoreboardManager.getInstance();
@@ -166,27 +166,27 @@ describe('scoreboard capture alerts', () => {
 		setItemValueMock.mockClear();
 		manager.setAlert(playerHandle, 'France');
 
-		expect(setItemValueMock).toHaveBeenCalledTimes(1);
+		expect(setItemValueMock).toHaveBeenCalledTimes(2);
 		expect(setItemValueMock).toHaveBeenCalledWith({ row: 3, col: 0 }, 'Player1 claimed |cffffcc00France|r');
 	});
 
-	it('omits the capture alert on the FFA player scoreboard', () => {
+	it('keeps the capture alert visible on the FFA player scoreboard', () => {
 		const renderer = new PlayerRenderer(1);
 		const playerHandle = { id: 1 } as player;
 
 		setItemValueMock.mockClear();
 		renderer.renderAlert(playerHandle, 'France');
 
-		expect(setItemValueMock).not.toHaveBeenCalled();
+		expect(setItemValueMock).toHaveBeenCalledWith({ row: 3, col: 0 }, 'Player1 claimed |cffffcc00France|r');
 	});
 
-	it('omits the capture alert on the team player scoreboard', () => {
+	it('keeps the capture alert visible on the team player scoreboard', () => {
 		const renderer = new TeamRenderer([]);
 		const playerHandle = { id: 1 } as player;
 
 		setItemValueMock.mockClear();
 		renderer.renderAlert(playerHandle, 'France');
 
-		expect(setItemValueMock).not.toHaveBeenCalled();
+		expect(setItemValueMock).toHaveBeenCalledWith({ row: 2, col: 0 }, 'Player1 claimed |cffffcc00France|r');
 	});
 });

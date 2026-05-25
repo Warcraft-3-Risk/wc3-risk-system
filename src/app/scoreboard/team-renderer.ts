@@ -1,3 +1,4 @@
+import { NameManager } from '../managers/names/name-manager';
 import { HexColors } from '../utils/hex-colors';
 import { ScoreboardRenderer } from './scoreboard-renderer';
 import { ScoreboardDataModel, PlayerRow, TeamRow } from './scoreboard-data-model';
@@ -16,7 +17,7 @@ export class TeamRenderer extends ScoreboardRenderer {
 	public constructor(teamRows: TeamRow[]) {
 		super(7);
 
-		this.size = 2;
+		this.size = 3;
 		teamRows.forEach((t) => {
 			this.size += t.members.length;
 		});
@@ -138,8 +139,8 @@ export class TeamRenderer extends ScoreboardRenderer {
 		}
 	}
 
-	public renderAlert(_player: player, _countryName: string): void {
-		// Player-facing scoreboards intentionally omit capture alerts.
+	public renderAlert(player: player, countryName: string): void {
+		this.setItemValue(`${NameManager.getInstance().getDisplayName(player)} claimed ${HexColors.TANGERINE}${countryName}|r`, this.size, 1);
 	}
 
 	// Hides instead of destroying — see ScoreboardRenderer.destroy()
