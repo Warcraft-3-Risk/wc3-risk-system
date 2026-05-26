@@ -145,8 +145,14 @@ function tsMain() {
 			FogEnable(true);
 			FogMaskEnable(true);
 
+			const hiddenSpawns = new Set<unit>();
 			CityToCountry.forEach((country, city) => {
 				city.HideMinimap();
+				const spawn = country.getSpawn();
+				if (!hiddenSpawns.has(spawn.unit)) {
+					spawn.HideMinimap();
+					hiddenSpawns.add(spawn.unit);
+				}
 			});
 
 			FogEnable(false);

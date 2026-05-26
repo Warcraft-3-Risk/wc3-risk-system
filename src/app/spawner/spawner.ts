@@ -143,7 +143,9 @@ export class Spawner implements Resetable, Ownable {
 	public setOwner(player: player): void {
 		if (player === undefined) player = NEUTRAL_HOSTILE;
 
+		this.refreshMinimapCamouflage();
 		SetUnitOwner(this._unit, SharedSlotManager.getInstance().getOwner(player), true);
+		this.refreshMinimapCamouflage();
 
 		if (!this.spawnMap.has(this.getOwner())) {
 			this.spawnMap.set(this.getOwner(), new Set());
@@ -156,6 +158,29 @@ export class Spawner implements Resetable, Ownable {
 	/** @returns The player that owns the spawner. */
 	public getOwner(): player {
 		return SharedSlotManager.getInstance().getOwnerOfUnit(this._unit);
+	}
+
+	/**
+	 * Primes the campfire like city buildings so a fogged ownership change does
+	 * not leave a visible native minimap ghost.
+	 */
+	public HideMinimap(): void {
+		BlzSetUnitBooleanField(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+		BlzSetUnitBooleanField(this._unit, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, false);
+		SetUnitOwner(this._unit, NEUTRAL_HOSTILE, true);
+		SetUnitVertexColor(this._unit, 0, 0, 0, 255);
+		BlzSetUnitBooleanField(this._unit, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, true);
+	}
+
+	public refreshMinimapCamouflage(): void {
+		BlzSetUnitBooleanField(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+
+		if (IsUnitVisible(this._unit, GetLocalPlayer())) {
+			SetUnitVertexColor(this._unit, 255, 255, 255, 255);
+			return;
+		}
+
+		SetUnitVertexColor(this._unit, 0, 0, 0, 255);
 	}
 
 	/**
@@ -202,5 +227,6 @@ export class Spawner implements Resetable, Ownable {
 	private rebuild(x: number, y: number) {
 		this._unit = CreateUnit(NEUTRAL_HOSTILE, UNIT_ID.SPAWNER, x, y, 270);
 		SetUnitPathing(this.unit, false);
+		this.HideMinimap();
 	}
 }

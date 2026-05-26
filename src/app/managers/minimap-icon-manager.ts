@@ -15,6 +15,8 @@ import { AllyColorFilterManager } from './ally-color-filter-manager';
 import { AllyColorState } from './alliances/ally-color-state';
 import { Wait } from '../utils/wait';
 import { MinimapTrackedList } from '../utils/minimap-tracked-list-logic';
+import { CityToCountry } from '../country/country-map';
+import type { Spawner } from '../spawner/spawner';
 
 export interface MinimapTickSample {
 	trackedUnits: number;
@@ -50,6 +52,7 @@ export class MinimapIconManager {
 	private cityBorders: Map<City, framehandle> = new Map(); // Inner border frames for capital cities
 	private cityOuterBorders: Map<City, framehandle> = new Map(); // Outer border frames for capital cities
 	private capitalIcons: Map<City, boolean> = new Map(); // Track which cities are capitals
+	private spawners: Spawner[] = [];
 	private trackedList = new MinimapTrackedList<unit, framehandle, player>();
 	private framePool: framehandle[] = []; // Pool of unused frames for recycling
 	private lastSeenOwners: Map<City, player> = new Map(); // Remember last seen owner
@@ -216,11 +219,28 @@ export class MinimapIconManager {
 		cities.forEach((city) => {
 			this.createCityIcon(city);
 		});
+		this.registerSpawners(cities);
 
 		if (DEBUG_PRINTS.master) debugPrint(`MinimapIconManager: Created ${this.cityIcons.size} icons`, DC.minimap);
 
 		this.startUpdateTimer();
 		this.expandPool(this.INITIAL_POOL_SIZE);
+	}
+
+	private registerSpawners(cities: City[]): void {
+		this.spawners.length = 0;
+		const seenSpawns = new Set<unit>();
+
+		for (const city of cities) {
+			const spawn = CityToCountry.get(city)?.getSpawn();
+			if (!spawn || seenSpawns.has(spawn.unit)) {
+				continue;
+			}
+
+			spawn.refreshMinimapCamouflage();
+			this.spawners.push(spawn);
+			seenSpawns.add(spawn.unit);
+		}
 	}
 
 	/**
@@ -675,6 +695,10 @@ export class MinimapIconManager {
 				record.lastDeadInFFA = isDeadInFFA;
 				record.lastOwnershipRevision = currentOwnershipRevision;
 			}
+		}
+
+		for (let s = 0; s < this.spawners.length; s++) {
+			this.spawners[s].refreshMinimapCamouflage();
 		}
 
 		// Update tracked units
@@ -1212,6 +1236,7 @@ export class MinimapIconManager {
 
 		const effectiveLocal = isReplay() ? getReplayObservedPlayer() : GetLocalPlayer();
 		const cityIndicatorScale = this.getCityIndicatorScale();
+		this.registerSpawners(cities);
 
 		// Reset all city icons back to default size and unhide them
 		for (let i = 0; i < this.cityRecords.length; i++) {
@@ -1259,6 +1284,7 @@ export class MinimapIconManager {
 		this.cityBorders.clear();
 		this.cityOuterBorders.clear();
 		this.capitalIcons.clear();
+		this.spawners.length = 0;
 		this.trackedList.trackedUnitList.length = 0;
 		this.trackedList.trackedFrameList.length = 0;
 		this.trackedList.trackedUnitIndex.clear();

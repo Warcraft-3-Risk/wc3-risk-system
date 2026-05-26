@@ -18,6 +18,7 @@ If a document does not describe the current system, it should be updated or remo
 - docs/game-loop/fog-before-distribution-ordering.md
 - docs/game-loop/reset-performance-batching.md
 - docs/game-loop/wait-timer-concurrency-note.md
+- docs/camera-position-overlay.md
 - docs/minimap/shared-slot-effective-ownership.md
 - docs/observer-ui-safety.md
 - docs/replay/replay-destroy-multiboard-crash.md
