@@ -1,5 +1,33 @@
 import { MAP_VERSION, W3C_MODE_ENABLED } from '../utils/map-info';
 
+// Default UI width at 100% HUD scale
+const DEFAULT_UI_WIDTH = 0.8;
+// UI is always centered horizontally at this X coordinate
+const UI_CENTER_X = 0.4;
+
+// Base absolute positions for frames at 100% HUD scale
+const UPKEEP_BASE_X = 0.6485;
+const UPKEEP_BASE_Y = 0.5972;
+
+/**
+ * Computes a scaled absolute X position based on HUD scale.
+ * Positions are relative to the UI center (0.4) and scaled outward.
+ */
+function scaledAbsX(baseX: number, hudScale: number): number {
+	const offsetFromCenter = baseX - UI_CENTER_X;
+	return UI_CENTER_X + offsetFromCenter * hudScale;
+}
+
+/**
+ * Computes a scaled absolute Y position based on HUD scale.
+ * The top bar anchors to the top of the screen (0.6) and scales downward.
+ */
+function scaledAbsY(baseY: number, hudScale: number): number {
+	const screenTop = 0.6;
+	const offsetFromTop = screenTop - baseY;
+	return screenTop - offsetFromTop * hudScale;
+}
+
 /**
  * Sets up the console UI for the game.
  */
@@ -12,7 +40,7 @@ export function SetConsoleUI() {
 
 	// Reposition Resource Frames
 	const upkeepFrame: framehandle = BlzGetFrameByName('ResourceBarUpkeepText', 0);
-	BlzFrameSetAbsPoint(upkeepFrame, FRAMEPOINT_TOPRIGHT, 0.6485, 0.5972);
+	BlzFrameSetAbsPoint(upkeepFrame, FRAMEPOINT_TOPRIGHT, UPKEEP_BASE_X, UPKEEP_BASE_Y);
 	BlzFrameSetText(upkeepFrame, '');
 
 	const lumberFrame: framehandle = BlzGetFrameByName('ResourceBarLumberText', 0);
@@ -30,6 +58,22 @@ export function SetConsoleUI() {
 	BlzFrameSetTextAlignment(mapInfo, TEXT_JUSTIFY_CENTER, TEXT_JUSTIFY_RIGHT);
 	BlzFrameSetLevel(mapInfo, 2);
 	BlzFrameSetText(mapInfo, `v${MAP_VERSION}`);
+
+	// Poll HUD scale and reposition top console bar frames accordingly
+	const consoleUI: framehandle = BlzGetFrameByName('ConsoleUIBackdrop', 0);
+	let lastHudScale = -1;
+
+	const hudScaleTimer = CreateTimer();
+	TimerStart(hudScaleTimer, 0.1, true, () => {
+		const currentScale = consoleUI ? BlzFrameGetWidth(consoleUI) / DEFAULT_UI_WIDTH : 1.0;
+
+		if (currentScale !== lastHudScale && currentScale > 0) {
+			lastHudScale = currentScale;
+
+			// Reposition upkeep frame with scaled coordinates
+			BlzFrameSetAbsPoint(upkeepFrame, FRAMEPOINT_TOPRIGHT, scaledAbsX(UPKEEP_BASE_X, currentScale), scaledAbsY(UPKEEP_BASE_Y, currentScale));
+		}
+	});
 
 	const newTitle: string = 'discord.gg/wc3risk';
 	const newResourceHeader: string = 'www.youtube.com/@riskreforged';
