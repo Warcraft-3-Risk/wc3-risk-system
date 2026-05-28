@@ -5,6 +5,7 @@ import { NEUTRAL_HOSTILE } from '../utils/utils';
 import { AllyColorState } from './alliances/ally-color-state';
 import { CityToCountry } from '../country/country-map';
 import { NameManager } from './names/name-manager';
+import { AllyColorModeButton } from '../ui/ally-color-mode-button';
 
 type ColorFilterCity = { barrack: { unit: unit }; cop: unit; guard?: { unit?: unit } };
 
@@ -50,12 +51,9 @@ export class AllyColorFilterManager {
 
 				const state = AllyColorState.getInstance();
 				state.toggle();
-
-				const mode = state.getMode();
-				if (mode === 0) print('Ally Color Filter: |cff00ff00Off|r');
-				else if (mode === 1) print('Ally Color Filter: |cffffff00Minimap Only|r');
-				else print('Ally Color Filter: |cffff0000On|r');
 			}
+
+			AllyColorModeButton.refreshExisting();
 
 			const customMode = AllyColorState.getInstance().getMode();
 			const activeLocalPlayer = PlayerManager.getInstance().players.get(GetLocalPlayer());

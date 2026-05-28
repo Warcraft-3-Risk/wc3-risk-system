@@ -45,6 +45,7 @@ import { ChatUIManager } from './app/managers/chat-ui-manager';
 import { detectGameStatus } from './app/utils/game-status';
 import { CityToCountry } from './app/country/country-map';
 import { ObserverRangeIndicator } from './app/triggers/visuals/observer-range-indicator';
+import { AllyColorModeButton } from './app/ui/ally-color-mode-button';
 
 function tsMain() {
 	try {
@@ -159,6 +160,7 @@ function tsMain() {
 			FogMaskEnable(false);
 
 			SetConsoleUI();
+			AllyColorModeButton.getInstance();
 			// UnitKillDisplay.getInstance(); // Removed - using button tooltip instead
 			PlayerCameraPositionManager.getInstance();
 			CameraManager.getInstance();
