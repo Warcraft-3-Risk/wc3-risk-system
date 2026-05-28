@@ -45,14 +45,13 @@ Replay viewers and observers are locked to mode 0 by `AllyColorState.getMode()`,
 
 Shared slots are assigned a real owner in `SharedSlotManager.assignSlotToPlayer()`, then wired in `givePlayerFullControlOfSlot()`.
 
-That method copies the real owner's color/name onto the shared slot:
+That method applies the real owner's runtime color to the shared slot:
 
 ```ts
-NameManager.getInstance().setColor(slot, NameManager.getInstance().getOriginalColor(player));
-NameManager.getInstance().copyDisplayNameToSlot(slot, player);
+SetPlayerColor(slot, nameManager.getOriginalColor(player));
 ```
 
-This is useful for native WC3 fallback behavior, but most custom visual systems should not depend on raw slot color. The safer path is still:
+Shared-slot assignment does not mutate player names. This preserves chat/statistics identity for eliminated players whose handles are reused as shared slots. Custom visual systems should not depend on raw slot color or raw slot name. The safer path is still:
 
 ```ts
 const owner = SharedSlotManager.getInstance().getOwnerOfUnit(unit);

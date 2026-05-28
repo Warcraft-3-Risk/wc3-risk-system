@@ -42,6 +42,8 @@ function clearTestUnits(): void {
 (globalThis as any).GetOwningPlayer = (u: TestUnit) => u.owner;
 
 // ─── Module Mocks ───────────────────────────────────────────────────
+type FakeNamedPlayer = { id?: number; name?: string };
+
 vi.mock('w3ts', () => ({
 	File: { read: vi.fn(() => ''), write: vi.fn() },
 }));
@@ -58,18 +60,19 @@ vi.mock('src/app/scoreboard/scoreboard-manager', () => ({
 		}),
 	},
 }));
+const nameManagerMock = vi.hoisted(() => ({
+	getDisplayName: vi.fn((p?: FakeNamedPlayer) => `Player ${p?.id ?? '?'}`),
+	getBtag: vi.fn(() => 'test#0000'),
+	setName: vi.fn(),
+	setColor: vi.fn(),
+	getOriginalColor: vi.fn(() => 0),
+	getDisplayColorCode: vi.fn(() => '|cFFFFFFFF'),
+	resetOriginalColors: vi.fn(),
+}));
+
 vi.mock('src/app/managers/names/name-manager', () => ({
 	NameManager: {
-		getInstance: () => ({
-			getDisplayName: (p: any) => `Player ${p?.id ?? '?'}`,
-			getBtag: () => 'test#0000',
-			setName: vi.fn(),
-			setColor: vi.fn(),
-			getOriginalColor: () => 0,
-			getDisplayColorCode: () => '|cFFFFFFFF',
-			copyDisplayNameToSlot: vi.fn(),
-			resetOriginalColors: vi.fn(),
-		}),
+		getInstance: () => nameManagerMock,
 	},
 }));
 vi.mock('src/app/managers/minimap-icon-manager', () => ({
@@ -163,6 +166,7 @@ describe('SharedSlotManager lifecycle integration', () => {
 	beforeEach(() => {
 		resetAllSingletons();
 		SharedSlotManager.resetInstance();
+		vi.clearAllMocks();
 		configureSettings({ diplomacy: 0 }); // FFA
 		clearTestUnits();
 		ssm = SharedSlotManager.getInstance();
@@ -265,6 +269,22 @@ describe('SharedSlotManager lifecycle integration', () => {
 					expect(GetPlayerId(slot)).not.toBe(GetPlayerId(p));
 				}
 			}
+		});
+
+		it('preserves a tracked eliminated player chat name when their handle is reused as a shared slot', () => {
+			const players = setupGame(12);
+			const activeOwner = players[0].getPlayer();
+			const eliminatedHandle = players[8].getPlayer();
+			eliminatedHandle.name = 'Pink (Microhive)';
+
+			for (let i = 8; i < 12; i++) {
+				eliminatePlayer(players[i]);
+			}
+
+			ssm.evaluateAndRedistribute();
+
+			expect(ssm.getSharedSlotsByPlayer(activeOwner)).toContain(eliminatedHandle);
+			expect(GetPlayerName(eliminatedHandle)).toBe('Pink (Microhive)');
 		});
 	});
 

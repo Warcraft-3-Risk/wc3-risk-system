@@ -486,8 +486,8 @@ export class SharedSlotManager implements Resetable {
 		if (DEBUG_PRINTS.master)
 			debugPrint(`SharedSlotManager: Giving player ${GetPlayerName(player)} full control of slot ${GetPlayerId(slot)}`, DC.sharedSlots);
 
-		NameManager.getInstance().setColor(slot, NameManager.getInstance().getOriginalColor(player));
-		NameManager.getInstance().copyDisplayNameToSlot(slot, player);
+		const nameManager = NameManager.getInstance();
+		SetPlayerColor(slot, nameManager.getOriginalColor(player));
 
 		this.enableAdvancedControl(player, slot, true);
 		this.enableAdvancedControl(slot, player, true);

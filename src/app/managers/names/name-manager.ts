@@ -251,18 +251,6 @@ export class NameManager {
 	}
 
 	/**
-	 * Copies the display name and color code from a source player to a target slot.
-	 * Used to sync shared slot names with their real owner.
-	 */
-	public copyDisplayNameToSlot(slot: player, sourcePlayer: player): void {
-		const source = this.names.get(sourcePlayer);
-		const target = this.names.get(slot);
-		target.displayName = source.displayName;
-		target.displayColorCode = source.displayColorCode;
-		SetPlayerName(slot, source.displayName);
-	}
-
-	/**
 	 * @returns The display color code of the player.
 	 */
 	public getDisplayColorCode(p: player): string {
