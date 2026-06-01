@@ -42,6 +42,7 @@ export class NameManager {
 	private static readonly COLOR_ALIASES: Map<string, string> = new Map([
 		['dg', 'dark green'],
 		['lb', 'light blue'],
+		['grey', 'gray'],
 	]);
 
 	/**
