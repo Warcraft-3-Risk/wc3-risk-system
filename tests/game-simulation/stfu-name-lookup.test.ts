@@ -82,6 +82,7 @@ const ALL_COLORS = [
 const COLOR_ALIASES: Map<string, string> = new Map([
 	['dg', 'dark green'],
 	['lb', 'light blue'],
+	['grey', 'gray'],
 ]);
 
 // ─── Helpers ────────────────────────────────────────────────────────
@@ -209,12 +210,23 @@ describe('Name lookup for -stfu command with shared slots', () => {
 	});
 
 	describe('basic color lookups (no shared slots)', () => {
-		it.each(ALL_COLORS.slice(0, 12))('finds player by exact color "%s"', (color) => {
+		it.each(ALL_COLORS)('finds player by exact color "%s" (all 24 colors)', (color) => {
 			const idx = ALL_COLORS.indexOf(color);
-			const btags = Array.from({ length: 12 }, (_, i) => `Player${i}#${2000 + i}`);
-			setupGame(12, btags);
+			const btags = Array.from({ length: 24 }, (_, i) => `Player${i}#${2000 + i}`);
+			setupGame(24, btags);
 
 			const results = findPlayersByName(color);
+
+			expect(results.length).toBe(1);
+			expect(GetPlayerId(results[0])).toBe(idx);
+		});
+
+		it.each(ALL_COLORS)('finds player by exact color "%s" case-insensitively', (color) => {
+			const idx = ALL_COLORS.indexOf(color);
+			const btags = Array.from({ length: 24 }, (_, i) => `Player${i}#${2000 + i}`);
+			setupGame(24, btags);
+
+			const results = findPlayersByName(color.toUpperCase());
 
 			expect(results.length).toBe(1);
 			expect(GetPlayerId(results[0])).toBe(idx);
@@ -258,12 +270,43 @@ describe('Name lookup for -stfu command with shared slots', () => {
 			expect(GetPlayerId(results[0])).toBe(9);
 		});
 
+		it('resolves "grey" alias to Gray player', () => {
+			setupGame(12);
+
+			const results = findPlayersByName('grey');
+
+			expect(results.length).toBe(1);
+			expect(GetPlayerId(results[0])).toBe(8); // Gray is index 8
+		});
+
+		it('resolves "Grey" (capitalized) alias to Gray player', () => {
+			setupGame(12);
+
+			const results = findPlayersByName('Grey');
+
+			expect(results.length).toBe(1);
+			expect(GetPlayerId(results[0])).toBe(8);
+		});
+
+		it('"gray" and "grey" both resolve to the same player', () => {
+			setupGame(12);
+
+			const grayResults = findPlayersByName('gray');
+			const greyResults = findPlayersByName('grey');
+
+			expect(grayResults.length).toBe(1);
+			expect(greyResults.length).toBe(1);
+			expect(GetPlayerId(grayResults[0])).toBe(GetPlayerId(greyResults[0]));
+		});
+
 		it('alias lookup is case-insensitive', () => {
 			setupGame(12);
 
 			expect(findPlayersByName('DG').length).toBe(1);
 			expect(findPlayersByName('LB').length).toBe(1);
 			expect(findPlayersByName('Dg').length).toBe(1);
+			expect(findPlayersByName('GREY').length).toBe(1);
+			expect(findPlayersByName('Grey').length).toBe(1);
 		});
 	});
 
@@ -295,6 +338,51 @@ describe('Name lookup for -stfu command with shared slots', () => {
 			expect(GetPlayerId(results[0])).toBe(4);
 		});
 
+		it('finds player by color substring "lav" → Lavender', () => {
+			setupGame(24);
+
+			const results = findPlayersByName('lav');
+
+			expect(results.length).toBe(1);
+			expect(GetPlayerId(results[0])).toBe(16);
+		});
+
+		it('finds player by color substring "emer" → Emerald', () => {
+			setupGame(24);
+
+			const results = findPlayersByName('emer');
+
+			expect(results.length).toBe(1);
+			expect(GetPlayerId(results[0])).toBe(19);
+		});
+
+		it('finds player by color substring "turq" → Turquoise', () => {
+			setupGame(24);
+
+			const results = findPlayersByName('turq');
+
+			expect(results.length).toBe(1);
+			expect(GetPlayerId(results[0])).toBe(22);
+		});
+
+		it('finds player by color substring "coa" → Coal', () => {
+			setupGame(24);
+
+			const results = findPlayersByName('coa');
+
+			expect(results.length).toBe(1);
+			expect(GetPlayerId(results[0])).toBe(18);
+		});
+
+		it('finds player by color substring "sno" → Snow', () => {
+			setupGame(24);
+
+			const results = findPlayersByName('sno');
+
+			expect(results.length).toBe(1);
+			expect(GetPlayerId(results[0])).toBe(23);
+		});
+
 		it('color substring is case-insensitive', () => {
 			setupGame(12);
 
@@ -310,6 +398,15 @@ describe('Name lookup for -stfu command with shared slots', () => {
 			const results = findPlayersByName('l');
 
 			// "Blue", "Yellow", "Light Blue" all contain "l"
+			expect(results.length).toBeGreaterThan(1);
+		});
+
+		it('returns multiple matches for ambiguous substring "ea" across extended colors', () => {
+			setupGame(24);
+
+			const results = findPlayersByName('ea');
+
+			// "Teal", "Wheat", "Peach", "Peanut" all contain "ea"
 			expect(results.length).toBeGreaterThan(1);
 		});
 	});
