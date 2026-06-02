@@ -12,7 +12,6 @@ export function HelpCommand(chatManager: ChatManager) {
 			{ cmd: '-ff', description: 'Forfeits the game without leaving it' },
 			{ cmd: '-names', description: 'Lists the players still alive in game' },
 			{ cmd: '-allies', description: 'Shows your allies with their colors and real names' },
-			{ cmd: '-discord / -qr', description: 'Shows the WC3 Risk Discord invite QR code' },
 			{
 				cmd: '-mute playerName/color',
 				description: `Mutes a player for 300 seconds if they are dead.\n${HexColors.RED}Example: -mute blue|r`,

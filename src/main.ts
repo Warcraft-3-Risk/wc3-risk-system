@@ -46,6 +46,7 @@ import { detectGameStatus } from './app/utils/game-status';
 import { CityToCountry } from './app/country/country-map';
 import { ObserverRangeIndicator } from './app/triggers/visuals/observer-range-indicator';
 import { AllyColorModeButton } from './app/ui/ally-color-mode-button';
+import { ObserverDiscordQrCode } from './app/triggers/visuals/observer-discord-qr-code';
 
 function tsMain() {
 	try {
@@ -122,6 +123,7 @@ function tsMain() {
 		KeyEvents();
 		CitySelectedEvent();
 		ObserverRangeIndicator.getInstance();
+		ObserverDiscordQrCode.getInstance();
 
 		//if singleplayer
 		if (EDITOR_DEVELOPER_MODE && ReloadGameCachesFromDisk()) {

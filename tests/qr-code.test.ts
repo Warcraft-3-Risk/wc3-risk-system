@@ -4,11 +4,11 @@ import { WC3_RISK_DISCORD_QR_ROWS, WC3_RISK_DISCORD_URL } from '../src/app/qr/wc
 import { getQrCodeDarkRuns } from '../src/app/ui/qr-code-frame-renderer';
 
 describe('QR code generator', () => {
-	it('encodes the WC3 Risk Discord invite as a version 3 medium-error QR matrix', () => {
+	it('encodes the WC3 Risk Discord invite as a version 2 medium-error QR matrix', () => {
 		const qrCode = generateQrCode(WC3_RISK_DISCORD_URL);
 
-		expect(qrCode.version).toBe(3);
-		expect(qrCode.size).toBe(29);
+		expect(qrCode.version).toBe(2);
+		expect(qrCode.size).toBe(25);
 		expect(qrCode.errorCorrectionLevel).toBe('M');
 		expect(qrCode.mask).toBeGreaterThanOrEqual(0);
 		expect(qrCode.mask).toBeLessThanOrEqual(7);
@@ -26,17 +26,17 @@ describe('QR code generator', () => {
 	});
 
 	it('builds a QR code from checked-in rows', () => {
-		const qrCode = createQrCodeFromRows(WC3_RISK_DISCORD_URL, WC3_RISK_DISCORD_QR_ROWS, 3, 'M', 2);
+		const qrCode = createQrCodeFromRows(WC3_RISK_DISCORD_URL, WC3_RISK_DISCORD_QR_ROWS, 2, 'M', 2);
 
-		expect(qrCode.size).toBe(29);
-		expect(qrCode.darkModuleCount).toBe(433);
+		expect(qrCode.size).toBe(25);
+		expect(qrCode.darkModuleCount).toBe(342);
 	});
 
 	it('groups dark modules into fewer horizontal run frames for WC3 rendering', () => {
 		const qrCode = generateQrCode(WC3_RISK_DISCORD_URL);
 		const runs = getQrCodeDarkRuns(qrCode.modules);
 
-		expect(runs).toHaveLength(210);
+		expect(runs).toHaveLength(169);
 		expect(runs[0]).toEqual({ x: 0, y: 0, length: 7 });
 		expect(runs.length).toBeLessThan(qrCode.darkModuleCount);
 	});
@@ -47,7 +47,7 @@ describe('QR code generator', () => {
 		expectFinderPattern(qrCode, 3, 3);
 		expectFinderPattern(qrCode, qrCode.size - 4, 3);
 		expectFinderPattern(qrCode, 3, qrCode.size - 4);
-		expectAlignmentPattern(qrCode, 22, 22);
+		expectAlignmentPattern(qrCode, qrCode.size - 7, qrCode.size - 7);
 	});
 
 	it('renders a stable text representation for debugging', () => {

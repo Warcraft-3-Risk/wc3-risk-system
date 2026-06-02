@@ -15,7 +15,6 @@ import { W3CDrawCommand } from './w3c-draw';
 import { W3CGGCommand } from './w3c-gg';
 import { Advanced } from './advanced';
 import { KillCommand } from './kill';
-import { DiscordCommand } from './discord';
 
 export function SetCommands() {
 	const chatManager: ChatManager = ChatManager.getInstance();
@@ -36,5 +35,4 @@ export function SetCommands() {
 	W3CDrawCommand(chatManager);
 	W3CGGCommand(chatManager);
 	KillCommand(chatManager, nameManager, playerManager);
-	DiscordCommand(chatManager);
 }
