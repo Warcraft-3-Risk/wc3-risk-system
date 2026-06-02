@@ -1,4 +1,4 @@
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 import { NameManager } from '../managers/names/name-manager';
 
 type Multis = {

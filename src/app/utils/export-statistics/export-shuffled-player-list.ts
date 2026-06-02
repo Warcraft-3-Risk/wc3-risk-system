@@ -1,4 +1,4 @@
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { CUSTOM_MAP_DATA_MATCH_DIRECTORY, CUSTOM_MAP_DATA_MINE_TYPE_TXT, ShuffleArray } from '../utils';

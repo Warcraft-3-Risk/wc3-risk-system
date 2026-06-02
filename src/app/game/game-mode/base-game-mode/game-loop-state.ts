@@ -1,7 +1,7 @@
 import { StringToCountry } from 'src/app/country/country-map';
 import { VictoryManager, VictoryProgressState } from 'src/app/managers/victory-manager';
 import { CITIES_TO_WIN_WARNING_RATIO, TICK_DURATION_IN_SECONDS, TURN_DURATION_IN_SECONDS } from 'src/configs/game-settings';
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 import { GlobalGameData } from '../../state/global-game-state';
 import { updateTickUI } from '../utillity/update-ui';
 import { BaseState } from '../state/base-state';

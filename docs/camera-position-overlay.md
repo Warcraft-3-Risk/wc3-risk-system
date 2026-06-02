@@ -14,6 +14,11 @@ camera target over sync data at a low rate, each client smooths the received
 positions locally, and the local viewer's camera projects those world positions
 into UI coordinates every render tick.
 
+W3Champions builds intentionally disable this feature. The overlay depends on
+`BlzSendSyncData` and per-player sync event registration, both of which are kept
+out of W3C builds through `src/app/utils/sync-data-policy.ts` while replay
+desync issues are being isolated.
+
 ## Current Behavior
 
 The system is owned by `PlayerCameraPositionManager`. It is initialized from
@@ -129,6 +134,10 @@ const y = S2R(parts[1]);
 On the first sync from a player, the manager creates that player's UI frames and
 initializes both the target position and the display position to the received
 value. On later syncs it only updates `camPositionData`.
+
+In W3C builds this whole path is skipped: no camera sync trigger is registered,
+no sync timer is started, and the F9 ally camera preference is shown as
+unavailable.
 
 Porting notes:
 
@@ -409,7 +418,8 @@ Startup:
 1. `src/main.ts` loads the frame TOC and initializes core managers.
 2. `SetConsoleUI()` prepares the custom UI.
 3. `PlayerCameraPositionManager.getInstance()` starts sync, lerp, and render
-   timers if `SHOW_PLAYER_CAMERA_POSITIONS` is enabled.
+   timers if `SHOW_PLAYER_CAMERA_POSITIONS` is enabled and sync data is allowed
+   for the current build.
 4. `ObserverCameraPositionOverlay.getInstance()` creates the observer toggle.
 5. `EVENT_ON_PRE_MATCH` refreshes observer-toggle eligibility.
 
@@ -508,6 +518,8 @@ Recommended defaults:
 ## Constraints and Safety Rules
 
 - Keep sync, smoothing, and rendering separate.
+- Keep the W3C sync-data policy centralized; do not add new `BlzSendSyncData`
+  features without routing them through the same build gate.
 - Keep overlay visibility local. Do not stop network sync just because one
   viewer hides the overlay.
 - Project world labels with the viewer's camera, not the target player's camera.

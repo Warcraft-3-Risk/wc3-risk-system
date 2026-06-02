@@ -4,7 +4,7 @@ import { UnitToCity } from '../city/city-map';
 import { countryTracker } from '../game/services/country-creator';
 import { Coordinates } from '../interfaces/coordinates';
 import { UNIT_TYPE } from '../utils/unit-types';
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 
 export function CountryCreatorCountryEvent() {
     const t: trigger = CreateTrigger();

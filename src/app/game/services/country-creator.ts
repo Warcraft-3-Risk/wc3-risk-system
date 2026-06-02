@@ -1,4 +1,4 @@
-import { File } from "w3ts";
+import { File } from 'w3ts/system/file';
 import { Coordinates } from "../../interfaces/coordinates";
 
 export interface CityCreate {

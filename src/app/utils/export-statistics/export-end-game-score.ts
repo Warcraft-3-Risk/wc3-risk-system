@@ -1,4 +1,4 @@
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 import { CUSTOM_MAP_DATA_MATCH_DIRECTORY, CUSTOM_MAP_DATA_MINE_TYPE_TXT } from '../utils';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
 

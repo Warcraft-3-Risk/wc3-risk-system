@@ -9,6 +9,19 @@ vi.mock('w3ts/system/file', () => ({
 	File: { read: vi.fn(() => ''), write: vi.fn() },
 }));
 
+const mockMapInfo = vi.hoisted(() => ({
+	w3cModeEnabled: false,
+}));
+
+vi.mock('../src/app/utils/map-info', () => ({
+	MAP_NAME: 'Risk Europe',
+	MAP_VERSION: 'test',
+	MAP_TYPE: 'europe',
+	get W3C_MODE_ENABLED() {
+		return mockMapInfo.w3cModeEnabled;
+	},
+}));
+
 // Mock NameManager
 vi.mock('../src/app/managers/names/name-manager', () => {
 	return {
@@ -111,6 +124,7 @@ describe('PlayerCameraPositionManager', () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
+		mockMapInfo.w3cModeEnabled = false;
 
 		localPlayer = { id: 0 };
 		otherPlayer = { id: 1 };
@@ -145,6 +159,17 @@ describe('PlayerCameraPositionManager', () => {
 		(AllyColorState as any).instance = undefined;
 		(AllyColorFilterManager as any).instance = undefined;
 		GlobalGameData.matchState = 'inProgress';
+	});
+
+	it('does not initialize or send camera sync data in W3C builds', () => {
+		mockMapInfo.w3cModeEnabled = true;
+
+		const manager = PlayerCameraPositionManager.getInstance();
+		(manager as any).syncLocalPlayerPosition();
+
+		expect(globalThis.BlzTriggerRegisterPlayerSyncEvent).not.toHaveBeenCalled();
+		expect(globalThis.TimerStart).not.toHaveBeenCalled();
+		expect(globalThis.BlzSendSyncData).not.toHaveBeenCalled();
 	});
 
 	it('syncs camera position when the active player is ALIVE', () => {

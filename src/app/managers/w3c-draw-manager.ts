@@ -2,7 +2,7 @@ import { debugPrint } from '../utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { NameManager } from './names/name-manager';
 import { PlayerManager } from '../player/player-manager';
-import { getElapsedTime } from 'w3ts';
+import { getElapsedTime } from 'w3ts/system/gametime';
 import { W3C_DRAW_DURATION } from 'src/configs/game-settings';
 
 /**

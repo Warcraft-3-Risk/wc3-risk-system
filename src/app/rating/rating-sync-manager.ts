@@ -9,7 +9,7 @@ import { debugPrint } from '../utils/debug-print';
 import { DC, DEBUG_PRINTS } from 'src/configs/game-settings';
 import { RatingManager } from './rating-manager';
 import { PlayerManager } from '../player/player-manager';
-import { MapPlayer, SyncRequest } from 'w3ts';
+import { isSyncDataDisabledForW3CBuild } from '../utils/sync-data-policy';
 
 /**
  * Singleton manager for P2P rating synchronization
@@ -55,6 +55,7 @@ export class RatingSyncManager {
 	 * @returns True if sync is complete and safe to access rating data
 	 */
 	public isSyncComplete(): boolean {
+		if (isSyncDataDisabledForW3CBuild()) return true;
 		return this.syncFullyCompleted;
 	}
 
@@ -74,6 +75,14 @@ export class RatingSyncManager {
 	 * @param humanPlayers Array of human players (excludes AI)
 	 */
 	public startSync(humanPlayers: ActivePlayer[]): void {
+		if (isSyncDataDisabledForW3CBuild()) {
+			if (DEBUG_PRINTS.master) debugPrint(`[RATING SYNC] Skipping P2P sync for W3C build`, DC.ratingSync);
+			this.markSyncDisabled();
+			return;
+		}
+
+		const { MapPlayer } = require('w3ts/handles/player') as typeof import('w3ts/handles/player');
+		const { SyncRequest } = require('w3ts/system/sync') as typeof import('w3ts/system/sync');
 		const localPlayer = GetLocalPlayer();
 		const localPlayerId = GetPlayerId(localPlayer);
 		const localBtag = NameManager.getInstance().getBtag(localPlayer);
@@ -410,6 +419,14 @@ export class RatingSyncManager {
 				if (DEBUG_PRINTS.master) debugPrint(`[RATING SYNC]   -> Sync already complete, timeout ignored`, DC.ratingSync);
 			}
 		});
+	}
+
+	private markSyncDisabled(): void {
+		this.receivedPlayerData.clear();
+		this.expectedPlayerCount = 0;
+		this.completedSyncs = 0;
+		this.isComplete = true;
+		this.syncFullyCompleted = true;
 	}
 
 	/**

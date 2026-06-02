@@ -1,4 +1,4 @@
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { DiplomacyStrings } from 'src/app/settings/strategies/diplomacy-strategy';
 import { FogStrings } from 'src/app/settings/strategies/fog-strategy';

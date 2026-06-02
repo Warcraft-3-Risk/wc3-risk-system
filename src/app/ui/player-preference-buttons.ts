@@ -1,10 +1,11 @@
 import { createGuardButton } from '../factory/guard-button-factory';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 import { RatingManager } from '../rating/rating-manager';
 import { NameManager } from '../managers/names/name-manager';
 import { getCountryLabelsText, normalizeLargeCityIndicators } from '../player/options';
+import { isSyncDataDisabledForW3CBuild } from '../utils/sync-data-policy';
 
 const OPTION_BUTTON_CONTEXT_OFFSETS = [0, 100, 200, 300, 400, 500, 600, 700];
 
@@ -336,6 +337,27 @@ export function buildColorContrastModeButton(player: ActivePlayer): framehandle 
 }
 
 export function buildCameraPanModeButton(player: ActivePlayer): framehandle {
+	if (isSyncDataDisabledForW3CBuild()) {
+		player.options.cameraPan = false;
+
+		return createGuardButton({
+			player: player,
+			createContext: GetPlayerId(player.getPlayer()) + 600,
+			key: OSKEY_F9,
+			textures: {
+				primary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp',
+				secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNTelescope.blp',
+			},
+			xOffset: 0.138,
+			initialTooltipText: `Ally Cameras ${HexColors.TANGERINE}(F9)|r\n${HexColors.LIGHT_GRAY}Unavailable in W3Champions builds.|r`,
+			action: () => {
+				if (player.getPlayer() === GetLocalPlayer()) {
+					DisplayTimedTextToPlayer(player.getPlayer(), 0, 0, 3, `${HexColors.TANGERINE}Ally camera sync is disabled in W3Champions builds.|r`);
+				}
+			},
+		});
+	}
+
 	const { SettingsContext } = require('src/app/settings/settings-context') as typeof import('../settings/settings-context');
 	const settings = SettingsContext.getInstance();
 	const isFFA = settings.isFFA();

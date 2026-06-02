@@ -1,5 +1,5 @@
 import { Resetable } from 'src/app/interfaces/resetable';
-import { Destructable } from 'w3ts';
+import { Destructable } from 'w3ts/handles/destructable';
 import { Wait } from 'src/app/utils/wait';
 import { needsReset, computeBatches } from 'src/app/utils/tree-reset-logic';
 

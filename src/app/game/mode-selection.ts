@@ -10,8 +10,8 @@ import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import { GlobalGameData } from './state/global-game-state';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 import { LocalMessage } from '../utils/messages';
-import { RatingSyncManager } from 'src/app/rating/rating-sync-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
+import { isSyncDataDisabledForW3CBuild } from '../utils/sync-data-policy';
 
 export class ModeSelection {
 	private ui: SettingsView;
@@ -38,7 +38,8 @@ export class ModeSelection {
 		// Start P2P rating synchronization early (during settings selection)
 		// This allows sync to complete while host is configuring the game
 		// Only start sync if rating system is enabled
-		if (RATING_SYSTEM_ENABLED) {
+		if (RATING_SYSTEM_ENABLED && !isSyncDataDisabledForW3CBuild()) {
+			const { RatingSyncManager } = require('src/app/rating/rating-sync-manager') as typeof import('src/app/rating/rating-sync-manager');
 			const syncManager = RatingSyncManager.getInstance();
 			// Human players AND observers can participate in P2P sync
 			// Observers are detected via IsPlayerObserver, not by controller type

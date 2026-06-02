@@ -1,6 +1,8 @@
 import { GlobalGameData } from '../game/state/global-game-state';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
-import { Dialog, MapPlayer, Trigger } from 'w3ts';
+import { Dialog } from 'w3ts/handles/dialog';
+import { MapPlayer } from 'w3ts/handles/player';
+import { Trigger } from 'w3ts/handles/trigger';
 import { PlayerManager } from '../player/player-manager';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_PLAYER_FORFEIT, EVENT_ON_PLAYER_STFU } from '../utils/events/event-constants';

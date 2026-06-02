@@ -11,6 +11,7 @@ import { ObserverCameraPositionOverlay } from '../triggers/visuals/observer-came
 import { AllyColorState } from './alliances/ally-color-state';
 import { AllyColorFilterManager } from './ally-color-filter-manager';
 import { ColorStringUtil } from '../utils/color-string-util';
+import { isSyncDataDisabledForW3CBuild } from '../utils/sync-data-policy';
 
 export type CamPositionData = {
 	x: number;
@@ -37,7 +38,7 @@ export default class PlayerCameraPositionManager {
 	}
 
 	private constructor() {
-		if (!SHOW_PLAYER_CAMERA_POSITIONS) return;
+		if (!SHOW_PLAYER_CAMERA_POSITIONS || isSyncDataDisabledForW3CBuild()) return;
 
 		this.syncTrigger = CreateTrigger();
 
@@ -135,6 +136,8 @@ export default class PlayerCameraPositionManager {
 	}
 
 	private syncLocalPlayerPosition() {
+		if (isSyncDataDisabledForW3CBuild()) return;
+
 		const p = GetLocalPlayer();
 		// Only sync if dragging/playing, spectators might not need to sync unless they want to be watched too
 		if (GetPlayerController(p) === MAP_CONTROL_USER) {
@@ -163,6 +166,8 @@ export default class PlayerCameraPositionManager {
 	}
 
 	private onSync() {
+		if (isSyncDataDisabledForW3CBuild()) return;
+
 		const p = GetTriggerPlayer();
 		const data = BlzGetTriggerSyncData();
 		const parts = data.split(':');

@@ -11,7 +11,7 @@ import {
 	buildLargeCityIndicatorButton,
 	setOptionButtonsVisibleForPlayer,
 } from '../ui/player-preference-buttons';
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
 import { debugPrint } from '../utils/debug-print';

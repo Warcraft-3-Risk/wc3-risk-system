@@ -1,4 +1,4 @@
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 import { ChatManager } from '../managers/chat-manager';
 import { areOptionButtonsVisibleForPlayer, setOptionButtonsVisibleForPlayer } from 'src/app/ui/player-preference-buttons';
 

@@ -9,7 +9,7 @@ import { Spawner } from '../spawner/spawner';
 import { SpawnerBuilder } from '../spawner/spawner-builder';
 import { SpawnerData } from '../spawner/spawner-data';
 import { PlayerManager } from '../player/player-manager';
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 import { HexColors } from '../utils/hex-colors';
 import { MinimapIconManager } from '../managers/minimap-icon-manager';
 import { CountryLabelManager } from '../managers/country-label-manager';

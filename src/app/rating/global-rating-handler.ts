@@ -1,4 +1,4 @@
-import { File } from 'w3ts';
+import { File } from 'w3ts/system/file';
 import { OthersRatingFileData, PlayerRatingData } from './types';
 import { RANKED_SEASON_RESET_KEY, RATING_FILE_ENCRYPTION_ENABLED } from 'src/configs/game-settings';
 import { encryptData, decryptData } from './rating-encryption';
