@@ -42,6 +42,7 @@ export class NameManager {
 	private static readonly COLOR_ALIASES: Map<string, string> = new Map([
 		['dg', 'dark green'],
 		['lb', 'light blue'],
+		['grey', 'gray'],
 	]);
 
 	/**
@@ -61,6 +62,9 @@ export class NameManager {
 		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as {
 			SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager;
 		};
+		const { PlayerManager } = require('src/app/player/player-manager') as {
+			PlayerManager: typeof import('src/app/player/player-manager').PlayerManager;
+		};
 
 		const resolved = this.resolveColorAlias(search);
 		const resolvedLower = resolved.toLowerCase().trim();
@@ -72,7 +76,10 @@ export class NameManager {
 			const p = Player(i);
 
 			if (GetPlayerSlotState(p) !== PLAYER_SLOT_STATE_PLAYING) continue;
-			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(p) !== undefined) continue;
+			// Skip shared slots, but not if the slot belongs to a real game participant
+			// (eliminated players whose slots were reassigned should still be findable)
+			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(p) !== undefined && !PlayerManager.getInstance().players.has(p))
+				continue;
 			if (filter && !filter(p)) continue;
 
 			const color = this.getColor(p);
@@ -118,6 +125,9 @@ export class NameManager {
 		const { SharedSlotManager } = require('src/app/game/services/shared-slot-manager') as {
 			SharedSlotManager: typeof import('src/app/game/services/shared-slot-manager').SharedSlotManager;
 		};
+		const { PlayerManager } = require('src/app/player/player-manager') as {
+			PlayerManager: typeof import('src/app/player/player-manager').PlayerManager;
+		};
 
 		let result: player = undefined;
 
@@ -125,7 +135,9 @@ export class NameManager {
 			const player = Player(i);
 
 			if (GetPlayerSlotState(player) !== PLAYER_SLOT_STATE_PLAYING) continue;
-			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(player) !== undefined) continue;
+			// Skip shared slots, but not if the slot belongs to a real game participant
+			if (SharedSlotManager.getInstance().getPlayerBySharedSlot(player) !== undefined && !PlayerManager.getInstance().players.has(player))
+				continue;
 
 			if (isNonEmptySubstring(string, this.getBtag(player))) {
 				result = player;
