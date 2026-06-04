@@ -60,7 +60,7 @@ export const W3C_DRAW_DURATION: number = 120;
 export const MMD_ENABLED: boolean = true;
 
 // Enable/disable shared slot allocation. Default is false.
-export const SHARED_SLOT_ALLOCATION_ENABLED = true;
+export const SHARED_SLOT_ALLOCATION_ENABLED = false;
 
 // This represents whether the ban list is active. Is set to true by default.
 export const BAN_LIST_ACTIVE: boolean = true;
