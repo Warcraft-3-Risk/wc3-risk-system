@@ -10,6 +10,7 @@ export function HelpCommand(chatManager: ChatManager) {
 			{ cmd: '-cam ####', description: `Changes your camera distance\n${HexColors.RED}Example: -cam 4000|r` },
 			{ cmd: '-ui', description: 'Toggles visibility of UI buttons (health, value, labels)' },
 			{ cmd: '-ff', description: 'Forfeits the game without leaving it' },
+			{ cmd: '-skip', description: 'Skips the starting countdown in developer mode or single-player games' },
 			{ cmd: '-names', description: 'Lists the players still alive in game' },
 			{ cmd: '-allies', description: 'Shows your allies with their colors and real names' },
 			{

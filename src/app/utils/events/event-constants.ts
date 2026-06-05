@@ -5,6 +5,7 @@ export const EVENT_ON_PLAYER_DEAD = 'onPlayerDead';
 export const EVENT_ON_PLAYER_STFU = 'onPlayerSTFU';
 export const EVENT_ON_PLAYER_FORFEIT = 'onPlayerForfeit';
 export const EVENT_ON_PLAYER_RESTART = 'onPlayerRestart';
+export const EVENT_ON_PLAYER_CHAT = 'onPlayerChat';
 export const EVENT_ON_CITY_CAPTURE = 'onCityCapture';
 export const EVENT_ON_UNIT_KILLED = 'onUnitKilled';
 export const EVENT_ON_SWAP_GUARD = 'onSwapGuard';

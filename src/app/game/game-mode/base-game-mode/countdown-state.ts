@@ -1,8 +1,8 @@
-import { CountdownMessage } from 'src/app/utils/messages';
+import { CountdownMessage, ErrorMsg } from 'src/app/utils/messages';
 import { PlayGlobalSound } from 'src/app/utils/utils';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
-import { STARTING_COUNTDOWN } from '../../../../configs/game-settings';
+import { EDITOR_DEVELOPER_MODE, STARTING_COUNTDOWN } from '../../../../configs/game-settings';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { RatingManager } from 'src/app/rating/rating-manager';
@@ -13,13 +13,21 @@ import { updateRatingStatsButtonForRankedStatus } from 'src/app/ui/player-prefer
 import { GlobalGameData } from '../../state/global-game-state';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 
+const SKIP_COMMAND = '-skip';
+
+export function isSkipCountdownAllowed(humanPlayerCount: number, isDeveloperMode: boolean = EDITOR_DEVELOPER_MODE): boolean {
+	return isDeveloperMode || humanPlayerCount === 1;
+}
+
 export class CountdownState<T extends StateData> extends BaseState<T> {
 	private initialDuration: number;
+	private countdownDuration: number;
 	private shouldSkipToNextState: boolean = false;
 
 	public constructor(duration: number = STARTING_COUNTDOWN) {
 		super();
 		this.initialDuration = duration;
+		this.countdownDuration = duration;
 	}
 
 	onEnterState() {
@@ -95,9 +103,9 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 			}
 
 			const startDelayTimer: timer = CreateTimer();
-			let duration: number = this.initialDuration;
+			this.countdownDuration = this.initialDuration;
 			BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
-			this.countdownDisplay(duration);
+			this.countdownDisplay(this.countdownDuration);
 			TimerStart(startDelayTimer, 1, true, () => {
 				// Check if we should skip to next state due to forfeit
 				if (this.shouldSkipToNextState) {
@@ -113,13 +121,13 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 				ScoreboardManager.getInstance().updateReplayPov();
 
 				BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
-				this.countdownDisplay(duration);
+				this.countdownDisplay(this.countdownDuration);
 
-				if (duration >= 1 && duration <= 3) {
+				if (this.countdownDuration >= 1 && this.countdownDuration <= 3) {
 					PlayGlobalSound('Sound\\Interface\\BattleNetTick.flac');
 				}
 
-				if (duration <= 0) {
+				if (this.countdownDuration <= 0) {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);
 					BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), false);
@@ -127,11 +135,27 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 					this.nextState(this.stateData);
 				}
-				duration--;
+				this.countdownDuration--;
 			});
 		} catch (error) {
 			print('Error in Metagame ' + error);
 		}
+	}
+
+	onPlayerChat(player: player, message: string): void {
+		const cmd = message.split(' ')[0].toLowerCase().trim();
+
+		if (cmd !== SKIP_COMMAND) return;
+
+		const humanPlayerCount = PlayerManager.getInstance().getCurrentActiveHumanPlayers().length;
+
+		if (!isSkipCountdownAllowed(humanPlayerCount)) {
+			ErrorMsg(player, '-skip is only available in developer mode or single-player games.');
+			return;
+		}
+
+		this.countdownDuration = 0;
+		this.countdownDisplay(this.countdownDuration);
 	}
 
 	onPlayerForfeit(player: ActivePlayer): void {

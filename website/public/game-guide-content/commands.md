@@ -22,7 +22,7 @@
 ```mermaid
 flowchart TD
     Commands["Chat Commands"]
-    Commands --> Game["Game Commands<br/>-ff, -restart, -mute"]
+    Commands --> Game["Game Commands<br/>-ff, -restart, -mute, -skip"]
     Commands --> UI["UI Commands<br/>-cam, -gold, -names, -ui"]
     Commands --> W3C["W3C Commands<br/>-w3c-draw, -w3c-gg"]
     Commands --> Info["Info Commands<br/>-help, -tutorial, -advanced, -allies"]
@@ -61,6 +61,16 @@ Example:
 | Effect | Triggers game restart sequence |
 | Event | Emits `EVENT_ON_PLAYER_RESTART` |
 | Note | If last human player, triggers game end |
+
+### `-skip`
+**Skip the starting countdown.**
+
+| Detail | Value |
+|--------|-------|
+| Effect | Sets the countdown value to `0` |
+| Condition | Developer mode or exactly one active human player |
+| Event | Handled by `CountdownState.onPlayerChat` |
+| Scope | Countdown phase only |
 
 ### `-mute`
 **Mute a player for 5 minutes.**
@@ -197,6 +207,7 @@ flowchart TD
 | Command | Aliases | Category | Description |
 |---------|---------|----------|-------------|
 | `-ff` | `-forfeit` | Game | Forfeit/concede |
+| `-skip` | — | Game | Skip countdown in dev/single-player |
 | `-restart` | `-ng`, `-newgame` | Game | Restart game |
 | `-mute` | — | Game | Mute player (300s) |
 | `-cam` | `-zoom` | UI | Camera controls |

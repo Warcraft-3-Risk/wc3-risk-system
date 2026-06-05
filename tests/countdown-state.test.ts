@@ -12,6 +12,11 @@ vi.mock('../src/app/utils/player-colors', () => ({
 	ACTIVE_PLAYER_COLORS: [],
 }));
 
+vi.mock('../src/app/utils/messages', () => ({
+	CountdownMessage: vi.fn(),
+	ErrorMsg: vi.fn(),
+}));
+
 vi.mock('w3ts', () => ({
 	File: class {},
 }));
@@ -22,13 +27,14 @@ vi.mock('w3ts/system/file', () => ({
 
 vi.mock('../src/app/utils/unit-types', () => ({ UNIT_TYPE: {} }));
 
-import { CountdownState } from '../src/app/game/game-mode/base-game-mode/countdown-state';
+import { CountdownState, isSkipCountdownAllowed } from '../src/app/game/game-mode/base-game-mode/countdown-state';
 import { GlobalGameData } from '../src/app/game/state/global-game-state';
 import { PlayerManager } from '../src/app/player/player-manager';
 import { SettingsContext } from '../src/app/settings/settings-context';
 import { RatingManager } from '../src/app/rating/rating-manager';
 import { NameManager } from '../src/app/managers/names/name-manager';
 import { ActivePlayer } from '../src/app/player/types/active-player';
+import { ErrorMsg } from '../src/app/utils/messages';
 
 // Mock dependencies
 vi.mock('../src/app/utils/utils', () => ({
@@ -96,6 +102,8 @@ describe('CountdownState', () => {
 		global.DisplayTimedTextToPlayer = vi.fn();
 		global.CreateTimer = vi.fn().mockReturnValue('dummyTimer');
 		global.TimerStart = vi.fn();
+		global.PauseTimer = vi.fn();
+		global.DestroyTimer = vi.fn();
 		global.BlzGetFrameByName = vi.fn().mockReturnValue('dummyFrame');
 		global.BlzFrameSetVisible = vi.fn();
 
@@ -138,5 +146,56 @@ describe('CountdownState', () => {
 		const messages = calls.map((call: any[]) => call[4]);
 
 		expect(messages.some((msg: string) => msg.includes('This is an unranked game!'))).toBe(false);
+	});
+
+	it('allows skip in developer mode regardless of human player count', () => {
+		expect(isSkipCountdownAllowed(8, true)).toBe(true);
+	});
+
+	it('allows skip with one human player outside developer mode', () => {
+		expect(isSkipCountdownAllowed(1, false)).toBe(true);
+	});
+
+	it('blocks skip with multiple human players outside developer mode', () => {
+		expect(isSkipCountdownAllowed(2, false)).toBe(false);
+	});
+
+	it('should transition on the next timer tick when -skip is sent during countdown', () => {
+		let countdownTick: () => void = () => {};
+		global.TimerStart = vi.fn((_timer: timer, _timeout: number, _periodic: boolean, callback: () => void) => {
+			countdownTick = callback;
+		});
+
+		countdownState.onEnterState();
+		countdownState.onPlayerChat(Player(0), '-skip');
+		countdownTick();
+
+		expect(countdownState.nextState).toHaveBeenCalledWith(countdownState.stateData);
+		expect(global.PauseTimer).toHaveBeenCalledWith('dummyTimer');
+		expect(global.DestroyTimer).toHaveBeenCalledWith('dummyTimer');
+		expect(global.BlzFrameSetVisible).toHaveBeenCalledWith('dummyFrame', false);
+	});
+
+	it('should ignore other countdown chat messages', () => {
+		let countdownTick: () => void = () => {};
+		global.TimerStart = vi.fn((_timer: timer, _timeout: number, _periodic: boolean, callback: () => void) => {
+			countdownTick = callback;
+		});
+
+		countdownState.onEnterState();
+		countdownState.onPlayerChat(Player(0), '-names');
+		countdownTick();
+
+		expect(countdownState.nextState).not.toHaveBeenCalled();
+	});
+
+	it('should reject -skip when multiple humans are playing outside developer mode', () => {
+		vi.spyOn(PlayerManager, 'getInstance').mockReturnValue({
+			getCurrentActiveHumanPlayers: vi.fn().mockReturnValue([{}, {}]),
+		} as any);
+
+		countdownState.onPlayerChat(Player(0), '-skip');
+
+		expect(ErrorMsg).toHaveBeenCalledWith(Player(0), '-skip is only available in developer mode or single-player games.');
 	});
 });

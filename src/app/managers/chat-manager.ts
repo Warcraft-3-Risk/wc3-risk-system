@@ -1,3 +1,6 @@
+import { EVENT_ON_PLAYER_CHAT } from '../utils/events/event-constants';
+import { EventEmitter } from '../utils/events/event-emitter';
+
 /**
  * Manages chat commands and their associated actions.
  */
@@ -29,9 +32,13 @@ export class ChatManager {
 		TriggerAddCondition(
 			t,
 			Condition(() => {
-				const cmd: string = GetEventPlayerChatString().split(' ')[0].toLowerCase().trim();
+				const player = GetTriggerPlayer();
+				const message = GetEventPlayerChatString();
+				const cmd: string = message.split(' ')[0].toLowerCase().trim();
+				const action = this._chatActions.get(cmd);
 
-				this._chatActions.get(cmd)();
+				EventEmitter.getInstance().emit(EVENT_ON_PLAYER_CHAT, player, message);
+				if (action) action();
 
 				return true;
 			})

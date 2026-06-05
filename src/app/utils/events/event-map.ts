@@ -10,6 +10,7 @@ import {
 	EVENT_ON_PLAYER_STFU,
 	EVENT_ON_PLAYER_FORFEIT,
 	EVENT_ON_PLAYER_RESTART,
+	EVENT_ON_PLAYER_CHAT,
 	EVENT_ON_CITY_CAPTURE,
 	EVENT_ON_UNIT_KILLED,
 	EVENT_ON_CITY_SELECTED,
@@ -44,6 +45,7 @@ export interface GameEventMap {
 	[EVENT_ON_PLAYER_STFU]: [player: ActivePlayer];
 	[EVENT_ON_PLAYER_FORFEIT]: [player: ActivePlayer];
 	[EVENT_ON_PLAYER_RESTART]: [player: ActivePlayer];
+	[EVENT_ON_PLAYER_CHAT]: [player: player, message: string];
 	[EVENT_ON_CITY_CAPTURE]: [city: City, prevOwner: ActivePlayer, owner: ActivePlayer];
 	[EVENT_ON_UNIT_KILLED]: [killingUnit: unit, dyingUnit: unit];
 	[EVENT_ON_CITY_SELECTED]: [city: City, player: player];

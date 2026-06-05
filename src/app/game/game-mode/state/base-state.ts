@@ -28,6 +28,8 @@ export abstract class BaseState<T extends StateData> {
 
 	onPlayerRestart(player: ActivePlayer) {}
 
+	onPlayerChat(player: player, message: string) {}
+
 	onPlayerAlive(player: ActivePlayer): void {
 		onPlayerAliveHandle(player);
 	}

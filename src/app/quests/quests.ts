@@ -185,6 +185,7 @@ export class Quests {
 
 			${HexColors.YELLOW}Game Commands:|r
 			-ff - Forfeit the game without leaving (counts as defeat)
+			-skip - Skip the starting countdown (developer mode or single-player only)
 			-ng - Restart the game when it is over
 			-names - Display a list of all alive/nomad players in the game
 
