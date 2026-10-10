@@ -7,6 +7,7 @@ import { HexColors } from '../utils/hex-colors';
 import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
+import { hasEconomy } from '../utils/dead-player-economy';
 
 export class TeamBoard extends Scoreboard {
 	private teams: Team[];
@@ -107,7 +108,7 @@ export class TeamBoard extends Scoreboard {
 			for (let j = 0; j < team.getMembers().length; j++) {
 				const player = team.getMembers()[j];
 				const playerHandle: player = player.getPlayer();
-				const incomeString: string = player.status.isAlive() || player.status.isNomad() ? `${player.trackedData.income.income}` : '-';
+				const incomeString: string = hasEconomy(player) ? `${player.trackedData.income.income}` : '-';
 
 				this.setItemValue(`${this.getStringColor(playerHandle)}${incomeString}`, row, this.INCOME_COL);
 				this.updatePlayerData(player, row, this.getStringColor(playerHandle), player.trackedData, isMyTeam);
@@ -208,8 +209,8 @@ export class TeamBoard extends Scoreboard {
 		// Name
 		this.setItemValue(`${teamPrefix}${NameManager.getInstance().getDisplayName(playerHandle)}`, row, this.PLAYER_COL);
 
-		// Gold - only visible for your own team, and only while the player can still spend it
-		if (isMyTeam && (player.status.isAlive() || player.status.isNomad())) {
+		// Gold - only visible for your own team, and only while the player still has an economy
+		if (isMyTeam && hasEconomy(player)) {
 			const playerGold: number = GetPlayerState(playerHandle, PLAYER_STATE_RESOURCE_GOLD);
 			const playerGoldTextColor: string = playerGold === 0 ? HexColors.RED : textColor;
 			this.setItemValue(`${playerGoldTextColor}${playerGold}`, row, this.GOLD_COL);

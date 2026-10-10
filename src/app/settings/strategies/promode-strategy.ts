@@ -59,7 +59,8 @@ export class PromodeStrategy implements SettingsStrategy {
 		const nameManager: NameManager = NameManager.getInstance();
 
 		playerManager.players.forEach((val, playerHandle) => {
-			nameManager.setColor(playerHandle, GetPlayerColor(playerHandle));
+			// Always the lobby color, so players keep their color across every match of a promode series
+			nameManager.setColor(playerHandle, nameManager.getLobbyColor(playerHandle));
 			nameManager.setName(playerHandle, 'acct');
 			val.trackedData.bonus.disable();
 		});

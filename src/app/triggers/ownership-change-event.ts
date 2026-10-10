@@ -15,6 +15,7 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_CITY_CAPTURE } from '../utils/events/event-constants';
 import { PlayLocalSound } from '../utils/utils';
+import { keepsEconomyWhenDead } from '../utils/dead-player-economy';
 
 export function OwnershipChangeEvent() {
 	const t: trigger = CreateTrigger();
@@ -45,7 +46,7 @@ export function OwnershipChangeEvent() {
 				if (country.getOwner() == prevOwnerHandle) {
 					country.setOwner(null);
 
-					if (prevOwner.status.isAlive()) {
+					if (prevOwner.status.isAlive() || keepsEconomyWhenDead(prevOwner)) {
 						prevOwner.trackedData.income.income -= country.getCities().length;
 						prevOwner.trackedData.income.delta -= country.getCities().length;
 
@@ -87,7 +88,7 @@ export function OwnershipChangeEvent() {
 				if (ownerData.countries.get(country) == country.getCities().length) {
 					country.setOwner(ownerHandle);
 
-					if (owner.status.isAlive()) {
+					if (owner.status.isAlive() || keepsEconomyWhenDead(owner)) {
 						ownerData.income.income += country.getCities().length;
 						ownerData.income.delta += country.getCities().length;
 					}

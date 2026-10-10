@@ -12,6 +12,7 @@ import { PlayLocalSound } from 'src/app/utils/utils';
 import { CHAOS_STARTING_INCOME, NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { Quests } from '../../../quests/quests';
+import { keepsEconomyWhenDead } from 'src/app/utils/dead-player-economy';
 
 export function onPlayerAliveHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.ALIVE;
@@ -31,7 +32,11 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 	player.status.status = PLAYER_STATUS.DEAD;
 	player.killedBy = player.trackedData.lastUnitKilledBy;
 	player.setEndData();
-	player.trackedData.income.income = 1;
+
+	// In team promode a dead player keeps their real income - see keepsEconomyWhenDead()
+	if (!keepsEconomyWhenDead(player)) {
+		player.trackedData.income.income = 1;
+	}
 
 	// Disable player controls
 	if (player.getPlayer() == GetLocalPlayer()) {

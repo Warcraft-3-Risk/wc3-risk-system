@@ -2,6 +2,7 @@ import { UnitToCity } from '../city/city-map';
 import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { UNIT_TYPE } from '../utils/unit-types';
+import { MinimapIconManager } from '../managers/minimap-icon-manager';
 
 export const UnitTrainedTrigger: trigger = CreateTrigger();
 
@@ -12,6 +13,9 @@ export function UnitTrainedEvent() {
 			const trainedUnit = GetTrainedUnit();
 
 			UnitToCity.get(GetTriggerUnit()).onUnitTrain(trainedUnit);
+
+			// Custom minimap drawing (promode only - a no-op otherwise)
+			MinimapIconManager.getInstance().registerIfValid(trainedUnit);
 
 			const player: ActivePlayer = PlayerManager.getInstance().players.get(GetOwningPlayer(trainedUnit));
 

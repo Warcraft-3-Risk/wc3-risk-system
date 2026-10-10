@@ -5,7 +5,8 @@ import { BaseMode } from './base-mode';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { PromodeCountdownState } from '../promode-game-mode/promode-countdown-state';
-import { ApplyFogState } from '../base-game-mode/apply-fog-state';
+import { PromodeApplyFogState } from '../promode-game-mode/promode-apply-fog-state';
+import { EnableCustomMinimapState } from '../promode-game-mode/enable-custom-minimap-state';
 import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-state';
 import { UpdatePlayerStatusState } from '../base-game-mode/update-player-status-state';
 import { EnableControlsState } from '../base-game-mode/enable-controls-state';
@@ -26,9 +27,10 @@ export class EqualizedPromodeData implements StateData {
 export class EqualizedPromodeMode extends BaseMode<EqualizedPromodeData> {
 	protected setupStates() {
 		return [
+			new EnableCustomMinimapState(),
 			new UpdatePlayerStatusState(),
 			new SetupState(),
-			new ApplyFogState(),
+			new PromodeApplyFogState(),
 			new EqualizedCityDistributeState(),
 			new SetPromodeTempVisionState(),
 			new PromodeCountdownState(),

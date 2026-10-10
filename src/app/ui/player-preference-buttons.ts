@@ -5,6 +5,8 @@ import { CityToCountry } from '../country/country-map';
 import { Country } from '../country/country';
 import { File } from 'w3ts';
 
+export const RATING_STATS_BUTTON_X_OFFSET: number = 0.092;
+
 export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
 		player: player,
@@ -168,7 +170,7 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 			primary: 'ReplaceableTextures\\CommandButtons\\BTNMedalHeroism.blp',
 			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
 		},
-		xOffset: 0.069,
+		xOffset: RATING_STATS_BUTTON_X_OFFSET,
 		initialTooltipText: `Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
 		action: (context: number, textures: { primary: string; secondary: string }, button) => {
 			if (GetLocalPlayer() == player.getPlayer()) {

@@ -141,8 +141,19 @@ export class VictoryManager {
 			}
 		}
 
-		if (PlayerManager.getInstance().activePlayersThatAreAlive.size <= 1) {
-			const remainingPlayer = Array.from(PlayerManager.getInstance().activePlayersThatAreAlive.values())[0];
+		// Counted in place rather than via activePlayersThatAreAlive - that getter copies and filters
+		// the whole player map, and this runs several times per tick.
+		let aliveCount = 0;
+		let remainingPlayer: ActivePlayer = undefined;
+
+		PlayerManager.getInstance().players.forEach((player) => {
+			if (!player.status.isActive()) return;
+
+			aliveCount++;
+			if (!remainingPlayer) remainingPlayer = player;
+		});
+
+		if (aliveCount <= 1) {
 			return fnAllEnemiesEleminated(remainingPlayer);
 		}
 		return;

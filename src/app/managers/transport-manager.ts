@@ -7,6 +7,7 @@ import { debugPrint } from '../utils/debug-print';
 import { ErrorMsg } from '../utils/messages';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { ORDER_ID } from '../../configs/order-id';
+import { MinimapIconManager } from './minimap-icon-manager';
 
 enum PatrolState {
 	LOADING,
@@ -235,6 +236,13 @@ export class TransportManager {
 
 		const transportData: Transport = this.transports.get(unit);
 
+		if (transportData.cargo) {
+			// Draw any surviving cargo on the custom promode minimap again (a no-op in other modes)
+			transportData.cargo.forEach((cargoUnit) => {
+				MinimapIconManager.getInstance().registerIfValid(cargoUnit, true);
+			});
+		}
+
 		transportData.cargo = null;
 
 		this.removeAutoLoadEffect(transportData);
@@ -280,6 +288,9 @@ export class TransportManager {
 				if (!transport) return false;
 
 				let loadedUnit: unit = GetLoadedUnit();
+
+				// Loaded units are managed by the transport, so stop drawing them on the custom promode minimap
+				MinimapIconManager.getInstance().unregisterTrackedUnit(loadedUnit);
 
 				const transportData = this.transports.get(transport);
 				transportData.cargo.push(loadedUnit);
@@ -410,7 +421,8 @@ export class TransportManager {
 				const index: number = transport.cargo.indexOf(GetOrderTargetUnit());
 
 				if (index > -1) {
-					transport.cargo.splice(index, 1);
+					const unloadedUnits = transport.cargo.splice(index, 1);
+					unloadedUnits.forEach((unit) => MinimapIconManager.getInstance().registerAfterUnload(unit));
 				}
 			})
 		);
@@ -486,7 +498,6 @@ export class TransportManager {
 		TriggerAddCondition(
 			t,
 			Condition(() => {
-				debugPrint('Transport Patrol Casted');
 				const transport: Transport = this.transports.get(GetTriggerUnit());
 
 				if (!transport || GetSpellAbilityId() !== ABILITY_ID.TRANSPORT_PATROL) {
@@ -629,6 +640,7 @@ export class TransportManager {
 				const unloadedUnits = transport.cargo.filter((unit) => !IsUnitInTransport(unit, transport.unit));
 				transport.cargo = transport.cargo.filter((unit) => IsUnitInTransport(unit, transport.unit));
 				unloadedUnits.forEach((unit) => {
+					MinimapIconManager.getInstance().registerAfterUnload(unit);
 					const index = transport.orderedUnits.indexOf(unit);
 					if (index > -1) {
 						this.unregisterOrder(transport, unit);

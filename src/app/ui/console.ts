@@ -48,15 +48,25 @@ export function SetConsoleUI() {
 		BlzFrameSetVisible(BlzGetFrameByName('VisionCheckBox', i), false);
 	}
 
-	if (GetHandleId(BlzGetFrameByName('ChatPlayerLabel', 0)) != 0) {
+	// DO NOT REMOVE the Location(0, 0) calls below - they are not dead code. These chat frames do not
+	// exist on every client (observers for example), and fetching a frame that exists allocates a handle
+	// while a missing one does not. The throwaway Location allocates one on the clients without the frame,
+	// so handle ids stay identical on every client. Without it, games with observers desync.
+	if (GetHandleId(BlzGetFrameByName('ChatPlayerLabel', 0)) == 0) {
+		Location(0, 0);
+	} else {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerLabel', 0), false);
 	}
 
-	if (GetHandleId(BlzGetFrameByName('ChatPlayerRadioButton', 0)) != 0) {
+	if (GetHandleId(BlzGetFrameByName('ChatPlayerRadioButton', 0)) == 0) {
+		Location(0, 0);
+	} else {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerRadioButton', 0), false);
 	}
 
-	if (GetHandleId(BlzGetFrameByName('ChatPlayerMenu', 0)) != 0) {
+	if (GetHandleId(BlzGetFrameByName('ChatPlayerMenu', 0)) == 0) {
+		Location(0, 0);
+	} else {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerMenu', 0), false);
 	}
 

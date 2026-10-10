@@ -5,6 +5,7 @@ import { HexColors } from '../utils/hex-colors';
 import { ShuffleArray } from '../utils/utils';
 import { Scoreboard } from './scoreboard';
 import { VictoryManager } from '../managers/victory-manager';
+import { keepsEconomyWhenDead } from '../utils/dead-player-economy';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { TURN_DURATION_IN_SECONDS } from '../../configs/game-settings';
 import { TeamManager } from '../teams/team-manager';
@@ -103,8 +104,9 @@ export class ObserverBoard extends Scoreboard {
 			const data: TrackedData = player.trackedData;
 			const textColor: string = HexColors.WHITE;
 
-			// Rating/income column for eliminated players only updates on full update (turn end)
-			if (player.status.isEliminated()) {
+			// Rating/income column for eliminated players only updates on full update (turn end).
+			// Dead players in team promode keep their economy, so their income column stays live instead.
+			if (player.status.isEliminated() && !keepsEconomyWhenDead(player)) {
 				const ratingManager = RatingManager.getInstance();
 				const btag = NameManager.getInstance().getBtag(player.getPlayer());
 				const ratingResult = ratingManager.getRatingResults().get(btag);
@@ -166,8 +168,13 @@ export class ObserverBoard extends Scoreboard {
 		// Name
 		this.setItemValue(`${grey}${teamPrefix}${NameManager.getInstance().getDisplayName(player.getPlayer())}`, row, this.PLAYER_COL);
 
-		// Gold
-		this.setItemValue(`${grey}-`, row, this.GOLD_COL);
+		// Income and gold - dead players in team promode keep their economy, so show them like normal
+		if (keepsEconomyWhenDead(player)) {
+			this.setItemValue(`${grey}${player.trackedData.income.income}`, row, this.INCOME_COL);
+			this.setItemValue(`${grey}${GetPlayerState(player.getPlayer(), PLAYER_STATE_RESOURCE_GOLD)}`, row, this.GOLD_COL);
+		} else {
+			this.setItemValue(`${grey}-`, row, this.GOLD_COL);
+		}
 
 		// Cities
 		this.setItemValue(`${grey}${data.cities.cities.length}`, row, this.CITIES_COL);

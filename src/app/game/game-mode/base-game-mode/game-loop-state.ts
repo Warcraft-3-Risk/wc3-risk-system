@@ -22,6 +22,7 @@ import { AnnounceOnLocation } from '../../announcer/announce';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { IncomeManager } from 'src/app/managers/income-manager';
+import { hasEconomy } from 'src/app/utils/dead-player-economy';
 import { RatingManager } from 'src/app/rating/rating-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 
@@ -171,7 +172,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		ScoreboardManager.getInstance().updateFull();
 		ScoreboardManager.getInstance().updateScoreboardTitle();
 		GlobalGameData.matchPlayers
-			.filter((x) => x.status.isActive())
+			.filter((x) => hasEconomy(x))
 			.forEach((player) => {
 				IncomeManager.giveIncome(player);
 			});

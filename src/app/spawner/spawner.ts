@@ -4,6 +4,7 @@ import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
+import { MinimapIconManager } from '../managers/minimap-icon-manager';
 
 export const SPAWNER_UNITS: Map<unit, Spawner> = new Map<unit, Spawner>();
 
@@ -87,6 +88,8 @@ export class Spawner implements Resetable, Ownable {
 			}
 
 			UnitAddType(u, UNIT_TYPE.SPAWN);
+			// Register for custom minimap drawing (promode only - a no-op otherwise). Must come after adding SPAWN type
+			MinimapIconManager.getInstance().registerIfValid(u);
 			if (GetLocalPlayer() == this.getOwner()) {
 				SetUnitVertexColor(u, 200, 200, 200, 150);
 			}
@@ -128,7 +131,11 @@ export class Spawner implements Resetable, Ownable {
 	public setOwner(player: player): void {
 		if (player == null) player = NEUTRAL_HOSTILE;
 
+		const customMinimap: boolean = MinimapIconManager.getInstance().isEnabled();
+
+		if (customMinimap) this.refreshMinimapCamouflage();
 		SetUnitOwner(this._unit, player, true);
+		if (customMinimap) this.refreshMinimapCamouflage();
 
 		if (!this.spawnMap.has(this.getOwner())) {
 			this.spawnMap.set(this.getOwner(), []);
@@ -141,6 +148,33 @@ export class Spawner implements Resetable, Ownable {
 	/** @returns The player that owns the spawner. */
 	public getOwner(): player {
 		return GetOwningPlayer(this._unit);
+	}
+
+	/**
+	 * Primes the spawner like city buildings so a fogged ownership change does not leave a
+	 * visible native minimap ghost. Only used by the custom promode minimap.
+	 */
+	public HideMinimap(): void {
+		BlzSetUnitBooleanField(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+		BlzSetUnitBooleanField(this._unit, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, false);
+		SetUnitOwner(this._unit, NEUTRAL_HOSTILE, true);
+		SetUnitVertexColor(this._unit, 0, 0, 0, 255);
+		BlzSetUnitBooleanField(this._unit, UNIT_BF_USE_EXTENDED_LINE_OF_SIGHT, true);
+	}
+
+	/**
+	 * Keeps the spawner off the native minimap and blacks it out while it is not visible to the
+	 * local player. Only used by the custom promode minimap.
+	 */
+	public refreshMinimapCamouflage(): void {
+		BlzSetUnitBooleanField(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
+
+		if (IsUnitVisible(this._unit, GetLocalPlayer())) {
+			SetUnitVertexColor(this._unit, 255, 255, 255, 255);
+			return;
+		}
+
+		SetUnitVertexColor(this._unit, 0, 0, 0, 255);
 	}
 
 	/**
@@ -189,5 +223,7 @@ export class Spawner implements Resetable, Ownable {
 	private rebuild(x: number, y: number) {
 		this._unit = CreateUnit(NEUTRAL_HOSTILE, UNIT_ID.SPAWNER, x, y, 270);
 		SetUnitPathing(this.unit, false);
+
+		if (MinimapIconManager.getInstance().isEnabled()) this.HideMinimap();
 	}
 }

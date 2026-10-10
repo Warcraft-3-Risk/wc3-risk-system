@@ -2,6 +2,7 @@ import { UNIT_ID } from 'src/configs/unit-id';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Resetable } from 'src/app/interfaces/resetable';
+import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 
 /**
  * Represents a Guard entity in the game, implementing the `Resetable` interface.
@@ -53,6 +54,10 @@ export class Guard implements Resetable {
 		UnitAddAbility(guard, FourCC("A006"));
 		UnitAddType(this._unit, UNIT_TYPE.GUARD);
 
+		// Untrack from the custom promode minimap FIRST (this re-enables the native minimap display),
+		// then hide the native icon. Order matters - reversing these lets the native dot leak through.
+		MinimapIconManager.getInstance().unregisterTrackedUnit(guard);
+
 		// Guards are never drawn on the minimap. A guard appearing at a city is itself an
 		// ownership tell, so it would leak captures through fog.
 		BlzSetUnitBooleanFieldBJ(guard, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
@@ -69,6 +74,7 @@ export class Guard implements Resetable {
 
 		// Back to being an ordinary unit, so let it onto the minimap again.
 		BlzSetUnitBooleanFieldBJ(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+		MinimapIconManager.getInstance().registerIfValid(this._unit);
 
 		this._unit = null;
 	}

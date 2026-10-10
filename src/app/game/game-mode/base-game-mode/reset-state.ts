@@ -10,8 +10,8 @@ import { TeamManager } from 'src/app/teams/team-manager';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { GlobalGameData } from '../../state/global-game-state';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
+import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 import { NameManager } from 'src/app/managers/names/name-manager';
-import { PLAYER_COLORS } from 'src/app/utils/player-colors';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -38,6 +38,10 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 		await Wait.forSeconds(1);
 		print('Resetting kill tracker...');
 		UnitKillTracker.getInstance().reset();
+		// Custom promode minimap only - skipped entirely in every other mode
+		if (MinimapIconManager.getInstance().isEnabled()) {
+			await MinimapIconManager.getInstance().reinitialize();
+		}
 		print('Resetting trees...');
 		TreeManager.getInstance().reset();
 		await Wait.forSeconds(1);
@@ -67,7 +71,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 		this.nextState(this.stateData);
 	}
 
-	// Restores every non-observer slot to its default color and colored name, and breaks all alliances between them.
+	// Restores every non-observer slot to its lobby color and colored name, and breaks all alliances between them.
 	private resetPlayersAndAlliances(): void {
 		const nameManager = NameManager.getInstance();
 
@@ -76,8 +80,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 
 			if (IsPlayerObserver(p)) continue;
 
-			SetPlayerColor(p, PLAYER_COLORS[i]);
-			nameManager.setColor(p, PLAYER_COLORS[i]);
+			nameManager.setColor(p, nameManager.getLobbyColor(p));
 			nameManager.setName(p, 'color');
 
 			for (let j = 0; j < bj_MAX_PLAYERS; j++) {

@@ -6,13 +6,13 @@
 export const CITIES_TO_WIN_RATIO: number = 0.3;
 
 //This is the starting gold for each player. 4 gold by default.
-export const STARTING_INCOME: number = 1000;
+export const STARTING_INCOME: number = 400;
 
 //This is the starting gold for each player in Chaos promode. 25 gold by default.
 export const CHAOS_STARTING_INCOME: number = 25;
 
 //This is the starting countdown for the game. 10 by default
-export const STARTING_COUNTDOWN: number = 3;
+export const STARTING_COUNTDOWN: number = 10;
 
 //This is the duration of a turn in seconds. 60 seconds by default.
 export const TURN_DURATION_IN_SECONDS: number = 60;
@@ -36,7 +36,7 @@ export const CITIES_PER_PLAYER_UPPER_BOUND: number = 22;
 export const STFU_DURATION: number = 300;
 
 //This represents whether debug messages should be printed. Default is false.
-export const SHOW_DEBUG_PRINTS = true;
+export const SHOW_DEBUG_PRINTS = false;
 
 // This represents whether debug logs should be saved to a file. Default is true.
 export const SAVE_DEBUG_LOGS_TO_FILE = false;
@@ -100,7 +100,7 @@ export const RANKED_STARTING_RATING: number = 1000;
 // Enable/disable editor developer mode. Default is false.
 // When enabled: Enables country creator commands for map editing (singleplayer only)
 // When disabled: Country creator commands are disabled
-export const EDITOR_DEVELOPER_MODE: boolean = true;
+export const EDITOR_DEVELOPER_MODE: boolean = false;
 
 // Enable/disable rating file encryption. Default is true.
 // When enabled: Rating files are encrypted with XOR+Base64 (production use)

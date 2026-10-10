@@ -12,15 +12,20 @@ export class NameManager {
 
 	private names: Map<player, PlayerNames>;
 
+	// Each player's color as selected in the lobby, captured before anything recolors them
+	private lobbyColors: Map<player, playercolor>;
+
 	/**
 	 * Private constructor to ensure singleton pattern.
 	 */
 	private constructor() {
 		this.names = new Map<player, PlayerNames>();
+		this.lobbyColors = new Map<player, playercolor>();
 
 		for (let i = 0; i < bj_MAX_PLAYER_SLOTS; i++) {
 			const p: player = Player(i);
 
+			this.lobbyColors.set(p, GetPlayerColor(p));
 			this.names.set(p, new PlayerNames(GetPlayerName(p), PLAYER_COLOR_CODES_MAP.get(GetPlayerColor(p))));
 			SetPlayerName(p, 'Player');
 		}
@@ -148,6 +153,14 @@ export class NameManager {
 	 */
 	public getColor(p: player): string {
 		return this.names.get(p).color;
+	}
+
+	/**
+	 * @param p - The player object.
+	 * @returns The color the player selected in the lobby.
+	 */
+	public getLobbyColor(p: player): playercolor {
+		return this.lobbyColors.get(p) ?? GetPlayerColor(p);
 	}
 
 	/**

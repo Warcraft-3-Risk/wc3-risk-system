@@ -5,28 +5,36 @@ export function UICommand(chatManager: ChatManager) {
 	chatManager.addCmd(['-ui'], () => {
 		const player: player = GetTriggerPlayer();
 
-		const healthButton = BlzGetFrameByName('GuardButton', GetPlayerId(player));
-		const valueButton = BlzGetFrameByName('GuardButton', GetPlayerId(player) + 100);
-		const labelButton = BlzGetFrameByName('GuardButton', GetPlayerId(player) + 200);
+		// Observers only have observer buttons, which always stay visible regardless of -ui
+		if (IsPlayerObserver(player)) return;
 
-		let isHidden: boolean = BlzFrameIsVisible(healthButton);
+		// Every client builds every player's buttons, but each player's buttons are only ever visible to
+		// that player. Visibility is purely local, so only the player who typed the command changes it -
+		// otherwise everyone else's client would start showing this player's buttons on top of their own.
+		if (player !== GetLocalPlayer()) return;
 
-		if (isHidden) {
-			if (player == GetLocalPlayer()) {
-				File.write('risk/ui.pld', `false`);
+		const id: number = GetPlayerId(player);
+		const healthButton: framehandle = BlzGetFrameByName('GuardButton', id);
+		const buttons: framehandle[] = [];
 
-				BlzFrameSetVisible(healthButton, false);
-				BlzFrameSetVisible(valueButton, false);
-				BlzFrameSetVisible(labelButton, false);
-			}
-		} else {
-			if (player == GetLocalPlayer()) {
-				File.write('risk/ui.pld', `true`);
-			}
+		// Some buttons only exist depending on settings (rating system, developer mode), so skip missing ones
+		const addButton = (frame: framehandle) => {
+			if (frame) buttons.push(frame);
+		};
 
-			BlzFrameSetVisible(healthButton, true);
-			BlzFrameSetVisible(valueButton, true);
-			BlzFrameSetVisible(labelButton, true);
+		addButton(healthButton);
+		addButton(BlzGetFrameByName('GuardButton', id + 100)); // Guard value
+		addButton(BlzGetFrameByName('GuardButton', id + 200)); // Country labels
+		addButton(BlzGetFrameByName('GuardButton', id + 300)); // Ranked stats
+		addButton(BlzGetFrameByName('GuardButton', id + 500)); // Cancel all orders
+		addButton(BlzGetFrameByName('CameraPositionButtonBackdrop', id + 400)); // Camera positions (developer mode only)
+
+		const show: boolean = !BlzFrameIsVisible(healthButton);
+
+		File.write('risk/ui.pld', `${show}`);
+
+		for (let i = 0; i < buttons.length; i++) {
+			BlzFrameSetVisible(buttons[i], show);
 		}
 	});
 }

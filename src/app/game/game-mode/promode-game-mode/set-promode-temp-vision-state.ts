@@ -5,6 +5,7 @@ import { Wait } from 'src/app/utils/wait';
 import { GlobalGameData } from '../../state/global-game-state';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { SettingsContext } from 'src/app/settings/settings-context';
+import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 
 export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogState<T> {
 	onEnterState() {
@@ -13,6 +14,7 @@ export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogStat
 
 	async runAsync(): Promise<void> {
 		SettingsContext.getInstance().applyStrategy('Fog');
+		MinimapIconManager.getInstance().clearSeenCache();
 		const players = GlobalGameData.matchPlayers;
 
 		const visionMap = new Map<unit, player[]>();
