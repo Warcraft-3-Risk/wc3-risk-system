@@ -35,7 +35,6 @@ import { ENABLE_EXPORT_SHUFFLED_PLAYER_LIST, EDITOR_DEVELOPER_MODE } from './con
 import { clearTickUI } from './app/game/game-mode/utillity/update-ui';
 import { FogManager } from './app/managers/fog-manager';
 import { UnitIssueOrderEvent } from './app/triggers/unit-issue-order-event';
-import { ClientManager } from './app/game/services/client-manager';
 import { UnitDamagedEvent } from './app/triggers/unit_death/unit-damaged-event';
 import { PlayerManager } from './app/player/player-manager';
 import { CountryCreatorCoordinatesEvent, CountryCreatorCountryEvent, CountryCreatorSaveEvent } from './app/triggers/country-creator-event';
@@ -69,12 +68,10 @@ function tsMain() {
 
 		//Handle names to prevent namebug
 		NameManager.getInstance();
-		ClientManager.getInstance();
 		PlayerManager.getInstance();
 
 		//Set up countries
 		SetCountries();
-		// SetRegions();
 		//Build countries, spawners, and cities
 		const countryBuilder = new ConcreteCountryBuilder();
 		const cityBuilder = new ConcreteCityBuilder();
@@ -89,18 +86,6 @@ function tsMain() {
 			countryBuilder.setSpawn(country.spawnerData, spawnerBuilder);
 			countryBuilder.build();
 		}
-		//Build regions
-		// const regionBuilder = new ConcreteRegionBuilder();
-
-		// for (const region of RegionSettings) {
-		// 	region.countryNames.forEach((countryName) => {
-		// 		const country = StringToCountry.get(countryName);
-		// 		regionBuilder.addCountry(country);
-		// 	});
-
-		// 	regionBuilder.setGoldBonus(region.goldBonus);
-		// 	regionBuilder.build();
-		// }
 
 		//Set up triggers
 		EnterRegionEvent();
@@ -137,7 +122,6 @@ function tsMain() {
 			FogEnable(false);
 			FogMaskEnable(false);
 			SetConsoleUI();
-			// UnitKillDisplay.getInstance(); // Removed - using button tooltip instead
 			PlayerCameraPositionManager.getInstance();
 			CameraManager.getInstance();
 			ChatManager.getInstance();

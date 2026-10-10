@@ -5,7 +5,6 @@ import { ComputeRatio } from '../utils/utils';
 import { StatisticsModel } from './statistics-model';
 import { RankedStatisticsView } from './ranked-statistics-view';
 import { UnrankedStatisticsView } from './unranked-statistics-view';
-import { IStatisticsView } from './base-statistics-view';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { RatingManager } from '../rating/rating-manager';
@@ -94,15 +93,6 @@ export class StatisticsController {
 		const showRating = ratingManager.getShowRatingPreference(btag);
 
 		return showRating;
-	}
-
-	/**
-	 * Get the appropriate view for a specific player
-	 * @param playerHandle The player
-	 * @returns The view instance (ranked or unranked)
-	 */
-	private getViewForPlayer(playerHandle: player): IStatisticsView {
-		return this.shouldShowRankedView(playerHandle) ? this.rankedView : this.unrankedView;
 	}
 
 	/**

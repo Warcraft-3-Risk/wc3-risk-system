@@ -5,8 +5,6 @@ import { EVENT_SET_GAME_MODE } from 'src/app/utils/events/event-constants';
 import { GlobalGameData } from '../../state/global-game-state';
 import { debugPrint } from 'src/app/utils/debug-print';
 
-export class BaseData implements StateData {}
-
 export abstract class BaseMode<T extends StateData> {
 	private states: BaseState<T>[];
 	private currentState: BaseState<T>;

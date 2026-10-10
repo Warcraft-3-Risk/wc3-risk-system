@@ -8,8 +8,6 @@ import { PLAYER_STATUS } from '../player/status/status-enum';
 import { ActivePlayer } from '../player/types/active-player';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { TrackedData } from '../player/data/tracked-data';
-import { CountryToRegion } from '../region/region-map';
-import { Region } from '../region/region';
 import { ScoreboardManager } from '../scoreboard/scoreboard-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { TeamManager } from '../teams/team-manager';
@@ -33,7 +31,6 @@ export function OwnershipChangeEvent() {
 
 			const city: City = UnitToCity.get(GetChangingUnit());
 			const country: Country = CityToCountry.get(city);
-			const region: Region = CountryToRegion.get(country);
 			const prevOwner: ActivePlayer | undefined = PlayerManager.getInstance().players.get(GetChangingUnitPrevOwner());
 			const owner: ActivePlayer | undefined = PlayerManager.getInstance().players.get(city.getOwner());
 			const teamManager: TeamManager = SettingsContext.getInstance().isFFA() ? null : TeamManager.getInstance();
@@ -57,16 +54,6 @@ export function OwnershipChangeEvent() {
 
 					if (teamManager) {
 						teamManager.getTeamFromPlayer(prevOwnerHandle).updateIncome(-country.getCities().length);
-					}
-				}
-
-				if (region && region.owner == prevOwnerHandle) {
-					region.setOwner(null);
-					prevOwner.trackedData.income.income -= region.goldBonus;
-					prevOwner.trackedData.income.delta -= region.goldBonus;
-
-					if (teamManager) {
-						teamManager.getTeamFromPlayer(prevOwnerHandle).updateIncome(-region.goldBonus);
 					}
 				}
 
@@ -103,12 +90,6 @@ export function OwnershipChangeEvent() {
 					if (owner.status.isAlive()) {
 						ownerData.income.income += country.getCities().length;
 						ownerData.income.delta += country.getCities().length;
-
-						if (region && region.isOwnedByPlayer(ownerHandle)) {
-							region.setOwner(ownerHandle);
-							ownerData.income.income += region.goldBonus;
-							ownerData.income.delta += region.goldBonus;
-						}
 					}
 
 					if (ownerData.income.income > ownerData.income.max) {
@@ -117,10 +98,6 @@ export function OwnershipChangeEvent() {
 
 					if (teamManager) {
 						teamManager.getTeamFromPlayer(ownerHandle).updateIncome(country.getCities().length);
-
-						if (region && region.isOwnedByPlayer(ownerHandle)) {
-							teamManager.getTeamFromPlayer(ownerHandle).updateIncome(region.goldBonus);
-						}
 					}
 
 					if (GlobalGameData.matchState == 'inProgress') {

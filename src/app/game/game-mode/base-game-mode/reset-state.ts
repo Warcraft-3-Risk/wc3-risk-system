@@ -6,11 +6,12 @@ import { BaseState } from '../state/base-state';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
 import { StateData } from '../state/state-data';
 import { FogManager } from 'src/app/managers/fog-manager';
-import { ClientManager } from '../../services/client-manager';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { GlobalGameData } from '../../state/global-game-state';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
+import { NameManager } from 'src/app/managers/names/name-manager';
+import { PLAYER_COLORS } from 'src/app/utils/player-colors';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -41,7 +42,8 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 		TreeManager.getInstance().reset();
 		await Wait.forSeconds(1);
 
-		ClientManager.getInstance().reset();
+		print('Resetting player colors, names and alliances...');
+		this.resetPlayersAndAlliances();
 
 		GlobalGameData.matchPlayers.forEach((val) => {
 			val.trackedData.reset();
@@ -63,5 +65,35 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 			});
 
 		this.nextState(this.stateData);
+	}
+
+	// Restores every non-observer slot to its default color and colored name, and breaks all alliances between them.
+	private resetPlayersAndAlliances(): void {
+		const nameManager = NameManager.getInstance();
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			const p = Player(i);
+
+			if (IsPlayerObserver(p)) continue;
+
+			SetPlayerColor(p, PLAYER_COLORS[i]);
+			nameManager.setColor(p, PLAYER_COLORS[i]);
+			nameManager.setName(p, 'color');
+
+			for (let j = 0; j < bj_MAX_PLAYERS; j++) {
+				const target = Player(j);
+
+				if (IsPlayerObserver(target)) continue;
+
+				SetPlayerAlliance(p, target, ALLIANCE_PASSIVE, false);
+				SetPlayerAlliance(p, target, ALLIANCE_HELP_REQUEST, false);
+				SetPlayerAlliance(p, target, ALLIANCE_HELP_RESPONSE, false);
+				SetPlayerAlliance(p, target, ALLIANCE_SHARED_XP, false);
+				SetPlayerAlliance(p, target, ALLIANCE_SHARED_SPELLS, false);
+				SetPlayerAlliance(p, target, ALLIANCE_SHARED_VISION, false);
+				SetPlayerAlliance(p, target, ALLIANCE_SHARED_CONTROL, false);
+				SetPlayerAlliance(p, target, ALLIANCE_SHARED_ADVANCED_CONTROL, false);
+			}
+		}
 	}
 }

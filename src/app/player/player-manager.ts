@@ -10,7 +10,6 @@ import { buildCameraPositionButton } from '../ui/camera-position-button';
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
-import { debugPrint } from '../utils/debug-print';
 import { NameManager } from '../managers/names/name-manager';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 import { BAN_LIST_ACTIVE, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
@@ -111,61 +110,6 @@ export class PlayerManager {
 		return this._instance;
 	}
 
-	public getEmptyPlayerSlots(): player[] {
-		let players: player[] = [];
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			const player = Player(i);
-
-			if (IsPlayerObserver(player)) {
-				this._observerFromHandle.set(player, new HumanPlayer(player));
-				continue;
-			}
-
-			if (GetPlayerSlotState(player) == PLAYER_SLOT_STATE_EMPTY) {
-				players.push(player);
-			}
-		}
-		return players;
-	}
-
-	public getPlayersThatLeftWithNoUnitsOrCities(): player[] {
-		let players: player[] = [];
-		// Find all slots that are eliminated players with no units
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			const player = Player(i);
-
-			// Ignore observers
-			if (IsPlayerObserver(player)) {
-				this._observerFromHandle.set(player, new HumanPlayer(player));
-				continue;
-			}
-
-			// Only consider players that have left
-			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_LEFT) {
-				continue;
-			}
-
-			// Ensure the player is tracked and has no units or cities
-			const activePlayer = PlayerManager.getInstance().players.get(player);
-			if (!activePlayer) {
-				continue;
-			}
-
-			// If the player has no units and no cities, consider them for client allocation
-			debugPrint(
-				`Player ${GetPlayerId(player)} has left. Units: ${activePlayer.trackedData.units.size}, Cities: ${activePlayer.trackedData.cities.cities.length}`
-			);
-
-			if (activePlayer.trackedData.units.size === 0 && activePlayer.trackedData.cities.cities.length === 0) {
-				debugPrint(`Player ${GetPlayerId(player)} added to left players list for potential client allocation.`);
-				players.push(player);
-			} else {
-				debugPrint(`Player ${GetPlayerId(player)} not added to left players list (has units or cities).`);
-			}
-		}
-		return players;
-	}
-
 	public getCurrentActiveHumanPlayers(): ActivePlayer[] {
 		let activePlayers: ActivePlayer[] = [];
 
@@ -263,10 +207,6 @@ export class PlayerManager {
 
 	public get activePlayersThatAreAlive(): Map<player, ActivePlayer> {
 		return new Map(Array.from(this._playerFromHandle).filter(([key, value]) => value.status.isActive()));
-	}
-
-	public get activePlayersThatHaveNotLeft(): Map<player, ActivePlayer> {
-		return new Map(Array.from(this._playerFromHandle).filter(([key, value]) => !value.status.isLeft()));
 	}
 
 	public get observers(): Map<player, HumanPlayer> {

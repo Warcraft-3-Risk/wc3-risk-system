@@ -742,7 +742,6 @@ export class RatingManager {
 		this.gameResults.set(btag, {
 			btag: btag,
 			basePlacementPoints: basePlacementPoints,
-			lobbySizeMultiplier: 1.0, // No longer used - dynamic placement handles lobby size
 			opponentStrengthModifier: opponentStrengthModifier,
 			killAdjustment: killAdjustment,
 			totalChange: totalChange,
@@ -913,7 +912,6 @@ export class RatingManager {
 			this.gameResults.set(btag, {
 				btag: btag,
 				basePlacementPoints: basePlacementPoints,
-				lobbySizeMultiplier: 1.0, // No longer used - dynamic placement handles lobby size
 				opponentStrengthModifier: opponentStrengthModifier,
 				killAdjustment: killAdjustment,
 				totalChange: totalChange,
@@ -1044,9 +1042,6 @@ export class RatingManager {
 			const playerKillValue = this.getPlayerKillValue(player);
 
 			// Calculate rating change using INITIAL player count and kill modifier
-			const basePlacementPoints = calculatePlacementPoints(preliminaryPlacement, this.initialPlayerCount);
-			const isGain = basePlacementPoints >= 0;
-			const opponentStrengthModifier = calculateOpponentStrengthModifier(currentRating, properOpponentRatings, isGain);
 			const totalChange = calculateRatingChange(
 				preliminaryPlacement,
 				currentRating,

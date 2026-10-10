@@ -1,5 +1,4 @@
 import { ABILITY_ID } from '../../configs/ability-id';
-import { ClientManager } from '../game/services/client-manager';
 import { TimedEvent } from '../libs/timer/timed-event';
 import { TransportTooltipLogic } from '../utils/transport-tooltip-logic';
 import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
@@ -363,14 +362,14 @@ export class TransportManager {
 						BlzPauseUnitEx(transport.unit, true);
 						BlzPauseUnitEx(transport.unit, false);
 						IssueImmediateOrder(transport.unit, 'stop');
-						ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+						ErrorMsg(GetOwningPlayer(transport.unit), 'You may only unload on pebble terrain!');
 						return false;
 					} else {
 						if (this.isTargetTerrainInvalid(abilityTargetX, abilityTargetY)) {
 							BlzPauseUnitEx(transport.unit, true);
 							BlzPauseUnitEx(transport.unit, false);
 							IssueImmediateOrder(transport.unit, 'stop');
-							ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+							ErrorMsg(GetOwningPlayer(transport.unit), 'You may only unload on pebble terrain!');
 							return false;
 						}
 					}
@@ -401,7 +400,7 @@ export class TransportManager {
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only unload on pebble terrain!');
+					ErrorMsg(GetOwningPlayer(transport.unit), 'You may only unload on pebble terrain!');
 
 					return false;
 				}
@@ -462,7 +461,7 @@ export class TransportManager {
 
 				if (this.isTerrainInvalid(transport.unit)) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(GetOwningPlayer(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
@@ -496,7 +495,7 @@ export class TransportManager {
 
 				if (this.isTerrainInvalid(transport.unit)) {
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(GetOwningPlayer(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 
@@ -598,7 +597,7 @@ export class TransportManager {
 					BlzPauseUnitEx(transport.unit, true);
 					BlzPauseUnitEx(transport.unit, false);
 					IssueImmediateOrder(transport.unit, 'stop');
-					ErrorMsg(ClientManager.getInstance().getOwnerOfUnit(transport.unit), 'You may only load on pebble terrain!');
+					ErrorMsg(GetOwningPlayer(transport.unit), 'You may only load on pebble terrain!');
 					return false;
 				}
 

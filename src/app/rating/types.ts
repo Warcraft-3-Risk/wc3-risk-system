@@ -78,8 +78,6 @@ export interface GameRatingResult {
 	btag: string;
 	/** Base points from placement (before multipliers) */
 	basePlacementPoints: number;
-	/** Lobby size multiplier (playerCount / 18) - deprecated, always 1.0 */
-	lobbySizeMultiplier: number;
 	/** Opponent strength modifier based on rating difference vs opponents */
 	opponentStrengthModifier: number;
 	/** Kill adjustment (additive) based on player's kills relative to lobby average */

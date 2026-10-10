@@ -1,5 +1,4 @@
 import { City } from '../city/city';
-import { ClientManager } from '../game/services/client-manager';
 
 /**
  * Context for the shared allegiance filter below.
@@ -58,7 +57,7 @@ export function GetUnitsInRangeOfUnitByAllegiance(
 
 	filterCity = city;
 	filterAllegianceCheck = allegianceCheck;
-	filterPlayer = ClientManager.getInstance().getOwnerOfUnit(killingUnit);
+	filterPlayer = GetOwningPlayer(killingUnit);
 
 	GroupEnumUnitsInRange(g, x, y, radius, allegianceFilter);
 }

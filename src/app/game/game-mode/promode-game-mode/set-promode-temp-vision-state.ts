@@ -5,7 +5,6 @@ import { Wait } from 'src/app/utils/wait';
 import { GlobalGameData } from '../../state/global-game-state';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { SettingsContext } from 'src/app/settings/settings-context';
-import { ClientManager } from '../../services/client-manager';
 
 export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogState<T> {
 	onEnterState() {
@@ -37,7 +36,7 @@ export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogStat
 				country.getCities().forEach((countryCity) => {
 					const unit: unit = countryCity.cop;
 
-					if (ClientManager.getInstance().getOwnerOfUnit(unit) !== NEUTRAL_HOSTILE) {
+					if (GetOwningPlayer(unit) !== NEUTRAL_HOSTILE) {
 						UnitShareVision(unit, playerHandle, true);
 
 						const playersWithVision = visionMap.get(unit) || [];

@@ -79,18 +79,6 @@ export function isNonEmptySubstring(substring: string, string: string): boolean 
 }
 
 /**
- * Computes the distance between two sets of coordinates.
- * @param x1 - The x-coordinate of the first location.
- * @param y1 - The y-coordinate of the first location.
- * @param x2 - The x-coordinate of the second location.
- * @param y2 - The y-coordinate of the second location.
- * @returns The distance between the two locations.
- */
-export function DistanceBetweenCoords(x1: number, y1: number, x2: number, y2: number) {
-	return SquareRoot(Pow(x2 - x1, 2) + Pow(y2 - y1, 2));
-}
-
-/**
  * Determines if a unit is melee.
  * @param unit - The unit to test.
  * @returns True if the unit is melee, otherwise false

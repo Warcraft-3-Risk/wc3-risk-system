@@ -1,4 +1,3 @@
-import { ClientManager } from 'src/app/game/services/client-manager';
 import { Resetable } from 'src/app/interfaces/resetable';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 
@@ -47,7 +46,7 @@ export class Barracks implements Resetable {
 	 * @param player - The player object that will become the new owner.
 	 */
 	public setOwner(player: player): void {
-		SetUnitOwner(this._unit, ClientManager.getInstance().getOwner(player), true);
+		SetUnitOwner(this._unit, player, true);
 	}
 
 	/**
@@ -55,7 +54,7 @@ export class Barracks implements Resetable {
 	 * @returns The player object representing the owner.
 	 */
 	public getOwner(): player {
-		return ClientManager.getInstance().getOwnerOfUnit(this._unit);
+		return GetOwningPlayer(this._unit);
 	}
 
 	/**

@@ -65,9 +65,6 @@ export const MMD_ENABLED: boolean = true;
 // Master toggle for the observer/ally camera position overlay (where other players are looking).
 export const SHOW_PLAYER_CAMERA_POSITIONS: boolean = true;
 
-// Enable/disable player client allocation. Default is false.
-export const CLIENT_ALLOCATION_ENABLED = false;
-
 // This represents whether the ban list is active. Is set to true by default.
 export const BAN_LIST_ACTIVE: boolean = true;
 
