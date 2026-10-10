@@ -1,6 +1,5 @@
 import { UNIT_ID } from '../../configs/unit-id';
 import { ClientManager } from '../game/services/client-manager';
-import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
@@ -80,7 +79,6 @@ export class Spawner implements Resetable, Ownable {
 				GetUnitY(this.unit),
 				270
 			);
-			UnitLagManager.getInstance().trackUnit(u);
 			let loc: location = GetUnitRallyPoint(this.unit);
 
 			if (!IsUnitType(u, UNIT_TYPE.TRANSPORT)) {

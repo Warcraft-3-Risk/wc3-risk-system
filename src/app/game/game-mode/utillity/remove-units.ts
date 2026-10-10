@@ -1,5 +1,4 @@
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
-import { UnitLagManager } from '../../services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 
 export function removeUnits(): void {
@@ -13,8 +12,7 @@ export function removeUnits(): void {
 			player,
 			Filter(() => {
 				const unit: unit = GetFilterUnit();
-				if (!IsUnitType(unit, UNIT_TYPE.BUILDING) && !IsUnitType(unit, UNIT_TYPE.GUARD) && !IsUnitType(unit, UNIT_TYPE.MINIMAP_INDICATOR)) {
-					UnitLagManager.getInstance().untrackUnit(unit);
+				if (!IsUnitType(unit, UNIT_TYPE.BUILDING) && !IsUnitType(unit, UNIT_TYPE.GUARD)) {
 					RemoveUnit(unit);
 				}
 			})

@@ -1,6 +1,5 @@
 import { ABILITY_ID } from '../../configs/ability-id';
 import { ClientManager } from '../game/services/client-manager';
-import { UnitLagManager } from '../game/services/unit-lag-manager';
 import { TimedEvent } from '../libs/timer/timed-event';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { debugPrint } from '../utils/debug-print';
@@ -56,9 +55,6 @@ const MAX_UNLOAD_DISTANCE: number = 300;
  */
 export class TransportManager {
 	// Static queue and timer for delayed tracking
-	private static delayedTrackQueue: unit[] = [];
-	private static delayedTrackTimer: timer = CreateTimer();
-	private static delayedTrackTimerRunning: boolean = false;
 	private static instance: TransportManager;
 	private transports: Map<unit, Transport>;
 	private autoLoadingTransports: Transport[] = [];
@@ -164,13 +160,6 @@ export class TransportManager {
 
 		const transportData: Transport = this.transports.get(unit);
 
-		if (transportData.cargo) {
-			// Track all cargo units (clients) again since the transport is dead
-			transportData.cargo.forEach((unit) => {
-				UnitLagManager.getInstance().trackUnit(unit);
-			});
-		}
-
 		transportData.cargo = null;
 
 		this.removeAutoLoadEffect(transportData);
@@ -211,9 +200,6 @@ export class TransportManager {
 				if (!transport) return false;
 
 				let loadedUnit: unit = GetLoadedUnit();
-
-				// Untrack the unit since it's now loaded and managed by the transport
-				UnitLagManager.getInstance().untrackUnit(loadedUnit);
 
 				const transportData = this.transports.get(transport);
 				transportData.cargo.push(loadedUnit);
@@ -344,24 +330,7 @@ export class TransportManager {
 				const index: number = transport.cargo.indexOf(GetOrderTargetUnit());
 
 				if (index > -1) {
-					const unloadedUnits = transport.cargo.splice(index, 1);
-					unloadedUnits.forEach((unit) => {
-						TransportManager.delayedTrackQueue.push(unit);
-					});
-
-					// Start the timer if not already running - This is needed since we can not make a dummy follow a unit in the same frame it is unloaded
-					// Consider moving the timer into the UnitLagManager.
-					if (!TransportManager.delayedTrackTimerRunning) {
-						TransportManager.delayedTrackTimerRunning = true;
-						TimerStart(TransportManager.delayedTrackTimer, 0.1, false, () => {
-							TransportManager.delayedTrackQueue.forEach((unit) => {
-								debugPrint(`Unit Unloaded Event Triggered for unit: ${GetUnitName(unit)}`);
-								UnitLagManager.getInstance().trackUnit(unit);
-							});
-							TransportManager.delayedTrackQueue = [];
-							TransportManager.delayedTrackTimerRunning = false;
-						});
-					}
+					transport.cargo.splice(index, 1);
 				}
 			})
 		);
@@ -576,11 +545,10 @@ export class TransportManager {
 					return false;
 				}
 
-				// Track unloaded units
+				// Split cargo into units that left the transport and those still aboard
 				const unloadedUnits = transport.cargo.filter((unit) => !IsUnitInTransport(unit, transport.unit));
 				transport.cargo = transport.cargo.filter((unit) => IsUnitInTransport(unit, transport.unit));
 				unloadedUnits.forEach((unit) => {
-					UnitLagManager.getInstance().trackUnit(unit);
 					const index = transport.orderedUnits.indexOf(unit);
 					if (index > -1) {
 						this.unregisterOrder(transport, unit);

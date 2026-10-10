@@ -6,7 +6,6 @@ import { GetUnitsInRangeByAllegiance } from '../utils/guard-filters';
 import { CompareUnitByValue } from '../utils/unit-comparisons';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { ClientManager } from '../game/services/client-manager';
-import { UnitLagManager } from '../game/services/unit-lag-manager';
 
 export const EnterRegionTrigger: trigger = CreateTrigger();
 
@@ -29,12 +28,10 @@ export function EnterRegionEvent() {
 			GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitOwnedByPlayer);
 
 			//No valid owned guards found, check for allies.
-			if (BlzGroupGetSize(g) == 0)
-				GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => UnitLagManager.IsUnitAlly(unit, player));
+			if (BlzGroupGetSize(g) == 0) GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => IsUnitAlly(unit, player));
 
 			//No valid allies, check for enemies.
-			if (BlzGroupGetSize(g) == 0)
-				GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => UnitLagManager.IsUnitEnemy(unit, player));
+			if (BlzGroupGetSize(g) == 0) GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => IsUnitEnemy(unit, player));
 
 			const trigUnit: unit = GetTriggerUnit();
 			//Set guardChoice, Transports will be null
@@ -51,7 +48,7 @@ export function EnterRegionEvent() {
 			}
 
 			//Change owner if guardChoice is an enemy of the city.
-			if (UnitLagManager.IsUnitEnemy(guardChoice, city.getOwner())) {
+			if (IsUnitEnemy(guardChoice, city.getOwner())) {
 				city.setOwner(ClientManager.getInstance().getOwnerOfUnit(guardChoice));
 			}
 

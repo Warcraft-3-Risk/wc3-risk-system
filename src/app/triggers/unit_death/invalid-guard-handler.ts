@@ -2,7 +2,6 @@ import { UnitToCity } from 'src/app/city/city-map';
 import { LandCity } from 'src/app/city/land-city';
 import { PortCity } from 'src/app/city/port-city';
 import { ClientManager } from 'src/app/game/services/client-manager';
-import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { UNIT_ID } from 'src/configs/unit-id';
 
@@ -27,7 +26,7 @@ export function InvalidGuardHandler(city: LandCity | PortCity, killingUnit: unit
 		);
 	}
 
-	if (UnitLagManager.IsUnitEnemy(newGuard, city.getOwner())) {
+	if (IsUnitEnemy(newGuard, city.getOwner())) {
 		city.changeOwner(ClientManager.getInstance().getOwnerOfUnit(newGuard));
 	}
 

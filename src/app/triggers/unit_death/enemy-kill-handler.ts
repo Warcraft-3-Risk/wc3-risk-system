@@ -2,16 +2,15 @@ import { GetUnitsInRangeByAllegiance, GetUnitsInRangeOfUnitByAllegiance } from '
 import { LargeSearchRadius, SmallSearchRadius } from './search-radii';
 import { City } from 'src/app/city/city';
 import { ReplaceGuard } from './replace-guard';
-import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 //This is where it falls for the bug. city = Owned city. killingUnit = killingCity. dyingUnit = dyingGuard
 export function EnemyKillHandler(city: City, dyingUnit: unit, killingUnit: unit): boolean {
-	if (!UnitLagManager.IsUnitEnemy(killingUnit, city.getOwner())) return null;
+	if (!IsUnitEnemy(killingUnit, city.getOwner())) return null;
 	if (IsUnitType(killingUnit, UNIT_TYPE_STRUCTURE) && IsUnitType(dyingUnit, UNIT_TYPE_SAPPER)) return null;
 
 	const searchGroup: group = CreateGroup();
 
 	//Search for city owned units within CoP of city
-	GetUnitsInRangeByAllegiance(searchGroup, city, SmallSearchRadius, (unit, player) => UnitLagManager.IsUnitAlly(unit, player));
+	GetUnitsInRangeByAllegiance(searchGroup, city, SmallSearchRadius, (unit, player) => IsUnitAlly(unit, player));
 
 	//Found city owned units within CoP
 	if (BlzGroupGetSize(searchGroup) >= 1) {
@@ -25,7 +24,7 @@ export function EnemyKillHandler(city: City, dyingUnit: unit, killingUnit: unit)
 		searchGroup,
 		city,
 		LargeSearchRadius,
-		(unit, player) => UnitLagManager.IsUnitAlly(unit, player),
+		(unit, player) => IsUnitAlly(unit, player),
 		dyingUnit,
 		killingUnit
 	);
@@ -36,7 +35,7 @@ export function EnemyKillHandler(city: City, dyingUnit: unit, killingUnit: unit)
 			searchGroup,
 			city,
 			SmallSearchRadius,
-			(unit, player) => UnitLagManager.IsUnitAlly(unit, player),
+			(unit, player) => IsUnitAlly(unit, player),
 			killingUnit,
 			killingUnit
 		);

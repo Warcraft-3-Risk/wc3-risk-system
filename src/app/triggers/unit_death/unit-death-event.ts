@@ -9,7 +9,6 @@ import { TeamManager } from 'src/app/teams/team-manager';
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
 import { EVENT_ON_UNIT_KILLED } from 'src/app/utils/events/event-constants';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
-import { UnitLagManager } from 'src/app/game/services/unit-lag-manager';
 import { debugPrint } from 'src/app/utils/debug-print';
 import { ClientManager } from 'src/app/game/services/client-manager';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
@@ -34,8 +33,6 @@ export function UnitDeathEvent() {
 			const killingUnitOwnerHandle: player = ClientManager.getInstance().getOwnerOfUnit(killingUnit);
 			const dyingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(dyingUnitOwnerHandle);
 			const killingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(killingUnitOwnerHandle);
-
-			UnitLagManager.getInstance().untrackUnit(dyingUnit);
 
 			// Track kill for the killing unit
 			if (killingUnit) {
