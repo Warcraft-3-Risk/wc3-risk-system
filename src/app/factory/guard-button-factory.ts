@@ -72,10 +72,16 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 
 	const buttonTrig = CreateTrigger();
 
-	BlzTriggerRegisterFrameEvent(hotkeyTrigger, button, FRAMEEVENT_CONTROL_CLICK);
+	BlzTriggerRegisterFrameEvent(buttonTrig, button, FRAMEEVENT_CONTROL_CLICK);
 	TriggerAddCondition(
 		buttonTrig,
-		Condition(() => config.action(config.createContext, config.textures, button))
+		Condition(() => {
+			config.action(config.createContext, config.textures, button);
+
+			// Drop keyboard focus from the clicked button, otherwise Enter re-triggers it instead of opening chat
+			BlzFrameSetEnable(button, false);
+			BlzFrameSetEnable(button, true);
+		})
 	);
 
 	BlzFrameSetVisible(button, false);

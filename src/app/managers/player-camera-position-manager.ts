@@ -145,6 +145,12 @@ export default class PlayerCameraPositionManager {
 
 		this.camPositionData.set(p, { x, y });
 		this.displayPositionData.set(p, { x, y });
+
+		// Sync events fire on every client, so this is the place to create the marker handles. Creating
+		// them lazily in render() would only do so on the observer's client - the handle ids drift apart
+		// and the game desyncs the moment an observer switches the overlay on.
+		this.createLabel(p);
+		this.createMinimapIcon(p);
 	}
 
 	private render(): void {
@@ -170,8 +176,10 @@ export default class PlayerCameraPositionManager {
 			this.lerpToward(display, this.camPositionData.get(p));
 
 			// In-game label
-			if (showInWorld) {
-				const label: texttag = this.ensureLabel(p);
+			const label: texttag = this.labels.get(p);
+
+			if (showInWorld && label) {
+				this.refreshLabelText(p, label);
 				SetTextTagPos(label, display.x, display.y, LABEL_Z_OFFSET);
 				this.setLabelVisible(p, true);
 			} else {
@@ -179,7 +187,9 @@ export default class PlayerCameraPositionManager {
 			}
 
 			// Minimap icon
-			const icon: framehandle = this.ensureMinimapIcon(p);
+			const icon: framehandle = this.minimapIcons.get(p);
+			if (!icon) return;
+
 			this.refreshIconTexture(p, icon);
 			positionFrameOnMinimap(icon, display.x, display.y);
 			this.setIconVisible(p, true);
@@ -226,36 +236,34 @@ export default class PlayerCameraPositionManager {
 		return viewer !== target;
 	}
 
-	private ensureLabel(p: player): texttag {
-		let label: texttag = this.labels.get(p);
+	/** Must only be called from synced code, so every client creates the same text tag. */
+	private createLabel(p: player): void {
+		if (this.labels.has(p)) return;
 
-		if (!label) {
-			label = CreateTextTag();
-			SetTextTagPermanent(label, true);
-			SetTextTagVisibility(label, false);
-			this.labels.set(p, label);
-			this.labelVisible.set(p, false);
-		}
-
-		const name: string = `${NameManager.getInstance().getColorCode(p)}${NameManager.getInstance().getDisplayName(p)}|r`;
-
-		if (this.labelTexts.get(p) !== name) {
-			SetTextTagText(label, name, LABEL_TEXT_SIZE);
-			this.labelTexts.set(p, name);
-		}
-
-		return label;
+		const label: texttag = CreateTextTag();
+		SetTextTagPermanent(label, true);
+		SetTextTagVisibility(label, false);
+		this.labels.set(p, label);
+		this.labelVisible.set(p, false);
 	}
 
-	private ensureMinimapIcon(p: player): framehandle {
-		let icon: framehandle = this.minimapIcons.get(p);
+	private refreshLabelText(p: player, label: texttag): void {
+		const name: string = `${NameManager.getInstance().getColorCode(p)}${NameManager.getInstance().getDisplayName(p)}|r`;
 
-		if (icon) return icon;
+		if (this.labelTexts.get(p) === name) return;
+
+		SetTextTagText(label, name, LABEL_TEXT_SIZE);
+		this.labelTexts.set(p, name);
+	}
+
+	/** Must only be called from synced code, so every client creates the same frame. */
+	private createMinimapIcon(p: player): void {
+		if (this.minimapIcons.has(p)) return;
 
 		// Offset the context so it cannot collide with the per-player preference buttons.
 		const context: number = GetPlayerId(p) + 1;
 
-		icon = BlzCreateFrameByType('BACKDROP', 'MinimapPlayerCameraIcon', BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0), '', context);
+		const icon: framehandle = BlzCreateFrameByType('BACKDROP', 'MinimapPlayerCameraIcon', BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0), '', context);
 		BlzFrameSetSize(icon, MINIMAP_ICON_WIDTH, MINIMAP_ICON_HEIGHT);
 		BlzFrameSetLevel(icon, MINIMAP_ICON_LEVEL);
 		BlzFrameSetAlpha(icon, MINIMAP_ICON_ALPHA);
@@ -263,8 +271,6 @@ export default class PlayerCameraPositionManager {
 
 		this.minimapIcons.set(p, icon);
 		this.iconVisible.set(p, false);
-
-		return icon;
 	}
 
 	private refreshIconTexture(p: player, icon: framehandle): void {
