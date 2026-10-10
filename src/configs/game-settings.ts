@@ -3,10 +3,10 @@
 
 //Used to control how many of total cities you need.
 //This is a percentage of the total cities .6 = 60%
-export const CITIES_TO_WIN_RATIO: number = 0.3;
+export const CITIES_TO_WIN_RATIO: number = 0.6;
 
 //This is the starting gold for each player. 4 gold by default.
-export const STARTING_INCOME: number = 400;
+export const STARTING_INCOME: number = 4;
 
 //This is the starting gold for each player in Chaos promode. 25 gold by default.
 export const CHAOS_STARTING_INCOME: number = 25;
@@ -26,7 +26,7 @@ export const NOMAD_DURATION: number = 60;
 //This represents the drop in required cities to win each turn. Default is 1.
 export const OVERTIME_MODIFIER: number = 1;
 
-//This represents the ratio of total cities to conquer to win.
+//This represents the ratio of total cities to conquer to win. Default is 0.7
 export const CITIES_TO_WIN_WARNING_RATIO: number = 0.7;
 
 //This represents the upper bound of cities a player starts with. Default is 22.
@@ -38,7 +38,7 @@ export const STFU_DURATION: number = 300;
 //This represents whether debug messages should be printed. Default is false.
 export const SHOW_DEBUG_PRINTS = false;
 
-// This represents whether debug logs should be saved to a file. Default is true.
+// This represents whether debug logs should be saved to a file. Default is false.
 export const SAVE_DEBUG_LOGS_TO_FILE = false;
 
 //This represents whether player names should be exported
@@ -56,7 +56,7 @@ export const CAPITALS_SELECTION_PHASE: number = 30;
 // This represents whether the game should terminate if there is only one human player left
 export const W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER: boolean = true;
 
-// This represents the duration of the W3C draw vote in seconds. Default is 30 seconds.
+// This represents the duration of the W3C draw vote in seconds. Default is 120 seconds.
 export const W3C_DRAW_DURATION: number = 120;
 
 // Enable/disable emitting player statistics to W3MMD (MMD) during the match and on game end.
