@@ -6,7 +6,7 @@ import War3MapW3i from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/w3i/file';
 import War3MapWts from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/wts/file';
 
 function main() {
-	// Get terrain from command line args (e.g., npm run build world)
+	// Get terrain from command line args (e.g., npm run build europe)
 	// Support -minify flag as well
 	let terrain: string | undefined;
 	let minifyOverride: boolean | undefined;
@@ -22,7 +22,7 @@ function main() {
 	// If no terrain specified, build all terrains
 	if (!terrain) {
 		logger.info('No terrain specified. Building all terrains...');
-		const terrains = ['asia', 'europe', 'world'];
+		const terrains = ['asia', 'europe'];
 		for (const t of terrains) {
 			logger.info(`\n=== Building ${t} ===`);
 			buildTerrain(t, minifyOverride);

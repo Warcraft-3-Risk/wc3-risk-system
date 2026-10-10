@@ -19,6 +19,7 @@ import { UnitTrainedEvent } from './app/triggers/unit-trained-event';
 import { KeyEvents } from './app/triggers/key-events';
 import { Quests } from './app/quests/quests';
 import CameraManager from './app/managers/camera-manager';
+import PlayerCameraPositionManager from './app/managers/player-camera-position-manager';
 import { TimedEventManager } from './app/libs/timer/timed-event-manager';
 import { AntiSpam } from './app/triggers/anti-spam';
 import { SetCommands } from './app/commands/commands';
@@ -51,6 +52,12 @@ function tsMain() {
 		if (!BlzChangeMinimapTerrainTex('Assets\\Minimap\\minimap.blp')) {
 			print('Failed to load minimap file!');
 		}
+
+		// Every uncaptured city, guard and spawner is owned by neutral hostile, so the minimap's
+		// creep camp filter would plaster an icon over all of them. Hide them and disable the
+		// filter button so players cannot toggle them back on.
+		SetCreepCampFilterState(false);
+		EnableMinimapFilterButtons(true, false);
 
 		SetGameSpeed(MAP_SPEED_FASTEST);
 		SetMapFlag(MAP_LOCK_SPEED, true);
@@ -131,6 +138,7 @@ function tsMain() {
 			FogMaskEnable(false);
 			SetConsoleUI();
 			// UnitKillDisplay.getInstance(); // Removed - using button tooltip instead
+			PlayerCameraPositionManager.getInstance();
 			CameraManager.getInstance();
 			ChatManager.getInstance();
 			TransportManager.getInstance();

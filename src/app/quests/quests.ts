@@ -11,7 +11,6 @@ import { HexColors } from '../utils/hex-colors';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { ShuffleArray } from '../utils/utils';
 import { RatingManager } from '../rating/rating-manager';
-import { debugPrint } from '../utils/debug-print';
 
 /**
  * Responsible for creating in-game quests.

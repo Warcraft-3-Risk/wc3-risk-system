@@ -5,7 +5,6 @@ import { ActivePlayer } from '../player/types/active-player';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_SWAP_GUARD } from '../utils/events/event-constants';
 import { AnnounceOnLocationObserverOnly, AnnounceOnUnitObserverOnly } from '../game/announcer/announce';
-import { debugPrint } from '../utils/debug-print';
 
 export function SpellEffectEvent() {
 	const tSpellEffect: trigger = CreateTrigger();

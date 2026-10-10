@@ -2,14 +2,14 @@ import { exec, execFile, execSync } from 'child_process';
 import { loadJsonFile, loadTerrainConfig, logger, compileMap, updateTsFileWithConfig, IProjectConfig } from './utils';
 
 function main() {
-	// Get terrain from command line args (e.g., npm run test world)
+	// Get terrain from command line args (e.g., npm run test europe)
 	const terrain = process.argv[2];
 
 	if (!terrain) {
 		logger.error('No terrain specified. Usage: npm run test <terrain>');
 		logger.error('Example: npm run test asia');
 		logger.error('Example: npm run test europe');
-		logger.error('Example: npm run test world');
+		logger.error('Example: npm run test europe');
 		process.exit(1);
 	}
 

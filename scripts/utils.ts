@@ -40,7 +40,7 @@ export function loadJsonFile(fname: string) {
 
 /**
  * Load terrain-specific config from maps/risk_{terrain}.json
- * @param terrain The terrain name (e.g., 'europe', 'world')
+ * @param terrain The terrain name (e.g., 'europe', 'asia')
  * @returns The project configuration
  */
 export function loadTerrainConfig(terrain: string): IProjectConfig {
@@ -226,7 +226,7 @@ export function updateTsFileWithConfig(config: IProjectConfig) {
 /**
  * Copies loading screen files from the map source folder to the root of the dist folder
  * This ensures loading screen assets are at the correct path for WC3 to load them
- * @param mapFolder The map folder name (e.g., 'risk_world.w3x')
+ * @param mapFolder The map folder name (e.g., 'risk_asia.w3x')
  */
 export function copyLoadingScreenFiles(mapFolder: string) {
 	const sourcePath = path.join('maps', mapFolder);
@@ -262,8 +262,8 @@ export function copyLoadingScreenFiles(mapFolder: string) {
  * Syncs object editor files from risk_europe.w3x (master) to the target terrain in dist/
  * This ensures all terrains use the same unit/ability/buff/destructable data
  * This function should be called AFTER the map files have been copied to dist/
- * @param targetTerrain The terrain to sync to (e.g., 'world', 'asia')
- * @param mapFolder The map folder name (e.g., 'risk_world.w3x')
+ * @param targetTerrain The terrain to sync to (e.g., 'asia')
+ * @param mapFolder The map folder name (e.g., 'risk_asia.w3x')
  */
 export function syncObjectEditorFiles(targetTerrain: string, mapFolder: string) {
 	// If building europe, no sync needed (it's the master)

@@ -2,6 +2,24 @@ import { City } from '../city/city';
 import { ClientManager } from '../game/services/client-manager';
 
 /**
+ * Context for the shared allegiance filter below.
+ *
+ * These functions run on every unit death near a city and on every city region enter/leave,
+ * so the boolexpr is created once at init and reused. Building a `Filter()` per call leaked a
+ * handle every time, which degraded performance over the course of a match.
+ *
+ * Note: this makes the filter non-reentrant. A filter callback must never trigger another
+ * group enumeration, or it would overwrite the context mid-enumeration.
+ */
+let filterCity: City;
+let filterAllegianceCheck: (filterUnit: unit, player: player) => boolean;
+let filterPlayer: player;
+
+const allegianceFilter: boolexpr = Filter(
+	() => filterCity.isValidGuard(GetFilterUnit()) && filterAllegianceCheck(GetFilterUnit(), filterPlayer)
+);
+
+/**
  * Retrieves units in a specified range based on allegiance.
  *
  * @param g - The group of units to consider.
@@ -20,13 +38,11 @@ export function GetUnitsInRangeByAllegiance(
 	const x: number = !unit ? city.guard.defaultX : GetUnitX(unit);
 	const y: number = !unit ? city.guard.defaultY : GetUnitY(unit);
 
-	GroupEnumUnitsInRange(
-		g,
-		x,
-		y,
-		radius,
-		Filter(() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), city.getOwner()))
-	);
+	filterCity = city;
+	filterAllegianceCheck = allegianceCheck;
+	filterPlayer = city.getOwner();
+
+	GroupEnumUnitsInRange(g, x, y, radius, allegianceFilter);
 }
 
 export function GetUnitsInRangeOfUnitByAllegiance(
@@ -40,13 +56,9 @@ export function GetUnitsInRangeOfUnitByAllegiance(
 	const x: number = GetUnitX(dyingUnit);
 	const y: number = GetUnitY(dyingUnit);
 
-	GroupEnumUnitsInRange(
-		g,
-		x,
-		y,
-		radius,
-		Filter(
-			() => city.isValidGuard(GetFilterUnit()) && allegianceCheck(GetFilterUnit(), ClientManager.getInstance().getOwnerOfUnit(killingUnit))
-		)
-	);
+	filterCity = city;
+	filterAllegianceCheck = allegianceCheck;
+	filterPlayer = ClientManager.getInstance().getOwnerOfUnit(killingUnit);
+
+	GroupEnumUnitsInRange(g, x, y, radius, allegianceFilter);
 }

@@ -1,5 +1,4 @@
 import { AnnounceOnLocationObserverOnly } from '../game/announcer/announce';
-import { debugPrint } from '../utils/debug-print';
 
 export function UnitIssueOrderEvent() {
 	const t: trigger = CreateTrigger();

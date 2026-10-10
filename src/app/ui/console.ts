@@ -48,21 +48,15 @@ export function SetConsoleUI() {
 		BlzFrameSetVisible(BlzGetFrameByName('VisionCheckBox', i), false);
 	}
 
-	if (GetHandleId(BlzGetFrameByName('ChatPlayerLabel', 0)) == 0) {
-		Location(0, 0);
-	} else {
+	if (GetHandleId(BlzGetFrameByName('ChatPlayerLabel', 0)) != 0) {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerLabel', 0), false);
 	}
 
-	if (GetHandleId(BlzGetFrameByName('ChatPlayerRadioButton', 0)) == 0) {
-		Location(0, 0);
-	} else {
+	if (GetHandleId(BlzGetFrameByName('ChatPlayerRadioButton', 0)) != 0) {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerRadioButton', 0), false);
 	}
 
-	if (GetHandleId(BlzGetFrameByName('ChatPlayerMenu', 0)) == 0) {
-		Location(0, 0);
-	} else {
+	if (GetHandleId(BlzGetFrameByName('ChatPlayerMenu', 0)) != 0) {
 		BlzFrameSetVisible(BlzGetFrameByName('ChatPlayerMenu', 0), false);
 	}
 

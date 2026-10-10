@@ -1,4 +1,3 @@
-import { GlobalGameData } from '../../state/global-game-state';
 import { NameManager } from 'src/app/managers/names/name-manager';
 import { BaseState } from '../state/base-state';
 import { CapitalsData } from '../mode/capitals-mode';

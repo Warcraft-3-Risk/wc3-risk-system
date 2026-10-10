@@ -6,6 +6,7 @@ import {
 	buildLabelToggleButton,
 	buildRatingStatsButton,
 } from '../ui/player-preference-buttons';
+import { buildCameraPositionButton } from '../ui/camera-position-button';
 import { File } from 'w3ts';
 import { PLAYER_STATUS } from './status/status-enum';
 import { Status } from './status/status';
@@ -53,6 +54,9 @@ export class PlayerManager {
 				if (RATING_SYSTEM_ENABLED) {
 					humanPlayer.ratingStatsUI = new RatingStatsUI(humanPlayer);
 				}
+
+				// Observers are the primary audience for the camera overlay
+				buildCameraPositionButton(humanPlayer);
 				continue;
 			}
 
@@ -73,6 +77,7 @@ export class PlayerManager {
 				const healthButton = buildGuardHealthButton(this._playerFromHandle.get(player));
 				const valueButton = buildGuardValueButton(this._playerFromHandle.get(player));
 				const labelButton = buildLabelToggleButton(this._playerFromHandle.get(player));
+				const cameraButton = buildCameraPositionButton(this._playerFromHandle.get(player));
 				// Only create rating stats button if rating system is enabled
 				const ratingButton = RATING_SYSTEM_ENABLED ? buildRatingStatsButton(this._playerFromHandle.get(player)) : null;
 				let contents: string = '';
@@ -84,6 +89,7 @@ export class PlayerManager {
 						BlzFrameSetVisible(healthButton, false);
 						BlzFrameSetVisible(valueButton, false);
 						BlzFrameSetVisible(labelButton, false);
+						if (cameraButton) BlzFrameSetVisible(cameraButton, false);
 						if (ratingButton) {
 							BlzFrameSetVisible(ratingButton, false);
 						}

@@ -77,6 +77,12 @@ export class FightBonus implements Bonus {
 
 	public disable() {
 		this.enabled = false;
+
+		// The bar is shown before the game mode's strategy is applied, so by the time we get here it
+		// may already be on screen with progress text. Every other method bails out once disabled,
+		// so the text has to be written directly here or the stale value stays up for the whole game.
+		BlzFrameSetValue(this.ui, 0);
+		BlzFrameSetText(BlzGetFrameByName('FightBonusBarText', GetPlayerId(this.player)), 'Fight Bonus: Deactivated');
 	}
 
 	private processBonus(): number {

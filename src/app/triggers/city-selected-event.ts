@@ -3,7 +3,6 @@ import { UnitToCity } from '../city/city-map';
 import { EVENT_ON_CITY_SELECTED } from '../utils/events/event-constants';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { UNIT_TYPE } from '../utils/unit-types';
-import { debugPrint } from '../utils/debug-print';
 
 export function CitySelectedEvent() {
 	const t: trigger = CreateTrigger();

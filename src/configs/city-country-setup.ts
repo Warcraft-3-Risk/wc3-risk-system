@@ -1,14 +1,13 @@
 import { MAP_TYPE } from 'src/app/utils/map-info';
 import { SetCountriesAsia } from './terrains/asia';
 import { SetCountriesEurope } from './terrains/europe';
-import { SetCountriesWorld } from './terrains/world';
 
 /**
  * Dynamically loads the appropriate terrain configuration based on MAP_TYPE
  * This function is called during game initialization to set up countries and cities
  *
  * The MAP_TYPE constant is injected during the build process from the config file
- * in the maps directory (maps/risk_europe.json or maps/risk_world.json).
+ * in the maps directory (maps/risk_europe.json or maps/risk_asia.json).
  *
  * To add a new terrain:
  * 1. Create a new config file: maps/risk_your_terrain.json
@@ -24,10 +23,7 @@ export function SetCountries() {
 		case 'europe':
 			SetCountriesEurope();
 			break;
-		case 'world':
-			SetCountriesWorld();
-			break;
 		default:
-			throw new Error(`Unknown map type: ${MAP_TYPE}. Expected 'asia', 'europe', or 'world'.`);
+			throw new Error(`Unknown map type: ${MAP_TYPE}. Expected 'asia' or 'europe'.`);
 	}
 }

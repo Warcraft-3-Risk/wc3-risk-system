@@ -37,6 +37,14 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 
 		StatisticsController.getInstance().setViewVisibility(false);
 
+		// Every promode variant plays a series, so it needs a board that persists between matches
+		const settings = SettingsContext.getInstance();
+
+		if (settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode()) {
+			ScoreboardManager.getInstance().sessionSetup([...GlobalGameData.matchPlayers]);
+			ScoreboardManager.getInstance().hideSessionBoard();
+		}
+
 		SettingsContext.getInstance().applyStrategy('Promode');
 		SettingsContext.getInstance().applyStrategy('Diplomacy');
 

@@ -28,10 +28,10 @@ export function EnterRegionEvent() {
 			GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitOwnedByPlayer);
 
 			//No valid owned guards found, check for allies.
-			if (BlzGroupGetSize(g) == 0) GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => IsUnitAlly(unit, player));
+			if (BlzGroupGetSize(g) == 0) GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitAlly);
 
 			//No valid allies, check for enemies.
-			if (BlzGroupGetSize(g) == 0) GetUnitsInRangeByAllegiance(g, city, CityRegionSize, (unit, player) => IsUnitEnemy(unit, player));
+			if (BlzGroupGetSize(g) == 0) GetUnitsInRangeByAllegiance(g, city, CityRegionSize, IsUnitEnemy);
 
 			const trigUnit: unit = GetTriggerUnit();
 			//Set guardChoice, Transports will be null

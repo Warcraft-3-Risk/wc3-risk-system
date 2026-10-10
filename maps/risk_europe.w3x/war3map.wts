@@ -1424,12 +1424,6 @@ STRING 7525
 Produces units for your armies.
 }
 
-STRING 7526
-// Units: u00A (|cffff8000MinimapIndicator|r), Name (Name)
-{
-|cffff8000MinimapIndicator|r
-}
-
 STRING 7528
 {
  

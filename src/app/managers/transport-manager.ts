@@ -1,6 +1,8 @@
 import { ABILITY_ID } from '../../configs/ability-id';
 import { ClientManager } from '../game/services/client-manager';
 import { TimedEvent } from '../libs/timer/timed-event';
+import { TransportTooltipLogic } from '../utils/transport-tooltip-logic';
+import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { debugPrint } from '../utils/debug-print';
 import { ErrorMsg } from '../utils/messages';
@@ -23,8 +25,7 @@ type Transport = {
 	loadTarget: unit;
 	unloadTargetX: number;
 	unloadTargetY: number;
-	floatingTextCargo: texttag | null;
-	floatingTextCapacity: texttag | null;
+	cargoText: texttag | null;
 	patrolEnabled: boolean;
 	patrolState: PatrolState;
 	patrolDestX: number;
@@ -37,6 +38,16 @@ type Transport = {
 	pathingDisableDuration: number;
 	orderedUnits: unit[];
 };
+
+// Observer cargo indicator above transport ships.
+const CARGO_TEXT_INTERVAL: number = 0.03;
+const CARGO_TEXT_SIZE: number = 0.017;
+// Lifts the label clear of the ship model, and nudges it left so it reads as centred.
+const CARGO_TEXT_Y_OFFSET: number = 120;
+const CARGO_TEXT_X_OFFSET: number = -45;
+// A two-digit label renders wider and the engine anchors it further right, so nudge it back.
+const CARGO_TEXT_X_DIGIT_OFFSET: number = -44;
+const CARGO_TEXT_HEIGHT: number = 120;
 
 const AUTO_LOAD_DISTANCE: number = 450;
 const AUTO_LOAD_DURATION: number = 180;
@@ -60,6 +71,9 @@ export class TransportManager {
 	private autoLoadingTransports: Transport[] = [];
 	private autoLoadTimer: timer = CreateTimer();
 	private allOrderedUnits: Set<unit> = new Set<unit>();
+	private transportList: Transport[] = [];
+	private cargoTextTimer: timer = CreateTimer();
+	private liveCargoTexts: number = 0;
 
 	/**
 	 * Gets the singleton instance of the TransportManager.
@@ -80,6 +94,7 @@ export class TransportManager {
 		this.transports = new Map<unit, Transport>();
 
 		TimerStart(this.autoLoadTimer, 1.0, true, () => this.onAutoLoadTick());
+		TimerStart(this.cargoTextTimer, CARGO_TEXT_INTERVAL, true, () => this.renderCargoText());
 
 		// Unit load management
 		// Handler for order queued for the load ability start
@@ -121,8 +136,7 @@ export class TransportManager {
 			loadTarget: null,
 			unloadTargetX: null,
 			unloadTargetY: null,
-			floatingTextCargo: null,
-			floatingTextCapacity: null,
+			cargoText: null,
 			patrolEnabled: false,
 			patrolState: PatrolState.LOADING,
 			patrolDestX: 0,
@@ -137,6 +151,68 @@ export class TransportManager {
 		};
 
 		this.transports.set(unit, transport);
+		this.transportList.push(transport);
+	}
+
+	/**
+	 * Draws a '<cargo>/<max>' label above each loaded transport, for observers only.
+	 *
+	 * Rendered as a single world text tag so the engine handles projection - a frame would need
+	 * world-to-screen conversion. Using one tag also avoids the font-dependent drift that came
+	 * from aligning two separate tags against each other.
+	 */
+	private renderCargoText(): void {
+		const isObserver: boolean = EDITOR_DEVELOPER_MODE || IsPlayerObserver(GetLocalPlayer());
+
+		// Regular players never create labels, so there is nothing to walk the list for. A player
+		// who stops observing still has labels to tear down, which is what the counter catches.
+		if (!isObserver) {
+			if (this.liveCargoTexts === 0) return;
+
+			for (let i = 0; i < this.transportList.length; i++) {
+				this.destroyCargoText(this.transportList[i]);
+			}
+
+			return;
+		}
+
+		for (let i = 0; i < this.transportList.length; i++) {
+			const transport: Transport = this.transportList[i];
+			const cargoCount: number = transport.cargo ? transport.cargo.length : 0;
+
+			if (!TransportTooltipLogic.isVisible(isObserver, cargoCount) || !UnitAlive(transport.unit)) {
+				this.destroyCargoText(transport);
+				continue;
+			}
+
+			if (!transport.cargoText) {
+				transport.cargoText = CreateTextTag();
+				SetTextTagPermanent(transport.cargoText, true);
+				SetTextTagVisibility(transport.cargoText, true);
+				this.liveCargoTexts++;
+			}
+
+			SetTextTagText(transport.cargoText, TransportTooltipLogic.getTooltipText(cargoCount), CARGO_TEXT_SIZE);
+			const xOffset: number = CARGO_TEXT_X_OFFSET + (cargoCount >= 10 ? CARGO_TEXT_X_DIGIT_OFFSET : 0);
+
+			SetTextTagPos(
+				transport.cargoText,
+				GetUnitX(transport.unit) + xOffset,
+				GetUnitY(transport.unit) + CARGO_TEXT_Y_OFFSET,
+				CARGO_TEXT_HEIGHT
+			);
+		}
+	}
+
+	/**
+	 * Destroys a transport's cargo label if it has one.
+	 */
+	private destroyCargoText(transport: Transport): void {
+		if (!transport || !transport.cargoText) return;
+
+		DestroyTextTag(transport.cargoText);
+		transport.cargoText = null;
+		this.liveCargoTexts--;
 	}
 
 	/**
@@ -179,6 +255,11 @@ export class TransportManager {
 			TimedEventManager.getInstance().removeTimedEvent(transportData.patrolEvent);
 			transportData.patrolEvent = null;
 		}
+
+		this.destroyCargoText(transportData);
+
+		const listIndex = this.transportList.indexOf(transportData);
+		if (listIndex > -1) this.transportList.splice(listIndex, 1);
 
 		this.transports.delete(unit);
 	}
@@ -657,28 +738,26 @@ export class TransportManager {
 
 		let group: group = CreateGroup();
 
-		GroupEnumUnitsInRange(
-			group,
-			GetUnitX(transport.unit),
-			GetUnitY(transport.unit),
-			AUTO_LOAD_DISTANCE,
-			Filter(() => {
-				let unit: unit = GetFilterUnit();
+		// Captured so the boolexpr can be destroyed afterwards - this runs once per second per transport
+		const autoLoadFilter: boolexpr = Filter(() => {
+			let unit: unit = GetFilterUnit();
 
-				if (IsUnitType(unit, UNIT_TYPE.SHIP)) return;
-				if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
-				if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
-				if (GetOwningPlayer(unit) != GetOwningPlayer(transport.unit)) return;
-				
-				// Global check for already ordered units
-				if (this.allOrderedUnits.has(unit)) return;
+			if (IsUnitType(unit, UNIT_TYPE.SHIP)) return;
+			if (IsUnitType(unit, UNIT_TYPE.GUARD)) return;
+			if (IsUnitType(unit, UNIT_TYPE.CITY)) return;
+			if (GetOwningPlayer(unit) != GetOwningPlayer(transport.unit)) return;
 
-				if (transport.cargo.length + transport.orderedUnits.length < 10) {
-					IssueTargetOrder(unit, 'smart', transport.unit);
-					this.registerOrder(transport, unit);
-				}
-			})
-		);
+			// Global check for already ordered units
+			if (this.allOrderedUnits.has(unit)) return;
+
+			if (transport.cargo.length + transport.orderedUnits.length < 10) {
+				IssueTargetOrder(unit, 'smart', transport.unit);
+				this.registerOrder(transport, unit);
+			}
+		});
+
+		GroupEnumUnitsInRange(group, GetUnitX(transport.unit), GetUnitY(transport.unit), AUTO_LOAD_DISTANCE, autoLoadFilter);
+		DestroyBoolExpr(autoLoadFilter);
 
 		DestroyGroup(group);
 		group = null;

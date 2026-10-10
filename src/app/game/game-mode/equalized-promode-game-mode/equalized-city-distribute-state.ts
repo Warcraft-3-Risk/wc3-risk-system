@@ -5,7 +5,6 @@ import { GlobalGameData } from '../../state/global-game-state';
 import { BaseState } from '../state/base-state';
 import { StateData } from '../state/state-data';
 import { ClientManager } from '../../services/client-manager';
-import { EqualizedPromodeData } from '../mode/equalized-promode-mode';
 
 /**
  * City distribution state for Equalized ProMode.

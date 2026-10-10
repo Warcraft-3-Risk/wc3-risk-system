@@ -1,5 +1,4 @@
 import { GlobalGameData } from 'src/app/game/state/global-game-state';
-import { debugPrint } from 'src/app/utils/debug-print';
 import { UNIT_TYPE } from 'src/app/utils/unit-types';
 
 export function UnitDamagedEvent() {

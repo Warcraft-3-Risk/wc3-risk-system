@@ -10,7 +10,7 @@ export function EnemyKillHandler(city: City, dyingUnit: unit, killingUnit: unit)
 	const searchGroup: group = CreateGroup();
 
 	//Search for city owned units within CoP of city
-	GetUnitsInRangeByAllegiance(searchGroup, city, SmallSearchRadius, (unit, player) => IsUnitAlly(unit, player));
+	GetUnitsInRangeByAllegiance(searchGroup, city, SmallSearchRadius, IsUnitAlly);
 
 	//Found city owned units within CoP
 	if (BlzGroupGetSize(searchGroup) >= 1) {
@@ -20,25 +20,11 @@ export function EnemyKillHandler(city: City, dyingUnit: unit, killingUnit: unit)
 	}
 
 	//No city owned units found, Search for allied units of killer in large radius of dying guard
-	GetUnitsInRangeOfUnitByAllegiance(
-		searchGroup,
-		city,
-		LargeSearchRadius,
-		(unit, player) => IsUnitAlly(unit, player),
-		dyingUnit,
-		killingUnit
-	);
+	GetUnitsInRangeOfUnitByAllegiance(searchGroup, city, LargeSearchRadius, IsUnitAlly, dyingUnit, killingUnit);
 
 	//Could not find valid units within large radius of guard, so we search in small radius by killer
 	if (BlzGroupGetSize(searchGroup) <= 0) {
-		GetUnitsInRangeOfUnitByAllegiance(
-			searchGroup,
-			city,
-			SmallSearchRadius,
-			(unit, player) => IsUnitAlly(unit, player),
-			killingUnit,
-			killingUnit
-		);
+		GetUnitsInRangeOfUnitByAllegiance(searchGroup, city, SmallSearchRadius, IsUnitAlly, killingUnit, killingUnit);
 	}
 
 	//Found valid guard units, set unit as guard

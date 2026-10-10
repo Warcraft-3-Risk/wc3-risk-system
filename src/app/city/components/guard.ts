@@ -52,6 +52,10 @@ export class Guard implements Resetable {
 		this._unit = guard;
 		UnitAddAbility(guard, FourCC("A006"));
 		UnitAddType(this._unit, UNIT_TYPE.GUARD);
+
+		// Guards are never drawn on the minimap. A guard appearing at a city is itself an
+		// ownership tell, so it would leak captures through fog.
+		BlzSetUnitBooleanFieldBJ(guard, UNIT_BF_HIDE_MINIMAP_DISPLAY, true);
 	}
 
 	/**
@@ -62,6 +66,10 @@ export class Guard implements Resetable {
 
 		UnitRemoveType(this._unit, UNIT_TYPE.GUARD);
 		UnitRemoveAbility(this._unit, FourCC("A006"));
+
+		// Back to being an ordinary unit, so let it onto the minimap again.
+		BlzSetUnitBooleanFieldBJ(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
+
 		this._unit = null;
 	}
 

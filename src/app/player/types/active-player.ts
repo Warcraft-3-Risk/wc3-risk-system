@@ -1,6 +1,6 @@
 import { Resetable } from 'src/app/interfaces/resetable';
 import { TrackedData } from '../data/tracked-data';
-import { Options } from '../options';
+import { CAMERA_POSITION_MODE, Options } from '../options';
 import { Status } from '../status/status';
 import { GamePlayer } from './game-player';
 import { NameManager } from 'src/app/managers/names/name-manager';
@@ -30,6 +30,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 			labels: true,
+			cameraPositionMode: CAMERA_POSITION_MODE.DISABLED,
 		};
 		this._killedBy = null;
 		this._admin = false;
@@ -61,6 +62,7 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			ping: false,
 			board: 0,
 			labels: true,
+			cameraPositionMode: CAMERA_POSITION_MODE.DISABLED,
 		};
 	}
 

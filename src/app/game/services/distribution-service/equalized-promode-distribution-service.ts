@@ -1,8 +1,6 @@
 import { City } from 'src/app/city/city';
 import { ActivePlayer } from 'src/app/player/types/active-player';
 import { StandardDistributionService } from './standard-distribution-service';
-import { GlobalGameData } from '../../state/global-game-state';
-import { EqualizedPromodeData } from '../../game-mode/mode/equalized-promode-mode';
 import { RegionToCity } from 'src/app/city/city-map';
 
 /**

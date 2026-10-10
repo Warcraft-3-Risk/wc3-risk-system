@@ -69,7 +69,7 @@ export class CapitalsDistributeCapitalsState extends BaseState<CapitalsData> {
 				debugPrint(`Player ${player} has been randomly assigned a capital in ${country.getName()}`);
 				this.changeCityOwner(capital, PlayerManager.getInstance().players.get(player));
 				IssueImmediateOrderById(capital.barrack.unit, UNIT_ID.CAPITAL);
-				PanCameraToTimedLocForPlayer(player, capital.barrack.location, 1);
+				PanCameraToTimedForPlayer(player, capital.barrack.defaultX, capital.barrack.defaultY, 1);
 				this.stateData.playerCapitalSelections.set(player, capital);
 				this.stateData.capitals.set(player, capital);
 			}
@@ -77,7 +77,7 @@ export class CapitalsDistributeCapitalsState extends BaseState<CapitalsData> {
 
 		this.stateData.capitals.forEach((city, player) => {
 			if (city instanceof LandCity) {
-				PingMinimapLocForPlayer(player, city.barrack.location, 20);
+				PingMinimapForPlayer(player, city.barrack.defaultX, city.barrack.defaultY, 20);
 				city.setCapital();
 			}
 		});

@@ -16,7 +16,6 @@ import { TeamManager } from '../teams/team-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_CITY_CAPTURE } from '../utils/events/event-constants';
-import { debugPrint } from '../utils/debug-print';
 import { PlayLocalSound } from '../utils/utils';
 
 export function OwnershipChangeEvent() {

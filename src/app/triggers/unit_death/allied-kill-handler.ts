@@ -10,18 +10,11 @@ export function AlliedKillHandler(city: City, dyingUnit: unit, killingUnit: unit
 	const searchGroup: group = CreateGroup();
 
 	//Search for allied units of dying unit in small radius
-	GetUnitsInRangeOfUnitByAllegiance(
-		searchGroup,
-		city,
-		SmallSearchRadius,
-		(unit, player) => IsUnitAlly(unit, player),
-		dyingUnit,
-		killingUnit
-	);
+	GetUnitsInRangeOfUnitByAllegiance(searchGroup, city, SmallSearchRadius, IsUnitAlly, dyingUnit, killingUnit);
 
 	//Could not find valid units within large radius of guard, so we search in small radius by killer
 	if (BlzGroupGetSize(searchGroup) <= 0) {
-		GetUnitsInRangeByAllegiance(searchGroup, city, SmallSearchRadius, (unit, player) => IsUnitAlly(unit, player), killingUnit);
+		GetUnitsInRangeByAllegiance(searchGroup, city, SmallSearchRadius, IsUnitAlly, killingUnit);
 	}
 
 	//Found valid guard units, set unit as guard

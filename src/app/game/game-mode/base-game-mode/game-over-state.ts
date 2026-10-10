@@ -1,5 +1,4 @@
 import { NameManager } from 'src/app/managers/names/name-manager';
-import { VictoryManager } from 'src/app/managers/victory-manager';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { GlobalGameData } from '../../state/global-game-state';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
@@ -16,6 +15,7 @@ import { HexColors } from 'src/app/utils/hex-colors';
 import { Team } from 'src/app/teams/team';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { PlayLocalSound } from 'src/app/utils/utils';
+import { recordSessionKillsDeaths } from 'src/app/utils/session-stats';
 
 export class GameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -30,17 +30,21 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 
 		// Hide match scoreboard and show score screen
 		ScoreboardManager.getInstance().destroyBoards();
+		// Chaos promode runs through PromodeMode, so it must take the promode end-of-match path too
+		const isPromode: boolean = SettingsContext.getInstance().isPromode() || SettingsContext.getInstance().isChaosPromode();
+
 		GlobalGameData.matchPlayers.forEach((player) => {
-			if (SettingsContext.getInstance().isPromode()) {
+			if (isPromode) {
 				NameManager.getInstance().setName(player.getPlayer(), 'acct');
 			} else {
 				NameManager.getInstance().setName(player.getPlayer(), 'btag');
 				player.trackedData.bonus.hideUI();
 			}
 		});
-		if (SettingsContext.getInstance().isPromode()) {
-			VictoryManager.getInstance().addWinToLeader();
-			VictoryManager.getInstance().showScore();
+
+		if (isPromode) {
+			// Promode plays a series: show the running session score and wait for -ng
+			this.recordSessionStats();
 		} else {
 			StatisticsController.getInstance().refreshView();
 			StatisticsController.getInstance().setViewVisibility(true);
@@ -56,6 +60,44 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 
 		// Play victory/defeat sounds locally
 		this.playOutcomeSounds();
+	}
+
+	private recordSessionStats(): void {
+		const sessionBoard = ScoreboardManager.getInstance().getSessionBoard();
+
+		if (!sessionBoard) return;
+
+		// The leader is a Team in team modes and an ActivePlayer in FFA/1v1
+		const leader = GlobalGameData.leader;
+		let winningTeam: Team = undefined;
+
+		if (leader instanceof Team) {
+			winningTeam = leader;
+		} else if (leader instanceof ActivePlayer) {
+			winningTeam = TeamManager.getInstance().getTeamFromPlayer(leader.getPlayer());
+		}
+
+		if (winningTeam) {
+			const losingPlayers: ActivePlayer[] = [];
+
+			TeamManager.getInstance()
+				.getTeams()
+				.forEach((team) => {
+					if (team != winningTeam) losingPlayers.push(...team.getMembers());
+				});
+
+			// Teams win and lose together, so every member gets the W/L
+			sessionBoard.recordMatchResult(winningTeam.getMembers(), losingPlayers);
+		} else if (leader instanceof ActivePlayer) {
+			// FFA / 1v1 promode: the leader wins, everyone else loses
+			const losingPlayers = GlobalGameData.matchPlayers.filter((p) => p.getPlayer() != leader.getPlayer());
+			sessionBoard.recordMatchResult([leader], losingPlayers);
+		}
+
+		recordSessionKillsDeaths(sessionBoard);
+
+		sessionBoard.updateFull();
+		ScoreboardManager.getInstance().showSessionBoard();
 	}
 
 	private playOutcomeSounds(): void {

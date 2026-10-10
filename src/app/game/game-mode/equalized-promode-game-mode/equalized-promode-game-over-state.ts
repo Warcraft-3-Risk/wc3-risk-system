@@ -14,6 +14,7 @@ import { EqualizedPromodeData } from '../mode/equalized-promode-mode';
 import { Wait } from 'src/app/utils/wait';
 import { ParticipantEntityManager } from 'src/app/utils/participant-entity';
 import { EqualizedPromodeDistributionService } from '../../services/distribution-service/equalized-promode-distribution-service';
+import { recordSessionKillsDeaths } from 'src/app/utils/session-stats';
 
 /**
  * Custom GameOverState for Equalized ProMode.
@@ -53,6 +54,9 @@ export class EqualizedPromodeGameOverState extends BaseState<EqualizedPromodeDat
 	 * Store the winner and automatically start Round 2.
 	 */
 	private handleRound1End(round1Winner: player | null) {
+		// Round 1's kills would be lost when tracked data resets for round 2, so bank them now.
+		this.recordRoundKillsDeaths();
+
 		// Use static methods to store data (survives state reset)
 		EqualizedPromodeDistributionService.setRound1Winner(round1Winner);
 		EqualizedPromodeDistributionService.setRoundNumber(2);
@@ -91,8 +95,8 @@ export class EqualizedPromodeGameOverState extends BaseState<EqualizedPromodeDat
 			VictoryManager.getInstance().addWinToLeader();
 		}
 
-		// Show current score
-		VictoryManager.getInstance().showScore();
+		this.recordRoundKillsDeaths();
+		this.recordPairResult(round1Winner, round2Winner);
 
 		// Reset round data for next pair
 		EqualizedPromodeDistributionService.setRoundNumber(1);
@@ -103,6 +107,38 @@ export class EqualizedPromodeGameOverState extends BaseState<EqualizedPromodeDat
 		SetTimeOfDay(12.0);
 
 		ReplayManager.getInstance().onRoundEnd();
+	}
+
+	private recordRoundKillsDeaths(): void {
+		const sessionBoard = ScoreboardManager.getInstance().getSessionBoard();
+
+		if (!sessionBoard) return;
+
+		recordSessionKillsDeaths(sessionBoard);
+	}
+
+	/**
+	 * Records the outcome of a completed two-round pair and shows the session board.
+	 * A split result is a draw, so neither player takes a win or a loss.
+	 */
+	private recordPairResult(round1Winner: player | null, round2Winner: player | null): void {
+		const sessionBoard = ScoreboardManager.getInstance().getSessionBoard();
+
+		if (!sessionBoard) return;
+
+		const pairWinner: player | null = round1Winner && round2Winner && round1Winner === round2Winner ? round1Winner : null;
+
+		if (pairWinner) {
+			const winner = GlobalGameData.matchPlayers.find((p) => p.getPlayer() === pairWinner);
+
+			if (winner) {
+				const losers = GlobalGameData.matchPlayers.filter((p) => p.getPlayer() !== pairWinner);
+				sessionBoard.recordMatchResult([winner], losers);
+			}
+		}
+
+		sessionBoard.updateFull();
+		ScoreboardManager.getInstance().showSessionBoard();
 	}
 
 	/**

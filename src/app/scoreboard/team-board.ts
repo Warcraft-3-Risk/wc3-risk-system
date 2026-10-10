@@ -13,10 +13,11 @@ export class TeamBoard extends Scoreboard {
 	private showTeamTotals: boolean;
 	private readonly PLAYER_COL: number = 1;
 	private readonly INCOME_COL: number = 2;
-	private readonly CITIES_COL: number = 3;
-	private readonly KILLS_COL: number = 4;
-	private readonly DEATHS_COL: number = 5;
-	private readonly STATUS_COL: number = 6;
+	private readonly GOLD_COL: number = 3;
+	private readonly CITIES_COL: number = 4;
+	private readonly KILLS_COL: number = 5;
+	private readonly DEATHS_COL: number = 6;
+	private readonly STATUS_COL: number = 7;
 
 	public constructor() {
 		super();
@@ -35,12 +36,13 @@ export class TeamBoard extends Scoreboard {
 		}
 
 		ShuffleArray(this.teams);
-		MultiboardSetColumnCount(this.board, 6);
+		MultiboardSetColumnCount(this.board, 7);
 
 		for (let i = 1; i <= this.size; i++) {
 			MultiboardSetRowCount(this.board, MultiboardGetRowCount(this.board) + 1);
 			this.setItemWidth(8.0, i, this.PLAYER_COL);
 			this.setItemWidth(2.5, i, this.INCOME_COL);
+			this.setItemWidth(3.3, i, this.GOLD_COL);
 			this.setItemWidth(2.5, i, this.CITIES_COL);
 			this.setItemWidth(4.0, i, this.KILLS_COL);
 			this.setItemWidth(4.0, i, this.DEATHS_COL);
@@ -49,12 +51,14 @@ export class TeamBoard extends Scoreboard {
 
 		this.setItemValue(`${HexColors.TANGERINE}Player|r`, 1, this.PLAYER_COL);
 		this.setItemValue(`${HexColors.TANGERINE}Inc|r`, 1, this.INCOME_COL);
+		this.setItemValue(`${HexColors.TANGERINE}G|r`, 1, this.GOLD_COL);
 		this.setItemValue(`${HexColors.TANGERINE}C|r`, 1, this.CITIES_COL);
 		this.setItemValue(`${HexColors.TANGERINE}K|r`, 1, this.KILLS_COL);
 		this.setItemValue(`${HexColors.TANGERINE}D|r`, 1, this.DEATHS_COL);
 		this.setItemValue(`${HexColors.TANGERINE}Status|r`, 1, this.STATUS_COL);
 		this.setItemWidth(20.0, this.size, this.PLAYER_COL);
 		this.setItemWidth(0.0, this.size, this.INCOME_COL);
+		this.setItemWidth(0.0, this.size, this.GOLD_COL);
 		this.setItemWidth(0.0, this.size, this.CITIES_COL);
 		this.setItemWidth(0.0, this.size, this.KILLS_COL);
 		this.setItemWidth(0.0, this.size, this.DEATHS_COL);
@@ -92,6 +96,7 @@ export class TeamBoard extends Scoreboard {
 
 		for (let i = 0; i < this.teams.length; i++) {
 			const team = this.teams[i];
+			const isMyTeam: boolean = this.isLocalPlayersTeam(team);
 
 			if (this.showTeamTotals) {
 				this.setItemValue(`${HexColors.LIGHT_BLUE}${team.getIncome()}`, row, this.INCOME_COL);
@@ -105,7 +110,7 @@ export class TeamBoard extends Scoreboard {
 				const incomeString: string = player.status.isAlive() || player.status.isNomad() ? `${player.trackedData.income.income}` : '-';
 
 				this.setItemValue(`${this.getStringColor(playerHandle)}${incomeString}`, row, this.INCOME_COL);
-				this.updatePlayerData(player, row, this.getStringColor(playerHandle), player.trackedData);
+				this.updatePlayerData(player, row, this.getStringColor(playerHandle), player.trackedData, isMyTeam);
 
 				row++;
 			}
@@ -120,6 +125,7 @@ export class TeamBoard extends Scoreboard {
 
 		for (let i = 0; i < this.teams.length; i++) {
 			const team = this.teams[i];
+			const isMyTeam: boolean = this.isLocalPlayersTeam(team);
 
 			if (this.showTeamTotals) {
 				this.updateTeamData(team, row);
@@ -129,11 +135,25 @@ export class TeamBoard extends Scoreboard {
 			for (let j = 0; j < team.getMembers().length; j++) {
 				const player = team.getMembers()[j];
 
-				this.updatePlayerData(player, row, this.getStringColor(player.getPlayer()), player.trackedData);
+				this.updatePlayerData(player, row, this.getStringColor(player.getPlayer()), player.trackedData, isMyTeam);
 
 				row++;
 			}
 		}
+	}
+
+	private isLocalPlayersTeam(team: Team): boolean {
+		return team.playerIsInTeam(GetLocalPlayer());
+	}
+
+	private getTeamGold(team: Team): number {
+		let total: number = 0;
+
+		team.getMembers().forEach((member) => {
+			total += GetPlayerState(member.getPlayer(), PLAYER_STATE_RESOURCE_GOLD);
+		});
+
+		return total;
 	}
 
 	private getStringColor(player: player): string {
@@ -159,6 +179,11 @@ export class TeamBoard extends Scoreboard {
 
 	private updateTeamData(team: Team, row: number) {
 		this.setItemValue(`${HexColors.WHITE}Team #${team.getNumber()}|r`, row, this.PLAYER_COL);
+
+		// Gold is private to your own team - other teams always read '-'
+		const teamGold: string = this.isLocalPlayersTeam(team) ? `${this.getTeamGold(team)}` : '-';
+		this.setItemValue(`${HexColors.LIGHT_BLUE}${teamGold}`, row, this.GOLD_COL);
+
 		this.setItemValue(`${HexColors.LIGHT_BLUE}${team.getCities()}`, row, this.CITIES_COL);
 		this.setItemValue(`${HexColors.LIGHT_BLUE}${team.getKills()}`, row, this.KILLS_COL);
 		this.setItemValue(`${HexColors.LIGHT_BLUE}${team.getDeaths()}`, row, this.DEATHS_COL);
@@ -171,7 +196,7 @@ export class TeamBoard extends Scoreboard {
 	 * @param {string} textColor - The text color code.
 	 * @param {TrackedData} data - The tracked data for the player.
 	 */
-	private updatePlayerData(player: ActivePlayer, row: number, textColor: string, data: TrackedData) {
+	private updatePlayerData(player: ActivePlayer, row: number, textColor: string, data: TrackedData, isMyTeam: boolean) {
 		const playerHandle: player = player.getPlayer();
 
 		let teamPrefix: string = '';
@@ -182,6 +207,15 @@ export class TeamBoard extends Scoreboard {
 
 		// Name
 		this.setItemValue(`${teamPrefix}${NameManager.getInstance().getDisplayName(playerHandle)}`, row, this.PLAYER_COL);
+
+		// Gold - only visible for your own team, and only while the player can still spend it
+		if (isMyTeam && (player.status.isAlive() || player.status.isNomad())) {
+			const playerGold: number = GetPlayerState(playerHandle, PLAYER_STATE_RESOURCE_GOLD);
+			const playerGoldTextColor: string = playerGold === 0 ? HexColors.RED : textColor;
+			this.setItemValue(`${playerGoldTextColor}${playerGold}`, row, this.GOLD_COL);
+		} else {
+			this.setItemValue(`${textColor}-`, row, this.GOLD_COL);
+		}
 
 		// Cities
 		const requiredCities = VictoryManager.getCityCountWin();

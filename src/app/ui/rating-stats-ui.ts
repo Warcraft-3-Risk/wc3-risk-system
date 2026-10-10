@@ -7,7 +7,6 @@ import { RANKED_SEASON_ID } from 'src/configs/game-settings';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_QUEST_UPDATE_PLAYER_STATUS } from '../utils/events/event-constants';
 import { CreateObserverButton } from '../utils/observer-helper';
-import { PlayerManager } from '../player/player-manager';
 import { truncateWithColorCode } from '../utils/utils';
 
 export class RatingStatsUI {

@@ -93,29 +93,19 @@ export const PLAYER_COLOR_CODES_MAP: Map<playercolor, string> = new Map<playerco
 	[PLAYER_COLOR_SNOW, '|cffecf0ff'],
 ]);
 
-/**
- * Percentage value representing the red component in the ping color for each player.
- * The percentage is used to blend the color component of the ping signal.
- */
-export const pingRedPercent = [
-	100.0, 0.0, 10.98, 32.94, 100.0, 99.61, 12.55, 89.8, 58.43, 49.41, 6.27, 29.02, 60.78, 0.0, 0.0, 74.51, 92.16, 97.25, 74.9, 86.27, 15.69,
-	92.16, 0.0, 64.31,
-];
+/** Solid black square. WC3 reserves this slot past the 24 player colours. */
+const TEAM_COLOR_BLACK_TEXTURE: string = 'ReplaceableTextures\\TeamColor\\TeamColor24.blp';
 
 /**
- * Percentage value representing the green component in the ping color for each player.
- * The percentage is used to blend the color component of the ping signal.
+ * Maps a player colour to its solid-colour TeamColor texture. These are flat squares, which
+ * makes them suitable for minimap icons.
  */
-export const pingGreenPercent = [
-	1.18, 25.88, 90.2, 0.0, 98.82, 54.12, 75.29, 35.69, 58.82, 74.9, 38.43, 16.47, 0.0, 0.0, 91.76, 0.0, 80.39, 64.31, 100.0, 72.55, 15.69,
-	94.12, 47.06, 43.53,
-];
+export function getTeamColorTexture(color: playercolor): string {
+	const colorIndex: number = GetHandleId(color);
 
-/**
- * Percentage value representing the blue component in the ping color for each player.
- * The percentage is used to blend the color component of the ping signal.
- */
-export const pingBluePercent = [
-	1.18, 100.0, 72.55, 50.59, 0.0, 5.49, 0.0, 69.02, 59.22, 94.51, 27.45, 1.57, 0.0, 76.47, 100.0, 99.61, 52.94, 54.51, 50.2, 92.16, 15.69,
-	100.0, 11.76, 20.0,
-];
+	if (colorIndex < 0 || colorIndex > 23) return TEAM_COLOR_BLACK_TEXTURE;
+
+	const suffix: string = colorIndex < 10 ? `0${colorIndex}` : `${colorIndex}`;
+
+	return `ReplaceableTextures\\TeamColor\\TeamColor${suffix}.blp`;
+}

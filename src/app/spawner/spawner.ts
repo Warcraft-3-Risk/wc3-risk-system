@@ -3,7 +3,6 @@ import { ClientManager } from '../game/services/client-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { Ownable } from '../interfaces/ownable';
 import { Resetable } from '../interfaces/resetable';
-import { debugPrint } from '../utils/debug-print';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 
@@ -71,6 +70,10 @@ export class Spawner implements Resetable, Ownable {
 
 		const amount: number = Math.min(this.spawnsPerStepWithMultiplier, this.maxSpawnsPerPlayerWithMultiplier - spawnCount);
 
+		// Hoisted out of the loop: neither changes while spawning, and both cost a handle/scan per unit
+		const rallyPoint: location = GetUnitRallyPoint(this.unit);
+		const ownerData = GlobalGameData.matchPlayers.find((x) => x.getPlayer() == this.getOwner());
+
 		for (let i = 0; i < amount; i++) {
 			let u: unit = CreateUnit(
 				ClientManager.getInstance().getClientOrPlayer(this.getOwner()),
@@ -79,10 +82,9 @@ export class Spawner implements Resetable, Ownable {
 				GetUnitY(this.unit),
 				270
 			);
-			let loc: location = GetUnitRallyPoint(this.unit);
 
 			if (!IsUnitType(u, UNIT_TYPE.TRANSPORT)) {
-				GlobalGameData.matchPlayers.find((x) => x.getPlayer() == this.getOwner()).trackedData.units.add(u);
+				ownerData.trackedData.units.add(u);
 			}
 
 			UnitAddType(u, UNIT_TYPE.SPAWN);
@@ -93,14 +95,14 @@ export class Spawner implements Resetable, Ownable {
 			this.spawnMap.get(this.getOwner()).push(u);
 			SPAWNER_UNITS.set(u, this);
 
-			if (loc != null) {
-				IssuePointOrderLoc(u, 'attack', loc);
-				RemoveLocation(loc);
+			if (rallyPoint != null) {
+				IssuePointOrderLoc(u, 'attack', rallyPoint);
 			}
 
-			loc = null;
 			u = null;
 		}
+
+		if (rallyPoint != null) RemoveLocation(rallyPoint);
 
 		this.setName();
 	}
