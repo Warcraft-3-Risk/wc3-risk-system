@@ -51,6 +51,25 @@ function getTeammateRequest(responder: player): GoldRequest | undefined {
 	return found;
 }
 
+/**
+ * Counts the requester's team members other than themselves.
+ * Promode forces a team diplomacy setting, so a 1v1 still reports as team mode
+ * even though there is nobody who could answer a gold request.
+ */
+function getTeammateCount(requester: player): number {
+	const team = TeamManager.getInstance().getTeamFromPlayer(requester);
+
+	if (!team) return 0;
+
+	let count: number = 0;
+
+	team.getMembers().forEach((member) => {
+		if (member.getPlayer() != requester) count++;
+	});
+
+	return count;
+}
+
 function isTeamMode(): boolean {
 	return !SettingsContext.getInstance().isFFA();
 }
@@ -83,6 +102,8 @@ export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) 
 		// "-g <amount>" with a plain number asks the team for gold.
 		// A non-numeric argument is still treated as a player name, so "-g <name>" keeps sending all gold.
 		if (splitStr.length === 2 && S2I(splitStr[1]) > 0) {
+			if (getTeammateCount(player) === 0) return ErrorMsg(player, 'You have no allies to request gold from!');
+
 			createGoldRequest(player, S2I(splitStr[1]), nameManager);
 			return;
 		}
