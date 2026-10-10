@@ -36,20 +36,31 @@ export class VictoryManager {
 		PlayerManager.getInstance().setPlayerStatus(player.getPlayer(), status);
 	}
 
-	public setLeader(participant: ParticipantEntity) {
-		// Don't set eliminated players as leader
-		if (participant instanceof ActivePlayer && participant.status.isEliminated()) {
-			return;
+	// Re-evaluates the leader against every participant, so the leader always reflects the
+	// actual city count standings (the same metric the city count victory condition uses).
+	public updateLeader() {
+		const allParticipants = this.getOwnershipByThresholdDescending(0);
+		const validParticipants: ParticipantEntity[] = [];
+
+		for (let i = 0; i < allParticipants.length; i++) {
+			const participant = allParticipants[i];
+
+			// Eliminated players can never be the leader
+			if (participant instanceof ActivePlayer && participant.status.isEliminated()) {
+				continue;
+			}
+
+			validParticipants.push(participant);
 		}
 
-		// If current leader is eliminated, always replace them
-		const currentLeaderEliminated =
-			GlobalGameData.leader instanceof ActivePlayer && GlobalGameData.leader.status.isEliminated();
+		if (validParticipants.length == 0) return;
 
-		if (GlobalGameData.leader == undefined || currentLeaderEliminated) {
-			GlobalGameData.leader = participant;
-		} else if (ParticipantEntityManager.getCityCount(participant) > ParticipantEntityManager.getCityCount(GlobalGameData.leader)) {
-			GlobalGameData.leader = participant;
+		const currentLeader = GlobalGameData.leader;
+		const currentLeaderEliminated = currentLeader instanceof ActivePlayer && currentLeader.status.isEliminated();
+		const highestCount = ParticipantEntityManager.getCityCount(validParticipants[0]);
+
+		if (currentLeader == undefined || currentLeaderEliminated || ParticipantEntityManager.getCityCount(currentLeader) < highestCount) {
+			GlobalGameData.leader = validParticipants[0];
 		}
 	}
 
@@ -104,6 +115,7 @@ export class VictoryManager {
 			VictoryManager.GAME_VICTORY_STATE = 'UNDECIDED';
 		} else if (playerWinCandidates.length == 1) {
 			debugPrint(ParticipantEntityManager.getDisplayName(playerWinCandidates[0]) + ' has met the city count victory condition!');
+			GlobalGameData.leader = playerWinCandidates[0];
 			VictoryManager.GAME_VICTORY_STATE = 'DECIDED';
 		} else {
 			VictoryManager.GAME_VICTORY_STATE = 'TIE';

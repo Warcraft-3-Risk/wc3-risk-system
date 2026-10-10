@@ -2,6 +2,7 @@ import { StateData } from '../state/state-data';
 import { CountdownState } from '../base-game-mode/countdown-state';
 import { CountdownMessage } from 'src/app/utils/messages';
 import { STARTING_COUNTDOWN } from '../../../../configs/game-settings';
+import { HexColors } from 'src/app/utils/hex-colors';
 
 export class PromodeCountdownState extends CountdownState<StateData> {
 	public constructor() {
@@ -9,6 +10,7 @@ export class PromodeCountdownState extends CountdownState<StateData> {
 	}
 
 	override countdownDisplay(duration: number): void {
-		CountdownMessage(`The Game will start in\n${duration}`);
+		const durationText = duration <= 3 ? `${HexColors.TANGERINE}${duration}|r` : `${duration}`;
+		CountdownMessage(`The Game will start in\n${durationText}`);
 	}
 }

@@ -30,8 +30,10 @@ export class ChatManager {
 			t,
 			Condition(() => {
 				const cmd: string = GetEventPlayerChatString().split(' ')[0].toLowerCase().trim();
+				const action = this._chatActions.get(cmd);
 
-				this._chatActions.get(cmd)();
+				// Any message starting with "-" fires this trigger, so unknown commands must be ignored
+				if (action) action();
 
 				return true;
 			})

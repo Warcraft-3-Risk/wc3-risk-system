@@ -85,7 +85,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 				// Pre-initialize rating stats UI frames for all players during countdown
 				PlayerManager.getInstance().playersAndObservers.forEach((player) => {
-					if (player.ratingStatsUI && player.ratingStatsUI.preInitialize) {
+					if (player.ratingStatsUI) {
 						player.ratingStatsUI.preInitialize();
 					}
 					// Update F4 button appearance based on ranked status
@@ -110,6 +110,11 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 				BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 				this.countdownDisplay(duration);
+
+				if (duration >= 1 && duration <= 3) {
+					PlayGlobalSound('Sound\\Interface\\BattleNetTick.flac');
+				}
+
 				if (duration <= 0) {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);
@@ -138,6 +143,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 	}
 
 	countdownDisplay(duration: number): void {
-		CountdownMessage(`The Game will start in\n${duration}`);
+		const durationText = duration <= 3 ? `${HexColors.TANGERINE}${duration}|r` : `${duration}`;
+		CountdownMessage(`The Game will start in\n${durationText}`);
 	}
 }

@@ -8,6 +8,9 @@ export const CITIES_TO_WIN_RATIO: number = 0.6;
 //This is the starting gold for each player. 4 gold by default.
 export const STARTING_INCOME: number = 4;
 
+//This is the starting gold for each player in Chaos promode. 25 gold by default.
+export const CHAOS_STARTING_INCOME: number = 25;
+
 //This is the starting countdown for the game. 10 by default
 export const STARTING_COUNTDOWN: number = 10;
 
@@ -65,6 +68,11 @@ export const CLIENT_ALLOCATION_ENABLED = false;
 // This represents whether the ban list is active. Is set to true by default.
 export const BAN_LIST_ACTIVE: boolean = true;
 
+// Minimum number of human players before the game consumes each player's built-in WC3 pause quota.
+// Below this threshold players keep the default (F10 -> Pause) ability; at or above it, pausing is
+// disabled to keep large lobbies running continuously.
+export const MIN_PLAYERS_FOR_PAUSE_CONSUMPTION: number = 14;
+
 // Rating system settings
 // Master toggle for the entire rating system. When disabled:
 //   - No rating stats button (F4) is shown
@@ -92,7 +100,7 @@ export const RANKED_STARTING_RATING: number = 1000;
 // Enable/disable editor developer mode. Default is false.
 // When enabled: Enables country creator commands for map editing (singleplayer only)
 // When disabled: Country creator commands are disabled
-export const EDITOR_DEVELOPER_MODE: boolean = false;
+export const EDITOR_DEVELOPER_MODE: boolean = true;
 
 // Enable/disable rating file encryption. Default is true.
 // When enabled: Rating files are encrypted with XOR+Base64 (production use)

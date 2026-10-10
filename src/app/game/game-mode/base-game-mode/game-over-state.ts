@@ -13,6 +13,9 @@ import { FogManager } from 'src/app/managers/fog-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
 import { LocalMessage } from 'src/app/utils/messages';
 import { HexColors } from 'src/app/utils/hex-colors';
+import { Team } from 'src/app/teams/team';
+import { TeamManager } from 'src/app/teams/team-manager';
+import { PlayLocalSound } from 'src/app/utils/utils';
 
 export class GameOverState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -50,6 +53,35 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 		SetTimeOfDay(12.0);
 
 		ReplayManager.getInstance().onRoundEnd();
+
+		// Play victory/defeat sounds locally
+		this.playOutcomeSounds();
+	}
+
+	private playOutcomeSounds(): void {
+		const leader = GlobalGameData.leader;
+		const winners = new Set<player>();
+
+		if (leader instanceof Team) {
+			leader.getMembers().forEach((m) => winners.add(m.getPlayer()));
+		} else if (leader instanceof ActivePlayer) {
+			const team = SettingsContext.getInstance().isFFA() ? undefined : TeamManager.getInstance().getTeamFromPlayer(leader.getPlayer());
+
+			if (team) {
+				team.getMembers().forEach((m) => winners.add(m.getPlayer()));
+			} else {
+				winners.add(leader.getPlayer());
+			}
+		}
+
+		GlobalGameData.matchPlayers.forEach((p) => {
+			if (winners.has(p.getPlayer())) {
+				PlayLocalSound('Sound\\Interface\\QuestCompleted.flac', p.getPlayer());
+			} else if (!p.status.isEliminated()) {
+				// Only play for players still alive — eliminated players already heard it
+				PlayLocalSound('Sound\\Interface\\QuestFailed.flac', p.getPlayer());
+			}
+		});
 	}
 
 	override onPlayerRestart(player: ActivePlayer) {

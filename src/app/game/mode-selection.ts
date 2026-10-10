@@ -5,7 +5,7 @@ import { Quests } from 'src/app/quests/quests';
 import { ExportGameSettings } from 'src/app/utils/export-statistics/export-game-settings';
 import { EventEmitter } from 'src/app/utils/events/event-emitter';
 import { EVENT_MODE_SELECTION, EVENT_SET_GAME_MODE } from 'src/app/utils/events/event-constants';
-import { ENABLE_EXPORT_GAME_SETTINGS, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
+import { ENABLE_EXPORT_GAME_SETTINGS, MIN_PLAYERS_FOR_PAUSE_CONSUMPTION, RATING_SYSTEM_ENABLED } from 'src/configs/game-settings';
 import { GameType } from 'src/app/settings/strategies/game-type-strategy';
 import { GlobalGameData } from './state/global-game-state';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
@@ -48,14 +48,17 @@ export class ModeSelection {
 			syncManager.startSync(allHumans);
 		}
 
-		// Consuming pauses to maintain continous gameplay
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			const player = Player(i);
+		// Consuming pauses to maintain continous gameplay in large lobbies.
+		// Smaller lobbies keep the default WC3 pause ability.
+		if (PlayerManager.getInstance().players.size >= MIN_PLAYERS_FOR_PAUSE_CONSUMPTION) {
+			for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+				const player = Player(i);
 
-			if (player == GetLocalPlayer()) {
-				for (let index = 0; index < 3; index++) {
-					PauseGame(true);
-					PauseGame(false);
+				if (player == GetLocalPlayer()) {
+					for (let index = 0; index < 3; index++) {
+						PauseGame(true);
+						PauseGame(false);
+					}
 				}
 			}
 		}

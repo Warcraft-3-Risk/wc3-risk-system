@@ -16,8 +16,8 @@ import { TeamManager } from '../teams/team-manager';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_CITY_CAPTURE } from '../utils/events/event-constants';
-import { ParticipantEntityManager } from '../utils/participant-entity';
 import { debugPrint } from '../utils/debug-print';
+import { PlayLocalSound } from '../utils/utils';
 
 export function OwnershipChangeEvent() {
 	const t: trigger = CreateTrigger();
@@ -52,6 +52,8 @@ export function OwnershipChangeEvent() {
 					if (prevOwner.status.isAlive()) {
 						prevOwner.trackedData.income.income -= country.getCities().length;
 						prevOwner.trackedData.income.delta -= country.getCities().length;
+
+						PlayLocalSound('Sound\\Interface\\CreepAggroWhat1.flac', prevOwnerHandle);
 					}
 
 					if (teamManager) {
@@ -93,7 +95,7 @@ export function OwnershipChangeEvent() {
 				}
 
 				if (GlobalGameData.matchState == 'inProgress') {
-					VictoryManager.getInstance().setLeader(ParticipantEntityManager.getParticipantByActivePlayer(owner));
+					VictoryManager.getInstance().updateLeader();
 				}
 
 				if (ownerData.countries.get(country) == country.getCities().length) {

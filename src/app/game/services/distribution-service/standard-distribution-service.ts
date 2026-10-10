@@ -14,7 +14,7 @@ export class StandardDistributionService {
 	private citiesPerPlayerUpperBound: number = CITIES_PER_PLAYER_UPPER_BOUND;
 	private maxCitiesPerPlayer: number;
 	private cities: City[];
-	private players: DoublyLinkedList<ActivePlayer>;
+	protected players: DoublyLinkedList<ActivePlayer>;
 
 	/**
 	 * Initializes city pool and player list.

@@ -123,8 +123,8 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 
 	if (isRanked) {
 		// For ranked games, show icon based on player's preference
-		const { RatingManager } = require('src/app/rating/rating-manager');
-		const { NameManager } = require('src/app/managers/names/name-manager');
+		const { RatingManager } = require('src/app/rating/rating-manager') as typeof import('../rating/rating-manager');
+		const { NameManager } = require('src/app/managers/names/name-manager') as typeof import('../managers/names/name-manager');
 		const ratingManager = RatingManager.getInstance();
 		const btag = NameManager.getInstance().getBtag(player.getPlayer());
 		const showRating = ratingManager.getShowRatingPreference(btag);
@@ -173,7 +173,7 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 		action: (context: number, textures: { primary: string; secondary: string }, button) => {
 			if (GetLocalPlayer() == player.getPlayer()) {
 				// Import RatingManager at runtime to check ranked status
-				const { RatingManager } = require('src/app/rating/rating-manager');
+				const { RatingManager } = require('src/app/rating/rating-manager') as typeof import('../rating/rating-manager');
 				const ratingManager = RatingManager.getInstance();
 
 				// Check if this is a ranked game - if not, show message and do nothing
@@ -189,7 +189,7 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 				}
 
 				// Import RatingSyncManager at runtime to check sync status
-				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager');
+				const { RatingSyncManager } = require('src/app/rating/rating-sync-manager') as typeof import('../rating/rating-sync-manager');
 
 				// Check if sync is complete before allowing UI access
 				if (!RatingSyncManager.getInstance().isSyncComplete()) {

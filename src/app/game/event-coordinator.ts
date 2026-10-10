@@ -97,7 +97,7 @@ export class EventCoordinator {
 				this._currentMode = new W3CMode();
 			} else if (SettingsContext.getInstance().isEqualizedPromode()) {
 				this._currentMode = new EqualizedPromodeMode();
-			} else if (SettingsContext.getInstance().isPromode()) {
+			} else if (SettingsContext.getInstance().isPromode() || SettingsContext.getInstance().isChaosPromode()) {
 				this._currentMode = new PromodeMode();
 			} else {
 				this._currentMode = new StandardMode();

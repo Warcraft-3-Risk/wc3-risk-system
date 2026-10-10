@@ -216,7 +216,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 		// This runs REGARDLESS of ranked status so players can see their current game stats
 		debugPrint(`GameLoopState.onEndTurn() - Refreshing rating stats UI for all players (turn ${turn})`);
 		GlobalGameData.matchPlayers.forEach((player) => {
-			if (player.ratingStatsUI && player.ratingStatsUI.refresh) {
+			if (player.ratingStatsUI) {
 				player.ratingStatsUI.refresh();
 			}
 		});

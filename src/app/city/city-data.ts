@@ -12,6 +12,16 @@ export interface CityData {
 	name?: string;
 
 	/**
+	 * The city slot label used for map balancing notes.
+	 */
+	slot?: string;
+
+	/**
+	 * The city quality grade used for map balancing notes.
+	 */
+	quality?: string;
+
+	/**
 	 * The barracks for the city, represented by a unit or `UnitData` object.
 	 */
 	barrack: unit | UnitData;

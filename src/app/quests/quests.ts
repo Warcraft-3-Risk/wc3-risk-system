@@ -193,6 +193,10 @@ export class Quests {
 			-gold / -g <player> <amount> - Send gold to an ally
 			  Example: -gold red 100 (sends 100 gold to red player)
 			  Example: -g blue (sends all your gold to blue player)
+			-gold / -g <amount> - Ask your team for gold
+			  Example: -g 100 (asks your teammates for 100 gold)
+			-y - Accept a teammate's gold request
+			-n - Dismiss a teammate's gold request
 
 			${HexColors.YELLOW}Social Commands:|r
 			-mute <player name/color> - Mute a dead player for 300 seconds

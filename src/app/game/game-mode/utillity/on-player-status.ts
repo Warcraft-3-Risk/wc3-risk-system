@@ -8,15 +8,17 @@ import { RatingManager } from 'src/app/rating/rating-manager';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
-import { NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
+import { PlayLocalSound } from 'src/app/utils/utils';
+import { CHAOS_STARTING_INCOME, NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
+import { SettingsContext } from 'src/app/settings/settings-context';
 import { Quests } from '../../../quests/quests';
 
 export function onPlayerAliveHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.ALIVE;
-	player.trackedData.income.income = STARTING_INCOME;
+	player.trackedData.income.income = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
 
 	if (player.trackedData.income.max == 0) {
-		player.trackedData.income.max = STARTING_INCOME;
+		player.trackedData.income.max = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
 	}
 	ScoreboardManager.getInstance().updatePartial();
 }
@@ -63,18 +65,21 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 	}
 
 	if (forfeit) {
-		GlobalMessage(`${playerDisplayName} has forfeited!`, 'Sound\\Interface\\SecretFound.flac');
+		GlobalMessage(`${playerDisplayName} has forfeited!`);
 	} else if (player.killedBy) {
-		GlobalMessage(
-			`${playerDisplayName} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`,
-			'Sound\\Interface\\SecretFound.flac'
-		);
+		GlobalMessage(`${playerDisplayName} has been defeated by ${NameManager.getInstance().getDisplayName(player.killedBy)}!`);
 	} else {
-		GlobalMessage(
-			`${playerDisplayName} has been defeated!`,
-			'Sound\\Interface\\SecretFound.flac'
-		);
+		GlobalMessage(`${playerDisplayName} has been defeated!`);
 	}
+
+	// QuestFailed for the defeated player, SecretFound for everyone else
+	PlayLocalSound('Sound\\Interface\\QuestFailed.flac', player.getPlayer());
+
+	let announceSound = CreateSound('Sound\\Interface\\SecretFound.flac', false, false, true, 10, 10, '');
+	if (GetLocalPlayer() === player.getPlayer()) SetSoundVolume(announceSound, 0);
+	StartSound(announceSound);
+	KillSoundWhenDone(announceSound);
+	announceSound = undefined;
 
 	Quests.getInstance().updatePlayersQuest();
 	ScoreboardManager.getInstance().updatePartial();

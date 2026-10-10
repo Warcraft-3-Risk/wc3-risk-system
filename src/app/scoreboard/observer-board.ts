@@ -86,6 +86,13 @@ export class ObserverBoard extends Scoreboard {
 			const incomeB = pB.trackedData.income.income;
 			if (incomeA < incomeB) return 1;
 			if (incomeA > incomeB) return -1;
+
+			// Tie-break by city count desc, so the board matches the city count victory condition
+			const citiesA = pA.trackedData.cities.cities.length;
+			const citiesB = pB.trackedData.cities.cities.length;
+			if (citiesA < citiesB) return 1;
+			if (citiesA > citiesB) return -1;
+
 			return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
 		});
 

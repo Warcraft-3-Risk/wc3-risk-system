@@ -114,7 +114,7 @@ export class EqualizedPromodeDistributionService extends StandardDistributionSer
 	 */
 	private getPlayers(): ActivePlayer[] {
 		const players: ActivePlayer[] = [];
-		const playerList = (this as any).players; // Access protected players property
+		const playerList = this.players;
 
 		// Convert DoublyLinkedList to array
 		const length = playerList.length();

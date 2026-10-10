@@ -75,6 +75,12 @@ export class Team {
 			if (playerAIncome < playerBIncome) return 1;
 			if (playerAIncome > playerBIncome) return -1;
 
+			// Tie-break by city count desc, so the board matches the city count victory condition
+			const citiesA = pA.trackedData.cities.cities.length;
+			const citiesB = pB.trackedData.cities.cities.length;
+			if (citiesA < citiesB) return 1;
+			if (citiesA > citiesB) return -1;
+
 			// Secondary sort by player ID for deterministic ordering across all clients
 			return GetPlayerId(pA.getPlayer()) - GetPlayerId(pB.getPlayer());
 		});
@@ -122,8 +128,8 @@ export class Team {
 		}
 	}
 
-	public reset() {
-		this.income = this.teamMembers.length * STARTING_INCOME;
+	public reset(startingIncome: number = STARTING_INCOME) {
+		this.income = this.teamMembers.length * startingIncome;
 		this.cities = 0;
 		this.kills = 0;
 		this.deaths = 0;

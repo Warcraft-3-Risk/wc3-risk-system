@@ -79,6 +79,11 @@ export class TeamBoard extends Scoreboard {
 		this.teams.sort((teamA, teamB) => {
 			if (teamA.getIncome() < teamB.getIncome()) return 1;
 			if (teamA.getIncome() > teamB.getIncome()) return -1;
+
+			// Tie-break by total cities desc, so the board matches the city count victory condition
+			if (teamA.getCities() < teamB.getCities()) return 1;
+			if (teamA.getCities() > teamB.getCities()) return -1;
+
 			// Secondary sort by team number for deterministic ordering across all clients
 			return teamA.getNumber() - teamB.getNumber();
 		});
