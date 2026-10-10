@@ -16,10 +16,17 @@ function main() {
 	const config: IProjectConfig = loadTerrainConfig(terrain);
 
 	// Update map-info.ts with the correct MAP_TYPE before compiling
-	updateTsFileWithConfig(config);
+	const restoreMapInfo = updateTsFileWithConfig(config);
 
-	// compileMap will sync object editor files from risk_europe to dist/ automatically
-	const result = compileMap(config);
+	// compileMap will sync object editor files from risk_europe to dist/ automatically. It runs
+	// synchronously, so map-info.ts can be put back as soon as it returns.
+	let result: boolean;
+
+	try {
+		result = compileMap(config);
+	} finally {
+		restoreMapInfo();
+	}
 
 	if (!result) {
 		logger.error(`Failed to compile map.`);

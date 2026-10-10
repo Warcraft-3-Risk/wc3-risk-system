@@ -206,10 +206,12 @@ export const logger = createLogger({
  * Updates the map-info.ts file with values from the config
  * This injects MAP_NAME, MAP_VERSION, MAP_TYPE, and W3C_MODE_ENABLED constants
  * @param config The project configuration
+ * @returns A function that puts the original map-info.ts back, so a build does not leave it modified in git
  */
-export function updateTsFileWithConfig(config: IProjectConfig) {
+export function updateTsFileWithConfig(config: IProjectConfig): () => void {
 	const tsFilePath = path.join(__dirname, '..', 'src/app/utils', 'map-info.ts');
 	const w3cModeEnabled = `${config.w3cModeEnabled}` == 'true';
+	const originalContent: string | undefined = fs.existsSync(tsFilePath) ? fs.readFileSync(tsFilePath, 'utf8') : undefined;
 
 	const fileContent = `
 	//Do not edit - this will automatically update based on the project config.json upon building the map
@@ -221,6 +223,13 @@ export function updateTsFileWithConfig(config: IProjectConfig) {
 
 	fs.writeFileSync(tsFilePath, fileContent);
 	logger.info(`Updated map-info.ts with MAP_TYPE='${config.mapType}'`);
+
+	return () => {
+		if (originalContent === undefined) return;
+
+		fs.writeFileSync(tsFilePath, originalContent);
+		logger.info('Restored original map-info.ts');
+	};
 }
 
 /**

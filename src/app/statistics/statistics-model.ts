@@ -111,7 +111,8 @@ export class StatisticsModel {
 		settings +=
 			FogColors[settingsManager.getSettings().Fog] + 'Fog|r ' + FogOptionsColorFormatted[settingsManager.getSettings().Fog];
 
-		this.timePlayed = `${HexColors.TANGERINE}Game Time:|r ${formattedTime}
+		// OS time is each client's own clock, so it is display-only and must never feed synced logic
+		this.timePlayed = `${HexColors.TANGERINE}Game Time:|r ${formattedTime} ${HexColors.TANGERINE}OS Time:|r ${os.date('%Y-%m-%d %H:%M:%S')}
 		${HexColors.TANGERINE}Total Turns:|r ${totalTurns.toFixed(2)}
 		${HexColors.TANGERINE}Version:|r ${MAP_TYPE.charAt(0).toUpperCase() + MAP_TYPE.slice(1)} v${MAP_VERSION}
 		${HexColors.TANGERINE}Settings:|r ${settings}`;
