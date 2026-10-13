@@ -5,6 +5,7 @@ import { Resetable } from '../interfaces/resetable';
 import { UNIT_TYPE } from '../utils/unit-types';
 import { NEUTRAL_HOSTILE } from '../utils/utils';
 import { MinimapIconManager } from '../managers/minimap-icon-manager';
+import { ReserveManager } from '../managers/reserve-manager';
 
 export const SPAWNER_UNITS: Map<unit, Spawner> = new Map<unit, Spawner>();
 
@@ -90,6 +91,8 @@ export class Spawner implements Resetable, Ownable {
 			UnitAddType(u, UNIT_TYPE.SPAWN);
 			// Register for custom minimap drawing (promode only - a no-op otherwise). Must come after adding SPAWN type
 			MinimapIconManager.getInstance().registerIfValid(u);
+			// Reserves ability (a no-op unless the Reserves game type is on)
+			ReserveManager.getInstance().registerUnit(u);
 			if (GetLocalPlayer() == this.getOwner()) {
 				SetUnitVertexColor(u, 200, 200, 200, 150);
 			}

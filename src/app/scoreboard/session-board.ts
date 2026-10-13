@@ -11,7 +11,7 @@ export interface SessionStats {
 }
 
 /**
- * Between-matches scoreboard for modes that play a series (promode, chaos promode).
+ * Between-matches scoreboard for modes that play a series (promode, equalized promode).
  * It is created once per session and survives resets, accumulating wins, losses
  * and kill/death values across every match played.
  */

@@ -202,10 +202,10 @@ export class Quests {
 			  Example: -mute blue
 
 			${HexColors.YELLOW}Hotkeys:|r
-			F4 - Toggle ranked stats window
-			F6 - Toggle guard health bar preference
-			F7 - Toggle guard value display preference
-			F8 - Toggle country label visibility
+			F1-F4 - Deploy units from the reserves (Reserves game type)
+			F6 - Toggle ranked stats window
+			F7 - Toggle country label visibility
+			F8 - Cancel all orders
 			F9 - Open quest/information panel
 			F11 - Toggle allies tab visibility
 		`;

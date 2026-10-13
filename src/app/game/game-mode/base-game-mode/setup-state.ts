@@ -9,7 +9,7 @@ import { StateData } from '../state/state-data';
 import { Quests } from 'src/app/quests/quests';
 import { clearTickUI } from '../utillity/update-ui';
 import { TeamManager } from 'src/app/teams/team-manager';
-import { CHAOS_STARTING_INCOME, STARTING_INCOME } from 'src/configs/game-settings';
+import { STARTING_INCOME } from 'src/configs/game-settings';
 import { TreeManager } from '../../services/tree-service';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { CountdownMessage } from '../../../utils/messages';
@@ -40,7 +40,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		// Every promode variant plays a series, so it needs a board that persists between matches
 		const settings = SettingsContext.getInstance();
 
-		if (settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode()) {
+		if (settings.isPromode() || settings.isEqualizedPromode()) {
 			ScoreboardManager.getInstance().sessionSetup([...GlobalGameData.matchPlayers]);
 			ScoreboardManager.getInstance().hideSessionBoard();
 		}
@@ -55,8 +55,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			GlobalGameData.leader = GlobalGameData.matchPlayers[Math.floor(Math.random() * GlobalGameData.matchPlayers.length)];
 		} else {
 			const teams = [...TeamManager.getInstance().getTeams()];
-			const teamStartingIncome = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
-			teams.forEach((team) => team.reset(teamStartingIncome));
+			teams.forEach((team) => team.reset(STARTING_INCOME));
 			// get random team from list
 			GlobalGameData.leader = teams[Math.floor(Math.random() * teams.length)];
 			ScoreboardManager.getInstance().teamSetup();

@@ -10,14 +10,12 @@ export const PromodeOptions: Record<number, string> = {
 	0: `Off`,
 	1: `On`,
 	2: `Equalized`,
-	3: `Chaos`,
 };
 
 export const PromodeOptionsColorFormatted: Record<number, string> = {
 	0: `${HexColors.GREEN}${PromodeOptions[0]}|r`,
 	1: `${HexColors.RED}${PromodeOptions[1]}|r`,
 	2: `${HexColors.RED}${PromodeOptions[2]}|r`,
-	3: `${HexColors.RED}${PromodeOptions[3]}|r`,
 };
 
 export class PromodeStrategy implements SettingsStrategy {
@@ -26,7 +24,6 @@ export class PromodeStrategy implements SettingsStrategy {
 		[0, this.handleOff],
 		[1, this.handleOn],
 		[2, this.handleOn], // Equalized ProMode uses same settings as regular ProMode
-		[3, this.handleOn], // Chaos ProMode uses same settings as regular ProMode
 	]);
 
 	constructor(promode: number) {

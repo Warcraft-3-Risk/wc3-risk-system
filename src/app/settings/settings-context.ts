@@ -91,14 +91,6 @@ export class SettingsContext {
 	}
 
 	/**
-	 * Checks if the game setting is chaos promode
-	 * @returns true if game is "chaos promode"
-	 */
-	public isChaosPromode(): boolean {
-		return this.settings.Promode == 3;
-	}
-
-	/**
 	 * Checks if the game setting for Fog is on or off
 	 * @returns true if fog is off
 	 */
@@ -135,6 +127,13 @@ export class SettingsContext {
 	 */
 	public isCapitals(): boolean {
 		return this.settings.GameType == 1;
+	}
+
+	/**
+	 * Checks if the game type is set to Reserves (units can be sent to and deployed from the reserves)
+	 */
+	public isReserves(): boolean {
+		return this.settings.GameType == 2;
 	}
 
 	/**

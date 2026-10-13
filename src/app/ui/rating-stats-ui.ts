@@ -194,7 +194,7 @@ export class RatingStatsUI {
 
 			this.updateStatsFromManager();
 
-			// Update the F4 button icon based on current preference
+			// Update the F6 button icon based on current preference
 			const ratingManager = RatingManager.getInstance();
 			const btag = NameManager.getInstance().getBtag(this.player.getPlayer());
 			const showRating = ratingManager.getShowRatingPreference(btag);
@@ -237,7 +237,7 @@ export class RatingStatsUI {
 	/**
 	 * Register ESC key to close rating stats window and leaderboard
 	 * ESC priority: close leaderboard first, then close rating stats window
-	 * Note: F4 is handled by guard-button-factory for toggle functionality (open/close)
+	 * Note: F6 is handled by guard-button-factory for toggle functionality (open/close)
 	 */
 	private registerEscapeKey(): void {
 		// Register ESC key
@@ -276,7 +276,7 @@ export class RatingStatsUI {
 			// Update button text
 			this.updateEnableDisableButtonText();
 
-			// Update the F4 button icon to reflect the preference
+			// Update the F6 button icon to reflect the preference
 			this.updateRatingButtonIcon(newPreference);
 
 			// Show confirmation message
@@ -290,7 +290,7 @@ export class RatingStatsUI {
 	}
 
 	/**
-	 * Update the F4 rating button icon based on the showRating preference
+	 * Update the F6 rating button icon based on the showRating preference
 	 * @param showRating True if rating is enabled, false if disabled
 	 */
 	private updateRatingButtonIcon(showRating: boolean): void {
@@ -310,7 +310,7 @@ export class RatingStatsUI {
 	}
 
 	/**
-	 * Update the F4 rating button tooltip to show current preference
+	 * Update the F6 rating button tooltip to show current preference
 	 * @param showRating True if rating is enabled, false if disabled
 	 */
 	private updateRatingButtonTooltip(showRating: boolean): void {
@@ -321,7 +321,7 @@ export class RatingStatsUI {
 			const preferenceText = showRating ? `${HexColors.GREEN}Enabled` : `${HexColors.RED}Disabled`;
 			BlzFrameSetText(
 				buttonTooltip,
-				`Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${preferenceText}`
+				`Ranked Stats ${HexColors.TANGERINE}(F6)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${preferenceText}`
 			);
 		}
 	}
@@ -613,7 +613,7 @@ export class RatingStatsUI {
 				CreateObserverButton(this.leaderboardPrevButton, IsPlayerObserver(GetLocalPlayer()), () => {
 					this.previousPage();
 
-					// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+					// Shift focus back to global context, so key events work properly (ESC, F6 etc.)
 					BlzFrameSetEnable(this.leaderboardPrevButton, false);
 					BlzFrameSetEnable(this.leaderboardPrevButton, true);
 				});
@@ -635,7 +635,7 @@ export class RatingStatsUI {
 				CreateObserverButton(this.leaderboardNextButton, IsPlayerObserver(GetLocalPlayer()), () => {
 					this.nextPage();
 
-					// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+					// Shift focus back to global context, so key events work properly (ESC, F6 etc.)
 					BlzFrameSetEnable(this.leaderboardNextButton, false);
 					BlzFrameSetEnable(this.leaderboardNextButton, true);
 				});

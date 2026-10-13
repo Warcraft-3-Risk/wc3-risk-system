@@ -9,6 +9,7 @@ import { StateData } from '../state/state-data';
 import { PromodeCountdownState } from '../promode-game-mode/promode-countdown-state';
 import { PromodeApplyFogState } from '../promode-game-mode/promode-apply-fog-state';
 import { EnableCustomMinimapState } from '../promode-game-mode/enable-custom-minimap-state';
+import { EnableReservesState } from '../base-game-mode/enable-reserves-state';
 import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-state';
 import { UpdatePlayerStatusState } from '../base-game-mode/update-player-status-state';
 import { EnableControlsState } from '../base-game-mode/enable-controls-state';
@@ -19,6 +20,7 @@ export class PromodeMode extends BaseMode<PromodeData> {
 	protected setupStates() {
 		return [
 			new EnableCustomMinimapState(),
+			new EnableReservesState(),
 			new UpdatePlayerStatusState(),
 			new SetupState(),
 			new PromodeApplyFogState(),

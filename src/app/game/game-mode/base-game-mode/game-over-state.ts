@@ -30,8 +30,7 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 
 		// Hide match scoreboard and show score screen
 		ScoreboardManager.getInstance().destroyBoards();
-		// Chaos promode runs through PromodeMode, so it must take the promode end-of-match path too
-		const isPromode: boolean = SettingsContext.getInstance().isPromode() || SettingsContext.getInstance().isChaosPromode();
+		const isPromode: boolean = SettingsContext.getInstance().isPromode();
 
 		GlobalGameData.matchPlayers.forEach((player) => {
 			if (isPromode) {

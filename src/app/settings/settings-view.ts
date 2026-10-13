@@ -7,6 +7,11 @@ import { GameTypeOptionsColorFormatted } from './strategies/game-type-strategy';
 import { OvertimeStringsColorFormatted } from './strategies/overtime-strategy';
 import { PromodeOptionsColorFormatted } from './strategies/promode-strategy';
 
+// Game type popup values, in the order of the GameTypePopupMenu items in frames.fdf
+const GAME_TYPE_STANDARD: number = 0;
+const GAME_TYPE_CAPITALS: number = 1;
+const GAME_TYPE_RESERVES: number = 2;
+
 export class SettingsView {
 	private backdrop: framehandle;
 	private timer: framehandle;
@@ -99,7 +104,13 @@ export class SettingsView {
 		TriggerAddCondition(
 			t,
 			Condition(() => {
-				const frameValue: number = R2I(BlzGetTriggerFrameValue());
+				let frameValue: number = R2I(BlzGetTriggerFrameValue());
+
+				// ProMode only supports the Standard and Reserves game types - Capitals falls back to Standard
+				if (frameValue == GAME_TYPE_CAPITALS && SettingsContext.getInstance().getSettings().Promode != 0) {
+					frameValue = GAME_TYPE_STANDARD;
+					BlzFrameSetValue(BlzGetFrameByName('GameTypePopup', 0), frameValue);
+				}
 
 				SettingsContext.getInstance().getSettings().GameType = frameValue;
 				this.colorizeGameTypeText(frameValue);
@@ -200,15 +211,18 @@ export class SettingsView {
 
 				SettingsContext.getInstance().getSettings().Promode = frameValue;
 
-				// ProMode On (1), Equalized (2), or Chaos (3): lock other settings
-				if (frameValue === 1 || frameValue === 2 || frameValue === 3) {
-					SettingsContext.getInstance().getSettings().GameType = 0;
+				// ProMode On (1) or Equalized (2): lock the other settings. The game type stays selectable, but only
+				// Standard or Reserves - Capitals falls back to Standard.
+				if (frameValue === 1 || frameValue === 2) {
+					const gameType: number = SettingsContext.getInstance().isReserves() ? GAME_TYPE_RESERVES : GAME_TYPE_STANDARD;
+
+					SettingsContext.getInstance().getSettings().GameType = gameType;
 					SettingsContext.getInstance().getSettings().Fog = 1;
 					SettingsContext.getInstance().getSettings().Diplomacy.option = 2;
 					SettingsContext.getInstance().getSettings().Overtime.option = 3;
 
-					BlzFrameSetValue(gameTypeFrame, 0);
-					BlzFrameSetEnable(gameTypeFrame, false);
+					BlzFrameSetValue(gameTypeFrame, gameType);
+					BlzFrameSetEnable(gameTypeFrame, true);
 					BlzFrameSetValue(fogFrame, 1);
 					BlzFrameSetEnable(fogFrame, false);
 					BlzFrameSetValue(diploFrame, 2);
@@ -216,13 +230,11 @@ export class SettingsView {
 					BlzFrameSetValue(overtimeFrame, 3);
 					BlzFrameSetEnable(overtimeFrame, false);
 				} else {
-					// ProMode Off (0): unlock other settings
-					SettingsContext.getInstance().getSettings().GameType = 0;
+					// ProMode Off (0): unlock other settings. The selected game type (Standard or Reserves) is kept.
 					SettingsContext.getInstance().getSettings().Fog = 0;
 					SettingsContext.getInstance().getSettings().Diplomacy.option = 0;
 					SettingsContext.getInstance().getSettings().Overtime.option = 0;
 
-					BlzFrameSetValue(gameTypeFrame, 0);
 					BlzFrameSetEnable(gameTypeFrame, true);
 					BlzFrameSetValue(fogFrame, 0);
 					BlzFrameSetEnable(fogFrame, true);

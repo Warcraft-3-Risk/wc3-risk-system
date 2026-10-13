@@ -288,7 +288,7 @@ export class RankedStatisticsView implements IStatisticsView {
 						player.ratingStatsUI.toggleLeaderboardDisplay();
 					}
 
-					// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+					// Shift focus back to global context, so key events work properly (ESC, F6 etc.)
 					BlzFrameSetEnable(this.leaderboardButton, false);
 					BlzFrameSetEnable(this.leaderboardButton, true);
 				}
@@ -301,7 +301,7 @@ export class RankedStatisticsView implements IStatisticsView {
 				player.ratingStatsUI.toggleLeaderboardDisplay();
 			}
 
-			// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+			// Shift focus back to global context, so key events work properly (ESC, F6 etc.)
 			BlzFrameSetEnable(this.leaderboardButton, false);
 			BlzFrameSetEnable(this.leaderboardButton, true);
 		});
@@ -329,7 +329,7 @@ export class RankedStatisticsView implements IStatisticsView {
 						player.ratingStatsUI.toggle();
 					}
 
-					// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+					// Shift focus back to global context, so key events work properly (ESC, F6 etc.)
 					BlzFrameSetEnable(this.personalStatsButton, false);
 					BlzFrameSetEnable(this.personalStatsButton, true);
 				}

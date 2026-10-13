@@ -3,6 +3,7 @@ import { UNIT_TYPE } from 'src/app/utils/unit-types';
 import { NEUTRAL_HOSTILE } from 'src/app/utils/utils';
 import { Resetable } from 'src/app/interfaces/resetable';
 import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
+import { ReserveManager } from 'src/app/managers/reserve-manager';
 
 /**
  * Represents a Guard entity in the game, implementing the `Resetable` interface.
@@ -53,6 +54,9 @@ export class Guard implements Resetable {
 		this._unit = guard;
 		UnitAddAbility(guard, FourCC("A006"));
 		UnitAddType(this._unit, UNIT_TYPE.GUARD);
+		// Guards carry the reserves ability too (casting it does nothing for them), so a
+		// selection containing a guard still shows the button
+		ReserveManager.getInstance().registerUnit(guard);
 
 		// Untrack from the custom promode minimap FIRST (this re-enables the native minimap display),
 		// then hide the native icon. Order matters - reversing these lets the native dot leak through.
@@ -75,6 +79,7 @@ export class Guard implements Resetable {
 		// Back to being an ordinary unit, so let it onto the minimap again.
 		BlzSetUnitBooleanFieldBJ(this._unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, false);
 		MinimapIconManager.getInstance().registerIfValid(this._unit);
+		ReserveManager.getInstance().registerUnit(this._unit);
 
 		this._unit = null;
 	}

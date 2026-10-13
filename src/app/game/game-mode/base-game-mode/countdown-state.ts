@@ -50,7 +50,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 					// Only show ranked/unranked message on the first match (not on restarts)
 					if (GlobalGameData.matchCount === 1) {
-						const message = `${HexColors.TANGERINE}This is a ranked game!|r Press ${HexColors.TANGERINE}F4|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats.`;
+						const message = `${HexColors.TANGERINE}This is a ranked game!|r Press ${HexColors.TANGERINE}F6|r or ${HexColors.TANGERINE}use the button in the top-left corner|r to view your stats.`;
 
 						// Send message only to players who have rating display enabled
 						PlayerManager.getInstance().playersAndObservers.forEach((activePlayer) => {
@@ -88,7 +88,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 					if (player.ratingStatsUI) {
 						player.ratingStatsUI.preInitialize();
 					}
-					// Update F4 button appearance based on ranked status
+					// Update F6 button appearance based on ranked status
 					updateRatingStatsButtonForRankedStatus(player, isRanked);
 				});
 			}

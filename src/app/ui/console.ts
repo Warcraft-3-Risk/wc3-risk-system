@@ -160,10 +160,10 @@ export function AllyMenuFFASetup() {
 	tempText += '|n|cffffffff-mute <player> - Mute a dead player for 300 seconds';
 	tempText += '|n|cffffffff-ui - Toggle UI buttons visibility';
 	tempText += '|n|n|cffffcc00Hotkeys:|r';
-	tempText += '|n|cffffffff F4 - Toggle ranked stats window';
-	tempText += '|n|cffffffff F6 - Toggle guard health preference';
-	tempText += '|n|cffffffff F7 - Toggle guard value preference';
-	tempText += '|n|cffffffff F8 - Toggle country labels';
+	tempText += '|n|cffffffff F1-F4 - Deploy units from the reserves (Reserves game type)';
+	tempText += '|n|cffffffff F6 - Toggle ranked stats window';
+	tempText += '|n|cffffffff F7 - Toggle country labels';
+	tempText += '|n|cffffffff F8 - Cancel all orders';
 
 	BlzFrameSetText(AllyMenuTitle, tempText);
 

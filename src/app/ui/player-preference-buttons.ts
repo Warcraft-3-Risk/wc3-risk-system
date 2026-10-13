@@ -11,13 +11,13 @@ export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
 		player: player,
 		createContext: GetPlayerId(player.getPlayer()),
-		key: OSKEY_F6,
 		textures: {
 			primary: 'ReplaceableTextures\\CommandButtons\\BTNHeartBottleHalfEmpty.blp',
 			secondary: 'ReplaceableTextures\\CommandButtons\\BTNHeartBottle_Full.blp',
 		},
 		xOffset: 0.0,
 		textXOffset: 0.015,
+		initialTooltipText: `Guard Health Preference|r\nSets your preference for unit health when taking possession of a city.\nCurrent preference: ${HexColors.RED}Highest`,
 		action: (context: number, textures: { primary: string; secondary: string }) => {
 			player.options.health = !player.options.health;
 
@@ -29,7 +29,7 @@ export function buildGuardHealthButton(player: ActivePlayer): framehandle {
 			const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
 			BlzFrameSetText(
 				buttonTooltip,
-				`Guard Health Preference ${HexColors.TANGERINE}(F6)|r\nSets your preference for unit health when taking possession of a city.\nCurrent preference: ` +
+				`Guard Health Preference|r\nSets your preference for unit health when taking possession of a city.\nCurrent preference: ` +
 					`${player.options.health ? `${HexColors.RED}Highest` : `${HexColors.GREEN}Lowest`}`
 			);
 		},
@@ -40,12 +40,12 @@ export function buildGuardValueButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
 		player: player,
 		createContext: GetPlayerId(player.getPlayer()) + 100,
-		key: OSKEY_F7,
 		textures: {
 			primary: 'ReplaceableTextures\\CommandButtons\\BTNIncome.blp',
 			secondary: 'ReplaceableTextures\\CommandButtons\\BTNGoldPile.blp',
 		},
 		xOffset: 0.023,
+		initialTooltipText: `Guard Value Preference|r\nSets your preference for unit value when taking possession of a city.\nCurrent preference: ${HexColors.GREEN}Lowest`,
 		action: (context: number, textures: { primary: string; secondary: string }) => {
 			player.options.value = !player.options.value;
 
@@ -57,7 +57,7 @@ export function buildGuardValueButton(player: ActivePlayer): framehandle {
 			const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
 			BlzFrameSetText(
 				buttonTooltip,
-				`Guard Value Preference ${HexColors.TANGERINE}(F7)|r\nSets your preference for unit value when taking possession of a city.\nCurrent preference: ` +
+				`Guard Value Preference|r\nSets your preference for unit value when taking possession of a city.\nCurrent preference: ` +
 					`${player.options.value ? `${HexColors.RED}Highest` : `${HexColors.GREEN}Lowest`}`
 			);
 		},
@@ -68,13 +68,13 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
 		player: player,
 		createContext: GetPlayerId(player.getPlayer()) + 200,
-		key: OSKEY_F8,
+		key: OSKEY_F7,
 		textures: {
 			primary: 'ReplaceableTextures\\CommandButtons\\BTNRecipe.blp',
 			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNRecipe.blp',
 		},
 		xOffset: 0.046,
-		initialTooltipText: `Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ${HexColors.GREEN}Visible`,
+		initialTooltipText: `Country Labels ${HexColors.TANGERINE}(F7)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ${HexColors.GREEN}Visible`,
 		action: (context: number, textures: { primary: string; secondary: string }) => {
 			player.options.labels = !player.options.labels;
 
@@ -97,7 +97,7 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 				const buttonTooltip = BlzGetFrameByName('GuardButtonToolTip', context);
 				BlzFrameSetText(
 					buttonTooltip,
-					`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ` +
+					`Country Labels ${HexColors.TANGERINE}(F7)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ` +
 						`${player.options.labels ? `${HexColors.GREEN}Visible` : `${HexColors.RED}Hidden`}`
 				);
 			}
@@ -105,7 +105,7 @@ export function buildLabelToggleButton(player: ActivePlayer): framehandle {
 	});
 }
 /**
- * Update the F4 rating stats button appearance based on ranked game status
+ * Update the F6 rating stats button appearance based on ranked game status
  * Should be called after ranked status is determined in countdown phase
  * @param player The player whose button to update
  * @param isRanked Whether the game is ranked
@@ -140,7 +140,7 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 			const preferenceText = showRating ? `${HexColors.GREEN}Enabled` : `${HexColors.RED}Disabled`;
 			BlzFrameSetText(
 				buttonTooltip,
-				`Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${preferenceText}`
+				`Ranked Stats ${HexColors.TANGERINE}(F6)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${preferenceText}`
 			);
 		}
 	} else {
@@ -155,7 +155,7 @@ export function updateRatingStatsButtonForRankedStatus(player: ActivePlayer, isR
 		if (buttonTooltip) {
 			BlzFrameSetText(
 				buttonTooltip,
-				`Ranked Stats ${HexColors.TANGERINE}(F4)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`
+				`Ranked Stats ${HexColors.TANGERINE}(F6)|r\n${HexColors.LIGHT_GRAY}Unavailable in unranked games.|r`
 			);
 		}
 	}
@@ -165,13 +165,13 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
 		player: player,
 		createContext: GetPlayerId(player.getPlayer()) + 300,
-		key: OSKEY_F4,
+		key: OSKEY_F6,
 		textures: {
 			primary: 'ReplaceableTextures\\CommandButtons\\BTNMedalHeroism.blp',
 			secondary: 'ReplaceableTextures\\CommandButtonsDisabled\\DISBTNMedalHeroism.blp',
 		},
 		xOffset: RATING_STATS_BUTTON_X_OFFSET,
-		initialTooltipText: `Ranked Stats ${HexColors.TANGERINE}(F4)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
+		initialTooltipText: `Ranked Stats ${HexColors.TANGERINE}(F6)|r\nView your ranked statistics and toggle ranked display in post-game stats.\nCurrent preference: ${HexColors.GREEN}Enabled`,
 		action: (context: number, textures: { primary: string; secondary: string }, button) => {
 			if (GetLocalPlayer() == player.getPlayer()) {
 				// Import RatingManager at runtime to check ranked status
@@ -208,7 +208,7 @@ export function buildRatingStatsButton(player: ActivePlayer): framehandle {
 
 				player.ratingStatsUI.toggle();
 
-				// Shift focus back to global context, so key events work properly (ESC, F4 etc.)
+				// Shift focus back to global context, so key events work properly (ESC, F6 etc.)
 				BlzFrameSetEnable(button, false);
 				BlzFrameSetEnable(button, true);
 			}

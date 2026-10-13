@@ -14,7 +14,7 @@ const TEXTURE_COOLDOWN: string = 'ReplaceableTextures\\CommandButtonsDisabled\\D
 const unitsOfPlayer: group = CreateGroup();
 
 /**
- * Builds the "cancel all orders" button (F3). Stops whatever every one of the player's own units is
+ * Builds the "cancel all orders" button (F8). Stops whatever every one of the player's own units is
  * currently doing, with a short cooldown so it cannot be spammed.
  *
  * Key presses and frame clicks are synced events, so the action - including the cooldown timer - runs
@@ -27,13 +27,13 @@ export function buildCancelOrdersButton(player: ActivePlayer): framehandle {
 	return createGuardButton({
 		player: player,
 		createContext: GetPlayerId(handle) + BUTTON_CONTEXT_OFFSET,
-		key: OSKEY_F3,
+		key: OSKEY_F8,
 		textures: {
 			primary: TEXTURE_READY,
 			secondary: TEXTURE_COOLDOWN,
 		},
 		xOffset: CANCEL_ORDERS_BUTTON_X_OFFSET,
-		initialTooltipText: `Cancel All Orders ${HexColors.TANGERINE}(F3)|r\nOrders all of your units to stop, cancelling their current orders.\nCooldown: ${COOLDOWN_SECONDS} seconds`,
+		initialTooltipText: `Cancel All Orders ${HexColors.TANGERINE}(F8)|r\nOrders all of your units to stop, cancelling their current orders.\nCooldown: ${COOLDOWN_SECONDS} seconds`,
 		action: (context: number, textures: { primary: string; secondary: string }) => {
 			if (GetTriggerPlayer() !== handle) return;
 

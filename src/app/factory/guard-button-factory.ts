@@ -1,17 +1,17 @@
 import { ActivePlayer } from '../player/types/active-player';
-import { HexColors } from '../utils/hex-colors';
 
 export type ButtonConfig = {
 	player: ActivePlayer;
 	createContext: number;
-	key: oskeytype;
+	// Optional - buttons without a key can only be clicked
+	key?: oskeytype;
 	textures: {
 		primary: string;
 		secondary: string;
 	};
 	xOffset: number;
 	action: (context: number, textures: { primary: string; secondary: string }, button: framehandle) => void;
-	initialTooltipText?: string;
+	initialTooltipText: string;
 	textXOffset?: number;
 };
 
@@ -50,25 +50,17 @@ export function createGuardButton(config: ButtonConfig): framehandle {
 	BlzFrameSetPoint(tooltipText, FRAMEPOINT_TOPLEFT, button, FRAMEPOINT_BOTTOMLEFT, config.textXOffset || 0, -0.01);
 	BlzFrameSetEnable(tooltipText, false);
 
-	if (config.initialTooltipText) {
-		BlzFrameSetText(tooltipText, config.initialTooltipText);
-	} else {
-		const str = config.key == OSKEY_F6 ? 'Health' : 'Value';
+	BlzFrameSetText(tooltipText, config.initialTooltipText);
 
-		BlzFrameSetText(
-			tooltipText,
-			`Guard ${str} Preference ${HexColors.TANGERINE}(F${str === 'Health' ? `6` : `7`})|r\nSets your preference for unit ${str} when taking possession of a city.\nCurrent preference: ` +
-				`${str === 'Health' ? `${HexColors.RED}Highest` : `${HexColors.GREEN}Lowest`}`
+	if (config.key) {
+		const hotkeyTrigger = CreateTrigger();
+
+		BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
+		TriggerAddCondition(
+			hotkeyTrigger,
+			Condition(() => config.action(config.createContext, config.textures, button))
 		);
 	}
-
-	const hotkeyTrigger = CreateTrigger();
-
-	BlzTriggerRegisterPlayerKeyEvent(hotkeyTrigger, config.player.getPlayer(), config.key, 0, false);
-	TriggerAddCondition(
-		hotkeyTrigger,
-		Condition(() => config.action(config.createContext, config.textures, button))
-	);
 
 	const buttonTrig = CreateTrigger();
 

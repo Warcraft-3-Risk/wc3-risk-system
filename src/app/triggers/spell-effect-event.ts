@@ -5,6 +5,7 @@ import { ActivePlayer } from '../player/types/active-player';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { EVENT_ON_SWAP_GUARD } from '../utils/events/event-constants';
 import { AnnounceOnLocationObserverOnly, AnnounceOnUnitObserverOnly } from '../game/announcer/announce';
+import { ReserveManager } from '../managers/reserve-manager';
 
 export function SpellEffectEvent() {
 	const tSpellEffect: trigger = CreateTrigger();
@@ -87,6 +88,9 @@ function onSpellEffect(trigger: trigger) {
 							IssuePointOrder(spawner, 'setrally', GetUnitX(spawner), GetUnitY(spawner));
 						}
 					});
+					break;
+				case ABILITY_ID.SEND_TO_RESERVES:
+					ReserveManager.getInstance().sendToReserves(GetTriggerUnit());
 					break;
 				default:
 					break;

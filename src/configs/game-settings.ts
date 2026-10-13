@@ -8,9 +8,6 @@ export const CITIES_TO_WIN_RATIO: number = 0.6;
 //This is the starting gold for each player. 4 gold by default.
 export const STARTING_INCOME: number = 4;
 
-//This is the starting gold for each player in Chaos promode. 25 gold by default.
-export const CHAOS_STARTING_INCOME: number = 25;
-
 //This is the starting countdown for the game. 10 by default
 export const STARTING_COUNTDOWN: number = 10;
 
@@ -75,7 +72,7 @@ export const MIN_PLAYERS_FOR_PAUSE_CONSUMPTION: number = 14;
 
 // Rating system settings
 // Master toggle for the entire rating system. When disabled:
-//   - No rating stats button (F4) is shown
+//   - No rating stats button (F6) is shown
 //   - No "ranked/unranked game" messages are displayed
 //   - No rating data is stored or loaded
 //   - Statistics always uses the unranked leaderboard (without rating column)
@@ -120,3 +117,21 @@ export const RATING_SYNC_TIMEOUT: number = 10.0;
 // All current game players are always synced regardless of this limit.
 // Note: Lower values reduce lag during sync (100 = ~10KB per player vs 250 = ~25KB)
 export const RATING_SYNC_TOP_PLAYERS: number = 100;
+
+// Reserves game type: units are deployed by clicking one of the player's cities - a click counts if it is within this range of the city's barracks. Default is 200.
+export const RESERVE_DEPLOY_RADIUS: number = 200;
+
+// Reserves game type: the maximum number of units deployed from the reserves per click. Default is 10.
+export const RESERVE_DEPLOY_MAX_UNITS: number = 10;
+
+// Reserves game type: the maximum number of heavy units (General, Admiral, Artillery, Tank, Warship B, Battleship SS) deployed per click. Default is 1.
+export const RESERVE_DEPLOY_MAX_HEAVY_UNITS: number = 1;
+
+// Reserves game type: the deploy budget stops growing at this value. Deploying a unit uses up its gold cost. Default is 500.
+export const RESERVE_BUDGET_MAX: number = 500;
+
+// Reserves game type: minutes of match time it takes the deploy budget to grow from 0 to RESERVE_BUDGET_MAX if nothing is spent. Default is 60.
+export const RESERVE_BUDGET_MINUTES_TO_MAX: number = 60;
+
+// Reserves game type: budget gained per second - derived from the two settings above, do not set directly.
+export const RESERVE_BUDGET_PER_SECOND: number = RESERVE_BUDGET_MAX / (RESERVE_BUDGET_MINUTES_TO_MAX * 60);

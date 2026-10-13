@@ -9,17 +9,16 @@ import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { PlayLocalSound } from 'src/app/utils/utils';
-import { CHAOS_STARTING_INCOME, NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
-import { SettingsContext } from 'src/app/settings/settings-context';
+import { NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
 import { Quests } from '../../../quests/quests';
 import { keepsEconomyWhenDead } from 'src/app/utils/dead-player-economy';
 
 export function onPlayerAliveHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.ALIVE;
-	player.trackedData.income.income = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
+	player.trackedData.income.income = STARTING_INCOME;
 
 	if (player.trackedData.income.max == 0) {
-		player.trackedData.income.max = SettingsContext.getInstance().isChaosPromode() ? CHAOS_STARTING_INCOME : STARTING_INCOME;
+		player.trackedData.income.max = STARTING_INCOME;
 	}
 	ScoreboardManager.getInstance().updatePartial();
 }

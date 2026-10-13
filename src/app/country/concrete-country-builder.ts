@@ -130,7 +130,7 @@ export class ConcreteCountryBuilder implements CountryBuilder {
 					if (labelButtonTooltip) {
 						BlzFrameSetText(
 							labelButtonTooltip,
-							`Country Labels ${HexColors.TANGERINE}(F8)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ${HexColors.RED}Hidden`
+							`Country Labels ${HexColors.TANGERINE}(F7)|r\nToggles the visibility of country name labels on the map.\nCurrent preference: ${HexColors.RED}Hidden`
 						);
 					}
 				}

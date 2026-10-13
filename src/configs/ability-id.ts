@@ -26,4 +26,6 @@ export const ABILITY_ID = {
 	HIGH_HEALTH_DEFENDER: FourCC('a052'),
 	LOW_VALUE_DEFENDER: FourCC('a053'),
 	HIGH_VALUE_DEFENDER: FourCC('a054'),
+	//Reserves Game Type Abilities
+	SEND_TO_RESERVES: FourCC('A00A'),
 };

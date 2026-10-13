@@ -11,12 +11,14 @@ import { VisionState } from '../base-game-mode/vision-state';
 import { ApplyFogState } from '../base-game-mode/apply-fog-state';
 import { UpdatePlayerStatusState } from '../base-game-mode/update-player-status-state';
 import { EnableControlsState } from '../base-game-mode/enable-controls-state';
+import { EnableReservesState } from '../base-game-mode/enable-reserves-state';
 
 export class StandardData implements StateData {}
 
 export class StandardMode extends BaseMode<StandardData> {
 	protected setupStates() {
 		return [
+			new EnableReservesState(),
 			new UpdatePlayerStatusState(),
 			new SetupState(),
 			new ApplyFogState(),

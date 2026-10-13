@@ -10,6 +10,7 @@ import { EnableCustomMinimapState } from '../promode-game-mode/enable-custom-min
 import { ProModeGameLoopState } from '../promode-game-mode/promode-game-loop-state';
 import { UpdatePlayerStatusState } from '../base-game-mode/update-player-status-state';
 import { EnableControlsState } from '../base-game-mode/enable-controls-state';
+import { EnableReservesState } from '../base-game-mode/enable-reserves-state';
 import { EqualizedCityDistributeState } from '../equalized-promode-game-mode/equalized-city-distribute-state';
 import { EqualizedPromodeGameOverState } from '../equalized-promode-game-mode/equalized-promode-game-over-state';
 
@@ -28,6 +29,7 @@ export class EqualizedPromodeMode extends BaseMode<EqualizedPromodeData> {
 	protected setupStates() {
 		return [
 			new EnableCustomMinimapState(),
+			new EnableReservesState(),
 			new UpdatePlayerStatusState(),
 			new SetupState(),
 			new PromodeApplyFogState(),

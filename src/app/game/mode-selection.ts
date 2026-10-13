@@ -123,7 +123,7 @@ export class ModeSelection {
 			ExportGameSettings.write(settings);
 		}
 
-		const gameType: GameType = settings.isCapitals() ? 'Capitals' : 'Standard';
+		const gameType: GameType = settings.isCapitals() ? 'Capitals' : settings.isReserves() ? 'Reserves' : 'Standard';
 		GlobalGameData.gameMode = gameType;
 		this.eventEmitter.emit(EVENT_SET_GAME_MODE, gameType);
 	}

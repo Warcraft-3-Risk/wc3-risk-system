@@ -114,6 +114,8 @@ export abstract class City implements Resetable, Ownable {
 	protected validGuardHandler(unit: unit): boolean {
 		if (!UnitAlive(unit)) return false;
 		if (IsUnitLoaded(unit)) return false;
+		// Units in the reserves (Reserves game type) are hidden off the battlefield
+		if (IsUnitHidden(unit)) return false;
 		if (IsUnitType(unit, UNIT_TYPE_STRUCTURE)) return false;
 		if (IsUnitType(unit, UNIT_TYPE.TRANSPORT)) return false;
 		if (GetUnitTypeId(unit) == UNIT_ID.DUMMY_GUARD) return false;

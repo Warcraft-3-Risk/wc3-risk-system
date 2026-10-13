@@ -12,6 +12,7 @@ import { GlobalGameData } from '../../state/global-game-state';
 import { UnitKillTracker } from 'src/app/managers/unit-kill-tracker';
 import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 import { NameManager } from 'src/app/managers/names/name-manager';
+import { ReserveManager } from 'src/app/managers/reserve-manager';
 
 export class ResetState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -35,6 +36,8 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 		await Wait.forSeconds(1);
 		print('Removing units...');
 		removeUnits();
+		// Reserves game type - the hidden reserve units were just removed with the rest
+		ReserveManager.getInstance().reset();
 		await Wait.forSeconds(1);
 		print('Resetting kill tracker...');
 		UnitKillTracker.getInstance().reset();

@@ -19,7 +19,7 @@ interface CityIconRecord {
  * Draws the minimap ourselves: cities, moving units and spawner camouflage are rendered as frames
  * over the native minimap, and their native minimap icons are hidden.
  *
- * Only used in the promode modes (ProMode, Chaos, Equalized). It stays completely inert until
+ * Only used in the promode modes (ProMode, Equalized). It stays completely inert until
  * {@link activate} is called from a promode state - every public entry point returns immediately
  * while inactive, so other modes keep the native minimap untouched and no frames, timers or
  * vertex colors are ever created for them.
