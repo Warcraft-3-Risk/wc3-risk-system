@@ -190,6 +190,7 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 				MenuItem "Standard",     -2,
 				MenuItem "Capitals",     -2,
 				MenuItem "Reserves",     -2,
+				MenuItem "Arena",     -2,
 			}
 		}
 

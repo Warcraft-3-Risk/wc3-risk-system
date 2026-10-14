@@ -12,6 +12,8 @@ import { W3C_MODE_ENABLED } from '../utils/map-info';
 import { LocalMessage } from '../utils/messages';
 import { RatingSyncManager } from 'src/app/rating/rating-sync-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
+import { ArenaManager } from 'src/app/managers/arena-manager';
+import { HexColors } from 'src/app/utils/hex-colors';
 
 export class ModeSelection {
 	private ui: SettingsView;
@@ -113,6 +115,10 @@ export class ModeSelection {
 	public end(): void {
 		const settings: SettingsContext = SettingsContext.getInstance();
 
+		if (settings.isArena()) {
+			this.validateArena(settings);
+		}
+
 		settings.initStrategies();
 		settings.applyStrategy('GameType');
 		settings.applyStrategy('Overtime');
@@ -123,8 +129,30 @@ export class ModeSelection {
 			ExportGameSettings.write(settings);
 		}
 
-		const gameType: GameType = settings.isCapitals() ? 'Capitals' : settings.isReserves() ? 'Reserves' : 'Standard';
+		const gameType: GameType = settings.isCapitals() ? 'Capitals' : settings.isReserves() ? 'Reserves' : settings.isArena() ? 'Arena' : 'Standard';
 		GlobalGameData.gameMode = gameType;
 		this.eventEmitter.emit(EVENT_SET_GAME_MODE, gameType);
+	}
+
+	/** Arena needs at least 2 players and a terrain with arenas configured - anything else falls back to Standard. */
+	private validateArena(settings: SettingsContext): void {
+		let playerCount = 0;
+
+		PlayerManager.getInstance().players.forEach((_, playerHandle) => {
+			if (GetPlayerSlotState(playerHandle) == PLAYER_SLOT_STATE_PLAYING) playerCount++;
+		});
+
+		let reason: string = undefined;
+
+		if (!ArenaManager.hasArenas()) {
+			reason = 'there are no arenas on this map';
+		} else if (playerCount < 2) {
+			reason = 'it needs at least 2 players';
+		}
+
+		if (reason) {
+			settings.getSettings().GameType = 0;
+			DisplayTimedTextToPlayer(GetLocalPlayer(), 0, 0, 10, `${HexColors.RED}Arena is not available|r - ${reason}. Playing Standard instead.`);
+		}
 	}
 }

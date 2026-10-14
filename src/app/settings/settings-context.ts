@@ -137,6 +137,13 @@ export class SettingsContext {
 	}
 
 	/**
+	 * Checks if the game type is set to Arena (1v1 rounds with identical armies in a single country)
+	 */
+	public isArena(): boolean {
+		return this.settings.GameType == 3;
+	}
+
+	/**
 	 * Checks if the game setting for Overtime is on or off
 	 * @returns true if overtime is on
 	 */

@@ -40,7 +40,7 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		// Every promode variant plays a series, so it needs a board that persists between matches
 		const settings = SettingsContext.getInstance();
 
-		if (settings.isPromode() || settings.isEqualizedPromode()) {
+		if (settings.isPromode() || settings.isEqualizedPromode() || settings.isArena()) {
 			ScoreboardManager.getInstance().sessionSetup([...GlobalGameData.matchPlayers]);
 			ScoreboardManager.getInstance().hideSessionBoard();
 		}
@@ -49,7 +49,10 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		SettingsContext.getInstance().applyStrategy('Diplomacy');
 
 		// Setting up the scoreboard
-		if (SettingsContext.getInstance().isFFA() || GlobalGameData.matchPlayers.length <= 2) {
+		if (settings.isArena()) {
+			// Arena rounds follow each other without a break, so the session board is the only scoreboard and stays up
+			ScoreboardManager.getInstance().showSessionBoard();
+		} else if (SettingsContext.getInstance().isFFA() || GlobalGameData.matchPlayers.length <= 2) {
 			ScoreboardManager.getInstance().ffaSetup(GlobalGameData.matchPlayers);
 			// get random player from list
 			GlobalGameData.leader = GlobalGameData.matchPlayers[Math.floor(Math.random() * GlobalGameData.matchPlayers.length)];
@@ -61,8 +64,10 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 			ScoreboardManager.getInstance().teamSetup();
 		}
 
-		const observerKeys = [...PlayerManager.getInstance().observers.keys()];
-		ScoreboardManager.getInstance().obsSetup(GlobalGameData.matchPlayers, observerKeys);
+		if (!settings.isArena()) {
+			const observerKeys = [...PlayerManager.getInstance().observers.keys()];
+			ScoreboardManager.getInstance().obsSetup(GlobalGameData.matchPlayers, observerKeys);
+		}
 
 		VictoryManager.getInstance().reset();
 		ScoreboardManager.getInstance().updateScoreboardTitle();

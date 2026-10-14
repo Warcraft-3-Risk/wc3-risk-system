@@ -18,7 +18,6 @@ export const UNIT_ID = {
 	//Port Units
 	MARINE: FourCC('u008'),
 	CAPTAIN: FourCC('u009'),
-	ADMIRAL: FourCC('u010'),
 	TRANSPORT_SHIP: FourCC('s000'),
 	ARMORED_TRANSPORT_SHIP: FourCC('s001'),
 	WARSHIP_A: FourCC('s002'),

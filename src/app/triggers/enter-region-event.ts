@@ -1,4 +1,5 @@
 import { CityRegionSize } from 'src/configs/city-settings';
+import { SettingsContext } from '../settings/settings-context';
 import { City } from '../city/city';
 import { RegionToCity, UnitToCity } from '../city/city-map';
 import { UNIT_TYPE } from '../utils/unit-types';
@@ -12,6 +13,8 @@ export function EnterRegionEvent() {
 	TriggerAddCondition(
 		EnterRegionTrigger,
 		Condition(() => {
+			// Arena cities have no guard - units must never be pulled into guarding them
+			if (SettingsContext.getInstance().isArena()) return false;
 			if (IsUnitType(GetTriggerUnit(), UNIT_TYPE.TRANSPORT)) return false;
 
 			const city: City = RegionToCity.get(GetTriggeringRegion());

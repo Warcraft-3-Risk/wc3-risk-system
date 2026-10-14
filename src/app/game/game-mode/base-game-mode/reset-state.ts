@@ -49,7 +49,7 @@ export class ResetState<T extends StateData> extends BaseState<T> {
 		TreeManager.getInstance().reset();
 		await Wait.forSeconds(1);
 
-		print('Resetting player colors, names and alliances...');
+		print('Resetting players...');
 		this.resetPlayersAndAlliances();
 
 		GlobalGameData.matchPlayers.forEach((val) => {

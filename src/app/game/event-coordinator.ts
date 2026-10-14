@@ -27,6 +27,7 @@ import { SettingsContext } from '../settings/settings-context';
 import { PromodeMode } from './game-mode/mode/promode-mode';
 import { EqualizedPromodeMode } from './game-mode/mode/equalized-promode-mode';
 import { W3CMode } from './game-mode/mode/w3c-mode';
+import { ArenaMode } from './game-mode/mode/arena-mode';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 
 export class EventCoordinator {
@@ -92,6 +93,8 @@ export class EventCoordinator {
 	public applyGameMode(gameType: GameType) {
 		if (gameType == 'Capitals') {
 			this._currentMode = new CapitalsMode();
+		} else if (gameType == 'Arena') {
+			this._currentMode = new ArenaMode();
 		} else {
 			if (W3C_MODE_ENABLED) {
 				this._currentMode = new W3CMode();

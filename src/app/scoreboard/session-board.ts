@@ -3,6 +3,15 @@ import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
 import { Scoreboard } from './scoreboard';
 
+/** Outcome of a player's previous match - Win, Loss or Draw. */
+export type LastResult = 'W' | 'L' | 'D';
+
+const LAST_RESULT_COLORS: Record<LastResult, string> = {
+	W: HexColors.GREEN,
+	L: HexColors.RED,
+	D: HexColors.TANGERINE,
+};
+
 export interface SessionStats {
 	wins: number;
 	losses: number;
@@ -11,13 +20,18 @@ export interface SessionStats {
 }
 
 /**
- * Between-matches scoreboard for modes that play a series (promode, equalized promode).
+ * Between-matches scoreboard for modes that play a series (promode, equalized promode, arena).
+ * Arena shows it permanently, as rounds follow each other without a break.
  * It is created once per session and survives resets, accumulating wins, losses
  * and kill/death values across every match played.
  */
 export class SessionBoard extends Scoreboard {
 	private players: ActivePlayer[];
 	private stats: Map<player, SessionStats> = new Map();
+	// Kills/deaths of the match in progress, shown on top of the banked totals (Arena keeps the board up during rounds)
+	private liveKillsDeaths: Map<player, { kills: number; deaths: number }> = new Map();
+	// Previous match result, shown in front of the name (Arena) - players without one show none
+	private lastResults: Map<player, LastResult> = new Map();
 	private readonly PLAYER_COL = 1;
 	private readonly WINS_COL = 2;
 	private readonly LOSSES_COL = 3;
@@ -79,6 +93,25 @@ export class SessionBoard extends Scoreboard {
 		}
 	}
 
+	/** Sets the running kill/death values of the match in progress. They are shown but not banked - see recordKillsDeaths. */
+	public setLiveKillsDeaths(player: ActivePlayer, kills: number, deaths: number): void {
+		this.liveKillsDeaths.set(player.getPlayer(), { kills, deaths });
+	}
+
+	public clearLiveKillsDeaths(): void {
+		this.liveKillsDeaths.clear();
+	}
+
+	public getWins(player: player): number {
+		const stats = this.stats.get(player);
+		return stats ? stats.wins : 0;
+	}
+
+	/** Replaces every player's previous-match marker - players missing from the map (e.g. who waited) show none. */
+	public setLastResults(results: Map<player, LastResult>): void {
+		this.lastResults = results;
+	}
+
 	public updateFull(): void {
 		// Sort by wins descending, then K/D ratio descending
 		this.players.sort((a, b) => {
@@ -100,14 +133,20 @@ export class SessionBoard extends Scoreboard {
 			const stats = this.stats.get(player.getPlayer());
 			if (!stats) return;
 
+			const live = this.liveKillsDeaths.get(player.getPlayer());
+			const kills = stats.kills + (live ? live.kills : 0);
+			const deaths = stats.deaths + (live ? live.deaths : 0);
 			const textColor = GetLocalPlayer() == player.getPlayer() ? HexColors.TANGERINE : HexColors.WHITE;
 			const nameColor = NameManager.getInstance().getColorCode(player.getPlayer());
 
-			this.setItemValue(`${nameColor}${NameManager.getInstance().getBtag(player.getPlayer())}`, row, this.PLAYER_COL);
+			const lastResult = this.lastResults.get(player.getPlayer());
+			const resultPrefix = lastResult ? `${LAST_RESULT_COLORS[lastResult]}${lastResult}|r ` : '';
+
+			this.setItemValue(`${resultPrefix}${nameColor}${NameManager.getInstance().getBtag(player.getPlayer())}`, row, this.PLAYER_COL);
 			this.setItemValue(`${HexColors.GREEN}${stats.wins}`, row, this.WINS_COL);
 			this.setItemValue(`${HexColors.RED}${stats.losses}`, row, this.LOSSES_COL);
-			this.setItemValue(`${textColor}${stats.kills}`, row, this.KILLS_COL);
-			this.setItemValue(`${textColor}${stats.deaths}`, row, this.DEATHS_COL);
+			this.setItemValue(`${textColor}${kills}`, row, this.KILLS_COL);
+			this.setItemValue(`${textColor}${deaths}`, row, this.DEATHS_COL);
 
 			row++;
 		});
@@ -124,6 +163,8 @@ export class SessionBoard extends Scoreboard {
 	public destroy(): void {
 		this.players = null;
 		this.stats = null;
+		this.liveKillsDeaths = null;
+		this.lastResults = null;
 		DestroyMultiboard(this.board);
 		this.board = null;
 	}

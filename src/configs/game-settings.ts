@@ -124,7 +124,7 @@ export const RESERVE_DEPLOY_RADIUS: number = 200;
 // Reserves game type: the maximum number of units deployed from the reserves per click. Default is 10.
 export const RESERVE_DEPLOY_MAX_UNITS: number = 10;
 
-// Reserves game type: the maximum number of heavy units (General, Admiral, Artillery, Tank, Warship B, Battleship SS) deployed per click. Default is 1.
+// Reserves game type: the maximum number of heavy units (General, Artillery, Tank, Warship B, Battleship SS) deployed per click. Default is 1.
 export const RESERVE_DEPLOY_MAX_HEAVY_UNITS: number = 1;
 
 // Reserves game type: the deploy budget stops growing at this value. Deploying a unit uses up its gold cost. Default is 500.
@@ -135,3 +135,29 @@ export const RESERVE_BUDGET_MINUTES_TO_MAX: number = 60;
 
 // Reserves game type: budget gained per second - derived from the two settings above, do not set directly.
 export const RESERVE_BUDGET_PER_SECOND: number = RESERVE_BUDGET_MAX / (RESERVE_BUDGET_MINUTES_TO_MAX * 60);
+
+// Arena game type: seconds of countdown before each round starts. Default is 3.
+export const ARENA_COUNTDOWN: number = 3;
+
+// Arena game type: length of a round in seconds, shown on the timer in the top right. When it runs out every unit
+// is paused and the player with the higher kill value (gold cost of the enemy units killed) wins. Default is 90.
+export const ARENA_ROUND_DURATION: number = 90;
+
+// Arena game type: seconds between the end of a round and the next round being prepared. Default is 4.
+export const ARENA_ROUND_END_DELAY: number = 4;
+
+// Arena game type: length of a session in minutes, counted from the first round. A running round is always played out;
+// at the first round end after this, the player with the most wins wins the game. Players tied for the most wins
+// play deciding rounds among themselves until one is ahead. Default is 15.
+export const ARENA_SESSION_MINUTES: number = 15;
+
+// Arena game type: armies spawn this far from their city, towards the opponent's city. Default is 350.
+export const ARENA_SPAWN_OFFSET: number = 350;
+
+// Arena game type: the arena is the area painted with the arena country's own terrain, searched up to this
+// distance from the country's cities. It keeps the search from leaking into a far-away country that happens
+// to use the same terrain. Default is 5000.
+export const ARENA_MAX_RADIUS: number = 5000;
+
+// Arena game type: seconds between checks that pull units back that have stepped outside the arena. Default is 0.1.
+export const ARENA_BOUNDARY_CHECK_INTERVAL: number = 0.1;

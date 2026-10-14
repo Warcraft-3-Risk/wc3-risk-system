@@ -11,6 +11,7 @@ import { PromodeOptionsColorFormatted } from './strategies/promode-strategy';
 const GAME_TYPE_STANDARD: number = 0;
 const GAME_TYPE_CAPITALS: number = 1;
 const GAME_TYPE_RESERVES: number = 2;
+const GAME_TYPE_ARENA: number = 3;
 
 export class SettingsView {
 	private backdrop: framehandle;
@@ -106,7 +107,7 @@ export class SettingsView {
 			Condition(() => {
 				let frameValue: number = R2I(BlzGetTriggerFrameValue());
 
-				// ProMode only supports the Standard and Reserves game types - Capitals falls back to Standard
+				// ProMode only supports the Standard, Reserves and Arena game types - Capitals falls back to Standard
 				if (frameValue == GAME_TYPE_CAPITALS && SettingsContext.getInstance().getSettings().Promode != 0) {
 					frameValue = GAME_TYPE_STANDARD;
 					BlzFrameSetValue(BlzGetFrameByName('GameTypePopup', 0), frameValue);
@@ -212,9 +213,10 @@ export class SettingsView {
 				SettingsContext.getInstance().getSettings().Promode = frameValue;
 
 				// ProMode On (1) or Equalized (2): lock the other settings. The game type stays selectable, but only
-				// Standard or Reserves - Capitals falls back to Standard.
+				// Standard, Reserves or Arena - Capitals falls back to Standard.
 				if (frameValue === 1 || frameValue === 2) {
-					const gameType: number = SettingsContext.getInstance().isReserves() ? GAME_TYPE_RESERVES : GAME_TYPE_STANDARD;
+					const settings = SettingsContext.getInstance();
+					const gameType: number = settings.isReserves() ? GAME_TYPE_RESERVES : settings.isArena() ? GAME_TYPE_ARENA : GAME_TYPE_STANDARD;
 
 					SettingsContext.getInstance().getSettings().GameType = gameType;
 					SettingsContext.getInstance().getSettings().Fog = 1;
@@ -230,7 +232,7 @@ export class SettingsView {
 					BlzFrameSetValue(overtimeFrame, 3);
 					BlzFrameSetEnable(overtimeFrame, false);
 				} else {
-					// ProMode Off (0): unlock other settings. The selected game type (Standard or Reserves) is kept.
+					// ProMode Off (0): unlock other settings. The selected game type (Standard, Reserves or Arena) is kept.
 					SettingsContext.getInstance().getSettings().Fog = 0;
 					SettingsContext.getInstance().getSettings().Diplomacy.option = 0;
 					SettingsContext.getInstance().getSettings().Overtime.option = 0;

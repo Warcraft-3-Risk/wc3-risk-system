@@ -1,5 +1,6 @@
 import { ABILITY_ID } from 'src/configs/ability-id';
 import { UNIT_ID } from 'src/configs/unit-id';
+import { UNIT_GOLD_COSTS } from 'src/configs/unit-costs';
 import { RESERVE_BUDGET_MAX, RESERVE_BUDGET_MINUTES_TO_MAX, RESERVE_BUDGET_PER_SECOND, RESERVE_DEPLOY_MAX_HEAVY_UNITS, RESERVE_DEPLOY_MAX_UNITS, RESERVE_DEPLOY_RADIUS } from 'src/configs/game-settings';
 import { City } from '../city/city';
 import { GlobalGameData } from '../game/state/global-game-state';
@@ -25,7 +26,6 @@ const RESERVABLE_UNIT_TYPES: number[] = [
 	UNIT_ID.TANK,
 	UNIT_ID.MARINE,
 	UNIT_ID.CAPTAIN,
-	UNIT_ID.ADMIRAL,
 	UNIT_ID.WARSHIP_A,
 	UNIT_ID.WARSHIP_B,
 	UNIT_ID.BATTLESHIP_SS,
@@ -34,29 +34,8 @@ const RESERVABLE_UNIT_TYPES: number[] = [
 /** Reservable ships - these can only be deployed near one of the player's ports. */
 const RESERVABLE_SHIP_TYPES: number[] = [UNIT_ID.WARSHIP_A, UNIT_ID.WARSHIP_B, UNIT_ID.BATTLESHIP_SS];
 
-/**
- * Reserve budget each unit uses up when deployed - its gold cost from the object editor (risk_europe.w3x).
- * Map scripts cannot read gold costs at runtime, so they are copied here; keep in sync if costs change.
- */
-const DEPLOY_COSTS: Map<number, number> = new Map([
-	[UNIT_ID.RIFLEMEN, 1],
-	[UNIT_ID.MEDIC, 2],
-	[UNIT_ID.MORTAR, 3],
-	[UNIT_ID.ROARER, 4],
-	[UNIT_ID.KNIGHT, 5],
-	[UNIT_ID.GENERAL, 10],
-	[UNIT_ID.ARTILLERY, 15],
-	[UNIT_ID.TANK, 25],
-	[UNIT_ID.MARINE, 1],
-	[UNIT_ID.CAPTAIN, 5],
-	[UNIT_ID.ADMIRAL, 10],
-	[UNIT_ID.WARSHIP_A, 5],
-	[UNIT_ID.WARSHIP_B, 20],
-	[UNIT_ID.BATTLESHIP_SS, 45],
-]);
-
 /** Heavy units: at most {@link RESERVE_DEPLOY_MAX_HEAVY_UNITS} of these come out per deployment. */
-const HEAVY_UNIT_TYPES: number[] = [UNIT_ID.GENERAL, UNIT_ID.ADMIRAL, UNIT_ID.ARTILLERY, UNIT_ID.TANK, UNIT_ID.WARSHIP_B, UNIT_ID.BATTLESHIP_SS];
+const HEAVY_UNIT_TYPES: number[] = [UNIT_ID.GENERAL, UNIT_ID.ARTILLERY, UNIT_ID.TANK, UNIT_ID.WARSHIP_B, UNIT_ID.BATTLESHIP_SS];
 
 const BUTTON_CONTEXT_OFFSET: number = 600;
 const BUTTON_SIZE: number = 0.026;
@@ -225,7 +204,7 @@ export class ReserveManager {
 	}
 
 	private getDeployCost(typeId: number): number {
-		return DEPLOY_COSTS.get(typeId) || 1;
+		return UNIT_GOLD_COSTS.get(typeId) || 1;
 	}
 
 	/** The most units of the type that come out in one deployment. */
