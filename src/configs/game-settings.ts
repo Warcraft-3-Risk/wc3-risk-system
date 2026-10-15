@@ -100,7 +100,7 @@ export const RANKED_STARTING_RATING: number = 1000;
 // Enable/disable editor developer mode. Default is false.
 // When enabled: Enables country creator commands for map editing (singleplayer only)
 // When disabled: Country creator commands are disabled
-export const EDITOR_DEVELOPER_MODE: boolean = true;
+export const EDITOR_DEVELOPER_MODE: boolean = false;
 
 // Enable/disable rating file encryption. Default is true.
 // When enabled: Rating files are encrypted with XOR+Base64 (production use)
