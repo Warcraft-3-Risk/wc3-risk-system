@@ -855,24 +855,6 @@ STRING 7333
 Highest Value Defender
 }
 
-STRING 7342
-// Units: H000 (Player Tools), Name (Name)
-{
-Player Tools
-}
-
-STRING 7343
-// Units: H000 (Player Tools), Propernames (Proper Names)
-{
-Player Tools
-}
-
-STRING 7344
-// Units: H000 (Player Tools), Ubertip (Tooltip - Extended)
-{
-Options
-}
-
 STRING 7351
 // Abilities: a054 (Highest Value Defender), Hotkey (Hotkey - Normal)
 {
@@ -901,12 +883,6 @@ STRING 7361
 // Abilities: a054 (Highest Value Defender), Ubertip (Tooltip - Normal - Extended)
 {
 Prioritizes the highest value unit when chosing a city defender.
-}
-
-STRING 7365
-// Units: H000 (Player Tools), Tip (Tooltip - Basic)
-{
-Player Tools
 }
 
 STRING 7372
