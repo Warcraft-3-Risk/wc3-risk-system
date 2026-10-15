@@ -62,6 +62,8 @@ typings/
 
 # Output of 'npm pack'
 *.tgz
+# Vendored dependencies referenced from package.json must be committed
+!vendor/*.tgz
 
 # Yarn Integrity file
 .yarn-integrity
