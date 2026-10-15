@@ -33,8 +33,16 @@ export function UnitDeathEvent() {
 			}
 			const dyingUnitOwnerHandle: player = GetOwningPlayer(dyingUnit);
 			const killingUnitOwnerHandle: player = GetOwningPlayer(killingUnit);
-			const dyingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(dyingUnitOwnerHandle);
-			const killingUnitOwner: GamePlayer = PlayerManager.getInstance().players.get(killingUnitOwnerHandle);
+			const playerManager: PlayerManager = PlayerManager.getInstance();
+			const dyingUnitOwner: GamePlayer = playerManager.players.get(dyingUnitOwnerHandle);
+			const killingUnitOwner: GamePlayer = playerManager.players.get(killingUnitOwnerHandle);
+
+			// Computed once here and passed down - this runs on every unit death
+			const pointValue: number = GetUnitPointValue(dyingUnit);
+			const unitTypeKey: string = `${GetUnitTypeId(dyingUnit)}`;
+			const isPlayerCombat: boolean =
+				playerManager.playerControllers.get(killingUnitOwnerHandle) === MAP_CONTROL_USER &&
+				playerManager.playerControllers.get(dyingUnitOwnerHandle) === MAP_CONTROL_USER;
 
 			// Track kill for the killing unit
 			if (killingUnit) {
@@ -46,42 +54,32 @@ export function UnitDeathEvent() {
 				if (killingUnit && !IsUnitType(killingUnit, UNIT_TYPE.BUILDING)) {
 					// Only count kills of enemy/allied units, not own units (denies)
 					if (killingUnitOwnerHandle !== dyingUnitOwnerHandle) {
-						const pointValue = GetUnitPointValue(dyingUnit);
 						const totalKillValue = UnitKillTracker.getInstance().addKillValue(killingUnit, pointValue);
 						updateUnitNameWithKillValue(killingUnit, totalKillValue);
-					} else {
+					} else if (SHOW_DEBUG_PRINTS) {
 						debugPrint(`[KILL TRACKER] Skipping deny - unit killed its own unit`);
 					}
-				} else if (killingUnit) {
+				} else if (killingUnit && SHOW_DEBUG_PRINTS) {
 					debugPrint(`[KILL TRACKER] Skipping name update - killing unit is a building`);
 				}
 			} catch (e) {
-				debugPrint(`[KILL TRACKER ERROR] Exception: ${e}`);
+				if (SHOW_DEBUG_PRINTS) {
+					debugPrint(`[KILL TRACKER ERROR] Exception: ${e}`);
+				}
 			}
 
 			// Remove the dying unit from kill tracking
 			UnitKillTracker.getInstance().removeUnit(dyingUnit);
 
 			if (killingUnitOwner) {
-				killingUnitOwner.onKill(
-					dyingUnitOwnerHandle,
-					dyingUnit,
-					PlayerManager.getInstance().playerControllers.get(killingUnitOwnerHandle) === MAP_CONTROL_USER &&
-						PlayerManager.getInstance().playerControllers.get(dyingUnitOwnerHandle) === MAP_CONTROL_USER
-				);
+				killingUnitOwner.onKill(dyingUnitOwnerHandle, dyingUnit, isPlayerCombat, pointValue, unitTypeKey);
 			}
-			if (dyingUnitOwner)
-				dyingUnitOwner.onDeath(
-					killingUnitOwnerHandle,
-					dyingUnit,
-					PlayerManager.getInstance().playerControllers.get(killingUnitOwnerHandle) === MAP_CONTROL_USER &&
-						PlayerManager.getInstance().playerControllers.get(dyingUnitOwnerHandle) === MAP_CONTROL_USER
-				);
+			if (dyingUnitOwner) dyingUnitOwner.onDeath(killingUnitOwnerHandle, dyingUnit, isPlayerCombat, pointValue, unitTypeKey);
 
 			if (!SettingsContext.getInstance().isFFA() && !IsPlayerAlly(killingUnitOwnerHandle, dyingUnitOwnerHandle)) {
 				const teamManager: TeamManager = TeamManager.getInstance();
-				if (killingUnitOwner) teamManager.getTeamFromPlayer(killingUnitOwnerHandle).updateKillCount(GetUnitPointValue(dyingUnit));
-				if (dyingUnitOwner) teamManager.getTeamFromPlayer(dyingUnitOwnerHandle).updateDeathCount(GetUnitPointValue(dyingUnit));
+				if (killingUnitOwner) teamManager.getTeamFromPlayer(killingUnitOwnerHandle).updateKillCount(pointValue);
+				if (dyingUnitOwner) teamManager.getTeamFromPlayer(dyingUnitOwnerHandle).updateDeathCount(pointValue);
 			}
 
 			if (IsUnitType(dyingUnit, UNIT_TYPE.GUARD)) HandleGuardDeath(dyingUnit, killingUnit);

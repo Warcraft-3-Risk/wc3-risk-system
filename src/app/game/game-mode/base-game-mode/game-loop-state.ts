@@ -25,10 +25,16 @@ import { IncomeManager } from 'src/app/managers/income-manager';
 import { hasEconomy } from 'src/app/utils/dead-player-economy';
 import { RatingManager } from 'src/app/rating/rating-manager';
 import { StatisticsController } from 'src/app/statistics/statistics-controller';
+import { EventEmitter } from 'src/app/utils/events/event-emitter';
+import { EVENT_ON_PLAYER_RESTART } from 'src/app/utils/events/event-constants';
 
 export class GameLoopState<T extends StateData> extends BaseState<T> {
+	private matchLoopTimer: timer | undefined;
+	private hasFinishedMatchLoop: boolean = false;
+
 	onEnterState() {
 		GlobalGameData.matchState = 'inProgress';
+		this.hasFinishedMatchLoop = false;
 
 		// Capture initial game data for rating calculations
 		// This locks in player count and ratings at game start - never changes during game
@@ -47,20 +53,18 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 		this.onStartTurn(GlobalGameData.turnCount);
 
-		const _matchLoopTimer: timer = CreateTimer();
+		this.matchLoopTimer = CreateTimer();
 
 		updateTickUI();
 
-		TimerStart(_matchLoopTimer, TICK_DURATION_IN_SECONDS, true, () => {
+		TimerStart(this.matchLoopTimer, TICK_DURATION_IN_SECONDS, true, () => {
 			try {
 				// End game if only one player is remaining
 				this.endIfLastActivePlayer();
 
 				// Check if the match is over
 				if (this.isMatchOver()) {
-					PauseTimer(_matchLoopTimer);
-					DestroyTimer(_matchLoopTimer);
-					this.nextState(this.stateData);
+					this.finishMatchLoop();
 					return;
 				}
 
@@ -73,9 +77,7 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 
 				// Stop game loop if match is over
 				if (this.isMatchOver()) {
-					PauseTimer(_matchLoopTimer);
-					DestroyTimer(_matchLoopTimer);
-					this.nextState(this.stateData);
+					this.finishMatchLoop();
 					return;
 				}
 
@@ -93,6 +95,25 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 				debugPrint('Error in Timer ' + error);
 			}
 		});
+	}
+
+	/**
+	 * Stops the match loop timer and moves on to the next state.
+	 * Safe to call more than once - only the first call has an effect.
+	 * @returns true if this call finished the loop, false if it was already finished.
+	 */
+	private finishMatchLoop(): boolean {
+		if (this.hasFinishedMatchLoop) return false;
+		this.hasFinishedMatchLoop = true;
+
+		if (this.matchLoopTimer) {
+			PauseTimer(this.matchLoopTimer);
+			DestroyTimer(this.matchLoopTimer);
+			this.matchLoopTimer = undefined;
+		}
+
+		this.nextState(this.stateData);
+		return true;
 	}
 
 	endIfLastActivePlayer(): boolean {
@@ -333,9 +354,19 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 	// GameLoopState uses GlobalGameData.matchState to determine if the match is over
 	// This is preferable as it allows the state to clean up and transition to the next state
 	onPlayerRestart(player: ActivePlayer) {
+		// The match already ended but the loop has not ticked yet - finish it now and
+		// pass the restart on to the game over state instead of dropping it.
+		if (GlobalGameData.matchState === 'postMatch') {
+			if (this.finishMatchLoop()) {
+				EventEmitter.getInstance().emit(EVENT_ON_PLAYER_RESTART, player);
+			}
+			return;
+		}
+
 		const humanPlayersCount: number = PlayerManager.getInstance().getHumanPlayersCount();
 		if (humanPlayersCount === 1) {
 			GlobalGameData.matchState = 'postMatch';
+			this.finishMatchLoop();
 		}
 	}
 

@@ -28,6 +28,9 @@ export abstract class BaseState<T extends StateData> {
 
 	onPlayerRestart(player: ActivePlayer) {}
 
+	// Only the countdown state reacts to -skip; every other state ignores it
+	onSkipCountdown(): void {}
+
 	onPlayerAlive(player: ActivePlayer): void {
 		onPlayerAliveHandle(player);
 	}

@@ -1,5 +1,6 @@
 import { File } from 'w3ts';
 import { ChatManager } from '../managers/chat-manager';
+import { isCameraPositionButtonAvailable } from '../ui/camera-position-button';
 
 export function UICommand(chatManager: ChatManager) {
 	chatManager.addCmd(['-ui'], () => {
@@ -27,7 +28,8 @@ export function UICommand(chatManager: ChatManager) {
 		addButton(BlzGetFrameByName('GuardButton', id + 200)); // Country labels
 		addButton(BlzGetFrameByName('GuardButton', id + 300)); // Ranked stats
 		addButton(BlzGetFrameByName('GuardButton', id + 500)); // Cancel all orders
-		addButton(BlzGetFrameByName('CameraPositionButtonBackdrop', id + 400)); // Camera positions (developer mode only)
+		// Camera positions - only in team games with allies (or developer mode), never in FFA
+		if (isCameraPositionButtonAvailable(player)) addButton(BlzGetFrameByName('CameraPositionButtonBackdrop', id + 400));
 
 		const show: boolean = !BlzFrameIsVisible(healthButton);
 

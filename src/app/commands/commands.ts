@@ -15,6 +15,8 @@ import { W3CDrawCommand } from './w3c-draw';
 import { W3CGGCommand } from './w3c-gg';
 import { Advanced } from './advanced';
 import { DevCaptureCommand } from './dev-capture';
+import { KillCommand } from './kill';
+import { SkipCommand } from './skip';
 
 export function SetCommands() {
 	const chatManager: ChatManager = ChatManager.getInstance();
@@ -35,4 +37,6 @@ export function SetCommands() {
 	W3CDrawCommand(chatManager);
 	W3CGGCommand(chatManager);
 	DevCaptureCommand(chatManager, nameManager);
+	KillCommand(chatManager, nameManager, playerManager);
+	SkipCommand(chatManager);
 }

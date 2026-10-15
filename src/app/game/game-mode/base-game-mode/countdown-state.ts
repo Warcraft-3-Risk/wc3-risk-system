@@ -66,8 +66,9 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 
 					// Note: P2P rating sync already started in ModeSelection.run() during settings phase
 				} else {
-					// Only show ranked/unranked message on the first match (not on restarts)
-					if (GlobalGameData.matchCount === 1) {
+					// Only show ranked/unranked message on the first match (not on restarts).
+					// Team games are never ranked, so the unranked notice is only useful in FFA.
+					if (GlobalGameData.matchCount === 1 && isFFA) {
 						const message = `${HexColors.TANGERINE}This is an unranked game!|r Ranked play requires at least ${HexColors.TANGERINE}16 eligible FFA players|r.`;
 
 						// Send message only to players who have rating display enabled
@@ -98,7 +99,7 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 			BlzFrameSetVisible(BlzGetFrameByName('CountdownFrame', 0), true);
 			this.countdownDisplay(duration);
 			TimerStart(startDelayTimer, 1, true, () => {
-				// Check if we should skip to next state due to forfeit
+				// Check if we should skip to next state due to forfeit or -skip
 				if (this.shouldSkipToNextState) {
 					PauseTimer(startDelayTimer);
 					DestroyTimer(startDelayTimer);
@@ -128,6 +129,11 @@ export class CountdownState<T extends StateData> extends BaseState<T> {
 		} catch (error) {
 			print('Error in Metagame ' + error);
 		}
+	}
+
+	override onSkipCountdown(): void {
+		// Picked up by the countdown timer on its next tick
+		this.shouldSkipToNextState = true;
 	}
 
 	onPlayerForfeit(player: ActivePlayer): void {

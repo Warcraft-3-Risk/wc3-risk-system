@@ -42,8 +42,8 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		});
 	}
 
-	abstract onKill(victim: player, unit: unit, isPlayerCombat: boolean): void;
-	abstract onDeath(killer: player, unit: unit, isPlayerCombat: boolean): void;
+	abstract onKill(victim: player, unit: unit, isPlayerCombat: boolean, pointValue: number, unitTypeKey: string): void;
+	abstract onDeath(killer: player, unit: unit, isPlayerCombat: boolean, pointValue: number, unitTypeKey: string): void;
 
 	public getPlayer(): player {
 		return this._player;
@@ -82,7 +82,12 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 		}
 	}
 
-	public setEndData() {
+	/**
+	 * Records the player's end-of-match stats and disables their controls.
+	 * @param revealName - Whether to reveal the player's btag right away. Team games pass false
+	 * so a dead player stays anonymous until their whole team is eliminated.
+	 */
+	public setEndData(revealName: boolean = true) {
 		const handle: player = this.getPlayer();
 
 		this.trackedData.income.end = this.trackedData.income.income;
@@ -103,7 +108,9 @@ export abstract class ActivePlayer implements GamePlayer, Resetable {
 			EnableDragSelect(false, false);
 		}
 
-		NameManager.getInstance().setName(handle, 'btag');
+		if (revealName) {
+			NameManager.getInstance().setName(handle, 'btag');
+		}
 	}
 
 	public get trackedData(): TrackedData {

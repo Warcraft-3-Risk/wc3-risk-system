@@ -12,6 +12,7 @@ import {
 	EVENT_ON_PLAYER_NOMAD,
 	EVENT_ON_PLAYER_RESTART,
 	EVENT_ON_PLAYER_STFU,
+	EVENT_ON_SKIP_COUNTDOWN,
 	EVENT_ON_SWAP_GUARD,
 	EVENT_ON_UNIT_KILLED,
 	EVENT_QUEST_UPDATE_PLAYER_STATUS,
@@ -67,6 +68,7 @@ export class EventCoordinator {
 		EventEmitter.getInstance().on(EVENT_ON_PLAYER_RESTART, (player: ActivePlayer) =>
 			this._currentMode?.getCurrentState().onPlayerRestart(player)
 		);
+		EventEmitter.getInstance().on(EVENT_ON_SKIP_COUNTDOWN, () => this._currentMode?.getCurrentState().onSkipCountdown());
 		EventEmitter.getInstance().on(EVENT_ON_CITY_CAPTURE, (city: City, preOwner: ActivePlayer, owner: ActivePlayer) =>
 			this._currentMode?.getCurrentState().onCityCapture(city, preOwner, owner)
 		);

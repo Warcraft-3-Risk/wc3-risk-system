@@ -1,7 +1,7 @@
 import { ABILITY_ID } from '../../configs/ability-id';
 import { TimedEvent } from '../libs/timer/timed-event';
 import { TransportTooltipLogic } from '../utils/transport-tooltip-logic';
-import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
+import { EDITOR_DEVELOPER_MODE, SHOW_DEBUG_PRINTS } from 'src/configs/game-settings';
 import { TimedEventManager } from '../libs/timer/timed-event-manager';
 import { debugPrint } from '../utils/debug-print';
 import { ErrorMsg } from '../utils/messages';
@@ -537,7 +537,7 @@ export class TransportManager {
 
 				debugPrint('Registering Patrol Timed Event');
 				transport.patrolEvent = timedEventManager.registerTimedEvent(1000000, () => {
-					debugPrint('Transport Patrol Tick');
+					if (SHOW_DEBUG_PRINTS) debugPrint('Transport Patrol Tick');
 					this.handlePatrol(transport);
 				});
 

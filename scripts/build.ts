@@ -2,13 +2,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import War3Map from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/map';
 import { compileMap, getFilesInDirectory, loadJsonFile, loadTerrainConfig, logger, toArrayBuffer, IProjectConfig, toBuffer, updateTsFileWithConfig } from './utils';
-import War3MapW3i from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/w3i/file';
 import War3MapWts from 'mdx-m3-viewer-th/dist/cjs/parsers/w3x/wts/file';
-
-// Highest w3i version mdx-m3-viewer-th can parse. Anything above this is handled by
-// allowNewerMapInfoVersions below.
-const MAX_PARSABLE_W3I_VERSION = 33;
-const W3I_HEADER_BYTES = 28;
 
 function main() {
 	// Get terrain from command line args (e.g., npm run build europe)
@@ -100,8 +94,6 @@ export function createMapFromDir(output: string, dir: string, config: IProjectCo
 		config
 	);
 
-	allowNewerMapInfoVersions(map, w3iFile);
-
 	map.archive.resizeHashtable(files.length);
 
 	for (const fileName of files) {
@@ -125,54 +117,6 @@ export function createMapFromDir(output: string, dir: string, config: IProjectCo
 	fs.writeFileSync(output, new Uint8Array(result));
 
 	logger.info('Finished!');
-}
-
-/**
- * The w3i parser in mdx-m3-viewer-th only understands map info versions up to 33, but World
- * Editor 3.0 writes version 39. Saving the map in the editor therefore used to break the build
- * with a ByteStream error until war3map.w3i was restored by hand - which also threw away
- * whatever had just been changed in Map Properties.
- *
- * map.save() parses the w3i for exactly one decision: maps built before patch 1.31 need the
- * legacy 512 byte HM3W header prepended, newer ones must not have it. The game version is at a
- * fixed offset in every w3i from version 28 onwards, so for a file the parser cannot read we
- * answer that one question ourselves and leave the file itself untouched in the archive.
- */
-function allowNewerMapInfoVersions(map: War3Map, w3iFile: string | undefined) {
-	if (!w3iFile) return;
-
-	const header = readW3iHeader(w3iFile);
-
-	if (!header || header.version <= MAX_PARSABLE_W3I_VERSION) return;
-
-	const buildVersion = header.gameVersionMajor * 100 + header.gameVersionMinor;
-
-	logger.info(
-		`war3map.w3i is version ${header.version} (editor newer than the parser supports); using game version ${buildVersion} from its header`
-	);
-
-	// Only getBuildVersion() is ever read off the result, and only to compare against 131.
-	map.getMapInformation = () => ({ getBuildVersion: () => buildVersion }) as unknown as War3MapW3i;
-}
-
-/**
- * Reads the fixed-position prologue of a w3i: version, then the four game version fields that
- * every version from 28 onwards carries.
- */
-function readW3iHeader(file: string): { version: number; gameVersionMajor: number; gameVersionMinor: number } | undefined {
-	const buffer = fs.readFileSync(file);
-
-	if (buffer.length < W3I_HEADER_BYTES) return undefined;
-
-	const version = buffer.readInt32LE(0);
-
-	// Before version 28 the game version fields do not exist, but those are also the versions the
-	// parser handles perfectly well, so the caller will ignore what we return here.
-	return {
-		version,
-		gameVersionMajor: buffer.readInt32LE(12),
-		gameVersionMinor: buffer.readInt32LE(16),
-	};
 }
 
 function updateStrings(wtsDir: string | undefined, w3iDir: string | undefined, configs: IProjectConfig) {

@@ -13,6 +13,7 @@ import { CHAOS_STARTING_INCOME, NOMAD_DURATION, STARTING_INCOME, STFU_DURATION }
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { Quests } from '../../../quests/quests';
 import { keepsEconomyWhenDead } from 'src/app/utils/dead-player-economy';
+import { TeamManager } from 'src/app/teams/team-manager';
 
 export function onPlayerAliveHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.ALIVE;
@@ -24,6 +25,28 @@ export function onPlayerAliveHandle(player: ActivePlayer): void {
 	ScoreboardManager.getInstance().updatePartial();
 }
 
+/**
+ * In team games names stay hidden while any teammate is still alive.
+ * Once the whole team is eliminated, every member's btag is revealed at once.
+ */
+function revealTeamNamesIfEliminated(player: ActivePlayer): void {
+	if (SettingsContext.getInstance().isFFA()) return;
+
+	const team = TeamManager.getInstance().getTeamFromPlayer(player.getPlayer());
+
+	// No team to wait for - reveal right away
+	if (!team) {
+		NameManager.getInstance().setName(player.getPlayer(), 'btag');
+		return;
+	}
+
+	if (team.getMembers().find((member) => member.status.isActive())) return;
+
+	team.getMembers().forEach((member) => {
+		NameManager.getInstance().setName(member.getPlayer(), 'btag');
+	});
+}
+
 export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): void {
 	if (player.status.isEliminated()) {
 		return;
@@ -31,7 +54,8 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 
 	player.status.status = PLAYER_STATUS.DEAD;
 	player.killedBy = player.trackedData.lastUnitKilledBy;
-	player.setEndData();
+	player.setEndData(SettingsContext.getInstance().isFFA());
+	revealTeamNamesIfEliminated(player);
 
 	// In team promode a dead player keeps their real income - see keepsEconomyWhenDead()
 	if (!keepsEconomyWhenDead(player)) {
@@ -146,7 +170,8 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 	if (playerStatus.isLeft()) return;
 
 	player.status.status = PLAYER_STATUS.LEFT;
-	player.setEndData();
+	player.setEndData(SettingsContext.getInstance().isFFA());
+	revealTeamNamesIfEliminated(player);
 	player.trackedData.income.income = 0;
 
 	// Build display name with optional rating (local player check for display customization)

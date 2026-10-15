@@ -7,6 +7,7 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { CAMERA_POSITION_MODE, CameraPositionMode } from '../player/options';
 import { initMinimapCoords, positionFrameOnMinimap } from '../utils/minimap-coords';
 import { getTeamColorTexture } from '../utils/player-colors';
+import { canUseAllyCameras } from '../utils/ally-cameras';
 
 export type CamPositionData = {
 	x: number;
@@ -15,8 +16,8 @@ export type CamPositionData = {
 
 // How far the displayed marker moves toward the real camera position each render tick.
 // Tuned against RENDER_INTERVAL - raising the interval wants a higher speed to feel the same.
-const LERP_SPEED: number = 0.12;
-const RENDER_INTERVAL: number = 0.03;
+const LERP_SPEED: number = 0.2;
+const RENDER_INTERVAL: number = 0.05;
 const SYNC_INTERVAL: number = 0.5;
 
 // Snap instead of lerping once we are this close (squared distance, world units).
@@ -52,6 +53,10 @@ export default class PlayerCameraPositionManager {
 	private lastSyncedX: number = 0;
 	private lastSyncedY: number = 0;
 	private hasSynced: boolean = false;
+
+	// Whether the local player may watch their allies' cameras this match. Re-evaluated at the start
+	// of every match (see refreshAllyCameraEligibility), so it never leaks from one match into the next.
+	private localCanUseAllyCameras: boolean = false;
 
 	private syncTrigger: trigger;
 
@@ -117,11 +122,21 @@ export default class PlayerCameraPositionManager {
 	}
 
 	/**
-	 * Only observers can view the overlay, so with nobody observing there is nothing to
-	 * broadcast and a normal game pays no sync cost at all.
+	 * Re-evaluates whether the local player is in a team game with allies. Must be called once the
+	 * match's teams and alliances are set up (SetupState), and it runs again on every restart.
+	 */
+	public refreshAllyCameraEligibility(): void {
+		this.localCanUseAllyCameras = canUseAllyCameras(GetLocalPlayer());
+	}
+
+	/**
+	 * Observers can watch everyone, and in team games allies can watch each other. Alliances are
+	 * symmetric, so if the local player has an ally, that ally could be watching the local camera.
+	 * In a plain FFA game with no observers this sends nothing at all.
 	 */
 	private anyoneCouldBeWatching(): boolean {
 		if (EDITOR_DEVELOPER_MODE) return true;
+		if (this.localCanUseAllyCameras) return true;
 
 		return PlayerManager.getInstance().observers.size > 0;
 	}
@@ -224,16 +239,24 @@ export default class PlayerCameraPositionManager {
 		return activePlayer.options.cameraPositionMode;
 	}
 
-	/** The overlay is an observer tool only - regular players never see it. */
+	/** Observers always, players only in team games where they have allies. Only called for the local player. */
 	private isEligibleViewer(p: player): boolean {
-		return EDITOR_DEVELOPER_MODE || IsPlayerObserver(p);
+		return EDITOR_DEVELOPER_MODE || IsPlayerObserver(p) || this.localCanUseAllyCameras;
 	}
 
 	private canSee(viewer: player, target: player): boolean {
 		// Developer mode shows your own camera too, so the overlay can be tested in singleplayer.
 		if (EDITOR_DEVELOPER_MODE) return true;
+		if (viewer === target) return false;
 
-		return viewer !== target;
+		// Eliminated players stop syncing, so their marker would just sit frozen at the last position
+		const targetPlayer = PlayerManager.getInstance().players.get(target);
+		if (targetPlayer && !targetPlayer.status.isActive()) return false;
+
+		if (IsPlayerObserver(viewer)) return true;
+
+		// Players only ever see their allies, never enemies or observers
+		return targetPlayer !== undefined && IsPlayerAlly(viewer, target);
 	}
 
 	/** Must only be called from synced code, so every client creates the same text tag. */

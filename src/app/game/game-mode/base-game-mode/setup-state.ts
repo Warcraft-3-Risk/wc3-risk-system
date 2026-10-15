@@ -14,6 +14,8 @@ import { TreeManager } from '../../services/tree-service';
 import { ReplayManager } from 'src/app/statistics/replay-manager';
 import { CountdownMessage } from '../../../utils/messages';
 import { HexColors } from '../../../utils/hex-colors';
+import PlayerCameraPositionManager from 'src/app/managers/player-camera-position-manager';
+import { refreshCameraPositionButtons } from 'src/app/ui/camera-position-button';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -47,6 +49,10 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 
 		SettingsContext.getInstance().applyStrategy('Promode');
 		SettingsContext.getInstance().applyStrategy('Diplomacy');
+
+		// Alliances are set now, so decide whether ally cameras are available this match (team games only)
+		PlayerCameraPositionManager.getInstance().refreshAllyCameraEligibility();
+		refreshCameraPositionButtons();
 
 		// Setting up the scoreboard
 		if (SettingsContext.getInstance().isFFA() || GlobalGameData.matchPlayers.length <= 2) {

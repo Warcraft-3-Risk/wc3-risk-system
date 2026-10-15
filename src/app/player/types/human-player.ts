@@ -8,7 +8,8 @@ export class HumanPlayer extends ActivePlayer {
 		super(player);
 	}
 
-	onKill(victim: player, unit: unit, isPlayerCombat: boolean): void {
+	// pointValue and unitTypeKey are computed once by the death event and shared by onKill/onDeath
+	onKill(victim: player, unit: unit, isPlayerCombat: boolean, pointValue: number, unitTypeKey: string): void {
 		const killer: player = this.getPlayer();
 
 		if (!this.status.isAlive() && !this.status.isNomad()) return;
@@ -17,14 +18,17 @@ export class HumanPlayer extends ActivePlayer {
 			return;
 		}
 		if (IsPlayerAlly(victim, killer)) return;
-		const val: number = GetUnitPointValue(unit);
+		const val: number = pointValue;
 		const kdData = this.trackedData.killsDeaths;
-		kdData.get(killer).killValue += val;
-		kdData.get(victim).killValue += val;
-		kdData.get(`${GetUnitTypeId(unit)}`).killValue += val;
-		kdData.get(killer).kills++;
-		kdData.get(victim).kills++;
-		kdData.get(`${GetUnitTypeId(unit)}`).kills++;
+		const killerKD = kdData.get(killer);
+		const victimKD = kdData.get(victim);
+		const unitTypeKD = kdData.get(unitTypeKey);
+		killerKD.killValue += val;
+		victimKD.killValue += val;
+		unitTypeKD.killValue += val;
+		killerKD.kills++;
+		victimKD.kills++;
+		unitTypeKD.kills++;
 		const bounty = this.trackedData.bounty.add(val);
 
 		if (bounty > 0) {
@@ -39,7 +43,7 @@ export class HumanPlayer extends ActivePlayer {
 		}
 	}
 
-	onDeath(killer: player, unit: unit, isPlayerCombat: boolean): void {
+	onDeath(killer: player, unit: unit, isPlayerCombat: boolean, pointValue: number, unitTypeKey: string): void {
 		this.trackedData.units.delete(unit);
 
 		if(isPlayerCombat) {
@@ -49,7 +53,7 @@ export class HumanPlayer extends ActivePlayer {
 		if (!this.status.isAlive() && !this.status.isNomad()) return;
 
 		const victim: player = this.getPlayer();
-		const val: number = GetUnitPointValue(unit);
+		const val: number = pointValue;
 
 		// For denies (killing own units), don't track as kill/death or add to fight bonus
 		if (victim == killer) {
@@ -60,13 +64,17 @@ export class HumanPlayer extends ActivePlayer {
 
 		const kdData = this.trackedData.killsDeaths;
 
-		kdData.get(killer).deathValue += val;
-		kdData.get(victim).deathValue += val;
-		kdData.get(`${GetUnitTypeId(unit)}`).deathValue += val;
+		const killerKD = kdData.get(killer);
+		const victimKD = kdData.get(victim);
+		const unitTypeKD = kdData.get(unitTypeKey);
 
-		kdData.get(killer).deaths++;
-		kdData.get(victim).deaths++;
-		kdData.get(`${GetUnitTypeId(unit)}`).deaths++;
+		killerKD.deathValue += val;
+		victimKD.deathValue += val;
+		unitTypeKD.deathValue += val;
+
+		killerKD.deaths++;
+		victimKD.deaths++;
+		unitTypeKD.deaths++;
 
 		if (isPlayerCombat) {
 			this.trackedData.lastCombat =

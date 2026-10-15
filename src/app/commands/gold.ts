@@ -1,12 +1,12 @@
 import { GlobalGameData } from '../game/state/global-game-state';
 import { ChatManager } from '../managers/chat-manager';
 import { NameManager } from '../managers/names/name-manager';
-import { PlayerManager } from '../player/player-manager';
 import { SettingsContext } from '../settings/settings-context';
 import { TeamManager } from '../teams/team-manager';
 import { HexColors } from '../utils/hex-colors';
 import { ErrorMsg } from '../utils/messages';
 import { isNonEmptySubstring } from '../utils/utils';
+import { isSingleplayer } from '../utils/singleplayer';
 
 // Seconds a pending gold request stays open before it expires on its own.
 const GOLD_REQUEST_DURATION: number = 10;
@@ -72,10 +72,6 @@ function getTeammateCount(requester: player): number {
 
 function isTeamMode(): boolean {
 	return !SettingsContext.getInstance().isFFA();
-}
-
-function isSingleplayer(): boolean {
-	return PlayerManager.getInstance().getHumanPlayersCount() === 1;
 }
 
 export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) {
