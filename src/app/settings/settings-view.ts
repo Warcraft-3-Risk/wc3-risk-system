@@ -143,9 +143,16 @@ export class SettingsView {
 		TriggerAddCondition(
 			t,
 			Condition(() => {
-				const frameValue: number = R2I(BlzGetTriggerFrameValue());
+				let frameValue: number = R2I(BlzGetTriggerFrameValue());
+				const settings = SettingsContext.getInstance();
 
-				SettingsContext.getInstance().getSettings().Diplomacy.option = frameValue;
+				// Promode only allows Lobby Teams (1) or Lobby Teams (Shared) (2), anything else falls back to Shared
+				if ((settings.isPromode() || settings.isChaosPromode()) && frameValue !== 1 && frameValue !== 2) {
+					frameValue = 2;
+					BlzFrameSetValue(BlzGetFrameByName('DiplomacyPopup', 0), frameValue);
+				}
+
+				settings.getSettings().Diplomacy.option = frameValue;
 				this.colorizeDiplomacyText(frameValue);
 			})
 		);
@@ -200,8 +207,9 @@ export class SettingsView {
 
 				SettingsContext.getInstance().getSettings().Promode = frameValue;
 
-				// ProMode On (1), Equalized (2), or Chaos (3): lock other settings
-				if (frameValue === 1 || frameValue === 2 || frameValue === 3) {
+				// ProMode On (1) or Chaos (2): lock other settings. Diplomacy stays changeable between
+				// Lobby Teams and Lobby Teams (Shared), with Shared preselected.
+				if (frameValue === 1 || frameValue === 2) {
 					SettingsContext.getInstance().getSettings().GameType = 0;
 					SettingsContext.getInstance().getSettings().Fog = 1;
 					SettingsContext.getInstance().getSettings().Diplomacy.option = 2;
@@ -212,7 +220,7 @@ export class SettingsView {
 					BlzFrameSetValue(fogFrame, 1);
 					BlzFrameSetEnable(fogFrame, false);
 					BlzFrameSetValue(diploFrame, 2);
-					BlzFrameSetEnable(diploFrame, false);
+					BlzFrameSetEnable(diploFrame, true);
 					BlzFrameSetValue(overtimeFrame, 3);
 					BlzFrameSetEnable(overtimeFrame, false);
 				} else {

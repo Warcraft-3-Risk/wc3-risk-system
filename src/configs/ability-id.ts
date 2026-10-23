@@ -8,6 +8,8 @@ export const ABILITY_ID = {
 	BERSERK: FourCC('a005'),
 	//City Ability
 	SWAP: FourCC('a030'),
+	//Unit ability for Lobby Teams without shared control: swap the casting unit into an own or allied city
+	TEAM_SWAP: FourCC('A00A'),
 	//Spawner Abilities
 	SPWN_3000: FourCC('a031'),
 	SPWN_6000: FourCC('a032'),

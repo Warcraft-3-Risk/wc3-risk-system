@@ -16,6 +16,7 @@ import { CountdownMessage } from '../../../utils/messages';
 import { HexColors } from '../../../utils/hex-colors';
 import PlayerCameraPositionManager from 'src/app/managers/player-camera-position-manager';
 import { refreshCameraPositionButtons } from 'src/app/ui/camera-position-button';
+import { syncTeamSwapAbility } from 'src/app/city/team-swap';
 
 export class SetupState<T extends StateData> extends BaseState<T> {
 	onEnterState() {
@@ -42,13 +43,17 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		// Every promode variant plays a series, so it needs a board that persists between matches
 		const settings = SettingsContext.getInstance();
 
-		if (settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode()) {
+		if (settings.isPromode() || settings.isChaosPromode()) {
 			ScoreboardManager.getInstance().sessionSetup([...GlobalGameData.matchPlayers]);
 			ScoreboardManager.getInstance().hideSessionBoard();
 		}
 
 		SettingsContext.getInstance().applyStrategy('Promode');
 		SettingsContext.getInstance().applyStrategy('Diplomacy');
+
+		// Units get the team swap ability only in Lobby Teams without shared control.
+		// Called here rather than from DiplomacyStrategy, which would create a circular import with SettingsContext.
+		syncTeamSwapAbility();
 
 		// Alliances are set now, so decide whether ally cameras are available this match (team games only)
 		PlayerCameraPositionManager.getInstance().refreshAllyCameraEligibility();

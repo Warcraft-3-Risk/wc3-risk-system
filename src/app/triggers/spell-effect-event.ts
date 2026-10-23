@@ -1,5 +1,6 @@
 import { ABILITY_ID } from 'src/configs/ability-id';
 import { UnitToCity } from '../city/city-map';
+import { onTeamSwapCast } from '../city/team-swap';
 import { PlayerManager } from '../player/player-manager';
 import { ActivePlayer } from '../player/types/active-player';
 import { EventEmitter } from '../utils/events/event-emitter';
@@ -32,6 +33,9 @@ function onSpellEffect(trigger: trigger) {
 					EventEmitter.getInstance().emit(EVENT_ON_SWAP_GUARD, GetSpellTargetUnit(), UnitToCity.get(GetTriggerUnit()), player);
 					AnnounceOnLocationObserverOnly('Swapped', x + 140, y + 20, 1.0, 2.0, GetTriggerPlayer());
 					// AnnounceOnUnitObserverOnly('Swaped', GetSpellTargetUnit(), 2.0, 3.0);
+					break;
+				case ABILITY_ID.TEAM_SWAP:
+					onTeamSwapCast(GetTriggerUnit(), GetSpellTargetUnit(), GetTriggerPlayer());
 					break;
 				// case ABILITY_ID.LOW_HEALTH_DEFENDER:
 				// 	player.options.health = false;

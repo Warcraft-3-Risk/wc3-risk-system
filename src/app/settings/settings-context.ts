@@ -83,19 +83,11 @@ export class SettingsContext {
 	}
 
 	/**
-	 * Checks if the game setting is equalized promode
-	 * @returns true if game is "equalized promode"
-	 */
-	public isEqualizedPromode(): boolean {
-		return this.settings.Promode == 2;
-	}
-
-	/**
 	 * Checks if the game setting is chaos promode
 	 * @returns true if game is "chaos promode"
 	 */
 	public isChaosPromode(): boolean {
-		return this.settings.Promode == 3;
+		return this.settings.Promode == 2;
 	}
 
 	/**
@@ -128,6 +120,23 @@ export class SettingsContext {
 	 */
 	public isFFA(): boolean {
 		return this.settings.Diplomacy.option == 0;
+	}
+
+	/**
+	 * Checks if the game setting for Diplomacy is set to Lobby Teams without shared control.
+	 * Allies play like FFA there - no shared units and no gold sharing.
+	 * @returns true if gold sharing between allies is disabled
+	 */
+	public isGoldSharingDisabled(): boolean {
+		return this.settings.Diplomacy.option == 1;
+	}
+
+	/**
+	 * Checks if the game setting for Diplomacy is set to Lobby Teams without shared control.
+	 * @returns true if teammates cannot control each other's units
+	 */
+	public isSharedControlDisabled(): boolean {
+		return this.settings.Diplomacy.option == 1;
 	}
 
 	/**

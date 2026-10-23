@@ -230,7 +230,6 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			Frame "MENU" "PromodePopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
 				MenuItem "Off",     -2,
 				MenuItem "On",     -2,
-				MenuItem "Equalized",     -2,
 				MenuItem "Chaos",     -2,
 			}
 		}

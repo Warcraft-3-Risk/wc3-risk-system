@@ -1,4 +1,33 @@
+import { HexColors } from '../utils/hex-colors';
 import { MAP_VERSION, W3C_MODE_ENABLED } from '../utils/map-info';
+
+// Horizontal center of the mapInfo slot, measured from the right edge of the supply text
+const MAP_INFO_X: number = 0.05;
+// Distance from the slot center to the outer edge of each team label
+const TEAM_SCORE_LEFT_WIDTH: number = 0.032;
+const TEAM_SCORE_RIGHT_WIDTH: number = 0.035;
+// Distance from the slot center to the inner edge of each team's score
+const TEAM_SCORE_GAP: number = 0.005;
+
+function createMapInfoPiece(name: string, point: framepointtype, x: number, horizontalAlign: textaligntype): void {
+	const frame: framehandle = BlzCreateFrameByType('TEXT', name, BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 'EscMenuLabelTextTemplate', 0);
+	BlzFrameSetPoint(frame, point, BlzGetFrameByName('ResourceBarSupplyText', 0), FRAMEPOINT_RIGHT, x, 0.0);
+	BlzFrameSetTextAlignment(frame, TEXT_JUSTIFY_CENTER, horizontalAlign);
+	BlzFrameSetLevel(frame, 2);
+	BlzFrameSetText(frame, '');
+}
+
+/**
+ * Shows a team score in the mapInfo slot as "<leftLabel> <leftScore> - <rightScore> <rightLabel>".
+ * The labels keep the default text color and sit on the slot edges, the scores are white around a centered dash.
+ */
+export function SetTeamScoreText(leftLabel: string, leftScore: number, rightScore: number, rightLabel: string): void {
+	BlzFrameSetText(BlzGetFrameByName('mapInfo', 0), `${HexColors.WHITE}-|r`);
+	BlzFrameSetText(BlzGetFrameByName('mapInfoLeftLabel', 0), leftLabel);
+	BlzFrameSetText(BlzGetFrameByName('mapInfoLeftScore', 0), `${HexColors.WHITE}${leftScore}|r`);
+	BlzFrameSetText(BlzGetFrameByName('mapInfoRightScore', 0), `${HexColors.WHITE}${rightScore}|r`);
+	BlzFrameSetText(BlzGetFrameByName('mapInfoRightLabel', 0), rightLabel);
+}
 
 /**
  * Sets up the console UI for the game.
@@ -26,10 +55,18 @@ export function SetConsoleUI() {
 		'EscMenuLabelTextTemplate',
 		0
 	);
-	BlzFrameSetPoint(mapInfo, FRAMEPOINT_LEFT, BlzGetFrameByName('ResourceBarSupplyText', 0), FRAMEPOINT_RIGHT, 0.035, 0.0);
-	BlzFrameSetTextAlignment(mapInfo, TEXT_JUSTIFY_CENTER, TEXT_JUSTIFY_RIGHT);
+	// Anchored by its center so longer text (W3C/team promode score) stays centered instead of growing to the right
+	BlzFrameSetPoint(mapInfo, FRAMEPOINT_CENTER, BlzGetFrameByName('ResourceBarSupplyText', 0), FRAMEPOINT_RIGHT, MAP_INFO_X, 0.0);
+	BlzFrameSetTextAlignment(mapInfo, TEXT_JUSTIFY_CENTER, TEXT_JUSTIFY_CENTER);
 	BlzFrameSetLevel(mapInfo, 2);
 	BlzFrameSetText(mapInfo, `v${MAP_VERSION}`);
+
+	// Team score pieces, empty until SetTeamScoreText fills them. Each piece has its own anchor so
+	// the labels stay on the slot edges and the dash stays centered whatever the score digits are.
+	createMapInfoPiece('mapInfoLeftLabel', FRAMEPOINT_LEFT, MAP_INFO_X - TEAM_SCORE_LEFT_WIDTH, TEXT_JUSTIFY_LEFT);
+	createMapInfoPiece('mapInfoLeftScore', FRAMEPOINT_RIGHT, MAP_INFO_X - TEAM_SCORE_GAP, TEXT_JUSTIFY_RIGHT);
+	createMapInfoPiece('mapInfoRightScore', FRAMEPOINT_LEFT, MAP_INFO_X + TEAM_SCORE_GAP, TEXT_JUSTIFY_LEFT);
+	createMapInfoPiece('mapInfoRightLabel', FRAMEPOINT_RIGHT, MAP_INFO_X + TEAM_SCORE_RIGHT_WIDTH, TEXT_JUSTIFY_RIGHT);
 
 	const newTitle: string = 'discord.gg/wc3risk';
 	const newResourceHeader: string = 'www.youtube.com/@riskreforged';

@@ -19,7 +19,7 @@ interface CityIconRecord {
  * Draws the minimap ourselves: cities, moving units and spawner camouflage are rendered as frames
  * over the native minimap, and their native minimap icons are hidden.
  *
- * Only used in the promode modes (ProMode, Chaos, Equalized). It stays completely inert until
+ * Only used in the promode modes (ProMode, Chaos). It stays completely inert until
  * {@link activate} is called from a promode state - every public entry point returns immediately
  * while inactive, so other modes keep the native minimap untouched and no frames, timers or
  * vertex colors are ever created for them.
@@ -45,6 +45,9 @@ export class MinimapIconManager {
 	private delayedTrackQueue: unit[] = [];
 	private delayedTrackTimer: timer;
 	private delayedTrackTimerRunning: boolean = false;
+
+	// Players that turned on colorblind mode (-colorblind): allies show yellow instead of teal
+	private colorblindPlayers: Set<player> = new Set();
 
 	// Global color context, used to invalidate every unit's cached color when it changes
 	private lastGlobalColorMode: number | undefined;
@@ -83,6 +86,20 @@ export class MinimapIconManager {
 
 	public isEnabled(): boolean {
 		return this.isActive;
+	}
+
+	/**
+	 * Toggles colorblind mode for a player. The icons recolor on the next update tick.
+	 * @returns true if colorblind mode is now on
+	 */
+	public toggleColorblind(player: player): boolean {
+		if (this.colorblindPlayers.has(player)) {
+			this.colorblindPlayers.delete(player);
+			return false;
+		}
+
+		this.colorblindPlayers.add(player);
+		return true;
 	}
 
 	/**
@@ -413,15 +430,17 @@ export class MinimapIconManager {
 	private updateAllIcons(): void {
 		const localPlayer = GetLocalPlayer();
 		const allyColorMode = GetAllyColorFilterState();
+		// Colorblind mode is part of the color context, so toggling it recolors every icon
+		const colorContext = this.colorblindPlayers.has(localPlayer) ? allyColorMode + 100 : allyColorMode;
 
 		// If the global color context changed, invalidate every unit's cached owner to force a recolor
-		if (this.lastGlobalColorMode !== allyColorMode || this.lastGlobalPovPlayer !== localPlayer) {
+		if (this.lastGlobalColorMode !== colorContext || this.lastGlobalPovPlayer !== localPlayer) {
 			const invalidPlayer = Player(25);
 			for (let j = 0; j < this.trackedList.trackedRawOwnerList.length; j++) {
 				this.trackedList.trackedRawOwnerList[j] = invalidPlayer;
 			}
 
-			this.lastGlobalColorMode = allyColorMode;
+			this.lastGlobalColorMode = colorContext;
 			this.lastGlobalPovPlayer = localPlayer;
 		}
 
@@ -450,7 +469,7 @@ export class MinimapIconManager {
 				record.lastVisible !== isVisible ||
 				record.lastOwner !== currentOwner ||
 				record.lastLastSeenOwner !== lastSeenOwner ||
-				record.lastColorMode !== allyColorMode
+				record.lastColorMode !== colorContext
 			) {
 				record.lastVisible = isVisible;
 				record.lastOwner = currentOwner;
@@ -458,7 +477,7 @@ export class MinimapIconManager {
 				this.updateCityIconColor(record.iconFrame, city, isVisible, localPlayer, allyColorMode);
 
 				record.lastLastSeenOwner = isVisible ? undefined : this.lastSeenOwners.get(city);
-				record.lastColorMode = allyColorMode;
+				record.lastColorMode = colorContext;
 			}
 		}
 
@@ -556,7 +575,7 @@ export class MinimapIconManager {
 
 	/**
 	 * Picks the icon texture for an owner, following the native minimap conventions: the local
-	 * player is white, and with the ally color filter on, allies are teal and enemies red.
+	 * player is white, and with the ally color filter on, allies are teal (yellow in colorblind mode) and enemies red.
 	 */
 	private getOwnerTexture(owner: player, localPlayer: player, allyColorMode: number): string {
 		if (owner === localPlayer) return this.COLOR_TEXTURES[99];
@@ -565,7 +584,7 @@ export class MinimapIconManager {
 		if (GetPlayerId(owner) >= 24) return this.COLOR_TEXTURES[90];
 
 		if (allyColorMode > 0) {
-			if (IsPlayerAlly(owner, localPlayer)) return this.COLOR_TEXTURES[2];
+			if (IsPlayerAlly(owner, localPlayer)) return this.COLOR_TEXTURES[this.colorblindPlayers.has(localPlayer) ? 4 : 2];
 			if (IsPlayerEnemy(owner, localPlayer)) return this.COLOR_TEXTURES[0];
 			return this.COLOR_TEXTURES[90];
 		}

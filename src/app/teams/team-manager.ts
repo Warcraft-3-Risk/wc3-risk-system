@@ -83,9 +83,25 @@ export class TeamManager {
 	}
 
 	public disableSharedControl() {
+		this.teams.forEach((team) => {
+			team.allyTeam(false);
+		});
+
 		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
 			BlzFrameSetEnable(BlzGetFrameByName('UnitsCheckBox', i), false);
 			BlzFrameSetVisible(BlzGetFrameByName('UnitsCheckBox', i), false);
+		}
+	}
+
+	// Blocks the ally menu's built-in gold trading and hides its gold column
+	public disableGoldTrading() {
+		SetMapFlag(MAP_LOCK_RESOURCE_TRADING, true);
+
+		BlzFrameSetVisible(BlzGetFrameByName('GoldHeader', 0), false);
+
+		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
+			BlzFrameSetVisible(BlzGetFrameByName('GoldBackdrop', i), false);
+			BlzFrameSetVisible(BlzGetFrameByName('GoldText', i), false);
 		}
 	}
 

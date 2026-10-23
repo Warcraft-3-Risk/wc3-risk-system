@@ -17,6 +17,7 @@ export function HelpCommand(chatManager: ChatManager) {
 				description: `Mutes a player for 300 seconds if they are dead.\n${HexColors.RED}Example: -mute blue|r`,
 			},
 			{ cmd: '-ng', description: 'Restarts the game if it is over' },
+			{ cmd: '-colorblind', description: 'Shows teammates yellow instead of teal on the promode minimap' },
 			{ cmd: '-gold playerName/color #', description: `Sends gold to the specified ally.\n${HexColors.RED}Example: -gold red 5|r` },
 			{ cmd: '-gold #', description: `Asks your team for gold. ${HexColors.TANGERINE}-y|r accepts, ${HexColors.TANGERINE}-n|r dismisses` },
 		];

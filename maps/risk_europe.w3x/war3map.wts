@@ -1493,3 +1493,27 @@ STRING 7546
 |cFFFF8000DPS:|r|cFFFFFFFF 35.56 |r|cFFFF8000Type:|r|cFFFFFFFF Siege|n|r|cFFFF8000Range:|r|cFFFFFFFF 500|n|n|r|cFFFF8000Hitpoints:|r|cFFFFFFFF 2800 |r|cFFFF8000Hp Regen:|r|cFFFFFFFF 2.5|n|r|cFFFF8000Armor:|r|cFFFFFFFF 0 |r|cFFFF8000Type:|r|cFFFFFFFF Normal|n|r|cFFFF8000Movespeed:|r|cFFFFFFFF 260|n|n|r|cFF3BA0CBAbilties:|r|cFFFFFFFF Splash Damage (90 Range)|n|r|cFFFF0000*Cannot attack trees|r
 }
 
+STRING 7547
+// Abilities: A00A (Swap Defender), Name (Name)
+{
+Swap Defender
+}
+
+STRING 7548
+// Abilities: A00A (Swap Defender), Tip (Tooltip - Normal)
+{
+Swap Defender
+}
+
+STRING 7549
+// Abilities: A00A (Swap Defender), Ubertip (Tooltip - Normal - Extended)
+{
+The selected unit will be set as the new defender|n|nThis can be used to give an ally control of the base
+}
+
+STRING 7550
+// Abilities: A00A (Swap Defender), Hotkey (Hotkey - Normal)
+{
+V
+}
+

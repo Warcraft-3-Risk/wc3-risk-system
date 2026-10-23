@@ -2,7 +2,7 @@ import { ActivePlayer } from '../player/types/active-player';
 import { SettingsContext } from '../settings/settings-context';
 
 /**
- * In team promode (ProMode, Chaos or Equalized with teams) a dead player - e.g. one who forfeited
+ * In team promode (ProMode or Chaos with teams) a dead player - e.g. one who forfeited
  * with -ff - keeps a normal economy: they still earn income and gold, and their income and gold
  * columns keep working. They just cannot control their own units anymore.
  *
@@ -15,7 +15,7 @@ export function keepsEconomyWhenDead(player: ActivePlayer): boolean {
 
 	if (settings.isFFA()) return false;
 
-	return settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode();
+	return settings.isPromode() || settings.isChaosPromode();
 }
 
 /**

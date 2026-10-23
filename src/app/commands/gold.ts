@@ -94,6 +94,7 @@ export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) 
 		}
 
 		if (!isTeamMode()) return;
+		if (SettingsContext.getInstance().isGoldSharingDisabled()) return ErrorMsg(player, 'Gold sharing is disabled in this mode!');
 
 		// "-g <amount>" with a plain number asks the team for gold.
 		// A non-numeric argument is still treated as a player name, so "-g <name>" keeps sending all gold.
@@ -140,6 +141,7 @@ export function GoldCommand(chatManager: ChatManager, nameManager: NameManager) 
 	chatManager.addCmd(['-y'], () => {
 		if (GlobalGameData.matchState != 'inProgress') return;
 		if (!isTeamMode() || isSingleplayer()) return;
+		if (SettingsContext.getInstance().isGoldSharingDisabled()) return;
 
 		const responder: player = GetTriggerPlayer();
 		const request = getTeammateRequest(responder);

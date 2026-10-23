@@ -52,6 +52,7 @@ export class DiplomacyStrategy implements SettingsStrategy {
 
 	private handleLobbyTeams(): void {
 		TeamManager.getInstance().disableSharedControl();
+		TeamManager.getInstance().disableGoldTrading();
 
 		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, true);
 	}

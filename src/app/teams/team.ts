@@ -108,6 +108,11 @@ export class Team {
 	}
 
 	public giveTeamFullControl() {
+		this.allyTeam(true);
+	}
+
+	// Allies every member with each other. Without shared control they keep vision and alliance, but cannot control each other's units.
+	public allyTeam(sharedControl: boolean) {
 		for (let i = 0; i < this.teamMembers.length; i++) {
 			const playerA = this.teamMembers[i].getPlayer();
 
@@ -122,8 +127,8 @@ export class Team {
 				SetPlayerAlliance(playerA, playerB, ALLIANCE_SHARED_XP, true);
 				SetPlayerAlliance(playerA, playerB, ALLIANCE_SHARED_SPELLS, true);
 				SetPlayerAlliance(playerA, playerB, ALLIANCE_SHARED_VISION, true);
-				SetPlayerAlliance(playerA, playerB, ALLIANCE_SHARED_CONTROL, true);
-				SetPlayerAlliance(playerA, playerB, ALLIANCE_SHARED_ADVANCED_CONTROL, true);
+				SetPlayerAlliance(playerA, playerB, ALLIANCE_SHARED_CONTROL, sharedControl);
+				SetPlayerAlliance(playerA, playerB, ALLIANCE_SHARED_ADVANCED_CONTROL, sharedControl);
 			}
 		}
 	}

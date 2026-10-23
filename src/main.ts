@@ -13,6 +13,7 @@ import { OwnershipChangeEvent } from './app/triggers/ownership-change-event';
 import { EnterRegionEvent } from './app/triggers/enter-region-event';
 import { LeaveRegionEvent } from './app/triggers/leave-region-event';
 import { SpellEffectEvent } from './app/triggers/spell-effect-event';
+import { TeamSwapEnterMapEvent } from './app/city/team-swap';
 import { PlayerLeaveEvent } from './app/triggers/player-leave-event';
 import { UnitDeathEvent } from './app/triggers/unit_death/unit-death-event';
 import { UnitTrainedEvent } from './app/triggers/unit-trained-event';
@@ -97,6 +98,7 @@ function tsMain() {
 		OwnershipChangeEvent();
 		PlayerLeaveEvent();
 		SpellEffectEvent();
+		TeamSwapEnterMapEvent();
 		UnitIssueOrderEvent();
 		AntiSpam();
 		KeyEvents();

@@ -125,11 +125,11 @@ export abstract class City implements Resetable, Ownable {
 
 	/**
 	 * A handler method for the casting event.
-	 * It changes the city's guard to the unit targeted by the spell,
-	 * and repositions the old guard to the location of the targeted unit.
+	 * It changes the city's guard to the given unit, and repositions the old guard to that unit's location.
+	 * The unit is passed in rather than read from the spell target, because the team swap ability
+	 * is cast by the new guard on the barracks.
 	 */
-	protected castHandler(targetingUnit: unit): void {
-		const targUnit: unit = GetSpellTargetUnit();
+	protected castHandler(targUnit: unit): void {
 		const x: number = GetUnitX(targUnit);
 		const y: number = GetUnitY(targUnit);
 		const oldGuard: unit = this.guard.unit;
