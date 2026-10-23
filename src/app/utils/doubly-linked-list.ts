@@ -54,14 +54,6 @@ export class DoublyLinkedList<T> {
 		return tmp!.value;
 	}
 
-	public getFirst(): T | null {
-		return this.head ? this.head.value : null;
-	}
-
-	public getLast(): T | null {
-		return this.tail ? this.tail.value : null;
-	}
-
 	public addLast(value: T): void {
 		const newNode = new DoublyLinkedListNode(value);
 		if (this.isEmpty()) {
@@ -125,24 +117,6 @@ export class DoublyLinkedList<T> {
 			if (this.head) {
 				this.head = this.head.next;
 				this.head!.prev = null;
-			}
-		}
-		this.size--;
-		return removedValue;
-	}
-
-	public removeLast(): T | null {
-		if (this.isEmpty()) {
-			return null;
-		}
-		const removedValue = this.tail!.value;
-		if (this.size === 1) {
-			this.head = null;
-			this.tail = null;
-		} else {
-			if (this.tail) {
-				this.tail = this.tail.prev;
-				this.tail!.next = null;
 			}
 		}
 		this.size--;

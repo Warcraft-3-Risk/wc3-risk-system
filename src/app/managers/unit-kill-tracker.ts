@@ -64,16 +64,6 @@ export class UnitKillTracker {
 	}
 
 	/**
-	 * Gets the accumulated kill value for a specific unit.
-	 * @param unit - The unit to query.
-	 * @returns The total point value of units killed, or 0 if the unit has no kills.
-	 */
-	public getKillValue(unit: unit): number {
-		if (!unit) return 0;
-		return this.killValues.get(unit) || 0;
-	}
-
-	/**
 	 * Removes a unit from tracking (call when unit dies or is removed).
 	 * @param unit - The unit to stop tracking.
 	 */

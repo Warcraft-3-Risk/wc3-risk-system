@@ -47,8 +47,6 @@ export class LandCity extends City {
 	 * @param unit - The trained unit.
 	 */
 	public onUnitTrain(unit: unit): void {
-		//TODO remove the defaultguardtype dependancy here.
-		//Maybe just run player options instead
 		if (IsUnitMelee(this.guard.unit) && GetUnitTypeId(unit) == DefaultGuardType) {
 			SetUnitPosition(unit, this.guard.defaultX, this.guard.defaultY);
 			UnitToCity.delete(this.guard.unit);

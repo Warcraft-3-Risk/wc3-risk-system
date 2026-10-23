@@ -119,10 +119,6 @@ export class CountryCreate {
     addCity(city: CityCreate): void {
         this.cities.push(city);
     }
-
-    setSpawner(coords: Coordinates): void {
-        this.spawner = coords;
-    }
 }
 
 

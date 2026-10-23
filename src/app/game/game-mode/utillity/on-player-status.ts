@@ -12,7 +12,7 @@ import { PlayLocalSound } from 'src/app/utils/utils';
 import { CHAOS_STARTING_INCOME, NOMAD_DURATION, STARTING_INCOME, STFU_DURATION } from 'src/configs/game-settings';
 import { SettingsContext } from 'src/app/settings/settings-context';
 import { Quests } from '../../../quests/quests';
-import { keepsEconomyWhenDead } from 'src/app/utils/dead-player-economy';
+import { keepsEconomyWhenEliminated } from 'src/app/utils/dead-player-economy';
 import { TeamManager } from 'src/app/teams/team-manager';
 
 export function onPlayerAliveHandle(player: ActivePlayer): void {
@@ -57,8 +57,8 @@ export function onPlayerDeadHandle(player: ActivePlayer, forfeit?: boolean): voi
 	player.setEndData(SettingsContext.getInstance().isFFA());
 	revealTeamNamesIfEliminated(player);
 
-	// In team promode a dead player keeps their real income - see keepsEconomyWhenDead()
-	if (!keepsEconomyWhenDead(player)) {
+	// In team games a dead player keeps their real income - see keepsEconomyWhenEliminated()
+	if (!keepsEconomyWhenEliminated(player)) {
 		player.trackedData.income.income = 1;
 	}
 
@@ -172,7 +172,11 @@ export function onPlayerLeftHandle(player: ActivePlayer): void {
 	player.status.status = PLAYER_STATUS.LEFT;
 	player.setEndData(SettingsContext.getInstance().isFFA());
 	revealTeamNamesIfEliminated(player);
-	player.trackedData.income.income = 0;
+
+	// In team games a player who left keeps their real income - see keepsEconomyWhenEliminated()
+	if (!keepsEconomyWhenEliminated(player)) {
+		player.trackedData.income.income = 0;
+	}
 
 	// Build display name with optional rating (local player check for display customization)
 	const ratingManager = RatingManager.getInstance();

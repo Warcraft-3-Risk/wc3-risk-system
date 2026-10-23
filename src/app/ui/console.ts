@@ -1,4 +1,65 @@
+import { HexColors } from '../utils/hex-colors';
 import { MAP_VERSION, W3C_MODE_ENABLED } from '../utils/map-info';
+
+// Horizontal center of the mapInfo slot, measured from the right edge of the supply text
+const MAP_INFO_X: number = 0.05;
+// Distance from the slot center to the outer edge of each team label
+const TEAM_SCORE_LEFT_WIDTH: number = 0.032;
+const TEAM_SCORE_RIGHT_WIDTH: number = 0.035;
+// Distance from the slot center to the inner edge of each score
+const TEAM_SCORE_GAP: number = 0.005;
+
+// Score pieces, only created once a promode session shows a score, so other modes never create them
+let scorePieces: framehandle[] | undefined;
+
+function createMapInfoPiece(point: framepointtype, x: number, horizontalAlign: textaligntype): framehandle {
+	const frame: framehandle = BlzCreateFrameByType('TEXT', '', BlzGetOriginFrame(ORIGIN_FRAME_GAME_UI, 0), 'EscMenuLabelTextTemplate', 0);
+	BlzFrameSetPoint(frame, point, BlzGetFrameByName('ResourceBarSupplyText', 0), FRAMEPOINT_RIGHT, x, 0.0);
+	BlzFrameSetTextAlignment(frame, TEXT_JUSTIFY_CENTER, horizontalAlign);
+	BlzFrameSetLevel(frame, 2);
+	BlzFrameSetText(frame, '');
+	return frame;
+}
+
+/**
+ * Turns the mapInfo slot into the score layout on first use. mapInfo is re-anchored by its center
+ * so it holds the dash, and each piece has its own anchor so the labels stay on the slot edges and
+ * the dash stays centered whatever the score digits are.
+ */
+function getScorePieces(): framehandle[] {
+	if (scorePieces) return scorePieces;
+
+	const mapInfo: framehandle = BlzGetFrameByName('mapInfo', 0);
+	BlzFrameClearAllPoints(mapInfo);
+	BlzFrameSetPoint(mapInfo, FRAMEPOINT_CENTER, BlzGetFrameByName('ResourceBarSupplyText', 0), FRAMEPOINT_RIGHT, MAP_INFO_X, 0.0);
+	BlzFrameSetTextAlignment(mapInfo, TEXT_JUSTIFY_CENTER, TEXT_JUSTIFY_CENTER);
+
+	scorePieces = [
+		mapInfo,
+		createMapInfoPiece(FRAMEPOINT_LEFT, MAP_INFO_X - TEAM_SCORE_LEFT_WIDTH, TEXT_JUSTIFY_LEFT),
+		createMapInfoPiece(FRAMEPOINT_RIGHT, MAP_INFO_X - TEAM_SCORE_GAP, TEXT_JUSTIFY_RIGHT),
+		createMapInfoPiece(FRAMEPOINT_LEFT, MAP_INFO_X + TEAM_SCORE_GAP, TEXT_JUSTIFY_LEFT),
+		createMapInfoPiece(FRAMEPOINT_RIGHT, MAP_INFO_X + TEAM_SCORE_RIGHT_WIDTH, TEXT_JUSTIFY_RIGHT),
+	];
+
+	return scorePieces;
+}
+
+/**
+ * Shows a series score in the mapInfo slot as "<leftLabel> <leftScore> - <rightScore> <rightLabel>".
+ * Scores come pre-colored so a 1v1 can tint them in the player colors. Labels are optional and
+ * sit on the slot edges, the scores sit around a centered dash.
+ * Must be called from synced code, the first call creates frames.
+ */
+export function SetScoreText(leftScore: string, rightScore: string, leftLabel: string = '', rightLabel: string = ''): void {
+	const [dash, leftLabelFrame, leftScoreFrame, rightScoreFrame, rightLabelFrame] = getScorePieces();
+
+	BlzFrameSetText(dash, `${HexColors.WHITE}-|r`);
+	BlzFrameSetText(leftLabelFrame, leftLabel);
+	BlzFrameSetText(leftScoreFrame, `${leftScore}|r`);
+	BlzFrameSetText(rightScoreFrame, `${rightScore}|r`);
+	BlzFrameSetText(rightLabelFrame, rightLabel);
+}
 
 /**
  * Sets up the console UI for the game.
@@ -153,7 +214,7 @@ export function AllyMenuFFASetup() {
 	tempText += '|n|cffffffff-advanced - Advanced gameplay tips and tricks';
 	tempText += '|n|cffffffff-cam #### - Set camera distance (1000 min, 8500 max)';
 	tempText += '|n|cffffffff-ff - Forfeit the game without leaving it';
-	tempText += '|n|cffffffff-ng - Restart the game when it is over';
+	tempText += '|n|cffffffff-ng - Restart the game when it is over (ProMode only)';
 	tempText += '|n|cffffffff-names - Display a list of alive/nomad players';
 	tempText += '|n|cffffffff-allies - Show your allies (team modes only)';
 	tempText += '|n|cffffffff-gold <player> <amount> - Send gold to allies (team modes)';

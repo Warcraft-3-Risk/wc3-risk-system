@@ -26,7 +26,6 @@ export class PlayerManager {
 
 	private _playerFromHandle: Map<player, ActivePlayer>;
 	private _playerControllerHandle: Map<player, mapcontrol>;
-	//TODO observers can just be "player" type. HOWEVER, this may come in handy later if i ever decide to implement obs that are actual players
 	private _observerFromHandle: Map<player, HumanPlayer>;
 	private _initialHumanPlayerCount: number = 0;
 
@@ -136,36 +135,12 @@ export class PlayerManager {
 		return activePlayers;
 	}
 
-	public activeToObs(player: player) {
-		this._observerFromHandle.set(player, this._playerFromHandle.get(player) as HumanPlayer);
-		this._playerFromHandle.delete(player);
-		SetPlayerState(player, PLAYER_STATE_OBSERVER, 1);
-	}
-
-	public obsToActive(player: player) {
-		this._playerFromHandle.set(player, this._observerFromHandle.get(player));
-		this._observerFromHandle.delete(player);
-		SetPlayerState(player, PLAYER_STATE_OBSERVER, 0);
-	}
-
 	public isActive(player: player) {
 		return this._playerFromHandle.has(player);
 	}
 
 	public getHumanPlayers(): ActivePlayer[] {
 		return Array.from(this._playerFromHandle.values()).filter((p: ActivePlayer) => GetPlayerController(p.getPlayer()) === MAP_CONTROL_USER);
-	}
-
-	/**
-	 * Get only human players (excludes AI/Computer players)
-	 * Used for P2P rating synchronization to exclude Computer players
-	 * @returns Array of human ActivePlayer objects
-	 */
-	public getHumanPlayersOnly(): ActivePlayer[] {
-		return Array.from(this._playerFromHandle.values()).filter((p: ActivePlayer) => {
-			const controller = GetPlayerController(p.getPlayer());
-			return controller === MAP_CONTROL_USER;
-		});
 	}
 
 	public getHumanPlayersCount(): number {
@@ -198,10 +173,6 @@ export class PlayerManager {
 
 	public get playerControllers(): Map<player, mapcontrol> {
 		return this._playerControllerHandle;
-	}
-
-	public setObserver(player: player) {
-		this._observerFromHandle.set(player, new HumanPlayer(player));
 	}
 
 	public get activePlayers(): Map<player, ActivePlayer> {

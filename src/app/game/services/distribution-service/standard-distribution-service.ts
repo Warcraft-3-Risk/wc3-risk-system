@@ -63,14 +63,6 @@ export class StandardDistributionService {
 
 				if (this.players.length() == 0) break;
 			}
-
-			//TODO
-			//Here I will check if each player has this.maxCitiesPerPlayer
-			//It is safe to assume no player has more at this point
-			//I can check the neutral cities to see if a players who need one
-			//can take one, and do it if so. repeat the process until they are all full
-			//There is some RARE edge cases where the player cannot get any of the neutral cities.
-			//I should handle that as well
 		} catch (error) {
 			print('Error in StandardDistro' + error);
 		}

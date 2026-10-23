@@ -1,4 +1,3 @@
-import { PlayerManager } from 'src/app/player/player-manager';
 import { SettingsStrategy } from './settings-strategy';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { FogManager } from 'src/app/managers/fog-manager';
@@ -43,13 +42,6 @@ export class FogStrategy implements SettingsStrategy {
 
 	public apply(): void {
 		const handler = this.strategyMap.get(this.fog);
-
-		// Setup fog tracking for players
-		const players = [...PlayerManager.getInstance().players.values()];
-
-		players.forEach((player) => {
-			FogManager.getInstance().add(player.getPlayer());
-		});
 
 		// Initialize fog for all players
 		SetTimeOfDayScale(0);

@@ -70,7 +70,6 @@ const errorMap: Map<player, timer> = new Map<player, timer>();
  * @param duration - The duration to display the message (default is 3 seconds).
  */
 
-//TODO refactor this to check if there is a timer already, if there is delete it before setting new timer
 export function ErrorMsg(player: player, msg: string, duration: number = 3) {
 	if (errorMap.has(player)) {
 		PauseTimer(errorMap.get(player));
@@ -93,7 +92,6 @@ export function ErrorMsg(player: player, msg: string, duration: number = 3) {
 
 const localMsgMap: Map<player, timer> = new Map<player, timer>();
 
-//TODO add support for multi message display, each message should have its own duration
 export function LocalMessage(player: player, msg: string, soundPath: string, duration: number = 3) {
 	if (localMsgMap.has(player)) {
 		PauseTimer(localMsgMap.get(player));

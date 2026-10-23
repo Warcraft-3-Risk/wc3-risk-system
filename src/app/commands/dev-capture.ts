@@ -9,6 +9,7 @@ import { HexColors } from '../utils/hex-colors';
 import { ErrorMsg } from '../utils/messages';
 import { GetRandomElementFromArray, NEUTRAL_HOSTILE, isNonEmptySubstring } from '../utils/utils';
 import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
+import { isSingleplayer } from '../utils/singleplayer';
 
 // Hard ceiling so a typo like "-dcap blue 999" cannot hand over the entire map in one go.
 const MAX_CITIES_PER_COMMAND: number = 10;
@@ -51,14 +52,15 @@ function getAnyPlayerByName(search: string, nameManager: NameManager): player[] 
  * income, scoreboard, country ownership and capture sounds all behave as if it were a real
  * capture.
  *
- * Testing aid only - the command is never registered unless EDITOR_DEVELOPER_MODE is on. It
+ * Testing aid only - the command is only registered in developer builds (EDITOR_DEVELOPER_MODE)
+ * or single-player games. It
  * exists to reproduce an enemy capture in a place the tester cannot see, which is otherwise
  * awkward to stage on your own.
  *
  * Usage: -dcap <player> [count]   e.g. "-dcap blue" or "-dcap blue 3"
  */
 export function DevCaptureCommand(chatManager: ChatManager, nameManager: NameManager) {
-	if (!EDITOR_DEVELOPER_MODE) return;
+	if (!EDITOR_DEVELOPER_MODE && !isSingleplayer()) return;
 
 	chatManager.addCmd(['-dcap', '-devcapture'], () => {
 		const sender: player = GetTriggerPlayer();

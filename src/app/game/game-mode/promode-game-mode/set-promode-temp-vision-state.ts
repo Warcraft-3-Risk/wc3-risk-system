@@ -19,7 +19,7 @@ export class SetPromodeTempVisionState<T extends StateData> extends ApplyFogStat
 
 		const visionMap = new Map<unit, player[]>();
 
-		DisplayTextToForce(bj_FORCE_ALL_PLAYERS, `Revealing blocks`);
+		DisplayTextToForce(bj_FORCE_ALL_PLAYERS, `Revealing blocks...`);
 
 		for (const activePlayer of players) {
 			const playerHandle: player = activePlayer.getPlayer();

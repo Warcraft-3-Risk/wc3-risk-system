@@ -68,27 +68,6 @@ export class NameManager {
 	}
 
 	/**
-	 * Gets a player by BattleTag substring.
-	 * @param string - The BattleTag substring to search for.
-	 * @returns The player object if found, null otherwise.
-	 */
-	public getPlayerFromBtag(string: string): player | null {
-		let result: player = null;
-
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			const player = Player(i);
-
-			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_PLAYING) continue;
-
-			if (isNonEmptySubstring(string, this.getBtag(player))) {
-				result = player;
-			}
-		}
-
-		return result;
-	}
-
-	/**
 	 * Sets the name of a player based on a specified type ('btag', 'acct', 'color', 'country').
 	 * @param p - The player object.
 	 * @param name - The type of name to set.
@@ -189,13 +168,5 @@ export class NameManager {
 	 */
 	public setCountry(p: player, country: string): void {
 		this.names.get(p).country = country;
-	}
-
-	/**
-	 * @param p - The player object.
-	 * @returns The country name of the player.
-	 */
-	public getCountry(p: player): string {
-		return this.names.get(p).country;
 	}
 }

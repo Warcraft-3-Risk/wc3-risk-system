@@ -17,6 +17,9 @@ import { Advanced } from './advanced';
 import { DevCaptureCommand } from './dev-capture';
 import { KillCommand } from './kill';
 import { SkipCommand } from './skip';
+import { SetScoreCommand } from './set-score';
+import { DevCommand } from './dev';
+import { isSingleplayer } from '../utils/singleplayer';
 
 export function SetCommands() {
 	const chatManager: ChatManager = ChatManager.getInstance();
@@ -39,4 +42,11 @@ export function SetCommands() {
 	DevCaptureCommand(chatManager, nameManager);
 	KillCommand(chatManager, nameManager, playerManager);
 	SkipCommand(chatManager);
+
+	// Testing commands that are only registered in single-player games, so they do not exist in real games.
+	// They are listed by -dev only, never in -help.
+	if (isSingleplayer()) {
+		SetScoreCommand(chatManager);
+		DevCommand(chatManager);
+	}
 }

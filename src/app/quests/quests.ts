@@ -184,7 +184,7 @@ export class Quests {
 
 			${HexColors.YELLOW}Game Commands:|r
 			-ff - Forfeit the game without leaving (counts as defeat)
-			-ng - Restart the game when it is over
+			-ng - Restart the game when it is over (ProMode only)
 			-names - Display a list of all alive/nomad players in the game
 
 			${HexColors.YELLOW}Team Mode Commands:|r

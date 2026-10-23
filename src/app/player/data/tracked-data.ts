@@ -182,10 +182,6 @@ export class TrackedData {
 		this._turnDied = value;
 	}
 
-	public get trainedUnits(): Map<number, number> {
-		return this._trainedUnits;
-	}
-
 	public get lastUnitKilledBy(): player {
 		return this._lastUnitKilledBy;
 	}

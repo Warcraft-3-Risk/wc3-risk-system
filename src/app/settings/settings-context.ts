@@ -1,13 +1,12 @@
 import { SettingsStrategy } from './strategies/settings-strategy';
 import { DiplomacyStrategy } from './strategies/diplomacy-strategy';
 import { FogStrategy } from './strategies/fog-strategy';
-import { GameTypeStrategy } from './strategies/game-type-strategy';
 import { PromodeStrategy } from './strategies/promode-strategy';
 import { Settings } from './settings';
 import { OvertimeStrategy } from './strategies/overtime-strategy';
 import { W3C_MODE_ENABLED } from '../utils/map-info';
 
-export type SettingsKey = 'GameType' | 'Diplomacy' | 'Fog' | 'Promode' | 'Overtime';
+export type SettingsKey = 'Diplomacy' | 'Fog' | 'Promode' | 'Overtime';
 
 export class SettingsContext {
 	private static instance: SettingsContext;
@@ -39,7 +38,6 @@ export class SettingsContext {
 	}
 
 	public initStrategies() {
-		this.strategies.set('GameType', new GameTypeStrategy(this.settings.GameType));
 		this.strategies.set('Diplomacy', new DiplomacyStrategy(this.settings.Diplomacy));
 		this.strategies.set('Fog', new FogStrategy(this.settings.Fog));
 		this.strategies.set('Promode', new PromodeStrategy(this.settings.Promode));
@@ -55,15 +53,6 @@ export class SettingsContext {
 		if (strategy) {
 			strategy.apply();
 		}
-	}
-
-	/**
-	 * Returns a specific strategy instance
-	 * @param key string to identify which strategy to return
-	 * @returns the strategy instance
-	 */
-	public getStrategy(key: SettingsKey): SettingsStrategy | undefined {
-		return this.strategies.get(key);
 	}
 
 	/**
@@ -83,35 +72,11 @@ export class SettingsContext {
 	}
 
 	/**
-	 * Checks if the game setting is equalized promode
-	 * @returns true if game is "equalized promode"
-	 */
-	public isEqualizedPromode(): boolean {
-		return this.settings.Promode == 2;
-	}
-
-	/**
 	 * Checks if the game setting is chaos promode
 	 * @returns true if game is "chaos promode"
 	 */
 	public isChaosPromode(): boolean {
-		return this.settings.Promode == 3;
-	}
-
-	/**
-	 * Checks if the game setting for Fog is on or off
-	 * @returns true if fog is off
-	 */
-	public isFogOff(): boolean {
-		return this.settings.Fog == 0;
-	}
-
-	/**
-	 * Checks if the game setting for Fog is on or off
-	 * @returns true if fog is on
-	 */
-	public isFogOn(): boolean {
-		return this.settings.Fog == 1;
+		return this.settings.Promode == 2;
 	}
 
 	/**
@@ -135,14 +100,6 @@ export class SettingsContext {
 	 */
 	public isCapitals(): boolean {
 		return this.settings.GameType == 1;
-	}
-
-	/**
-	 * Checks if the game setting for Overtime is on or off
-	 * @returns true if overtime is on
-	 */
-	public isOvertimeOn(): boolean {
-		return this.settings.Overtime.option != 3;
 	}
 
 	public isW3CMode(): boolean {
