@@ -2,6 +2,7 @@ import { GlobalGameData } from '../game/state/global-game-state';
 import { OvertimeManager } from '../managers/overtime-manager';
 import { VictoryManager } from '../managers/victory-manager';
 import { ActivePlayer } from '../player/types/active-player';
+import { Team } from '../teams/team';
 import { HexColors } from '../utils/hex-colors';
 import { ParticipantEntityManager } from '../utils/participant-entity';
 import { ObserverBoard } from './observer-board';
@@ -78,9 +79,10 @@ export class ScoreboardManager {
 
 	// The session board is created once per session and deliberately survives destroyBoards(),
 	// so wins/losses and K/D accumulate across every match in the series.
-	public sessionSetup(players: ActivePlayer[]): void {
+	// Teams are passed for team promode so the session score is shown per team.
+	public sessionSetup(players: ActivePlayer[], teams?: Team[], showScoreText: boolean = true): void {
 		if (!this.sessionBoard) {
-			this.sessionBoard = new SessionBoard(players);
+			this.sessionBoard = new SessionBoard(players, teams, showScoreText);
 		}
 	}
 

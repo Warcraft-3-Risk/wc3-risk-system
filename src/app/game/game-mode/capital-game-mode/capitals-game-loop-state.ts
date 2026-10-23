@@ -8,10 +8,14 @@ import { PLAYER_STATUS } from 'src/app/player/status/status-enum';
 import { LocalMessage } from 'src/app/utils/messages';
 import { UNIT_ID } from 'src/configs/unit-id';
 import { debugPrint } from 'src/app/utils/debug-print';
+import { MinimapIconManager } from 'src/app/managers/minimap-icon-manager';
 
 export class CapitalsGameLoopState extends GameLoopState<CapitalsData> {
 	onEnterState() {
 		super.onEnterState();
+
+		// The countdown is over: capitals were only revealed so the fog memory forgets their native minimap icon
+		MinimapIconManager.getInstance().releaseCapitalReveals();
 	}
 
 	onCityCapture(city: City, preOwner: ActivePlayer, owner: ActivePlayer): void {

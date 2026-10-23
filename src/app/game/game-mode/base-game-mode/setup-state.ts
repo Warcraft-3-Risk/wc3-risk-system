@@ -42,8 +42,14 @@ export class SetupState<T extends StateData> extends BaseState<T> {
 		// Every promode variant plays a series, so it needs a board that persists between matches
 		const settings = SettingsContext.getInstance();
 
-		if (settings.isPromode() || settings.isChaosPromode() || settings.isEqualizedPromode()) {
-			ScoreboardManager.getInstance().sessionSetup([...GlobalGameData.matchPlayers]);
+		if (settings.isPromode() || settings.isChaosPromode()) {
+			// Team promode (lobby teams, more than two players) shows the session score per team.
+			// Random teams change every round, so they get a per-player board and no score in the top right.
+			const isRandomTeams = settings.isRandomTeams();
+			const isTeamSession = !settings.isFFA() && !isRandomTeams && GlobalGameData.matchPlayers.length > 2;
+			const sessionTeams = isTeamSession ? [...TeamManager.getInstance().getTeams()] : undefined;
+
+			ScoreboardManager.getInstance().sessionSetup([...GlobalGameData.matchPlayers], sessionTeams, !isRandomTeams);
 			ScoreboardManager.getInstance().hideSessionBoard();
 		}
 

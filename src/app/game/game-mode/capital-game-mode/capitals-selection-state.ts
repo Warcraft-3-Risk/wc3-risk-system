@@ -113,16 +113,17 @@ export class CapitalsSelectionState extends BaseState<CapitalsData> {
 		if (cities.length <= 1) {
 			LocalMessage(
 				player,
-				`Only countries with 2 or cities can be chosen.\nPlease choose another city as your capital.`,
+				`Only countries with 2 or more cities can be chosen.\nPlease choose another city as your capital.`,
 				'Sound\\Interface\\Error.flac'
 			);
 			return;
 		}
 
-		if (cities.find((x) => x.getOwner() != NEUTRAL_HOSTILE && x.getOwner() != player) !== undefined) {
+		const takenCity = cities.find((x) => x.getOwner() != NEUTRAL_HOSTILE && x.getOwner() != player);
+		if (takenCity !== undefined) {
 			LocalMessage(
 				player,
-				`${NameManager.getInstance().getDisplayName(city.getOwner())} has already selected this city!\nPlease choose another city as your capital.`,
+				`${NameManager.getInstance().getDisplayName(takenCity.getOwner())} has already chosen a capital in this country!\nPlease choose another city as your capital.`,
 				'Sound\\Interface\\Error.flac'
 			);
 			return;

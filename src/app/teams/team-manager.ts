@@ -6,6 +6,7 @@ import { Team } from './team';
 export class TeamManager {
 	private teams: Map<number, Team>;
 	private playersTeam: Map<player, Team>;
+	private lobbyTeamCount: number;
 	private static instance: TeamManager;
 
 	private constructor() {
@@ -32,6 +33,8 @@ export class TeamManager {
 				tempTeams.get(teamNumber).push(player);
 			}
 		}
+
+		this.lobbyTeamCount = tempTeams.size;
 
 		let randomTeamNumber = arrayRange(0, PlayerManager.getInstance().players.size, 1);
 
@@ -76,17 +79,50 @@ export class TeamManager {
 		return this.playersTeam.get(player).getNumber();
 	}
 
+	/**
+	 * Random Teams: deals the players still in the game into as many teams as the lobby had, as evenly
+	 * as possible, in random order. Replaces the current teams, so it has to run before anything of the
+	 * round reads them (the diplomacy strategy at the start of every round). Colors are untouched.
+	 */
+	public shuffleTeams() {
+		const players: ActivePlayer[] = [];
+
+		PlayerManager.getInstance().players.forEach((player, playerHandle) => {
+			if (!IsPlayerSlotState(playerHandle, PLAYER_SLOT_STATE_PLAYING) || IsPlayerObserver(playerHandle)) return;
+
+			players.push(player);
+		});
+
+		ShuffleArray(players);
+
+		const teamCount = Math.max(1, Math.min(this.lobbyTeamCount, players.length));
+		const teamMembers: ActivePlayer[][] = [];
+
+		for (let i = 0; i < teamCount; i++) {
+			teamMembers.push([]);
+		}
+
+		players.forEach((player, index) => {
+			teamMembers[index % teamCount].push(player);
+		});
+
+		this.teams.clear();
+		this.playersTeam.clear();
+
+		teamMembers.forEach((members, index) => {
+			const team = new Team(members, index + 1);
+			this.teams.set(index + 1, team);
+
+			members.forEach((member) => {
+				this.playersTeam.set(member.getPlayer(), team);
+			});
+		});
+	}
+
 	public allowFullSharedControl() {
 		this.teams.forEach((team) => {
 			team.giveTeamFullControl();
 		});
-	}
-
-	public disableSharedControl() {
-		for (let i = 0; i < bj_MAX_PLAYERS; i++) {
-			BlzFrameSetEnable(BlzGetFrameByName('UnitsCheckBox', i), false);
-			BlzFrameSetVisible(BlzGetFrameByName('UnitsCheckBox', i), false);
-		}
 	}
 
 	public getActiveTeams(): Team[] {

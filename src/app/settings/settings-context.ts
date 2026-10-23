@@ -83,19 +83,11 @@ export class SettingsContext {
 	}
 
 	/**
-	 * Checks if the game setting is equalized promode
-	 * @returns true if game is "equalized promode"
-	 */
-	public isEqualizedPromode(): boolean {
-		return this.settings.Promode == 2;
-	}
-
-	/**
 	 * Checks if the game setting is chaos promode
 	 * @returns true if game is "chaos promode"
 	 */
 	public isChaosPromode(): boolean {
-		return this.settings.Promode == 3;
+		return this.settings.Promode == 2;
 	}
 
 	/**
@@ -128,6 +120,14 @@ export class SettingsContext {
 	 */
 	public isFFA(): boolean {
 		return this.settings.Diplomacy.option == 0;
+	}
+
+	/**
+	 * Checks if the game setting for Diplomacy is set to Random Teams
+	 * @returns true if the teams are scrambled every round
+	 */
+	public isRandomTeams(): boolean {
+		return this.settings.Diplomacy.option == 2;
 	}
 
 	/**

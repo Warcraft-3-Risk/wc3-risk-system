@@ -6,14 +6,15 @@ import { EVENT_ON_PLAYER_FORFEIT } from '../utils/events/event-constants';
 import { EventEmitter } from '../utils/events/event-emitter';
 import { ErrorMsg } from '../utils/messages';
 import { EDITOR_DEVELOPER_MODE } from 'src/configs/game-settings';
+import { isSingleplayer } from '../utils/singleplayer';
 
 /**
  * Developer-only command that eliminates the given player as if they had forfeited.
- * Never registered unless EDITOR_DEVELOPER_MODE is on.
+ * Only registered in developer builds (EDITOR_DEVELOPER_MODE) or single-player games.
  * Usage: -kill <color/name>
  */
 export function KillCommand(chatManager: ChatManager, nameManager: NameManager, playerManager: PlayerManager) {
-	if (!EDITOR_DEVELOPER_MODE) return;
+	if (!EDITOR_DEVELOPER_MODE && !isSingleplayer()) return;
 
 	chatManager.addCmd(['-kill'], () => {
 		if (GlobalGameData.matchState != 'inProgress') return;

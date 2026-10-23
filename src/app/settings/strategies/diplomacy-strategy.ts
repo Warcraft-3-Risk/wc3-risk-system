@@ -11,17 +11,13 @@ export interface DiplomacyOptions {
 export const DiplomacyStrings: Record<number, string> = {
 	0: `FFA`,
 	1: `Lobby Teams`,
-	2: `Lobby Teams (Shared)`,
-	3: `Random Teams`,
-	4: `Free Ally`,
+	2: `Random Teams`,
 };
 
 export const DiplomacyStringsColorFormatted: Record<number, string> = {
 	0: `${HexColors.GREEN}${DiplomacyStrings[0]}|r`,
 	1: `${HexColors.RED}${DiplomacyStrings[1]}|r`,
 	2: `${HexColors.RED}${DiplomacyStrings[2]}|r`,
-	3: `${HexColors.RED}${DiplomacyStrings[3]}|r`,
-	4: `${HexColors.RED}${DiplomacyStrings[4]}|r`,
 };
 
 export class DiplomacyStrategy implements SettingsStrategy {
@@ -29,9 +25,7 @@ export class DiplomacyStrategy implements SettingsStrategy {
 	private readonly strategyMap: Map<number, () => void> = new Map([
 		[0, this.handleFFA],
 		[1, this.handleLobbyTeams],
-		[2, this.handleLobbyTeamsShared],
-		[3, this.handleRandomTeams],
-		[4, this.handleFreeAlly],
+		[2, this.handleRandomTeams],
 	]);
 
 	constructor(diplomacy: DiplomacyOptions) {
@@ -50,25 +44,19 @@ export class DiplomacyStrategy implements SettingsStrategy {
 		AllyMenuFFASetup();
 	}
 
+	// Lobby teams always share full unit control
 	private handleLobbyTeams(): void {
-		TeamManager.getInstance().disableSharedControl();
-
-		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, true);
-	}
-
-	private handleLobbyTeamsShared(): void {
 		TeamManager.getInstance().allowFullSharedControl();
 
 		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, true);
 	}
 
+	// Plays exactly like lobby teams, but the teams are scrambled every round.
+	// Applied at the start of every round, after the reset broke the previous round's alliances.
 	private handleRandomTeams(): void {
-		//TODO
-	}
+		TeamManager.getInstance().shuffleTeams();
+		TeamManager.getInstance().allowFullSharedControl();
 
-	private handleFreeAlly(): void {
-		//TODO
-
-		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, false);
+		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, true);
 	}
 }

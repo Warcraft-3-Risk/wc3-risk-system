@@ -15,17 +15,31 @@ interface CityIconRecord {
 	lastColorMode: number | undefined;
 }
 
+interface CapitalIconRecord {
+	city: City;
+	// Horizontal and vertical border bars, then the horizontal and vertical colored arms
+	frames: framehandle[];
+	lastOwner: player | undefined;
+	lastColorMode: number | undefined;
+	lastTexture: string | undefined;
+}
+
 /**
  * Draws the minimap ourselves: cities, moving units and spawner camouflage are rendered as frames
  * over the native minimap, and their native minimap icons are hidden.
  *
- * Only used in the promode modes (ProMode, Chaos, Equalized). It stays completely inert until
+ * Only used in the promode modes (ProMode, Chaos). It stays completely inert until
  * {@link activate} is called from a promode state - every public entry point returns immediately
  * while inactive, so other modes keep the native minimap untouched and no frames, timers or
  * vertex colors are ever created for them.
  *
  * Cities keep fog-safe memory: an enemy city in fog keeps the color it was last seen with, and a
  * never-seen city stays gray, so ownership changes under fog are not revealed.
+ *
+ * Outside promode there is a second, much smaller mode: capitals only ({@link setCapital}). It draws
+ * capitals as an outlined cross in the owner's color and hides their native minimap display,
+ * everything else keeps the native minimap. It only starts once a city becomes a capital, so modes
+ * without capitals never create anything.
  */
 export class MinimapIconManager {
 	private static instance: MinimapIconManager;
@@ -37,6 +51,7 @@ export class MinimapIconManager {
 	private lastSeenOwners: Map<City, player> = new Map(); // Remember last seen owner
 	private updateTimer: timer;
 	private isActive: boolean = false;
+	private isBaseReady: boolean = false;
 	private readonly COLOR_TEXTURES: string[] = []; // Pre-built texture path lookup table
 	private cityLastTexture: Map<City, string> = new Map(); // Track last-applied texture per city frame
 	private frameLastTexture: Map<framehandle, string> = new Map(); // Track last-applied texture per framehandle
@@ -60,6 +75,21 @@ export class MinimapIconManager {
 	private readonly UNIT_ICON_SIZE = 0.002; // Icon size for units
 	private readonly INITIAL_POOL_SIZE = 2000; // Initial number of frames to create to avoid runtime spikes
 	private readonly UNITS_PER_TICK = 200; // Throttle dynamic units processed per tick
+
+	// Capitals-only mode: capital cross icons, with frames recycled when a capital turns back into a city.
+	// The cross is two colored bars over two slightly larger black bars, which form its outline so it
+	// stays readable next to massed units.
+	private capitalRecords: CapitalIconRecord[] = [];
+	private capitalFramePool: framehandle[][] = [];
+	private capitalRevealPending: Set<City> = new Set(); // Capitals whose fog memory refresh waits for fog to be on
+	private heldCapitalReveals: fogmodifier[] = []; // Reveals of new capitals, kept until the match starts
+	private readonly CAPITAL_ARM_LENGTH = 0.0105; // Tip to tip length of the cross arms
+	private readonly CAPITAL_ARM_THICKNESS = 0.0017; // Thickness of the arms, kept above ~3 pixels so it does not flicker between 2 and 3
+	private readonly CAPITAL_BORDER = 0.0007; // Width of the black outline around the cross
+	private readonly CAPITAL_BORDER_FRAMES = 2; // Leading entries of a record's frames that are outline, the rest take the owner color
+	private readonly CAPITAL_REVEAL_RADIUS = 300; // Large enough to cover the fog grid around the buildings, small enough to show little else
+	private readonly CAPITAL_REVEAL_DURATION = 0.5; // Long enough for a vision update to refresh the fog memory
+	private readonly CAPITAL_BORDER_TEXTURE = 'ReplaceableTextures\\CameraMasks\\Black_mask.blp';
 
 	// State for adaptive unit tracking
 	private currentUnitUpdateIndex: number = 0;
@@ -93,36 +123,13 @@ export class MinimapIconManager {
 	public activate(): void {
 		if (this.isActive) return;
 
+		// Capital icons are only drawn outside promode - promode draws every city itself
+		this.clearCapitals();
+
 		this.isActive = true;
+		this.ensureBase();
 
-		// Pre-build texture path lookup table (eliminates per-tick string concatenation)
-		for (let i = 0; i < 24; i++) {
-			const str = i < 10 ? '0' + i : '' + i;
-			this.COLOR_TEXTURES[i] = 'ReplaceableTextures\\TeamColor\\TeamColor' + str + '.blp';
-		}
-		this.COLOR_TEXTURES[90] = 'ReplaceableTextures\\TeamColor\\TeamColor90.blp'; // neutral gray
-		this.COLOR_TEXTURES[99] = 'ReplaceableTextures\\TeamColor\\TeamColor99.blp'; // white (self)
-
-		const worldBounds = GetWorldBounds();
-		this.worldMinX = GetRectMinX(worldBounds);
-		this.worldMinY = GetRectMinY(worldBounds);
-		this.worldWidth = GetRectMaxX(worldBounds) - this.worldMinX;
-		this.worldHeight = GetRectMaxY(worldBounds) - this.worldMinY;
-
-		this.consoleUI = BlzGetFrameByName('ConsoleUIBackdrop', 0);
 		this.delayedTrackTimer = CreateTimer();
-
-		// Follow HUD scale changes so the icons stay aligned with the minimap
-		let lastHudScale = -1;
-		TimerStart(CreateTimer(), 0.1, true, () => {
-			const currentScale = this.consoleUI ? BlzFrameGetWidth(this.consoleUI) / 0.8 : 1.0;
-
-			if (currentScale !== lastHudScale && currentScale > 0) {
-				lastHudScale = currentScale;
-				this.hudScale = currentScale;
-				this.repositionAllStaticIcons();
-			}
-		});
 
 		const cities: City[] = Array.from(CityToCountry.keys());
 
@@ -133,7 +140,6 @@ export class MinimapIconManager {
 
 		debugPrint(`MinimapIconManager: Activated with ${this.cityIcons.size} city icons`);
 
-		this.startUpdateTimer();
 		this.expandPool(this.INITIAL_POOL_SIZE);
 
 		// Start with Fog enabled so that the initial HideMinimap toggle respects the engine's fog state
@@ -152,6 +158,314 @@ export class MinimapIconManager {
 
 		FogEnable(false);
 		FogMaskEnable(false);
+	}
+
+	/**
+	 * Sets up what both modes share: the texture table, world bounds, HUD scale tracking and the update timer.
+	 * Runs once, from whichever mode starts first.
+	 */
+	private ensureBase(): void {
+		if (this.isBaseReady) return;
+
+		this.isBaseReady = true;
+
+		// Pre-build texture path lookup table (eliminates per-tick string concatenation)
+		for (let i = 0; i < 24; i++) {
+			const str = i < 10 ? '0' + i : '' + i;
+			this.COLOR_TEXTURES[i] = 'ReplaceableTextures\\TeamColor\\TeamColor' + str + '.blp';
+		}
+		this.COLOR_TEXTURES[90] = 'ReplaceableTextures\\TeamColor\\TeamColor90.blp'; // neutral gray
+		this.COLOR_TEXTURES[99] = 'ReplaceableTextures\\TeamColor\\TeamColor99.blp'; // white (self)
+
+		const worldBounds = GetWorldBounds();
+		this.worldMinX = GetRectMinX(worldBounds);
+		this.worldMinY = GetRectMinY(worldBounds);
+		this.worldWidth = GetRectMaxX(worldBounds) - this.worldMinX;
+		this.worldHeight = GetRectMaxY(worldBounds) - this.worldMinY;
+
+		this.consoleUI = BlzGetFrameByName('ConsoleUIBackdrop', 0);
+
+		// Follow HUD scale and window size changes so the icons stay aligned with the minimap.
+		// The window size matters for the capital icons, which are snapped to whole screen pixels.
+		let lastHudScale = -1;
+		let lastClientWidth = BlzGetLocalClientWidth();
+		let lastClientHeight = BlzGetLocalClientHeight();
+		TimerStart(CreateTimer(), 0.1, true, () => {
+			const currentScale = this.consoleUI ? BlzFrameGetWidth(this.consoleUI) / 0.8 : 1.0;
+			const clientWidth = BlzGetLocalClientWidth();
+			const clientHeight = BlzGetLocalClientHeight();
+
+			if ((currentScale !== lastHudScale && currentScale > 0) || clientWidth !== lastClientWidth || clientHeight !== lastClientHeight) {
+				if (currentScale > 0) {
+					lastHudScale = currentScale;
+					this.hudScale = currentScale;
+				}
+
+				lastClientWidth = clientWidth;
+				lastClientHeight = clientHeight;
+				this.repositionAllStaticIcons();
+			}
+		});
+
+		this.startUpdateTimer();
+	}
+
+	/**
+	 * Capitals-only mode: called whenever a city becomes a capital or turns back into a normal city.
+	 * A capital gets a cross icon and its native minimap display hidden, a former capital gets its
+	 * native display back. Ignored in promode, which already draws every city.
+	 *
+	 * @param beforeMatchStart - True while the match has not started yet. A new capital is then revealed
+	 * to every player until {@link releaseCapitalReveals} is called once the countdown is over.
+	 */
+	public setCapital(city: City, isCapital: boolean, beforeMatchStart: boolean): void {
+		if (this.isActive) return;
+
+		const index = this.capitalRecords.findIndex((record) => record.city === city);
+
+		if (isCapital) {
+			if (index !== -1) return;
+
+			this.ensureBase();
+			this.createCapitalIcon(city, beforeMatchStart);
+		} else if (index !== -1) {
+			this.removeCapitalAt(index);
+		}
+	}
+
+	private createCapitalIcon(city: City, beforeMatchStart: boolean): void {
+		this.setCapitalMinimapHidden(city, true, beforeMatchStart);
+
+		let frames = this.capitalFramePool.pop();
+
+		if (!frames) {
+			const gameUI = BlzGetOriginFrame(ORIGIN_FRAME_MINIMAP, 0);
+			frames = [];
+
+			for (let i = 0; i < 4; i++) {
+				const frame = BlzCreateFrameByType('BACKDROP', 'MinimapCapitalIcon', gameUI, '', 0);
+				// Outline below the colored arms
+				BlzFrameSetLevel(frame, i < this.CAPITAL_BORDER_FRAMES ? 9 : 10);
+				frames.push(frame);
+			}
+
+			// Sizes are set in positionCapitalIcon, since they depend on the screen resolution
+			BlzFrameSetTexture(frames[0], this.CAPITAL_BORDER_TEXTURE, 0, true);
+			BlzFrameSetTexture(frames[1], this.CAPITAL_BORDER_TEXTURE, 0, true);
+		}
+
+		const record: CapitalIconRecord = {
+			city,
+			frames,
+			lastOwner: undefined,
+			lastColorMode: undefined,
+			lastTexture: undefined,
+		};
+
+		this.capitalRecords.push(record);
+		this.positionCapitalIcon(record);
+		this.updateCapitalIconColor(record, GetLocalPlayer(), GetAllyColorFilterState());
+
+		for (let i = 0; i < frames.length; i++) {
+			BlzFrameSetVisible(frames[i], true);
+		}
+	}
+
+	private removeCapitalAt(index: number): void {
+		const record = this.capitalRecords[index];
+
+		this.setCapitalMinimapHidden(record.city, false, false);
+
+		for (let i = 0; i < record.frames.length; i++) {
+			BlzFrameSetVisible(record.frames[i], false);
+		}
+
+		this.capitalFramePool.push(record.frames);
+		this.capitalRecords.splice(index, 1);
+	}
+
+	/**
+	 * Hides or shows a capital's barracks and circle of power on the native minimap.
+	 *
+	 * The hide flag only applies to what a player currently sees: a fogged building keeps showing the
+	 * minimap image it was last seen with. So both buildings are briefly revealed to every player,
+	 * which refreshes that remembered image with the new flag. The engine only updates that memory
+	 * while fog is on, and capitals are set up while fog is off, so the reveal waits for fog if needed.
+	 *
+	 * Capitals set up before the match starts stay revealed until the countdown is over instead, which
+	 * covers the moment fog turns on for the match.
+	 */
+	private setCapitalMinimapHidden(city: City, hidden: boolean, holdUntilMatchStart: boolean): void {
+		BlzSetUnitBooleanField(city.barrack.unit, UNIT_BF_HIDE_MINIMAP_DISPLAY, hidden);
+		BlzSetUnitBooleanField(city.cop, UNIT_BF_HIDE_MINIMAP_DISPLAY, hidden);
+
+		if (holdUntilMatchStart) {
+			this.heldCapitalReveals.push(...this.createCapitalReveal(city));
+		} else if (IsFogEnabled()) {
+			this.revealCapitalBriefly(city);
+		} else {
+			this.capitalRevealPending.add(city);
+		}
+	}
+
+	/**
+	 * Reveals a capital's buildings to every player for a moment, so their fog memory picks up the
+	 * current minimap hide flag. Runs from synced code only, so every client creates the same handles.
+	 */
+	private revealCapitalBriefly(city: City): void {
+		const modifiers = this.createCapitalReveal(city);
+
+		const timer = CreateTimer();
+		TimerStart(timer, this.CAPITAL_REVEAL_DURATION, false, () => {
+			this.destroyCapitalReveal(modifiers);
+			DestroyTimer(timer);
+		});
+	}
+
+	/**
+	 * Ends the reveals of the capitals set up before the match. Called once the countdown is over.
+	 */
+	public releaseCapitalReveals(): void {
+		this.destroyCapitalReveal(this.heldCapitalReveals);
+		this.heldCapitalReveals = [];
+	}
+
+	private createCapitalReveal(city: City): fogmodifier[] {
+		const units = [city.barrack.unit, city.cop];
+		const modifiers: fogmodifier[] = [];
+
+		for (let p = 0; p < bj_MAX_PLAYERS; p++) {
+			const player = Player(p);
+
+			if (GetPlayerSlotState(player) != PLAYER_SLOT_STATE_PLAYING) continue;
+
+			for (let i = 0; i < units.length; i++) {
+				const modifier = CreateFogModifierRadius(
+					player,
+					FOG_OF_WAR_VISIBLE,
+					GetUnitX(units[i]),
+					GetUnitY(units[i]),
+					this.CAPITAL_REVEAL_RADIUS,
+					true,
+					false
+				);
+
+				FogModifierStart(modifier);
+				modifiers.push(modifier);
+			}
+		}
+
+		return modifiers;
+	}
+
+	private destroyCapitalReveal(modifiers: fogmodifier[]): void {
+		for (let i = 0; i < modifiers.length; i++) {
+			FogModifierStop(modifiers[i]);
+			DestroyFogModifier(modifiers[i]);
+		}
+	}
+
+	/**
+	 * Runs the reveals that waited for fog. Called from the update timer, which is synced, and
+	 * IsFogEnabled is the same on every client, so all clients create the fog modifiers together.
+	 */
+	private revealPendingCapitals(): void {
+		if (this.capitalRevealPending.size === 0 || !IsFogEnabled()) return;
+
+		this.capitalRevealPending.forEach((city) => this.revealCapitalBriefly(city));
+		this.capitalRevealPending.clear();
+	}
+
+	private clearCapitals(): void {
+		for (let i = this.capitalRecords.length - 1; i >= 0; i--) {
+			this.removeCapitalAt(i);
+		}
+	}
+
+	/**
+	 * Centers every part of the cross on the capital's minimap point and sizes it.
+	 *
+	 * The center and all sizes are snapped to whole screen pixels. Otherwise a capital whose center
+	 * falls between two pixels gets its arm and outline edges rounded in different directions,
+	 * which makes the outline thicker on one side.
+	 */
+	private positionCapitalIcon(record: CapitalIconRecord): void {
+		const frames = record.frames;
+		let centerX = this.getMinimapX(record.city.barrack.defaultX);
+		let centerY = this.getMinimapY(record.city.barrack.defaultY);
+		let length = this.CAPITAL_ARM_LENGTH;
+		let thickness = this.CAPITAL_ARM_THICKNESS;
+		let border = this.CAPITAL_BORDER;
+
+		const clientWidth = BlzGetLocalClientWidth();
+		const clientHeight = BlzGetLocalClientHeight();
+
+		if (clientWidth > 0 && clientHeight > 0) {
+			// Frame coordinates span 0.6 vertically; horizontally the 4:3 area is centered in the window
+			const pixelsPerUnit = clientHeight / 0.6;
+			const originX = (clientWidth - (clientHeight * 4) / 3) / 2;
+
+			const thicknessPx = Math.max(1, Math.round(thickness * pixelsPerUnit));
+			const borderPx = Math.max(1, Math.round(border * pixelsPerUnit));
+			let lengthPx = Math.max(thicknessPx, Math.round(length * pixelsPerUnit));
+
+			// Both bars share the center, so length and thickness need the same parity to sit on whole pixels
+			if ((lengthPx - thicknessPx) % 2 !== 0) lengthPx++;
+
+			// An odd size is centered on a pixel's middle, an even size on a pixel edge
+			const pixelX = originX + centerX * pixelsPerUnit;
+			const pixelY = centerY * pixelsPerUnit;
+			const snappedX = thicknessPx % 2 === 1 ? Math.floor(pixelX) + 0.5 : Math.round(pixelX);
+			const snappedY = thicknessPx % 2 === 1 ? Math.floor(pixelY) + 0.5 : Math.round(pixelY);
+
+			centerX = (snappedX - originX) / pixelsPerUnit;
+			centerY = snappedY / pixelsPerUnit;
+			length = lengthPx / pixelsPerUnit;
+			thickness = thicknessPx / pixelsPerUnit;
+			border = borderPx / pixelsPerUnit;
+		}
+
+		BlzFrameSetSize(frames[0], length + 2 * border, thickness + 2 * border);
+		BlzFrameSetSize(frames[1], thickness + 2 * border, length + 2 * border);
+		BlzFrameSetSize(frames[2], length, thickness);
+		BlzFrameSetSize(frames[3], thickness, length);
+
+		for (let i = 0; i < frames.length; i++) {
+			BlzFrameSetAbsPoint(frames[i], FRAMEPOINT_CENTER, centerX, centerY);
+		}
+	}
+
+	/**
+	 * Colors a capital by its current owner, also in fog. Capitals and their owners are public in the
+	 * capitals mode, so unlike the promode city icons there is no fog memory to keep.
+	 */
+	private updateCapitalIconColor(record: CapitalIconRecord, localPlayer: player, allyColorMode: number): void {
+		const texture = this.getOwnerTexture(record.city.getOwner(), localPlayer, allyColorMode);
+
+		if (record.lastTexture === texture) return;
+
+		record.lastTexture = texture;
+
+		for (let i = this.CAPITAL_BORDER_FRAMES; i < record.frames.length; i++) {
+			BlzFrameSetTexture(record.frames[i], texture, 0, true);
+		}
+	}
+
+	private updateCapitalIcons(localPlayer: player, allyColorMode: number): void {
+		this.revealPendingCapitals();
+
+		for (let c = 0; c < this.capitalRecords.length; c++) {
+			const record = this.capitalRecords[c];
+			const currentOwner = record.city.getOwner();
+
+			// Dirty check: only recolor when the owner or the ally color filter changed
+			if (record.lastOwner !== currentOwner || record.lastColorMode !== allyColorMode) {
+				record.lastOwner = currentOwner;
+				record.lastColorMode = allyColorMode;
+
+				this.updateCapitalIconColor(record, localPlayer, allyColorMode);
+			}
+		}
 	}
 
 	private registerSpawners(cities: City[]): void {
@@ -369,18 +683,24 @@ export class MinimapIconManager {
 	 * Positions an icon over the minimap point matching the given world coordinates.
 	 */
 	public updateIconPosition(iconFrame: framehandle, worldX: number, worldY: number): void {
+		BlzFrameSetAbsPoint(iconFrame, FRAMEPOINT_CENTER, this.getMinimapX(worldX), this.getMinimapY(worldY));
+	}
+
+	private getMinimapX(worldX: number): number {
 		const normalizedX = (worldX - this.worldMinX) / this.worldWidth;
-		const normalizedY = (worldY - this.worldMinY) / this.worldHeight;
 
 		// The default UI is 0.8 wide and always centered at X=0.4, so the console's left edge
 		// moves inwards towards 0.4 as the HUD scales down.
 		const uiLeftEdgeX = 0.4 - (0.8 * this.hudScale) / 2.0;
 
 		// The minimap sits in the bottom-left corner, slightly inset from the console's corner
-		const iconX = uiLeftEdgeX + 0.009 * this.hudScale + normalizedX * (this.MINIMAP_WIDTH * this.hudScale);
-		const iconY = 0.004 * this.hudScale + normalizedY * (this.MINIMAP_HEIGHT * this.hudScale);
+		return uiLeftEdgeX + 0.009 * this.hudScale + normalizedX * (this.MINIMAP_WIDTH * this.hudScale);
+	}
 
-		BlzFrameSetAbsPoint(iconFrame, FRAMEPOINT_CENTER, iconX, iconY);
+	private getMinimapY(worldY: number): number {
+		const normalizedY = (worldY - this.worldMinY) / this.worldHeight;
+
+		return 0.004 * this.hudScale + normalizedY * (this.MINIMAP_HEIGHT * this.hudScale);
 	}
 
 	/**
@@ -397,6 +717,8 @@ export class MinimapIconManager {
 		this.cityIcons.forEach((iconFrame, city) => {
 			this.updateIconPosition(iconFrame, city.barrack.defaultX, city.barrack.defaultY);
 		});
+
+		this.capitalRecords.forEach((record) => this.positionCapitalIcon(record));
 	}
 
 	private startUpdateTimer(): void {
@@ -413,6 +735,12 @@ export class MinimapIconManager {
 	private updateAllIcons(): void {
 		const localPlayer = GetLocalPlayer();
 		const allyColorMode = GetAllyColorFilterState();
+
+		// Capitals-only mode has nothing else to draw
+		if (!this.isActive) {
+			this.updateCapitalIcons(localPlayer, allyColorMode);
+			return;
+		}
 
 		// If the global color context changed, invalidate every unit's cached owner to force a recolor
 		if (this.lastGlobalColorMode !== allyColorMode || this.lastGlobalPovPlayer !== localPlayer) {
