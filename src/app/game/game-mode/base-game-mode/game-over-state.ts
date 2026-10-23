@@ -10,8 +10,6 @@ import { ActivePlayer } from 'src/app/player/types/active-player';
 import { Quests } from 'src/app/quests/quests';
 import { FogManager } from 'src/app/managers/fog-manager';
 import { PlayerManager } from 'src/app/player/player-manager';
-import { LocalMessage } from 'src/app/utils/messages';
-import { HexColors } from 'src/app/utils/hex-colors';
 import { Team } from 'src/app/teams/team';
 import { TeamManager } from 'src/app/teams/team-manager';
 import { PlayLocalSound } from 'src/app/utils/utils';
@@ -126,10 +124,11 @@ export class GameOverState<T extends StateData> extends BaseState<T> {
 		});
 	}
 
+	// -ng only exists in promode, which plays a series. Every other mode ignores it and ends with the score screen.
 	override onPlayerRestart(player: ActivePlayer) {
-		if (SettingsContext.getInstance().isFFA()) {
-			LocalMessage(GetLocalPlayer(), `${HexColors.RED}You can not restart in FFA mode!|r`, 'Sound\\Interface\\Error.flac');
-		} else {
+		const settings = SettingsContext.getInstance();
+
+		if (settings.isPromode() || settings.isChaosPromode()) {
 			this.nextState(this.stateData);
 		}
 	}

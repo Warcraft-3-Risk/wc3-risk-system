@@ -165,29 +165,6 @@ class DebugLogger {
 			}
 		}
 	}
-
-	dumpToFile(filename?: string): void {
-		if (filename) {
-			this.filename = filename;
-		} else {
-			this.initializeFilename();
-		}
-		this.writeToFile();
-		print(`${HexColors.YELLOW}Debug log dumped to: ${this.filename}|r`);
-	}
-
-	clear(): void {
-		this.logs = [];
-		this.writeToFile(); // Write empty file to clear it
-	}
-
-	stopAutoSave(): void {
-		if (this.autoSaveTimer) {
-			PauseTimer(this.autoSaveTimer);
-			DestroyTimer(this.autoSaveTimer);
-			this.autoSaveTimer = null;
-		}
-	}
 }
 
 export function debugPrint(message: string, ...args: any[]): void {
@@ -199,16 +176,4 @@ export function debugPrint(message: string, ...args: any[]): void {
 			DebugLogger.getInstance().addLog(fullMessage);
 		}
 	}
-}
-
-export function dumpDebugLog(filename?: string): void {
-	DebugLogger.getInstance().dumpToFile(filename);
-}
-
-export function clearDebugLog(): void {
-	DebugLogger.getInstance().clear();
-}
-
-export function stopDebugAutoSave(): void {
-	DebugLogger.getInstance().stopAutoSave();
 }

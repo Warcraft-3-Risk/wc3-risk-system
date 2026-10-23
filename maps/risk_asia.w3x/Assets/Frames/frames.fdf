@@ -208,7 +208,6 @@ Frame "BACKDROP" "SettingsView" INHERITS "QuestButtonBaseTemplate" {
 			Frame "MENU" "DiplomacyPopupMenu" INHERITS WITHCHILDREN "EscMenuPopupMenuMenuTemplate" {
 				MenuItem "FFA",     -2,
 				MenuItem "Lobby Teams",     -2,
-				MenuItem "Random Teams",     -2,
 			}
 		}
 

@@ -52,14 +52,4 @@ export class ChatManager {
 			}
 		});
 	}
-
-	/**
-	 * Removes commands linked to a function from the ChatManager.
-	 * @param cmds - The commands to be removed.
-	 */
-	public removeCmd(cmds: string[]) {
-		cmds.forEach((cmd) => {
-			this._chatActions.delete(cmd.toLowerCase());
-		});
-	}
 }

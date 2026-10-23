@@ -50,8 +50,8 @@ export const ENABLE_EXPORT_GAME_SETTINGS: boolean = false;
 //This represents whether end game score should be exported
 export const ENABLE_EXPORT_END_GAME_SCORE: boolean = false;
 
-//This represents how long the capitals selection phase should last in seconds. Default is 30 seconds.
-export const CAPITALS_SELECTION_PHASE: number = 30;
+//This represents how long the capitals selection phase should last in seconds. Default is 20 seconds.
+export const CAPITALS_SELECTION_PHASE: number = 20;
 
 // This represents whether the game should terminate if there is only one human player left
 export const W3C_TERMINATE_IF_ALONE_HUMAN_PLAYER: boolean = true;

@@ -7,6 +7,7 @@ import { updateTickUI } from '../utillity/update-ui';
 import { BaseState } from '../state/base-state';
 import { ScoreboardManager } from 'src/app/scoreboard/scoreboard-manager';
 import { ActivePlayer } from 'src/app/player/types/active-player';
+import { TeamManager } from 'src/app/teams/team-manager';
 import { HexColors } from 'src/app/utils/hex-colors';
 import { GlobalMessage } from 'src/app/utils/messages';
 import { City } from 'src/app/city/city';
@@ -362,6 +363,15 @@ export class GameLoopState<T extends StateData> extends BaseState<T> {
 			}
 			return;
 		}
+
+		// -ng only exists in promode and is ignored everywhere else
+		const settings = SettingsContext.getInstance();
+		if (!settings.isPromode() && !settings.isChaosPromode()) return;
+
+		// Only once the player's whole team is out (forfeited, defeated or left) - a teammate still playing keeps the match going
+		const team = player ? TeamManager.getInstance().getTeamFromPlayer(player.getPlayer()) : undefined;
+		const teamIsOut = team ? !team.getMembers().some((member) => member.status.isActive()) : !!player && !player.status.isActive();
+		if (!teamIsOut) return;
 
 		const humanPlayersCount: number = PlayerManager.getInstance().getHumanPlayersCount();
 		if (humanPlayersCount === 1) {

@@ -114,7 +114,6 @@ export class ModeSelection {
 		const settings: SettingsContext = SettingsContext.getInstance();
 
 		settings.initStrategies();
-		settings.applyStrategy('GameType');
 		settings.applyStrategy('Overtime');
 
 		Quests.getInstance().AddSettingsQuest(settings);

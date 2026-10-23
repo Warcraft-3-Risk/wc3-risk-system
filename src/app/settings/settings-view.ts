@@ -200,8 +200,7 @@ export class SettingsView {
 
 				SettingsContext.getInstance().getSettings().Promode = frameValue;
 
-				// ProMode On (1) or Chaos (2): lock the other settings. Diplomacy stays selectable and
-				// defaults to Lobby Teams.
+				// ProMode On (1) or Chaos (2): lock the other settings, Diplomacy to Lobby Teams
 				if (frameValue === 1 || frameValue === 2) {
 					SettingsContext.getInstance().getSettings().GameType = 0;
 					SettingsContext.getInstance().getSettings().Fog = 1;
@@ -213,7 +212,7 @@ export class SettingsView {
 					BlzFrameSetValue(fogFrame, 1);
 					BlzFrameSetEnable(fogFrame, false);
 					BlzFrameSetValue(diploFrame, 1);
-					BlzFrameSetEnable(diploFrame, true);
+					BlzFrameSetEnable(diploFrame, false);
 					BlzFrameSetValue(overtimeFrame, 3);
 					BlzFrameSetEnable(overtimeFrame, false);
 				} else {

@@ -25,8 +25,6 @@ export interface SessionStats {
 export class SessionBoard extends Scoreboard {
 	private players: ActivePlayer[];
 	private teams: Team[];
-	// False for random teams: their teams change every round, so the version text stays in the top right
-	private showScoreText: boolean;
 	private stats: Map<player, SessionStats> = new Map();
 	private readonly PLAYER_COL = 1;
 	private readonly WINS_COL = 2;
@@ -34,10 +32,9 @@ export class SessionBoard extends Scoreboard {
 	private readonly KILLS_COL = 4;
 	private readonly DEATHS_COL = 5;
 
-	constructor(players: ActivePlayer[], teams?: Team[], showScoreText: boolean = true) {
+	constructor(players: ActivePlayer[], teams?: Team[]) {
 		super();
 		this.players = [...players];
-		this.showScoreText = showScoreText;
 		this.teams = teams ? [...teams].sort((a, b) => a.getNumber() - b.getNumber()) : undefined;
 		this.size = this.players.length + 2 + (this.teams ? this.teams.length : 0);
 
@@ -64,7 +61,7 @@ export class SessionBoard extends Scoreboard {
 		this.setItemValue(`${HexColors.TANGERINE}K|r`, 1, this.KILLS_COL);
 		this.setItemValue(`${HexColors.TANGERINE}D|r`, 1, this.DEATHS_COL);
 
-		this.setTitle('Session Score');
+		this.setTitle('Scoreboard');
 
 		this.updateFull();
 
@@ -173,7 +170,7 @@ export class SessionBoard extends Scoreboard {
 	 */
 	private updateScoreText(): void {
 		// W3C mode already shows the 1v1 score there through the WinTracker
-		if (W3C_MODE_ENABLED || !this.showScoreText) return;
+		if (W3C_MODE_ENABLED) return;
 
 		if (this.teams && this.teams.length == 2) {
 			const first = this.teams[0];

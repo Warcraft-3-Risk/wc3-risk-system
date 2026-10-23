@@ -272,14 +272,6 @@ export class RatingManager {
 	}
 
 	/**
-	 * Get current game ID
-	 * @returns Current game ID or empty string if not generated
-	 */
-	public getCurrentGameId(): string {
-		return this.currentGameId || '';
-	}
-
-	/**
 	 * Capture initial game data at game start
 	 * This locks in the player count and ratings used for ALL calculations during the game
 	 * Must be called after countdown ends, when the actual game begins
@@ -308,27 +300,12 @@ export class RatingManager {
 	}
 
 	/**
-	 * Get the initial player count (locked at game start)
-	 */
-	public getInitialPlayerCount(): number {
-		return this.initialPlayerCount;
-	}
-
-	/**
 	 * Get a player's initial rating (from game start)
 	 * @param btag Player's BattleTag
 	 * @returns Rating at game start, or current rating if not captured
 	 */
 	public getInitialPlayerRating(btag: string): number {
 		return this.initialPlayerRatings.get(btag) || this.getPlayerRating(btag);
-	}
-
-	/**
-	 * Check if a player's rating has been finalized (they died/forfeited)
-	 * @param btag Player's BattleTag
-	 */
-	public isPlayerFinalized(btag: string): boolean {
-		return this.finalizedPlayers.has(btag);
 	}
 
 	/**
@@ -542,18 +519,6 @@ export class RatingManager {
 			this.ratingData.set(btag, defaultData);
 			this.loadedPlayers.add(btag);
 		}
-	}
-
-	/**
-	 * Get all loaded players' rating data
-	 * @returns Array of all loaded player rating data
-	 */
-	public getAllLoadedPlayers(): PlayerRatingData[] {
-		const players: PlayerRatingData[] = [];
-		this.ratingData.forEach((data) => {
-			players.push(data);
-		});
-		return players;
 	}
 
 	/**

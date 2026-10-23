@@ -52,10 +52,6 @@ export class ScoreboardManager {
 		}
 	}
 
-	public toggleVisibility(bool: boolean) {
-		this.iterateBoards((board) => board.setVisibility(bool));
-	}
-
 	public updateFull() {
 		this.iterateBoards((board) => board.updateFull());
 	}
@@ -80,9 +76,9 @@ export class ScoreboardManager {
 	// The session board is created once per session and deliberately survives destroyBoards(),
 	// so wins/losses and K/D accumulate across every match in the series.
 	// Teams are passed for team promode so the session score is shown per team.
-	public sessionSetup(players: ActivePlayer[], teams?: Team[], showScoreText: boolean = true): void {
+	public sessionSetup(players: ActivePlayer[], teams?: Team[]): void {
 		if (!this.sessionBoard) {
-			this.sessionBoard = new SessionBoard(players, teams, showScoreText);
+			this.sessionBoard = new SessionBoard(players, teams);
 		}
 	}
 

@@ -214,7 +214,7 @@ export function AllyMenuFFASetup() {
 	tempText += '|n|cffffffff-advanced - Advanced gameplay tips and tricks';
 	tempText += '|n|cffffffff-cam #### - Set camera distance (1000 min, 8500 max)';
 	tempText += '|n|cffffffff-ff - Forfeit the game without leaving it';
-	tempText += '|n|cffffffff-ng - Restart the game when it is over';
+	tempText += '|n|cffffffff-ng - Restart the game when it is over (ProMode only)';
 	tempText += '|n|cffffffff-names - Display a list of alive/nomad players';
 	tempText += '|n|cffffffff-allies - Show your allies (team modes only)';
 	tempText += '|n|cffffffff-gold <player> <amount> - Send gold to allies (team modes)';

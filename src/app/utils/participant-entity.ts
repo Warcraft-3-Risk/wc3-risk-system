@@ -36,14 +36,6 @@ export class ParticipantEntityManager {
 		return entity instanceof ActivePlayer ? (entity as ActivePlayer) : (entity as Team).getMemberWithHighestIncome();
 	}
 
-	public static getParticipantByActivePlayer(activePlayer: ActivePlayer): ParticipantEntity {
-		if (SettingsContext.getInstance().isFFA()) {
-			return activePlayer;
-		} else {
-			return TeamManager.getInstance().getTeamFromPlayer(activePlayer.getPlayer());
-		}
-	}
-
 	public static getParticipantByPlayer(player: player): ParticipantEntity {
 		if (SettingsContext.getInstance().isFFA()) {
 			return PlayerManager.getInstance().players.get(player);

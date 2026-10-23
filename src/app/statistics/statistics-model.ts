@@ -2,7 +2,6 @@ import { TURN_DURATION_IN_SECONDS } from 'src/configs/game-settings';
 import { ActivePlayer } from '../player/types/active-player';
 import { HexColors } from '../utils/hex-colors';
 import { AddLeadingZero } from '../utils/utils';
-import { ColumnConfig, GetStatisticsColumns } from './statistics-column-config';
 import { MAP_VERSION, MAP_TYPE } from '../utils/map-info';
 import { GlobalGameData } from '../game/state/global-game-state';
 import { SettingsContext } from '../settings/settings-context';
@@ -18,7 +17,6 @@ export class StatisticsModel {
 	private timePlayed: string;
 	private ranks: ActivePlayer[];
 	private winner: ActivePlayer;
-	private columns: ColumnConfig[];
 
 	private matchPlayers: ActivePlayer[];
 
@@ -43,8 +41,6 @@ export class StatisticsModel {
 				),
 			]);
 		}
-
-		this.columns = GetStatisticsColumns(this);
 	}
 
 	public getTimePlayed(): string {
@@ -57,10 +53,6 @@ export class StatisticsModel {
 
 	public getWinner(): ActivePlayer {
 		return this.winner;
-	}
-
-	public getColumnData(): ColumnConfig[] {
-		return this.columns;
 	}
 
 	public getRival(player: ActivePlayer): ActivePlayer | null {

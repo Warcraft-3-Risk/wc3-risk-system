@@ -52,19 +52,6 @@ export function ShuffleArray(arr: any[]): void {
 }
 
 /**
- * Selects a specified number of random elements from an array.
- * @param arr - The array to select from.
- * @param numElements - The number of elements to select.
- * @returns An array containing the selected elements.
- */
-export function GetRandomElements(arr: any[], numElements: number): any[] {
-	const shuffledArray = arr.sort(() => Math.random() - 0.5);
-	const selectedElements = shuffledArray.splice(0, numElements);
-
-	return selectedElements;
-}
-
-/**
  * Checks if a string is a non-empty substring of another string. Both strings are
  * transformed to lower case and trimmed before comparison.
  * @param substring - The string to search for.

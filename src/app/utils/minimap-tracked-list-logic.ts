@@ -39,14 +39,6 @@ export class MinimapTrackedList<TUnit, TFrame, TPlayer> {
 		return frame;
 	}
 
-	public removeTrackedUnit(unit: TUnit): TFrame | undefined {
-		const index = this.trackedUnitIndex.get(unit);
-		if (index !== undefined) {
-			return this.removeTrackedAt(index);
-		}
-		return undefined;
-	}
-
 	public clear(): void {
 		this.trackedUnitList.length = 0;
 		this.trackedFrameList.length = 0;

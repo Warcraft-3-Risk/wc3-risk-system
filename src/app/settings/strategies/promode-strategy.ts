@@ -63,7 +63,5 @@ export class PromodeStrategy implements SettingsStrategy {
 		});
 
 		SetMapFlag(MAP_LOCK_ALLIANCE_CHANGES, true);
-
-		//TODO Handle teams
 	}
 }
